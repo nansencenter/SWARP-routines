@@ -11,14 +11,18 @@ import mod_grib2_setup as tw_g2s
 
 ##########################################################
 # inputs - loop over these?
-vbl_list       = ['fice','hice'] # -> icec,icetk
+vbl_list       = ['fice','hice'] # TODO: change names? -> icec,icetk (also in mod_grib2_setup.py)
+                                 # TODO: get vbl_list from netcdf file directly
 
 # file inputs:
 pfil  = 'inputs/proj.in' # proj.in file used by hyc2proj
 ncfil = "test_ncfiles/TP4DAILY_start20120723_dump20120723.nc" # hyc2proj netcdf
 
 # output file:
-fil_out = 'out/test_hycproj_to_grib2.grb2'
+outdir  = 'out'
+if not os.path.exists(outdir):
+   os.makedirs(outdir)
+fil_out = outdir+'/test_hycproj_to_grib2.grb2'
 ##########################################################
 
 ##########################################################
