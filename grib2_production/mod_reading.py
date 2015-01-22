@@ -1,4 +1,5 @@
 import numpy as np
+from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
 
 ##########################################################
@@ -128,3 +129,57 @@ def nc_get_var(ncfil,vblname,time_index=None):
    nc.close()
 
    return vbl
+
+def nc_getinfo(ncfil,time_index=None):
+
+   ########################################################
+   class nc_info:
+
+      #####################################################
+      def __init__(self):
+         self.lon0         = 0 # 1st longitude value
+         self.lat0         = 0 # 1st latitude value
+         self.shape        = 0 # shape of grid
+
+         self.reftime      = 0
+         # added here manually
+         # - could possibly be determined
+         #   from netcdf metadata though
+         self.reftime_sig  = 'start of forecast'
+
+         self.timeunits = 'hour'
+         self.datatime  = 0
+
+         self.number_of_time_records   = 1
+   ########################################################
+
+   ncinfo   = nc_info()
+   nc       = ncopen(ncfil)
+
+   ########################################################
+   # time info:
+   time        = nc.variables['time']
+   reftime_h   = time[0] # hours since refpoint
+   time_info   = time.units.split()
+   time_info   = [ time_info[i] for i in [0,2] ]
+
+   time_fmt       = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1T12:00:00Z
+   refpoint       = datetime.strptime(time_info[1],time_fmt)
+   ncinfo.reftime = refpoint+timedelta(hours=reftime_h)
+
+   ncinfo.timeunits  = time_info[0]
+   if time_index is not None:
+      ncinfo.datatime   = time[time_index]-reftime_h
+
+   ncinfo.number_of_time_records = len(time[:])
+   ########################################################
+
+   ########################################################
+   # grid info:
+   ncinfo.lon0    = nc.variables['longitude'][0,0]
+   ncinfo.lat0    = nc.variables['latitude'] [0,0]
+   ncinfo.shape   = nc.variables['latitude'] [:,:].shape
+   ########################################################
+
+   nc.close()
+   return ncinfo
