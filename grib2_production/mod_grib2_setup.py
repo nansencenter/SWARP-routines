@@ -26,3 +26,23 @@ def def_ident_sect(reftime,reftime_sig):
    ident_sect[11:]   = [iProd_status,iData_type]
 
    return ident_sect
+
+def def_gdsinfo(proj_in,Npts):
+   # define grid definition section:
+   # >http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_sect3.shtml 
+   # inputs:
+   # 1) proj_in: object defined by mod_reading.py from proj.in file
+   #              (used by hyc2proj)
+   # 2) Npts: total number of points in the grid 
+   
+   i_Source_grid     = 0 # source of grid definition > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-0.shtml
+   N_xtra_gps        = 0 # Number of octets needed for each additional grid points defn.
+   N_interpret_gps   = 0 # interpretation of additional points
+
+   if proj_in.projection_name=='polar_stereographic':
+      i_grid_templ_no   = 20  # polar stereographic, grid template no
+                              # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-1.shtml
+
+   gdsinfo  = [i_Source_grid,Npts,N_xtra_gps,N_interpret_gps,i_grid_templ_no]
+
+   return np.array(gdsinfo,'i')

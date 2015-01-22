@@ -50,7 +50,7 @@ f_out    = open(fil_out,'wb')
 discipline_code   = 10  #Oceanographic Products > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table0-0.shtml
 
 # INPUT 2) identification section: pygrib/g2clib.c ("unpack1" method)
-ident_sect  = tw_g2s.get_ident_sect(reftime,reftime_sig)
+ident_sect  = tw_g2s.def_ident_sect(reftime,reftime_sig)
 
 # CALL Grib2Encode:
 grb_out     = g2e(discipline_code,ident_sect)
@@ -60,21 +60,12 @@ grb_out     = g2e(discipline_code,ident_sect)
 # DEFINE GRID:
 
 # INPUT 1)
-i_Source_grid     = 0      # source of grid definition > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-0.shtml
-Npts              = nx*ny  # no of points
-N_xtra_gps        = 0      # Number of octets needed for each additional grid points defn.
-N_interpret_gps   = 0      # interpretation of additional points
-
-if proj_in.projection_name=='polar_stereographic':
-   i_grid_templ_no   = 20  # polar stereographic, grid template no
-                           # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-1.shtml
-
-gdsinfo  = [i_Source_grid,Npts,N_xtra_gps,N_interpret_gps,i_grid_templ_no]
-
-# convert to numpy array
-gdsinfo  = np.array(gdsinfo,'i')
+# grid definition section:
+Npts     = nx*ny  # no of points
+gdsinfo  = tw_g2s.def_gdsinfo(proj_in,Npts)
 
 # INPUT 2)
+# grid definition template:
 gdt   = []
 
 # grid parameters for polar stereographic projection
@@ -102,7 +93,7 @@ if lon0<0:
 lat0  = int(lat[0,0]*fac)
 if lon0<0:
    lat0  = lat0+360*fac
-gdt.extend([lon0,lat0])
+gdt.extend([lat0,lon0])
 
 # resolution and component flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-3.shtml
 # - most not applicable (only rcf[4] - definition of reference for vector directions)
@@ -287,3 +278,5 @@ if 1:
       # lon_0 = lon.mean()
       # lat_0 = lat.mean()
       # R1    = grb.earthRmajor
+
+   gr.close()
