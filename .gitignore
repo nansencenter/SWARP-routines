@@ -1,2 +1,3 @@
 *.pyc
 grib2_production/out/*
+# grib2_production/figs/*

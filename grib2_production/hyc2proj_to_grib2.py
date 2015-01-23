@@ -82,15 +82,19 @@ pdtmpl   = tw_g2s.def_prod_template(ncinfo,vbl_name)
 
 # INPUT 3):
 # data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
-drtnum  = 40 # grid point data, jpeg 2000 compression
-# drtnum   = 0 # grid point data, simple packing
+# drtnum  = 40 # grid point data, jpeg 2000 compression
+drtnum   = 0 # grid point data, simple packing
 
 # INPUT 4):
 # data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
 drtmpl   = tw_g2s.def_datarep_template(drtnum)
 
 # INPUT 5)
-data_arr = data[:,:] # masked array or array
+KEEP_MASK   = 1
+if KEEP_MASK:
+   data_arr = data[:,:] # masked array
+else:
+   data_arr = data[:,:].data # array
 
 # CALL addfield:
 grb_out.addfield(pdtnum,pdtmpl,drtnum,drtmpl,data_arr)
@@ -145,29 +149,121 @@ if 1:
             print('\n')
             glon[glon>180] = glon[glon>180]-360
 
-         if 0:
+         if 1:
             # compare data arrays:
-            gdat  = msg.data()[0]
-            Gdat  = gdat.data[gdat.mask==False]
+            if KEEP_MASK:
+               Data_arr = data_arr.data
+               nmask    = data_arr.mask
+               gdat     = msg.data()[0].data
+               gmask    = msg.data()[0].mask
+            else:
+               Data_arr = data_arr
+               nmask    = data[:,:].mask
+               gdat     = msg.data()[0]
+               gmask    = data[:,:].mask
 
-            Data_arr = data_arr.transpose()
-            Darr     = Data_arr.data[Data_arr.mask==False]
-            
-            ddat  = abs(Gdat-Darr)
+            if 1:
+               # print diff between arrays:
+               Darr  = Data_arr[nmask==False]
+               Gdat  = gdat    [gmask==False]
+               ddat  = abs(Gdat-Darr)
+               print('max diff in data arrays: '+str(ddat.max()))
+               print('\n')
 
-         # # make plots
-         # from matplotlib import pyplot as plt 
-         # from matplotlib import Basemap
-         # fig   = plt.figure()
+            if 1:
+               # make plots:
+               figdir   = 'figs/'
+               if not os.path.exists(figdir):
+                  os.makedirs(figdir)
 
-      # data           = msg.values
-      # Z              = data.data
-      # Z[data.mask]   = np.NaN
-      # Zmin           = data.min()
-      # Zmax           = data.max()
-      # #
-      # lon_0 = lon.mean()
-      # lat_0 = lat.mean()
-      # R1    = grb.earthRmajor
+               # plot titles:
+               ttl   = data.standard_name
+               ttl   = ttl.replace('_',' ')
+               clim  = [0,1]
+
+               # make basemap:
+               from matplotlib import pyplot as plt 
+               from mpl_toolkits.basemap import Basemap
+               nx = grb.points_in_x_direction
+               ny = grb.points_in_y_direction
+               dx = grb.gridlength_in_x_direction
+               dy = grb.gridlength_in_y_direction
+               #
+               width    = dx*nx
+               height   = dy*ny
+               m        = Basemap(  projection=grb.proj4_proj,\
+                                    lon_0=grb.proj4_lon_0,\
+                                    lat_0=grb.proj4_lat_0,\
+                                    lat_ts=grb.proj4_lat_ts,\
+                                    width=width,height=height,\
+                                    rsphere=grb.earthRmajor,\
+                                    resolution='i',area_thresh=10000)
+
+               if 1:
+                  print('Making nc test plot...')
+                  Z        = Data_arr
+                  Z[nmask] = np.nan
+
+                  if 1:
+                     # simple plot with imshow (reverse i index)
+                     Z2    = [Z[i,:] for i in range(nx-1,-1,-1)]
+                     fig   = plt.figure()
+                     plt.imshow(Z2,vmin=clim[0],vmax=clim[1])
+                  elif 0:
+                     # use basemap...
+                     # plot is empty for some reason?????
+                     fig   = plt.figure()
+                     m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1])
+                     m.drawcoastlines()
+                     m.fillcontinents()
+
+                     # draw parallels.
+                     parallels = np.arange(0.,90,10.)
+                     m.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
+                     meridians = np.arange(-180.,180.,10.)
+                     m.drawmeridians(meridians,labels=[0,0,0,1],
+                                     fontsize=10,latmax=90)
+
+                  plt.colorbar()
+                  plt.title(ttl)
+
+                  fnam  = figdir+'test_nc.png'
+                  print('Saving to: '+fnam+'\n')
+                  plt.savefig(fnam)
+                  plt.close()
+                  fig.clf()
+
+               if 1:
+                  print('Making grb2 test plot...')
+                  Z        = gdat
+                  Z[gmask] = np.nan
+                  if 1:
+                     # simple plot with imshow (reverse i index)
+                     Z2 = [Z[i,:] for i in range(nx-1,-1,-1)]
+                     fig   = plt.figure()
+                     plt.imshow(Z2,vmin=clim[0],vmax=clim[1])
+                  elif 0:
+                     # use basemap...
+                     # plot is empty for some reason?????
+                     fig   = plt.figure()
+                     m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1])
+                     m.drawcoastlines()
+                     m.fillcontinents()
+
+                     # draw parallels.
+                     parallels = np.arange(0.,90,10.)
+                     m.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
+                     meridians = np.arange(-180.,180.,10.)
+                     m.drawmeridians(meridians,labels=[0,0,0,1],
+                                     fontsize=10,latmax=90)
+
+                  plt.colorbar()
+                  plt.title(ttl)
+
+                  fnam  = figdir+'test_grb2.png'
+                  print('Saving to: '+fnam+'\n')
+                  plt.savefig(fnam)
+                  plt.close()
+                  fig.clf()
 
    gr.close()
