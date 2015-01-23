@@ -8,6 +8,7 @@ from ncepgrib2 import Grib2Decode as g2d
 #
 import mod_reading as tw_rdg
 import mod_grib2_setup as tw_g2s
+ncgv  = tw_rdg.nc_get_var
 
 ##########################################################
 # inputs - loop over these?
@@ -38,7 +39,7 @@ f_out = open(fil_out,'wb')
 
 time_index  = time_indices[0]
 vbl         = vbl_list[0]
-data        = tw_rdg.nc_get_var(ncfil,vbl,time_index)
+data        = ncgv(ncfil,vbl,time_index)
 
 ##########################################################################################################
 # INITIALISATION
@@ -117,8 +118,32 @@ if 1:
       print('\n')
       grb   = g2d(msg.tostring(),gribmsg=True)
       print(grb)
-      #
-      # lat,lon        = msg.latlons()
+
+      if 1:
+         # compare grids:
+         lon         = ncgv(ncfil,'longitude')
+         lat         = ncgv(ncfil,'latitude')
+         glat,glon   = msg.latlons()
+         #
+         dlat  = abs(glat.transpose()-lat[:,:])
+         dlon  = abs(glon.transpose()-lon[:,:])
+         print('max diff in lat arrays: '+str(dlat.max()))
+         print('max diff in lon arrays: '+str(dlon.max()))
+
+         # compare data arrays:
+         gdat  = msg.data()[0]
+         Gdat  = gdat.data[gdat.mask==False]
+
+         Data_arr = data_arr.transpose()
+         Darr     = Data_arr.data[Data_arr.mask==False]
+         
+         ddat  = abs(Gdat-Darr)
+
+         # # make plots
+         # from matplotlib import pyplot as plt 
+         # from matplotlib import Basemap
+         # fig   = plt.figure()
+
       # data           = msg.values
       # Z              = data.data
       # Z[data.mask]   = np.NaN
