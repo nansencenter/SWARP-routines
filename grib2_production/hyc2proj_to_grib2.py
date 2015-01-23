@@ -12,8 +12,6 @@ ncgv  = tw_rdg.nc_get_var
 
 ##########################################################
 # inputs - loop over these?
-vbl_list       = ['fice','hice'] # TODO: change names? -> icec,icetk (also in mod_grib2_setup.py)
-                                 # TODO: get vbl_list from netcdf file directly
 
 # file inputs:
 pfil  = 'inputs/proj.in' # proj.in file used by hyc2proj
@@ -27,19 +25,20 @@ fil_out = outdir+'/test_hycproj_to_grib2.grb2'
 ##########################################################
 
 ##########################################################
-# read proj.in file
-proj_in  = tw_rdg.read_proj_infile(pfil)
+# # read proj.in file
+# proj_in  = tw_rdg.read_proj_infile(pfil)
 
 # read hyc2proj netcdf:
 ncinfo         = tw_rdg.nc_getinfo(ncfil)
 time_indices   = range(ncinfo.number_of_time_records)
+vbl_list       = ncinfo.variable_list
 
 # Open outfile before starting to encode messages
 f_out = open(fil_out,'wb')
 
 time_index  = time_indices[0]
-vbl         = vbl_list[0]
-data        = ncgv(ncfil,vbl,time_index)
+vbl_name    = vbl_list[0]
+data        = ncgv(ncfil,vbl_name,time_index)
 
 ##########################################################################################################
 # INITIALISATION
@@ -57,16 +56,14 @@ grb_out     = g2e(discipline_code,ident_sect)
 ##########################################################################################################
 # DEFINE GRID:
 
-# INPUT 1)
-# grid definition section:
-nx,ny    = ncinfo.shape
-Npts     = nx*ny  # no of points
-gdsinfo  = tw_g2s.def_gdsinfo(proj_in,Npts)
-
 # INPUT 2)
 # grid definition template:
 # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
-gdt   = tw_g2s.def_grid_template(proj_in,ncinfo)
+gdtnum,gdt  = tw_g2s.def_grid_template(ncinfo)
+
+# INPUT 1)
+# grid definition section:
+gdsinfo  = tw_g2s.def_gdsinfo(ncinfo,gdtnum)
 
 # CALL addgrid
 grb_out.addgrid(gdsinfo,gdt)
@@ -81,7 +78,7 @@ grb_out.addgrid(gdsinfo,gdt)
 pdtnum   = 0 # product_definition_template_number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-0.shtml
 
 # INPUT 2):
-pdtmpl   = tw_g2s.def_prod_template(ncinfo,data.name)
+pdtmpl   = tw_g2s.def_prod_template(ncinfo,vbl_name)
 
 # INPUT 3):
 # data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
@@ -120,24 +117,43 @@ if 1:
       print(grb)
 
       if 1:
-         # compare grids:
-         lon         = ncgv(ncfil,'longitude')
-         lat         = ncgv(ncfil,'latitude')
+         # lon,lat from grib2
          glat,glon   = msg.latlons()
-         #
-         dlat  = abs(glat.transpose()-lat[:,:])
-         dlon  = abs(glon.transpose()-lon[:,:])
-         print('max diff in lat arrays: '+str(dlat.max()))
-         print('max diff in lon arrays: '+str(dlon.max()))
 
-         # compare data arrays:
-         gdat  = msg.data()[0]
-         Gdat  = gdat.data[gdat.mask==False]
+         # lat,lon from nc file
+         lon   = ncgv(ncfil,'longitude')
+         lat   = ncgv(ncfil,'latitude')
+         nlon  = lon[:,:]
+         nlat  = lat[:,:]
 
-         Data_arr = data_arr.transpose()
-         Darr     = Data_arr.data[Data_arr.mask==False]
-         
-         ddat  = abs(Gdat-Darr)
+         if 1:
+            # calc difference between arrays:
+            dlat  = abs(glat-nlat)
+            dlon  = abs(glon-nlon)
+            glon[dlon>1]   = glon[dlon>1]+360.
+            dlon  = abs(glon-nlon)
+            dlon0 = abs(glon[dlon<1]-nlon[dlon<1])
+            #
+            print('"bad" grid points:')
+            print(glon[dlon>1],nlon[dlon>1])
+            print(glat[dlon>1],nlat[dlon>1])
+            print('\n')
+            #
+            print('compare rest of grid points:')
+            print('max diff in lat arrays (degrees): '+str(dlat.max()))
+            print('max diff in lon arrays (degrees): '+str(dlon0.max()))
+            print('\n')
+            glon[glon>180] = glon[glon>180]-360
+
+         if 0:
+            # compare data arrays:
+            gdat  = msg.data()[0]
+            Gdat  = gdat.data[gdat.mask==False]
+
+            Data_arr = data_arr.transpose()
+            Darr     = Data_arr.data[Data_arr.mask==False]
+            
+            ddat  = abs(Gdat-Darr)
 
          # # make plots
          # from matplotlib import pyplot as plt 

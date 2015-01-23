@@ -31,111 +31,111 @@ def def_ident_sect(reftime,reftime_sig):
 ####################################################################################################
 
 ####################################################################################################
-def def_gdsinfo(proj_in,Npts):
+def def_gdsinfo(ncinfo,gdtnum):
    # define grid definition section:
    # >http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_sect3.shtml 
    # inputs:
-   # 1) proj_in: object defined by mod_reading.py from proj.in file
-   #              (used by hyc2proj)
-   # 2) Npts: total number of points in the grid 
+   # 1) ncinfo: object defined by mod_reading.py from netcdf file
+   # 2) gdtnum: grid template number (from def_grid_template)
    
    i_Source_grid     = 0 # source of grid definition > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-0.shtml
    N_xtra_gps        = 0 # Number of octets needed for each additional grid points defn.
    N_interpret_gps   = 0 # interpretation of additional points
 
-   if proj_in.projection_name=='polar_stereographic':
-      i_grid_templ_no   = 20  # polar stereographic, grid template no
-                              # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-1.shtml
-
-   gdsinfo  = [i_Source_grid,Npts,N_xtra_gps,N_interpret_gps,i_grid_templ_no]
+   gdsinfo  = [i_Source_grid,ncinfo.Npts,N_xtra_gps,N_interpret_gps,gdtnum]
 
    return np.array(gdsinfo,'i')
 ####################################################################################################
 
 ####################################################################################################
-def def_grid_template(proj_in,ncinfo):
+def def_grid_template(ncinfo):
    # grid definition template:
-   # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
+   # link from > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-1.shtml
 
-   nx,ny = ncinfo.shape
-   gdt   = []
+   proj_in     = ncinfo.proj_info
+   proj_name   = proj_in.grid_mapping_name
 
-   # grid parameters for polar stereographic projection
-   # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
-   i_earth_shape  = 1   #spherical (specified radius) > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
-   gdt.append(i_earth_shape)
+   if proj_name=='polar_stereographic':
+      # stereographic > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
+      gdtnum   = 20
 
-   # parameters for spherical earth
-   re_h2c         = 6378273 # radius of earth (in m) from Hyc2proj/mod_toproj.F90 (subroutine polar_stereographic)
-   re_scale_fac   = 0       # radius = scaled_radius*10^(-scale_fac)
-   gdt.extend([re_scale_fac,re_h2c])
+      nx    = ncinfo.Npts_x
+      ny    = ncinfo.Npts_y
+      gdt   = []
 
-   #not applicable (oblate spherical)
-   gdt.extend([0,0,0,0])
+      # grid parameters for polar stereographic projection
+      # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
+      i_earth_shape  = 1   #spherical (specified radius) > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
+      gdt.append(i_earth_shape)
 
-   # # ??? 2 extra values compared to the table
-   # gdt.extend([0,0])
+      # parameters for spherical earth
+      re_h2c         = 6378273 # radius of earth (in m) from Hyc2proj/mod_toproj.F90 (subroutine polar_stereographic)
+      re_scale_fac   = 0       # radius = scaled_radius*10^(-scale_fac)
+      gdt.extend([re_scale_fac,re_h2c])
 
-   # no of points in each dirn
-   gdt.extend([nx,ny])
+      #not applicable (oblate spherical)
+      gdt.extend([0,0,0,0])
 
-   # lon,lat of 1st grid point:
-   fac   = 1e6 # degrees -> micro-degrees
-   lon0  = int(ncinfo.lon0*fac)
-   lat0  = int(ncinfo.lat0*fac)
-   if lon0<0:
-      lon0  = lon0+360*fac
-   if lon0<0:
-      lat0  = lat0+360*fac
-   gdt.extend([lat0,lon0])
+      # no of points in each dirn
+      gdt.extend([nx,ny])
 
-   # resolution and component flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-3.shtml
-   # - most not applicable (only rcf[4] - definition of reference for vector directions)
-   if proj_in.Rotate_vectors_to_output_grid:
-      rcf[4]   = 8*'0'
-      # rcf[4]=='0' => Resolved u and v components of vector quantities relative to easterly and northerly directions
-   else:
-      rcf      = '00001000'
-      # rcf[4]=='1' => Resolved u and v components of vector quantities relative to grid
+      # lon,lat of 1st grid point:
+      fac   = 1e6 # degrees -> micro-degrees
+      lon0  = int(ncinfo.lon0*fac)
+      lat0  = int(ncinfo.lat0*fac)
+      if lon0<0:
+         lon0  = lon0+360*fac
+      if lon0<0:
+         lat0  = lat0+360*fac
+      gdt.extend([lat0,lon0])
 
-   #convert from binary string to integer
-   rcf   = int(rcf,2)
-   gdt.append(rcf)
+      # resolution and component flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-3.shtml
+      # - most not applicable (only rcf[4] - definition of reference for vector directions)
+      if proj_in.false_easting==1.0:
+         rcf[4]   = 8*'0'
+         # rcf[4]=='0' => Resolved u and v components of vector quantities relative to easterly and northerly directions
+      else:
+         rcf      = '00001000'
+         # rcf[4]=='1' => Resolved u and v components of vector quantities relative to grid
 
-   # projection center
-   fac   = 1e6 # degrees -> micro-degrees
-   latc  = proj_in.Central_latitude_of_projection  # lat where resolution is specified
-   lonc  = proj_in.Central_longitude_of_projection # orientation = meridian which is parallel to the y-axis
-   latc  = int(latc*fac)
-   lonc  = int(lonc*fac)
-   if lonc<0:
-      lonc  = lonc+fac*360
-   gdt.extend([latc,lonc])
+      #convert from binary string to integer
+      rcf   = int(rcf,2)
+      gdt.append(rcf)
 
-   # resolution (km)
-   fac   = 1e6 # km-> mm
-   dx    = proj_in.Projection_grid_increment_left_right  # x dirn
-   dy    = proj_in.Projection_grid_increment_bottom_top  # y dirn
-   dx    = int(fac*dx)
-   dy    = int(fac*dy)
-   gdt.extend([dx,dy])
+      # projection center
+      fac   = 1e6 # degrees -> micro-degrees
+      latc  = proj_in.latitude_of_projection_origin  # lat where resolution is specified
+      lonc  = proj_in.longitude_of_projection_origin # orientation = meridian which is parallel to the y-axis
+      latc  = int(latc*fac)
+      lonc  = int(lonc*fac)
+      if lonc<0:
+         lonc  = lonc+fac*360
+      gdt.extend([latc,lonc])
 
-   # projection flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-5.shtml
-   pf    = 8*'0'
-   # pf[0]=='0' => north pole is in projection plane
+      # resolution
+      fac   = 1e3 # m -> mm
+      dx    = proj_in.x_resolution  # x dirn
+      dy    = proj_in.y_resolution  # y dirn
+      dx    = int(fac*dx)
+      dy    = int(fac*dy)
+      gdt.extend([dx,dy])
 
-   #convert from binary string to integer
-   pf = int(pf,2)
-   gdt.append(pf)
+      # projection flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-5.shtml
+      pf    = 8*'0'
+      # pf[0]=='0' => north pole is in projection plane
 
-   # scanning mode - not applicable to stereographic grid??
-   scan_mode   = 8*'0'
+      #convert from binary string to integer
+      pf = int(pf,2)
+      gdt.append(pf)
 
-   #convert from binary string to integer
-   scan_mode   = int(scan_mode,2)
-   gdt.append(scan_mode)
+      # scanning mode - not applicable to stereographic grid??
+      scan_mode   = 8*'0'
 
-   return np.array(gdt,'i')
+      #convert from binary string to integer
+      scan_mode   = int(scan_mode,2)
+      gdt.append(scan_mode)
+
+   return gdtnum,np.array(gdt,'i')
 ####################################################################################################
 
 ####################################################################################################
