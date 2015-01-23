@@ -1,0 +1,5 @@
+good map for panoply:
+stereographic
+center lon = -75
+center lat = 25
+radius     = 25
