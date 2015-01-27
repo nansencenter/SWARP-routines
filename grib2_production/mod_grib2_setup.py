@@ -206,6 +206,7 @@ def def_datarep_template(drtnum):
       # simple packing
       # data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp5-0.shtml
       drtmpl      = 5*[0]
+      drtmpl[3]   = 31
       drtmpl[4]   = 0 # originals are floating point
 
       # # 10^D*y = R + 10^E*X
