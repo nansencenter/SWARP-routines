@@ -11,7 +11,7 @@ import basemap_gridlines as bmg
 
 
 fil1     = 'eg_grib2/multi_1.at_10m.tp.200911.grb2'
-fil_out  = 'out/test_write.grb2'
+fil_out  = 'out/test_write_multi_1.grb2'
 gr       = pygrib.open(fil1)
 
 
