@@ -6,12 +6,13 @@ import pygrib
 from ncepgrib2 import Grib2Encode as g2e
 from ncepgrib2 import Grib2Decode as g2d
 #
-import mod_reading as tw_rdg
-import mod_grib2_setup as tw_g2s
-ncgv  = tw_rdg.nc_get_var
+import mod_reading as m_rdg
+import mod_grib2_setup as m_g2s
+ncgv  = m_rdg.nc_get_var
 
 ##########################################################
 # inputs - loop over these?
+DO_TEST  = 1
 
 # file inputs:
 pfil  = 'inputs/proj.in' # proj.in file used by hyc2proj
@@ -21,169 +22,217 @@ ncfil = "test_ncfiles/TP4DAILY_start20120723_dump20120723.nc" # hyc2proj netcdf
 outdir  = 'out'
 if not os.path.exists(outdir):
    os.makedirs(outdir)
-fil_out = outdir+'/test_hycproj_to_grib2.grb2'
+fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 ##########################################################
 
 ##########################################################
 # # read proj.in file
-# proj_in  = tw_rdg.read_proj_infile(pfil)
+# proj_in  = m_rdg.read_proj_infile(pfil)
 
 # read hyc2proj netcdf:
-ncinfo         = tw_rdg.nc_getinfo(ncfil)
+ncinfo         = m_rdg.nc_getinfo(ncfil)
 time_indices   = range(ncinfo.number_of_time_records)
 vbl_list       = ncinfo.variable_list
 
 # Open outfile before starting to encode messages
 f_out = open(fil_out,'wb')
 
-time_index  = time_indices[0]
-vbl_name    = vbl_list[0]
-data        = ncgv(ncfil,vbl_name,time_index)
+################################################################################################################
+if DO_TEST==1:
+   # just encode and check one variable and one time record:
+   time_indices   = [time_indices[0]]
+   vbl_list       = [vbl_list[0]]
+   #
+   print("Doing test...")
+   print("Encoding variable "+vbl_list[0])
+   print("at time record number "+str(time_indices[0]))
+   print(' ')
+################################################################################################################
 
-##########################################################################################################
-# INITIALISATION
+################################################################################################################
+for time_index in time_indices:
+   for vbl_name in vbl_list:
+      # encode all variables and all times as one message
 
-# INPUT 1) discipline code (pygrib/ncepgrib2.py, grib2message)
-discipline_code   = 10  #Oceanographic Products > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table0-0.shtml
+      data  = ncgv(ncfil,vbl_name,time_index)
 
-# INPUT 2) identification section: pygrib/g2clib.c ("unpack1" method)
-ident_sect  = tw_g2s.def_ident_sect(ncinfo.reftime,ncinfo.reftime_sig)
+      ##########################################################################################################
+      # INITIALISATION
 
-# CALL Grib2Encode:
-grb_out     = g2e(discipline_code,ident_sect)
-##########################################################################################################
+      # INPUT 1) discipline code (pygrib/ncepgrib2.py, grib2message)
+      discipline_code   = 10  #Oceanographic Products > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table0-0.shtml
 
-##########################################################################################################
-# DEFINE GRID:
+      # INPUT 2) identification section: pygrib/g2clib.c ("unpack1" method)
+      ident_sect  = m_g2s.def_ident_sect(ncinfo.reftime,ncinfo.reftime_sig)
 
-# INPUT 2)
-# grid definition template:
-# > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
-gdtnum,gdt  = tw_g2s.def_grid_template(ncinfo)
+      # CALL Grib2Encode:
+      grb_out  = g2e(discipline_code,ident_sect)
+      ##########################################################################################################
 
-# INPUT 1)
-# grid definition section:
-gdsinfo  = tw_g2s.def_gdsinfo(ncinfo,gdtnum)
+      ##########################################################################################################
+      # DEFINE GRID:
 
-# CALL addgrid
-grb_out.addgrid(gdsinfo,gdt)
-# sys.exit('L132')
-##########################################################################################################
+      # INPUT 2)
+      # grid definition template:
+      # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
+      gdtnum,gdt  = m_g2s.def_grid_template(ncinfo)
 
-##########################################################################################################
-# add product definition template, data representation template
-# and data (including bitmap which is read from data mask).
+      # INPUT 1)
+      # grid definition section:
+      gdsinfo  = m_g2s.def_gdsinfo(ncinfo,gdtnum)
 
-# INPUT 1):
-pdtnum   = 0 # product_definition_template_number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-0.shtml
+      # CALL addgrid
+      grb_out.addgrid(gdsinfo,gdt)
+      ##########################################################################################################
 
-# INPUT 2):
-pdtmpl   = tw_g2s.def_prod_template(ncinfo,vbl_name)
+      ##########################################################################################################
+      # add product definition template, data representation template
+      # and data (including bitmap which is read from data mask).
 
-# INPUT 3):
-# data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
-# drtnum  = 40 # grid point data, jpeg 2000 compression
-drtnum   = 0 # grid point data, simple packing
+      # INPUT 1):
+      pdtnum   = 0 # product_definition_template_number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-0.shtml
 
-# INPUT 4):
-# data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
-drtmpl   = tw_g2s.def_datarep_template(drtnum)
+      # INPUT 2):
+      pdtmpl   = m_g2s.def_prod_template(ncinfo,vbl_name)
 
-# INPUT 5)
-KEEP_MASK   = 1
-if KEEP_MASK:
-   data_arr = data[:,:] # masked array
-else:
-   data_arr = data[:,:].data # array
+      # INPUT 3):
+      # data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
+      # drtnum  = 40 # grid point data, jpeg 2000 compression
+      drtnum   = 0 # grid point data, simple packing
 
-# CALL addfield:
-grb_out.addfield(pdtnum,pdtmpl,drtnum,drtmpl,data_arr)
+      # INPUT 4):
+      # data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
+      drtmpl   = m_g2s.def_datarep_template(drtnum)
 
-# finalize the grib message.
-grb_out.end()
+      # INPUT 5)
+      KEEP_MASK   = 1
+      if KEEP_MASK:
+         data_arr = data[:,:] # masked array
+      else:
+         data_arr = data[:,:].data # array
 
-print('Writing grib message to '+fil_out)
-f_out.write(grb_out.msg)
-##########################################################################################################
+      # CALL addfield:
+      grb_out.addfield(pdtnum,pdtmpl,drtnum,drtmpl,data_arr)
+
+      # finalize the grib message.
+      grb_out.end()
+
+      print('Writing grib message to '+fil_out+'\n')
+      f_out.write(grb_out.msg)
+      ##########################################################################################################
 
 f_out.close()
 
-if 1:
+if DO_TEST:
    print('Test write to '+fil_out)
-   gr = pygrib.open(fil_out)
 
+   gr       = pygrib.open(fil_out)
    N        = 1
    grbmsgs  = gr.read(N) # get list of 1st N messages:
+
    for msg in grbmsgs:
       print(msg)
       print('\n')
       grb   = g2d(msg.tostring(),gribmsg=True)
       print(grb)
 
+      # lon,lat from grib2
+      glat,glon   = msg.latlons()
+
+      # lat,lon from nc file
+      lon   = ncgv(ncfil,'longitude')
+      lat   = ncgv(ncfil,'latitude')
+      nlon  = lon[:,:]
+      nlat  = lat[:,:]
+
+      #################################################################
+      # calc difference between grid arrays:
+      print('Comparing grids between netcdf and grib2 files...\n')
+
+      # small errors in lon can make 1 set be around -180
+      # while the other can be around +180
+      dlat  = abs(glat-nlat)
+      dlon  = abs(glon-nlon)
+      glon[dlon>1]   = glon[dlon>1]+360.
+      dlon  = abs(glon-nlon)
+      dlon0 = abs(glon[dlon<1]-nlon[dlon<1])
+
+      # points that still have big differences in lon
+      # - this is just around the north pole
+      print('> "Bad" grid points:')
+      print('>> Latitudes (degrees): '+str(glat[dlon>1])+' '+str(nlat[dlon>1]))
+      print('>> Longitudes (degrees): '+str(glon[dlon>1])+' '+str(nlon[dlon>1]))
+      print('\n')
+
+      # rest of points - lon/lat should be close
+      print('> Comparing rest of grid points...')
+      print('>> Max diff in lat arrays (degrees): '+str(dlat.max()))
+      print('>> Max diff in lon arrays (degrees): '+str(dlon0.max()))
+      print('\n')
+      glon[glon>180] = glon[glon>180]-360
+      #################################################################
+
+      #################################################################
+      # compare data arrays
+      print('Comparing data arrays between netcdf and grib2 files...\n')
+
+      if KEEP_MASK:
+         Data_arr = data_arr.data
+         nmask    = data_arr.mask
+         gdat     = msg.data()[0].data
+         gmask    = msg.data()[0].mask
+
+         # get min/max for plotting:
+         clim     = [msg.data()[0].min(),
+                     msg.data()[0].max()]
+      else:
+         Data_arr = data_arr
+         nmask    = data[:,:].mask
+         gdat     = msg.data()[0]
+         gmask    = data[:,:].mask
+
+         # get min/max for plotting:
+         clim     = [gdat[not np.isnan(gdat)].min(),
+                     gdat[not np.isnan(gdat)].max()]
+      #################################################################
+
+      #################################################################
+      # print diff between arrays:
+      Darr  = Data_arr[nmask==False]
+      Gdat  = gdat    [gmask==False]
+      ddat  = abs(Gdat-Darr)
+      print('>> Max diff in data arrays: '+str(ddat.max()))
+      print('\n')
+      #################################################################
+
+      #################################################################
       if 1:
-         # lon,lat from grib2
-         glat,glon   = msg.latlons()
+         # make plots:
+         figdir   = 'figs/'
+         if not os.path.exists(figdir):
+            os.makedirs(figdir)
 
-         # lat,lon from nc file
-         lon   = ncgv(ncfil,'longitude')
-         lat   = ncgv(ncfil,'latitude')
-         nlon  = lon[:,:]
-         nlat  = lat[:,:]
+         # plot titles:
+         ttl   = data.standard_name
+         ttl   = ttl.replace('_',' ')
+ 
+         PLOT_OPT = 1 # 1: simple plot with imshow
+                      # else: more complicated plot with basemap (TODO fix this)
 
-         if 1:
-            # calc difference between arrays:
-            dlat  = abs(glat-nlat)
-            dlon  = abs(glon-nlon)
-            glon[dlon>1]   = glon[dlon>1]+360.
-            dlon  = abs(glon-nlon)
-            dlon0 = abs(glon[dlon<1]-nlon[dlon<1])
-            #
-            print('"bad" grid points:')
-            print(glon[dlon>1],nlon[dlon>1])
-            print(glat[dlon>1],nlat[dlon>1])
-            print('\n')
-            #
-            print('compare rest of grid points:')
-            print('max diff in lat arrays (degrees): '+str(dlat.max()))
-            print('max diff in lon arrays (degrees): '+str(dlon0.max()))
-            print('\n')
-            glon[glon>180] = glon[glon>180]-360
+         ######################################################################
+         def do_test_plot(Z,grb=None,**kwargs):
 
-         if 1:
-            # compare data arrays:
-            if KEEP_MASK:
-               Data_arr = data_arr.data
-               nmask    = data_arr.mask
-               gdat     = msg.data()[0].data
-               gmask    = msg.data()[0].mask
+            fig   = plt.figure()
+
+            if grb is None:
+               # simple plot with imshow (reverse i index)
+               nx,ny = Z.shape
+               Z2    = [Z[i,:] for i in range(nx-1,-1,-1)]
+               plt.imshow(Z2,vmin=clim[0],vmax=clim[1])
             else:
-               Data_arr = data_arr
-               nmask    = data[:,:].mask
-               gdat     = msg.data()[0]
-               gmask    = data[:,:].mask
-
-            if 1:
-               # print diff between arrays:
-               Darr  = Data_arr[nmask==False]
-               Gdat  = gdat    [gmask==False]
-               ddat  = abs(Gdat-Darr)
-               print('max diff in data arrays: '+str(ddat.max()))
-               print('\n')
-
-            if 1:
-               # make plots:
-               figdir   = 'figs/'
-               if not os.path.exists(figdir):
-                  os.makedirs(figdir)
-
-               # plot titles:
-               ttl   = data.standard_name
-               ttl   = ttl.replace('_',' ')
-               clim  = [0,1]
-
-               # make basemap:
-               from matplotlib import pyplot as plt 
+               # more complicated plot with basemap (TODO fix this)
                from mpl_toolkits.basemap import Basemap
+
                nx = grb.points_in_x_direction
                ny = grb.points_in_y_direction
                dx = grb.gridlength_in_x_direction
@@ -199,71 +248,69 @@ if 1:
                                     rsphere=grb.earthRmajor,\
                                     resolution='i',area_thresh=10000)
 
-               if 1:
-                  print('Making nc test plot...')
-                  Z        = Data_arr
-                  Z[nmask] = np.nan
+               # plot variable:
+               m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1])
+               m.drawcoastlines()
+               m.fillcontinents()
 
-                  if 1:
-                     # simple plot with imshow (reverse i index)
-                     Z2    = [Z[i,:] for i in range(nx-1,-1,-1)]
-                     fig   = plt.figure()
-                     plt.imshow(Z2,vmin=clim[0],vmax=clim[1])
-                  elif 0:
-                     # use basemap...
-                     # plot is empty for some reason?????
-                     fig   = plt.figure()
-                     m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1])
-                     m.drawcoastlines()
-                     m.fillcontinents()
+               # draw parallels & meridians:
+               parallels = np.arange(0.,90,10.)
+               m.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
+               meridians = np.arange(-180.,180.,10.)
+               m.drawmeridians(meridians,labels=[0,0,0,1],
+                               fontsize=10,latmax=90)
 
-                     # draw parallels.
-                     parallels = np.arange(0.,90,10.)
-                     m.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
-                     meridians = np.arange(-180.,180.,10.)
-                     m.drawmeridians(meridians,labels=[0,0,0,1],
-                                     fontsize=10,latmax=90)
+            plt.colorbar()
+            return fig
+         ######################################################################
 
-                  plt.colorbar()
-                  plt.title(ttl)
+         ######################################################################
+         from matplotlib import pyplot as plt 
+         print('Making nc test plot...')
+         Z        = Data_arr
+         Z[nmask] = np.nan
 
-                  fnam  = figdir+'test_nc.png'
-                  print('Saving to: '+fnam+'\n')
-                  plt.savefig(fnam)
-                  plt.close()
-                  fig.clf()
+         if PLOT_OPT==1:
+            # simple plot with imshow (reverse i index)
+            fig   = do_test_plot(Z,vmin=clim[0],vmax=clim[1])
+         else:
+            # make basemap figure:
+            # TODO: not working at the moment
+            fig   = do_test_plot(Z,grb=grb,vmin=clim[0],vmax=clim[1])
 
-               if 1:
-                  print('Making grb2 test plot...')
-                  Z        = gdat
-                  Z[gmask] = np.nan
-                  if 1:
-                     # simple plot with imshow (reverse i index)
-                     Z2 = [Z[i,:] for i in range(nx-1,-1,-1)]
-                     fig   = plt.figure()
-                     plt.imshow(Z2,vmin=clim[0],vmax=clim[1])
-                  elif 0:
-                     # use basemap...
-                     # plot is empty for some reason?????
-                     fig   = plt.figure()
-                     m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1])
-                     m.drawcoastlines()
-                     m.fillcontinents()
+         # add title and save:
+         plt.title(ttl)
+         fnam  = figdir+'test_nc_'+vbl_name+'.png'
+         print('Saving to: '+fnam+'\n')
+         plt.savefig(fnam)
+         plt.close()
+         fig.clf()
+         ######################################################################
 
-                     # draw parallels.
-                     parallels = np.arange(0.,90,10.)
-                     m.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
-                     meridians = np.arange(-180.,180.,10.)
-                     m.drawmeridians(meridians,labels=[0,0,0,1],
-                                     fontsize=10,latmax=90)
+         ######################################################################
+         print('Making grb2 test plot...')
+         Z        = gdat
+         Z[gmask] = np.nan
+         if PLOT_OPT==1:
+            # simple plot with imshow (reverse i index)
+            do_test_plot(Z,vmin=clim[0],vmax=clim[1])
+         else:
+            # make basemap figure:
+            # TODO: not working at the moment
+            do_test_plot(Z,grb=grb,vmin=clim[0],vmax=clim[1])
 
-                  plt.colorbar()
-                  plt.title(ttl)
+         # add title and save:
+         plt.title(ttl)
+         fnam  = figdir+'test_grb2_'+vbl_name+'.png'
+         print('Saving to: '+fnam+'\n')
+         plt.savefig(fnam)
+         plt.close()
+         fig.clf()
+         #################################################################
 
-                  fnam  = figdir+'test_grb2.png'
-                  print('Saving to: '+fnam+'\n')
-                  plt.savefig(fnam)
-                  plt.close()
-                  fig.clf()
+      # finished with message
+      ####################################################################
 
+   # finished test
    gr.close()
+   #######################################################################
