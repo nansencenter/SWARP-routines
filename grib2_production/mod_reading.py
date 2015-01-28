@@ -183,3 +183,29 @@ def nc_getinfo(ncfil,time_index=None):
    nc.close()
    return ncinfo
 ###########################################################
+
+###########################################################
+def print_grib_messages(grb2fil,N=None):
+
+   import pygrib
+   from ncepgrib2 import Grib2Encode as g2e
+   from ncepgrib2 import Grib2Decode as g2d
+
+   gr       = pygrib.open(grb2fil)
+
+   if N is None:
+      # print all messages:
+      grbmsgs  = gr.read()
+   else:
+      # print 1st N messages:
+      grbmsgs  = gr.read(N)
+
+   for msg in grbmsgs:
+      print(msg)
+      print('\n')
+      grb   = g2d(msg.tostring(),gribmsg=True)
+      print(grb)
+      print('\n')
+
+   gr.close()
+###########################################################
