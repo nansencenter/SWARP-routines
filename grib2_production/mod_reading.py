@@ -15,62 +15,6 @@ class proj_obj:
             setattr(self,att_names[n],0)
 ##########################################################
 
-# ##########################################################
-# def read_proj_infile(pfil):
-#    # extracts information from proj.in file used by hyc2proj
-#    # when producing netcdf files from binaries
-# 
-# 
-#    pp = open(pfil,'r')
-#    pl = pp.readlines()
-#    pp.close()
-# 
-#    proj_name   = pl[0].strip()
-#    Nattr       = len(pl)-1
-#    att_names   = []
-#    att_vals    = []
-# 
-#    ############################################
-#    # make lists of attribute names and values
-#    for n in range(1,Nattr+1):
-#       pln      = pl[n].split('#')
-#       attval   = pln[0]
-#       attname  = pln[1].split()
-# 
-#       # attval can be numeric or logical
-#       if 'T' in attval:
-#          attval   = True
-#       elif 'F' in attval:
-#          attval   = False
-#       else:
-#          attval   = float(attval)
-# 
-#       # assign names:
-#       ss       = attname
-#       attname  = ss[0]
-#       for j in range(1,len(ss)):
-#          attname  = attname+'_'+ss[j]
-# 
-#       # remove troublesome characters:
-#       attname  = attname.replace('(','')
-#       attname  = attname.replace(')','')
-#       attname  = attname.replace('>','')
-#       attname  = attname.replace('-','_')
-#       if '=' in attname:
-#          jn = attname.index('=')
-#          attname  = attname[:jn-2]
-# 
-#       # append to lists:
-#       # print(attname)
-#       # print(attval)
-#       att_names.append(attname)
-#       att_vals.append(attval)
-#    ############################################
-# 
-#    proj_in  = proj_obj(proj_name,att_names,att_vals)
-#    return proj_in
-# ##########################################################
-
 ##########################################################
 def nc_get_var(ncfil,vblname,time_index=None):
    #get basic info from 2d variable
