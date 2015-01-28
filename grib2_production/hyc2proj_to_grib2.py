@@ -97,8 +97,10 @@ for time_index in time_indices:
 
       # INPUT 3):
       # data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
-      # drtnum  = 40 # grid point data, jpeg 2000 compression
-      drtnum   = 0 # grid point data, simple packing
+      if 1:
+         drtnum   = 0 # grid point data, simple packing
+      else:
+         drtnum  = 40 # grid point data, jpeg 2000 compression
 
       # INPUT 4):
       # data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
