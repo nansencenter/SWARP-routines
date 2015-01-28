@@ -11,8 +11,8 @@ import mod_grib2_setup as m_g2s
 ncgv  = m_rdg.nc_get_var
 
 ##########################################################
-# inputs - loop over these?
-DO_TEST  = 1
+# inputs - TODO: loop over these?
+DO_TEST  = 0
 
 # file inputs:
 pfil  = 'inputs/proj.in' # proj.in file used by hyc2proj
