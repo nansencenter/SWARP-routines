@@ -40,4 +40,4 @@ do
 done
 
 echo "Netcdf files in $odir:"
-ll $odir
+ls -lh $odir
