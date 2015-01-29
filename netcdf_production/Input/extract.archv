@@ -1,0 +1,31 @@
+4                      # Version of tecconv program
+pres     intf          # Field used to determine layer interfaces
+2 F F T                # 2-D, sphere, rotate, index velocities   
+1 270 1 210            # section plot ia:ib ja:jb
+1 1   XX XX   X        # extracted layers for 3-d fields (not used for 2-d)
+salin    01 01   F
+temp     01 01   F 
+thknss   01 01   F
+u-vel.   01 01   F 
+v-vel.   01 01   F 
+s-diff   01 01   F
+t-diff   01 01   F
+viscty   01 01   F
+srfhgt   00 00   F
+u_btrop  00 00   F
+v_btrop  00 00   F
+montg1   01 01   F
+mix_dpth 00 00   F
+bl_dpth  00 00   F
+airtmp   00 00   F
+ficem    00 00   T
+hicem    00 00   T
+hsnwm    00 00   F
+salflx   00 00   F
+sssflx   00 00   F
+sstflx   00 00   F
+sswflx   00 00   F
+surflx   00 00   F
+dfloe    00 00   T
+swh      00 00   T
+mwp      00 00   T
