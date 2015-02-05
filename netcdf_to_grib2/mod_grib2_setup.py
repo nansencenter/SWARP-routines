@@ -1,6 +1,116 @@
 import os,sys
 import numpy as np
 from datetime import datetime,timedelta
+#
+import pygrib
+from ncepgrib2 import Grib2Encode as g2e
+from ncepgrib2 import Grib2Decode as g2d
+#
+import mod_reading as m_rdg
+
+################################################################################################################
+def hyc2proj_to_grib2(ncfil,grb2fil)
+
+   ncgv  = m_rdg.nc_get_var
+
+   #############################################################################################################
+   # read hyc2proj netcdf:
+   ncinfo         = m_rdg.nc_getinfo(ncfil)
+   time_indices   = range(ncinfo.number_of_time_records)
+   vbl_list       = ncinfo.variable_list
+
+   # Open outfile before starting to encode messages
+   f_out = open(grb2fil,'wb')
+
+   #############################################################################################################
+   if DO_TEST==1:
+      # just encode and check one variable and one time record:
+      time_indices   = [time_indices[0]]
+      vbl_list       = [vbl_list[0]]
+      #
+      print("Doing test...")
+      print("Encoding variable "+vbl_list[0])
+      print("at time record number "+str(time_indices[0]))
+      print(' ')
+   ###############################################################################################################
+
+   ################################################################################################################
+   for time_index in time_indices:
+      for vbl_name in vbl_list:
+         # encode all variables and all times as one message
+
+         data  = ncgv(ncfil,vbl_name,time_index)
+
+         ##########################################################################################################
+         # INITIALISATION
+
+         # INPUT 1) discipline code (pygrib/ncepgrib2.py, grib2message)
+         discipline_code   = 10  #Oceanographic Products > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table0-0.shtml
+
+         # INPUT 2) identification section: pygrib/g2clib.c ("unpack1" method)
+         ident_sect  = def_ident_sect(ncinfo.reftime,ncinfo.reftime_sig)
+
+         # CALL Grib2Encode:
+         grb_out  = g2e(discipline_code,ident_sect)
+         ##########################################################################################################
+
+         ##########################################################################################################
+         # DEFINE GRID:
+
+         # INPUT 2)
+         # grid definition template:
+         # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
+         gdtnum,gdt  = def_grid_template(ncinfo)
+
+         # INPUT 1)
+         # grid definition section:
+         gdsinfo  = def_gdsinfo(ncinfo,gdtnum)
+
+         # CALL addgrid
+         grb_out.addgrid(gdsinfo,gdt)
+         ##########################################################################################################
+
+         ##########################################################################################################
+         # add product definition template, data representation template
+         # and data (including bitmap which is read from data mask).
+
+         # INPUT 1):
+         pdtnum   = 0 # product_definition_template_number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-0.shtml
+
+         # INPUT 2):
+         pdtmpl   = def_prod_template(ncinfo,vbl_name)
+
+         # INPUT 3):
+         # data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
+         if 1:
+            drtnum   = 0 # grid point data, simple packing
+         else:
+            drtnum  = 40 # grid point data, jpeg 2000 compression
+
+         # INPUT 4):
+         # data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
+         drtmpl   = def_datarep_template(drtnum)
+
+         # INPUT 5)
+         KEEP_MASK   = 1
+         if KEEP_MASK:
+            data_arr = data[:,:] # masked array
+         else:
+            data_arr = data[:,:].data # array
+
+         # CALL addfield:
+         grb_out.addfield(pdtnum,pdtmpl,drtnum,drtmpl,data_arr)
+
+         # finalize the grib message.
+         grb_out.end()
+
+         print('Writing grib message to '+grb2fil+'\n')
+         f_out.write(grb_out.msg)
+         ##########################################################################################################
+
+   f_out.close()
+   return
+####################################################################################################
 
 ####################################################################################################
 def def_ident_sect(reftime,reftime_sig):

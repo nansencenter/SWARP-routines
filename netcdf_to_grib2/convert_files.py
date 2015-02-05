@@ -8,14 +8,12 @@ from ncepgrib2 import Grib2Decode as g2d
 #
 import mod_reading as m_rdg
 import mod_grib2_setup as m_g2s
-ncgv  = m_rdg.nc_get_var
 
-##########################################################
-# inputs - TODO: loop over these?
+ncgv  = m_rdg.nc_get_var
 DO_TEST  = 0
 
+##########################################################
 # file inputs:
-pfil  = 'inputs/proj.in' # proj.in file used by hyc2proj
 ncfil = "test_ncfiles/TP4DAILY_start20120723_dump20120723.nc" # hyc2proj netcdf
 
 # output file:
@@ -23,107 +21,11 @@ outdir  = 'out'
 if not os.path.exists(outdir):
    os.makedirs(outdir)
 fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
+
+# do conversion
+m_g2s.hyc2proj_to grib2(ncfil,fil_out)
 ##########################################################
 
-##########################################################
-# # read proj.in file
-# proj_in  = m_rdg.read_proj_infile(pfil)
-
-# read hyc2proj netcdf:
-ncinfo         = m_rdg.nc_getinfo(ncfil)
-time_indices   = range(ncinfo.number_of_time_records)
-vbl_list       = ncinfo.variable_list
-
-# Open outfile before starting to encode messages
-f_out = open(fil_out,'wb')
-
-################################################################################################################
-if DO_TEST==1:
-   # just encode and check one variable and one time record:
-   time_indices   = [time_indices[0]]
-   vbl_list       = [vbl_list[0]]
-   #
-   print("Doing test...")
-   print("Encoding variable "+vbl_list[0])
-   print("at time record number "+str(time_indices[0]))
-   print(' ')
-################################################################################################################
-
-################################################################################################################
-for time_index in time_indices:
-   for vbl_name in vbl_list:
-      # encode all variables and all times as one message
-
-      data  = ncgv(ncfil,vbl_name,time_index)
-
-      ##########################################################################################################
-      # INITIALISATION
-
-      # INPUT 1) discipline code (pygrib/ncepgrib2.py, grib2message)
-      discipline_code   = 10  #Oceanographic Products > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table0-0.shtml
-
-      # INPUT 2) identification section: pygrib/g2clib.c ("unpack1" method)
-      ident_sect  = m_g2s.def_ident_sect(ncinfo.reftime,ncinfo.reftime_sig)
-
-      # CALL Grib2Encode:
-      grb_out  = g2e(discipline_code,ident_sect)
-      ##########################################################################################################
-
-      ##########################################################################################################
-      # DEFINE GRID:
-
-      # INPUT 2)
-      # grid definition template:
-      # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
-      gdtnum,gdt  = m_g2s.def_grid_template(ncinfo)
-
-      # INPUT 1)
-      # grid definition section:
-      gdsinfo  = m_g2s.def_gdsinfo(ncinfo,gdtnum)
-
-      # CALL addgrid
-      grb_out.addgrid(gdsinfo,gdt)
-      ##########################################################################################################
-
-      ##########################################################################################################
-      # add product definition template, data representation template
-      # and data (including bitmap which is read from data mask).
-
-      # INPUT 1):
-      pdtnum   = 0 # product_definition_template_number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-0.shtml
-
-      # INPUT 2):
-      pdtmpl   = m_g2s.def_prod_template(ncinfo,vbl_name)
-
-      # INPUT 3):
-      # data representation template number > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
-      if 1:
-         drtnum   = 0 # grid point data, simple packing
-      else:
-         drtnum  = 40 # grid point data, jpeg 2000 compression
-
-      # INPUT 4):
-      # data representation template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table5-0.shtml
-      drtmpl   = m_g2s.def_datarep_template(drtnum)
-
-      # INPUT 5)
-      KEEP_MASK   = 1
-      if KEEP_MASK:
-         data_arr = data[:,:] # masked array
-      else:
-         data_arr = data[:,:].data # array
-
-      # CALL addfield:
-      grb_out.addfield(pdtnum,pdtmpl,drtnum,drtmpl,data_arr)
-
-      # finalize the grib message.
-      grb_out.end()
-
-      print('Writing grib message to '+fil_out+'\n')
-      f_out.write(grb_out.msg)
-      ##########################################################################################################
-
-f_out.close()
 
 if DO_TEST:
    print('Test write to '+fil_out)
