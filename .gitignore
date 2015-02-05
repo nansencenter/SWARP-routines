@@ -2,5 +2,5 @@
 *.pyc
 *.gbx9
 *.ncx
-grib2_production/out/*
-grib2_production/figs/*
+netcdf_to_grib2/out/*
+netcdf_to_grib2/figs/*
