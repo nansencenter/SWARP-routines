@@ -9,8 +9,9 @@ from ncepgrib2 import Grib2Decode as g2d
 import mod_reading as m_rdg
 import mod_grib2_setup as m_g2s
 
-ncgv  = m_rdg.nc_get_var
-DO_TEST  = 0
+ncgv        = m_rdg.nc_get_var
+DO_TEST     = 1
+KEEP_MASK   = 1
 
 ##########################################################
 # file inputs:
@@ -23,7 +24,12 @@ if not os.path.exists(outdir):
 fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 
 # do conversion
-m_g2s.hyc2proj_to grib2(ncfil,fil_out)
+data,vbl_name  = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,DO_TEST=DO_TEST,KEEP_MASK=KEEP_MASK)
+
+if KEEP_MASK==1:
+   data_arr = data[:,:] # masked array
+else:
+   data_arr = data[:,:].data # array
 ##########################################################
 
 

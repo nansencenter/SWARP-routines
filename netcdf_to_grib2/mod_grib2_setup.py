@@ -9,8 +9,9 @@ from ncepgrib2 import Grib2Decode as g2d
 import mod_reading as m_rdg
 
 ################################################################################################################
-def hyc2proj_to_grib2(ncfil,grb2fil)
+def hyc2proj_to_grib2(ncfil,grb2fil,DO_TEST=0,KEEP_MASK=1):
 
+   out   = None
    ncgv  = m_rdg.nc_get_var
 
    #############################################################################################################
@@ -92,8 +93,7 @@ def hyc2proj_to_grib2(ncfil,grb2fil)
          drtmpl   = def_datarep_template(drtnum)
 
          # INPUT 5)
-         KEEP_MASK   = 1
-         if KEEP_MASK:
+         if KEEP_MASK==1:
             data_arr = data[:,:] # masked array
          else:
             data_arr = data[:,:].data # array
@@ -109,7 +109,11 @@ def hyc2proj_to_grib2(ncfil,grb2fil)
          ##########################################################################################################
 
    f_out.close()
-   return
+
+   if DO_TEST==1:
+      out   = [data,vbl_name]
+   
+   return out
 ####################################################################################################
 
 ####################################################################################################
