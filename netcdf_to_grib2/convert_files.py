@@ -10,8 +10,15 @@ import mod_reading as m_rdg
 import mod_grib2_setup as m_g2s
 
 ncgv        = m_rdg.nc_get_var
-DO_TEST     = 1
+DO_TEST     = 0
 KEEP_MASK   = 1
+
+#######################################################################
+if DO_TEST:
+   # test options
+   PLOT_OPT = 1 # 1: simple plot with imshow
+                # 2: more complicated plot with basemap
+#######################################################################
 
 ##########################################################
 # file inputs:
@@ -24,12 +31,13 @@ if not os.path.exists(outdir):
 fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 
 # do conversion
-data,vbl_name  = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,DO_TEST=DO_TEST,KEEP_MASK=KEEP_MASK)
-
-if KEEP_MASK==1:
-   data_arr = data[:,:] # masked array
-else:
-   data_arr = data[:,:].data # array
+out   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,DO_TEST=DO_TEST,KEEP_MASK=KEEP_MASK)
+if out is not None:
+   data,vbl_name  = out
+   if KEEP_MASK==1:
+      data_arr = data[:,:] # masked array
+   else:
+      data_arr = data[:,:].data # array
 ##########################################################
 
 
@@ -116,7 +124,7 @@ if DO_TEST:
       #################################################################
 
       #################################################################
-      if 1:
+      if PLOT_OPT>0:
          # make plots:
          figdir   = 'figs/'
          if not os.path.exists(figdir):
@@ -126,9 +134,6 @@ if DO_TEST:
          ttl   = data.standard_name
          ttl   = ttl.replace('_',' ')
  
-         PLOT_OPT = 1 # 1: simple plot with imshow
-                      # else: more complicated plot with basemap (TODO fix this)
-
          ######################################################################
          def do_test_plot(Z,grb=None,**kwargs):
 
@@ -159,7 +164,7 @@ if DO_TEST:
                                     resolution='i',area_thresh=10000)
 
                # plot variable:
-               m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1])
+               m.pcolor(nlon,nlat,Z,vmin=clim[0],vmax=clim[1],latlon=True)
                m.drawcoastlines()
                m.fillcontinents()
 
