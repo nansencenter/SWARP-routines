@@ -91,7 +91,7 @@ if DO_TEST==1:
 
       # points that still have big differences in lon
       # - this is just around the north pole
-      print('> "Bad" grid points:')
+      print('> "Bad" grid points (around north pole?):')
       print('>> Latitudes (degrees): '+str(glat[dlon>1])+' '+str(nlat[dlon>1]))
       print('>> Longitudes (degrees): '+str(glon[dlon>1])+' '+str(nlon[dlon>1]))
       print('\n')

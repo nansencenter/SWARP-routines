@@ -101,6 +101,21 @@ def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1):
 ####################################################################################################
 
 ####################################################################################################
+def _bin2dec(bin_list):
+   # convert binary list (list of 0's and 1's)
+   # to decimal integer
+
+   Nb = len(bin_list)
+   y  = 0
+   x  = 1
+   for n in range(Nb):
+      y  = y+ bin_list[Nb-1-n]*x
+      x  = 2*x
+
+   return int(y)
+####################################################################################################
+
+####################################################################################################
 def def_ident_sect(reftime,reftime_sig):
    ident_sect  = np.array(13*[0],'i')
 
@@ -132,9 +147,11 @@ def def_ident_sect(reftime,reftime_sig):
 def def_gdsinfo(ncinfo,gdtnum):
    # define grid definition section:
    # >http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_sect3.shtml 
-   # inputs:
+   # INPUTS:
    # 1) ncinfo: object defined by mod_reading.py from netcdf file
    # 2) gdtnum: grid template number (from def_grid_template)
+   # OUTPUTS:
+   # gdsinfo: grid definition section
    
    i_Source_grid     = 0 # source of grid definition > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-0.shtml
    N_xtra_gps        = 0 # Number of octets needed for each additional grid points defn.
@@ -147,8 +164,15 @@ def def_gdsinfo(ncinfo,gdtnum):
 
 ####################################################################################################
 def def_grid_template(ncinfo):
-   # grid definition template:
-   # link from > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-1.shtml
+   # define grid definition template:
+   # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-1.shtml
+   #
+   # INPUTS:
+   # ncinfo: object from mod_reading.py (nc_getinfo)
+   #           with metadata from netcdf file
+   # OUTPUTS:
+   # gdtnum = grid template number
+   # gdt    = grid template
 
    proj_in     = ncinfo.proj_info
    proj_name   = proj_in.grid_mapping_name
@@ -189,15 +213,14 @@ def def_grid_template(ncinfo):
 
       # resolution and component flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-3.shtml
       # - most not applicable (only rcf[4] - definition of reference for vector directions)
-      if proj_in.false_easting==1.0:
-         rcf[4]   = 8*'0'
-         # rcf[4]=='0' => Resolved u and v components of vector quantities relative to easterly and northerly directions
-      else:
-         rcf      = '00001000'
-         # rcf[4]=='1' => Resolved u and v components of vector quantities relative to grid
+      rcf   = 8*[0]
+      if proj_in.false_easting==0.0:
+         rcf[4]   = 1
+         # rcf[4]==1 => Resolved u and v components of vector quantities relative to grid
+         # rcf[4]==0 => Resolved u and v components of vector quantities relative to easterly and northerly directions
 
-      #convert from binary string to integer
-      rcf   = int(rcf,2)
+      #convert from binary list to decimal integer
+      rcf   = _bin2dec(rcf)
       gdt.append(rcf)
 
       # projection center
@@ -219,18 +242,18 @@ def def_grid_template(ncinfo):
       gdt.extend([dx,dy])
 
       # projection flags > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-5.shtml
-      pf    = 8*'0'
-      # pf[0]=='0' => north pole is in projection plane
+      pf    = 8*[0]
+      # pf[0]==0 => north pole is in projection plane
 
       #convert from binary string to integer
-      pf = int(pf,2)
+      pf = _bin2dec(pf)
       gdt.append(pf)
 
       # scanning mode - not applicable to stereographic grid??
-      scan_mode   = 8*'0'
+      scan_mode   = 8*[0]
 
       #convert from binary string to integer
-      scan_mode   = int(scan_mode,2)
+      scan_mode   = _bin2dec(scan_mode)
       gdt.append(scan_mode)
 
    return gdtnum,np.array(gdt,'i')
