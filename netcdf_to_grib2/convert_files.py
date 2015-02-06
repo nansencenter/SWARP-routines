@@ -22,11 +22,9 @@ if DO_TEST==1:
    PLOT_OPT = 0 # 0: no plot
                 # 1: simple plot with imshow
                 # 2: more complicated plot with basemap
-else:
-   DoTest   = None
 #######################################################################
 
-##########################################################
+#######################################################################
 # file inputs:
 ncfil = "test_ncfiles/TP4DAILY_start20120723_dump20120723.nc" # hyc2proj netcdf
 
@@ -39,7 +37,7 @@ fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 # do conversion
 ncinfo   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,KEEP_MASK=KEEP_MASK)
 
-##########################################################
+#######################################################################
 if DO_TEST==1:
    Nt             = ncinfo.number_of_time_records
    vbl_list       = ncinfo.variable_list
