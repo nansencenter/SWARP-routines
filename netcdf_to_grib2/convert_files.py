@@ -10,14 +10,20 @@ import mod_reading as m_rdg
 import mod_grib2_setup as m_g2s
 
 ncgv        = m_rdg.nc_get_var
-DO_TEST     = 0
 KEEP_MASK   = 1
+DO_TEST     = 0
 
 #######################################################################
-if DO_TEST:
+if DO_TEST==1:
    # test options
-   PLOT_OPT = 1 # 1: simple plot with imshow
+   tindx    = 0#time index to test
+   vindx    = 0#variable index to test
+   #
+   PLOT_OPT = 0 # 0: no plot
+                # 1: simple plot with imshow
                 # 2: more complicated plot with basemap
+else:
+   DoTest   = None
 #######################################################################
 
 ##########################################################
@@ -31,24 +37,33 @@ if not os.path.exists(outdir):
 fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 
 # do conversion
-out   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,KEEP_MASK=KEEP_MASK,DO_TEST=DO_TEST)
-if out is not None:
-   data,vbl_name  = out
+ncinfo   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,KEEP_MASK=KEEP_MASK)
+
+##########################################################
+if DO_TEST==1:
+   Nt             = ncinfo.number_of_time_records
+   vbl_list       = ncinfo.variable_list
+   time_indices   = range(Nt)
+   Nv             = len(vbl_list)
+   time_index     = time_indices[tindx]
+   vbl_name       = vbl_list    [vindx]
+   #
+   print('Test write to '+fil_out)
+   print("Doing test of encoding of variable "+vbl_name)
+   print("at time record number "+str(time_index))
+   print(' ')
+   data  = ncgv(ncfil,vbl_name,time_index)
    if KEEP_MASK==1:
       data_arr = data[:,:] # masked array
    else:
       data_arr = data[:,:].data # array
-##########################################################
 
+   grb_index   = 1+Nv*time_index+vindx
+   gr          = pygrib.open(fil_out)
+   grbmsgs     = gr.read(grb_index) # get list of 1st "grb_index" messages:
 
-if DO_TEST:
-   print('Test write to '+fil_out)
-
-   gr       = pygrib.open(fil_out)
-   N        = 1
-   grbmsgs  = gr.read(N) # get list of 1st N messages:
-
-   for msg in grbmsgs:
+   for msg in [grbmsgs[-1]]:
+      #last message
       print(msg)
       print('\n')
       grb   = g2d(msg.tostring(),gribmsg=True)

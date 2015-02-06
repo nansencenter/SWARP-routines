@@ -9,9 +9,8 @@ from ncepgrib2 import Grib2Decode as g2d
 import mod_reading as m_rdg
 
 ################################################################################################################
-def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1,DO_TEST=0):
+def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1):
 
-   out   = None
    ncgv  = m_rdg.nc_get_var
 
    #############################################################################################################
@@ -22,18 +21,6 @@ def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1,DO_TEST=0):
 
    # Open outfile before starting to encode messages
    f_out = open(grb2fil,'wb')
-
-   #############################################################################################################
-   if DO_TEST==1:
-      # just encode and check one variable and one time record:
-      time_indices   = [time_indices[0]]
-      vbl_list       = [vbl_list[0]]
-      #
-      print("Doing test...")
-      print("Encoding variable "+vbl_list[0])
-      print("at time record number "+str(time_indices[0]))
-      print(' ')
-   ###############################################################################################################
 
    ################################################################################################################
    for time_index in time_indices:
@@ -110,10 +97,7 @@ def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1,DO_TEST=0):
 
    f_out.close()
 
-   if DO_TEST==1:
-      out   = [data,vbl_name]
-   
-   return out
+   return ncinfo
 ####################################################################################################
 
 ####################################################################################################
