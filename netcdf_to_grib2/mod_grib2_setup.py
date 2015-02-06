@@ -9,7 +9,7 @@ from ncepgrib2 import Grib2Decode as g2d
 import mod_reading as m_rdg
 
 ################################################################################################################
-def hyc2proj_to_grib2(ncfil,grb2fil,DO_TEST=0,KEEP_MASK=1):
+def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1,DO_TEST=0):
 
    out   = None
    ncgv  = m_rdg.nc_get_var

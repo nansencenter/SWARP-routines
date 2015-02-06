@@ -31,7 +31,7 @@ if not os.path.exists(outdir):
 fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 
 # do conversion
-out   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,DO_TEST=DO_TEST,KEEP_MASK=KEEP_MASK)
+out   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,KEEP_MASK=KEEP_MASK,DO_TEST=DO_TEST)
 if out is not None:
    data,vbl_name  = out
    if KEEP_MASK==1:
