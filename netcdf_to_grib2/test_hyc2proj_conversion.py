@@ -36,6 +36,7 @@ fil_out = outdir+'/test_hyc2proj_to_grib2.grb2'
 
 # do conversion
 ncinfo   = m_g2s.hyc2proj_to_grib2(ncfil,fil_out,KEEP_MASK=KEEP_MASK)
+#######################################################################
 
 #######################################################################
 if DO_TEST==1:

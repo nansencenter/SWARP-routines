@@ -108,17 +108,24 @@ def nc_getinfo(ncfil,time_index=None):
    ########################################################
    # time info:
    time        = nc.variables['time']
-   reftime_h   = time[0] # hours since refpoint
+   reftime_u   = time[0] # hours since refpoint
    time_info   = time.units.split()
    time_info   = [ time_info[i] for i in [0,2] ]
-
+   #
+   time_info[0]   = time_info[0].strip('s')
+   if time_info[0]=='econd':
+      time_info[0]   = 'second'
    time_fmt       = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1T12:00:00Z
    refpoint       = datetime.strptime(time_info[1],time_fmt)
-   ncinfo.reftime = refpoint+timedelta(hours=reftime_h)
+   #
+   if time_info[0]=='second':
+      ncinfo.reftime = refpoint+timedelta(seconds=reftime_u)
+   elif time_info[0]=='hour':
+      ncinfo.reftime = refpoint+timedelta(hours=reftime_u)
 
    ncinfo.timeunits  = time_info[0]
    if time_index is not None:
-      ncinfo.datatime   = time[time_index]-reftime_h
+      ncinfo.datatime   = time[time_index]-reftime_u
 
    ncinfo.number_of_time_records = len(time[:])
    ########################################################

@@ -247,12 +247,19 @@ def def_prod_template(ncinfo,data_name):
    elif data_name=='hice':
       param_cat   = 2 # Discipline_code = 10: 2 -> Ice > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-1.shtml
       param_num   = 1   # ice thickness > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-2.shtml
+   elif data_name=='dmax':
+      param_cat   = 2# Discipline_code = 10: Ice > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-1.shtml
+      param_num   = 192# "Reserved for local use"
+
    elif data_name=='swh':
-      param_cat   = 0 # Discipline_code = 10: 0 -> Waves > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-1.shtml
-      param_num   = 4 # total significant wave height > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-2.shtml
+      param_cat   = 0 # Discipline_code = 10: 0 -> Waves > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2.shtml
+      param_num   = 3 # total significant wave height > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-0.shtml
+   elif data_name=='mwd':
+      param_cat   = 0 # Discipline_code = 10: 0 -> Waves > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2.shtml
+      param_num   = 4 # primary mean wave period > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-0.shtml
    elif data_name=='mwp':
-      param_cat   = 0 # Discipline_code = 10: 0 -> Waves > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-1.shtml
-      param_num   = 11# primary mean wave period > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-2.shtml
+      param_cat   = 0 # Discipline_code = 10: 0 -> Waves > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2.shtml
+      param_num   = 11# primary mean wave period > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-0.shtml
 
    pdtmpl.extend([param_cat,param_num])
 
@@ -267,7 +274,9 @@ def def_prod_template(ncinfo,data_name):
 
    # units of forecast time > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-4.shtml
    if ncinfo.timeunits=='hour':
-      ft_unit  = 1 # hours
+      ft_unit  = 1
+   elif ncinfo.timeunits=='second':
+      ft_unit  = 13
    pdtmpl.append(ft_unit)
 
    # forecast time (time since "reftime" = start of forecast )
