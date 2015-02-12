@@ -4,7 +4,13 @@
 *.ncx
 netcdf_to_grib2/out/*
 netcdf_to_grib2/figs/*
-netcdf_production/eg_TP4archv_nc/*
 netcdf_production/output/*
-netcdf_production/Input/*
-netcdf_production/output/*
+#
+netcdf_production/Input/depthlevels.in
+netcdf_production/Input/extract.archv_wav
+netcdf_production/Input/grid.info
+netcdf_production/Input/proj.in
+netcdf_production/Input/regional.depth.a
+netcdf_production/Input/regional.depth.b
+netcdf_production/Input/regional.grid.a
+netcdf_production/Input/regional.grid.b
