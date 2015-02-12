@@ -4,3 +4,7 @@
 *.ncx
 netcdf_to_grib2/out/*
 netcdf_to_grib2/figs/*
+netcdf_production/eg_TP4archv_nc/*
+netcdf_production/output/*
+netcdf_production/Input/*
+netcdf_production/output/*

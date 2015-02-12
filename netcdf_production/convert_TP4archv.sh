@@ -12,32 +12,44 @@
 # Info for hyc2proj
 # - copied from MSCPROGS/Input & edited
 h2p_in="$GIT_REPOS/SWARP-routines/netcdf_production/Input"
+
+pwd=`pwd`
+mkdir -p tmp
+cd tmp
+
+# Info for hyc2proj
 ln -s $h2p_in/proj.in .
-ln -s $h2p_in/extract.archv .
+ln -s $h2p_in/extract.archv_wav .
 ln -s $h2p_in/depthlevels.in .
 
 # Info about grid from topo dir
-topo=../../topo
-ln -s $topo/grid.info .
-ln -s $topo/regional.grid.a .
-ln -s $topo/regional.grid.b .
-ln -s $topo/regional.depths.a .
-ln -s $topo/regional.depths.b .
+ln -s $h2p_in/grid.info .
+ln -s $h2p_in/regional.grid.a .
+ln -s $h2p_in/regional.grid.b .
+ln -s $h2p_in/regional.depth.a .
+ln -s $h2p_in/regional.depth.b .
 
-odir=archv_netcdf
+odir=../archv_netcdf
 mkdir -p $odir
-for f in TP4archv*.a
+for f in $pwd/TP4archv_wav*.a
 do
-   hyc2proj $f
-   #
-   yr=${f:9:4}
-   day=${f:14:3}
-   dt=`jultodate $day $yr 1 1`
-   #
-   hr=${f:18:2}
-   fout=${f:0:8}_${dt}_${hr}.nc
-   mv $fout $odir
+   len=${#pwd}
+   g=${f:$((len+1))}
+   len=${#g}
+   base=${g:0:$((len-2))}
+   ln -s $f $pwd/$base.b .
+
+   echo "********************************************************"
+   echo "Running hyc2proj on $g..."
+   echo "********************************************************"
+   echo " "
+
+   hyc2proj $g
+   mv *.nc $odir
 done
 
 echo "Netcdf files in $odir:"
 ls -lh $odir
+
+cd $pwd
+rm -r tmp

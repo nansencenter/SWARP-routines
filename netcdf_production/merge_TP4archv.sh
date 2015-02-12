@@ -13,9 +13,21 @@ dir0=$1
 # TODO extract start date/time of forecast
 # and put it into output filename
 module load nco
-ofil=SWARPforecast_start____.nc  # output file
-odir=`pwd`                       # output file will be placed in current directory
+odir=`pwd`  # output file will be placed in current directory
 cd $dir0
+
+for f in *.nc
+do
+   echo $f
+   #get start of forecast
+   start_date=${f:18:8}
+   start_time=${f:27:6}
+   break
+done
+
+#set name of output file
+ofil=SWARPwavesice_forecast_start${start_date}T${start_time}Z.nc
+echo "Making $ofil"
 ncrcat *.nc $ofil
 
 #########################################################################
@@ -75,25 +87,29 @@ ncrename -v hice,icetk  $ofil #ice thickness
 ###########################################################################################
 # Global attributes for  files
 # (o or c = overwrite/create)
-ncatted -O -h -a software_version,global,c,c,"NERSC-HYCOM (TOPAZ)"             $ofil
-ncatted -O -h -a references,global,c,c,"www.nersc.no"                          $ofil
-ncatted -O -h -a comment,global,c,c," "                                        $ofil
-ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                                $ofil
-ncatted -O -h -a field_type,global,c,c,"3-hourly"                              $ofil
-# ncatted -O -h -a forecast_range,global,c,c,"6 day forecast"                 $ofil
+ncatted -O -h -a software_version,global,c,c,"NERSC-HYCOM (TOPAZ)"            $ofil
+ncatted -O -h -a references,global,c,c,"www.nersc.no"                         $ofil
+ncatted -O -h -a comment,global,c,c," "                                       $ofil
+ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
+ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
+ncatted -O -h -a forecast_range,global,c,c,"3 day forecast"                   $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
-ncatted -O -h -a institution,global,c,c,"NERSC"                                $ofil
-ncatted -O -h -a institution_references,global,c,c,"http://www.nersc.no/"      $ofil
-ncatted -O -h -a data_centre,global,c,c,"NERSC"                                $ofil
-ncatted -O -h -a data_centre_references,global,c,c,"www.nersc.no"              $ofil
-ncatted -O -h -a contact,global,c,c,"timothy.williams@nersc.no"                $ofil
-ncatted -O -h -a project,global,c,c,"SWARP"                                    $ofil
-ncatted -O -h -a project_references,global,c,c,"swarp.nersc.no"                $ofil
-ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"           $ofil
-ncatted -O -h -a operational_status,global,c,c,"test"                          $ofil
+ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
+ncatted -O -h -a institution_references,global,c,c,"http://www.nersc.no/"     $ofil
+ncatted -O -h -a data_centre,global,c,c,"NERSC"                               $ofil
+ncatted -O -h -a data_centre_references,global,c,c,"www.nersc.no"             $ofil
+ncatted -O -h -a contact,global,c,c,"timothy.williams@nersc.no"               $ofil
+ncatted -O -h -a project,global,c,c,"SWARP"                                   $ofil
+ncatted -O -h -a project_references,global,c,c,"swarp.nersc.no"               $ofil
+ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"          $ofil
+ncatted -O -h -a operational_status,global,c,c,"test"                         $ofil
 #
 ncatted -O -h -a title,global,o,c,"SWARP Waves-in-ice forecast"               $ofil
-# ncatted -O -h -a history,global,o,c,"Waves-in-ice model results"          $ofil
+# ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
+
+# delete old attributes
+ncatted -a field_date,global,d,,                                              $ofil
+
 ###########################################################################################
 
 mv $ofil $odir
