@@ -89,6 +89,7 @@ def nc_getinfo(ncfil,time_index=None):
          #   from netcdf metadata though
          self.reftime_sig  = 'start of forecast'
 
+         self.timevalues = []
          self.timeunits = 'hour'
          self.datatime  = 0
 
@@ -108,6 +109,7 @@ def nc_getinfo(ncfil,time_index=None):
    ########################################################
    # time info:
    time        = nc.variables['time']
+   Nt          = len(time[:])
    reftime_u   = time[0] # hours since refpoint
    time_info   = time.units.split()
    time_info   = [ time_info[i] for i in [0,2] ]
@@ -123,11 +125,19 @@ def nc_getinfo(ncfil,time_index=None):
    elif time_info[0]=='hour':
       ncinfo.reftime = refpoint+timedelta(hours=reftime_u)
 
-   ncinfo.timeunits  = time_info[0]
-   if time_index is not None:
-      ncinfo.datatime   = time[time_index]-reftime_u
+   if time_info[0]=='hour':
+      ncinfo.timeunits  = time_info[0]
+      ncinfo.timevalues = [time[i]-time[0] for i in range(Nt)]
+   elif time_info[0]=='second':
+      # convert time units to hours for readability of the messages:
+      ncinfo.timeunits  = 'hour'
+      ncinfo.timevalues = [int((time[i]-time[0])/3600.) for i in range(Nt)]
 
-   ncinfo.number_of_time_records = len(time[:])
+   if time_index is not None:
+      ncinfo.datatime   = ncinfo.timevalues[time_index]
+
+   ncinfo.number_of_time_records = Nt
+
    ########################################################
 
    ########################################################

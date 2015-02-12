@@ -27,7 +27,8 @@ def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1):
       for vbl_name in vbl_list:
          # encode all variables and all times as one message
 
-         data  = ncgv(ncfil,vbl_name,time_index)
+         data              = ncgv(ncfil,vbl_name,time_index)
+         ncinfo.datatime   = ncinfo.timevalues[time_index]
 
          ##########################################################################################################
          # INITIALISATION
@@ -263,11 +264,13 @@ def def_grid_template(ncinfo):
 def def_prod_template(ncinfo,data_name):
    pdtmpl   = [] # product definition template > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp4-0.shtml
 
+   print data_name
+
    # Parameter category & Parameter number
-   if data_name=='fice':
+   if data_name in ['fice','icec']:
       param_cat   = 2 # Discipline_code = 10: 2 -> Ice > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-1.shtml
       param_num   = 0   # ice cover > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-2.shtml
-   elif data_name=='hice':
+   elif data_name in ['hice','icetk']:
       param_cat   = 2 # Discipline_code = 10: 2 -> Ice > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-1.shtml
       param_num   = 1   # ice thickness > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table4-2-10-2.shtml
    elif data_name=='dmax':

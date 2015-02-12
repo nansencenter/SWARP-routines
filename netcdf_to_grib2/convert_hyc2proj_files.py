@@ -1,7 +1,8 @@
 import os
 import mod_grib2_setup as m_g2s
 
-fildir      = 'test_ncfiles'
+# fildir      = 'test_ncfiles'
+fildir      = '../netcdf_production/output'
 file_list   = [ f for f in os.listdir(fildir)
                   if os.path.isfile(os.path.join(fildir,f)) ]
 
