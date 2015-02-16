@@ -12,23 +12,37 @@ dir0=$1
 
 # TODO extract start date/time of forecast
 # and put it into output filename
-module load nco
 odir=`pwd`  # output file will be placed in current directory
 cd $dir0
+mkdir -p tmp
 
+echo " "
+echo "Unpacking files (ncpdq -U)..."
 for f in *.nc
 do
    echo $f
    #get start of forecast
    start_date=${f:18:8}
    start_time=${f:27:6}
-   break
+
+   # unpack files to make sure that scale factors are same in each file
+   ncpdq -U $f tmp/$f
 done
+
+#combine unpacked files
+echo " "
+echo "Combining unpacked files (ncrcat)..."
+ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
 ofil=SWARPwavesice_forecast_start${start_date}T${start_time}Z.nc
-echo "Making $ofil"
-ncrcat *.nc $ofil
+
+# make final file by repacking tmp.nc
+echo " "
+echo "Making $ofil (ncpdq)..."
+ncpdq tmp.nc $ofil
+
+rm -r tmp tmp.nc
 
 #########################################################################
 # rename dimensions
