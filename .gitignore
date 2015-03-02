@@ -14,3 +14,6 @@ netcdf_production/Input/regional.depth.a
 netcdf_production/Input/regional.depth.b
 netcdf_production/Input/regional.grid.a
 netcdf_production/Input/regional.grid.b
+#
+forecast_scripts/expt_01.0/*
+forecast_scripts/test/*
