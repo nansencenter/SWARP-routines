@@ -16,19 +16,19 @@ year_prev=$((year_now-1))     # previous year
 cd $restart_dir
 echo "Looking for restarts in current year (${year_now}) or previous year..."
 echo " "
-if [ -f TP4restart${year_now}_???_*.tar.gz ]
+if [ -f TP4restart${year_now}_*.tar.gz ]
 then
    # loop over all files in current year
    # - last file is most recent date
-   for f in TP4restart${year_now}_???_*.tar.gz
+   for f in TP4restart${year_now}_*.tar.gz
    do
       echo $f
    done
-elif [ -f TP4restart${year_prev}_???_*.tar.gz ]
+elif [ -f TP4restart${year_prev}_*.tar.gz ]
 then
    # loop over all files in previous year
    # - last file is most recent date
-   for f in TP4restart${year_prev}_???_*.tar.gz
+   for f in TP4restart${year_prev}_*.tar.gz
    do
       echo $f
    done
@@ -45,9 +45,10 @@ echo " "
 cd $P
 
 # $f is now most recent restart
-restart_year=${f:10:4}   # year of restart
-jday=${f:15:3} # julian day of restart
-hr=${f:19:2}   # hour of restart
+restart_year=${f:10:4}  # year of restart
+jday=${f:15:3}          # julian day of restart
+hr=00                   # hour of restart
+# hr=${f:19:2}            # hour of restart
 restart_date=`jul2date $jday $restart_year 1 1`
 restart_mon=${restart_date:4:2}
 restart_day=${restart_date:6:2}
@@ -79,7 +80,8 @@ then
    #
    mv ${f0}_mem001.a       $afil
    mv ${f0}_mem001.b       $bfil
-   mv ${f0}ICE_mem001.uf   $ufil
+   # mv ${f0}ICE_mem001.uf   $ufil
+   mv ${f0}ICE.uf          $ufil
 else
    echo "Restart files already present in $data_dir:"
    echo $afil
