@@ -1,7 +1,7 @@
 #!/bin/bash
 #This is a script to both move and compress the TP4restart files.
 
-#NEW VERSION: creating a TP4restart LIST that will register the name of every restart already archived
+#17-03-15 VERSION: creating a TP4restart LIST that will register the name of every restart already archived
 #I thought that reading through a text file would be faster than checking the whole work folder
 
 TP4rlog=$HOME/giacomo/restart_dir/TP4rlog #keeping a log, this can be manually cleared once in a while (monthly?) or by crontab
