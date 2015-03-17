@@ -3,7 +3,6 @@
 
 #NEW VERSION: creating a TP4restart LIST that will register the name of every restart already archived
 #I thought that reading through a text file would be faster than checking the whole work folder
-clear
 
 TP4rlog=$HOME/giacomo/restart_dir/TP4rlog #keeping a log, this can be manually cleared once in a while (monthly?) or by crontab
 TP4rlist=$HOME/giacomo/restart_dir/TP4rlist #path to the LIST
