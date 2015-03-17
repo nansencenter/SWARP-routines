@@ -5,8 +5,8 @@
 #I thought that reading through a text file would be faster than checking the whole work folder
 clear
 
-TP4rlog=$HOME/giacomo/TP4rlog #keeping a log, this can be manually cleared once in a while (monthly?) or by crontab
-TP4rlist=$HOME/giacomo/TP4rlist #path to the LIST
+TP4rlog=$HOME/giacomo/restart_dir/TP4rlog #keeping a log, this can be manually cleared once in a while (monthly?) or by crontab
+TP4rlist=$HOME/giacomo/restart_dir/TP4rlist #path to the LIST
 echo "NEW OPERATION" >> $TP4rlog
 date >> $TP4rlog #signing the time of the operation
 
@@ -37,9 +37,12 @@ if [ -z "$arch" ] #if arch is empty there are no new restart files
 then
 	echo "NO MODIFICATIONS - ARCHIVE UP TO DATE" >> $TP4rlog
 else
-	tar -zcvf ${rdir}/TP4restart_$(date +%d)_$(date +%H).tar.gz $arch #creating the tar file
-	echo "NEW ARCHIVE CREATED" >> $TP4rlog 
-	echo "${arch[@]}" >> $TP4rlog 
-	echo "LIST UPDATED - ARCHIVE UP TO DATE" >> $TP4rlog
-	mv ${rdir}/*.tar.gz ${bdir} #moving the tar to the bckup dir
+	tar -zcvf ${bdir}/TP4restart_$(date +%Y)_$(date --date yesterday +%j).tar.gz $arch #creating the tar file (HYCOM julian-1 day)
+	arch=( $arch) #defining as an array
+	for el in "${arch[@]}"
+		do
+		echo "$el - ADDED" >> $TP4rlog
+	done
+	echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
+cat $TP4rlog #printing the log
