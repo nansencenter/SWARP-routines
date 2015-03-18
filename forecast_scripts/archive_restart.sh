@@ -52,8 +52,8 @@ else
            ufil=${base}ICE.uf
 	   dcre=${base#TP4restart} #cutting TP4restart
            ryear=${dcre%%_*} #keeping the year, we want to distinguish between ops year and file year
-           tfil=${bdir}/$ryear/$base.tar.gz # tar file to create
-           tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil #remove /work/fanf/TOPAZ_RT from inside tar file
+           tfil=${bdir}/$ryear/$base.tar.gz #tar file to create
+           tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil #archiving without the full path
            echo "$base set -ADDED" >> $TP4rlog
         done
 	echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
