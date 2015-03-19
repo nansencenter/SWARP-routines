@@ -10,7 +10,7 @@
 MAILTO=gcmdnt90@gmail.com
 PATH=/usr/bin:/bin:$HOME/realtime:$HOME/realtime/subprogs:/local/matlab-2007b/bin
 
-## 00 04 * * * $HOME/Realtime/wamnsea_update.sh 2>&1 >$HOME/Realtime/logfiles/wamnsea.log | mail -s "CRON : Update WAMNSEA wave data from myocean.met.no" jon.bergh@nersc.no
+#00 04 * * * $HOME/Realtime/wamnsea_update.sh 2>&1 >$HOME/Realtime/logfiles/wamnsea.log | mail -s "CRON : Update WAMNSEA wave data from myocean.met.no" jon.bergh@nersc.no
 #00 05 * * * $HOME/Realtime/wamnsea_update.sh 2>&1 >$HOME/Realtime/logfiles/wamnsea-`date +"\%F-\%H"`.log 2>&1
 #30 23 * * * $HOME/Realtime/barents_forecast.sh 2>&1 >$HOME/Realtime/logfiles/barents-`date +"\%F-\%H"`.log 2>&1
 #00 06 * * * $HOME/Realtime/barents_forecast_WIM.sh 2>&1 >$HOME/Realtime/logfiles/barents_WIM-`date +"\%F-\%H"`.log 2>&1
