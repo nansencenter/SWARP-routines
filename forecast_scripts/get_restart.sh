@@ -3,7 +3,8 @@
 
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
 
-if [ 1 -eq 0 ] then
+if [ 1 -eq 0 ]
+then
    # proper location
    tp4dir="/work/timill/Model_Setups/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
    xdir="$tp4dir/expt_01.0"                     # location of expt directory
