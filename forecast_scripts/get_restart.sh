@@ -3,15 +3,17 @@
 
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
 
-if [ 1 -eq 0 ] then
+if [ 1 -eq 0 ]
+then
    # proper location
-   tp4dir="/work/timill/Model_Setups/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
-   xdir="$tp4dir/expt_01.0"                     # location of expt directory
+   tp4dir="/work/timill/RealTime/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
+   xdir="$tp4dir/expt_01.1"                     # location of expt directory
 else
    # test location
    tp4dir=`pwd`
-   mkdir -p expt_01.0
-   mkdir -p expt_01.0/data
+   xdir="$tp4dir/expt_01.1"
+   mkdir -p $xdir
+   mkdir -p $xdir/data
 fi
 
 cyear=`date -u +%Y`			# current year
