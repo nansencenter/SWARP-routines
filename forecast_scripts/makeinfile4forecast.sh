@@ -12,9 +12,9 @@
 #MAINDIR=/home/nersc/bergh/Realtime
 MAINDIR=$HOME/SWARP-routines/forecast_scripts
 
-if [ $# -ne 6 ]
+if [ $# -ne 5 ]
 then
-  echo "Usage: $0 <6 inputs> (see script)"
+  echo "Usage: $0 <5 inputs> (see script)"
   exit
 else
 
@@ -23,7 +23,9 @@ else
   echo "-------------------------------------------------------------------------"
 
   rungen=$1
-  
+  thr=`printf '%3.3d' $3`	#three digits modification
+  fou=`printf '%3.3d' $4`	#three digits modification
+  fiv=`printf '%3.3d' $5`	#three digits modification
   cd ${MAINDIR}/infiles
   if [ -z "${rungen}" -o "${rungen}" == "TP4" ]
   then
@@ -36,22 +38,20 @@ else
   then
     echo "Run version:    $1"
     echo "Reference year: $2"
-    echo "From day:       $3"
-    echo "To day 1:       $4"
-    echo "To day 2:       $5"
-    echo "To day 3:       $6"
+    echo "From day:       $thr"
+    echo "To day 1:       $fou"
+    echo "To day 2:       $fiv"
     if [ -f infile.in ]
     then
       rm -f infile.in
     fi
 
     cat $file | sed \
-    -e "s/nd1/$3/g" \
-    -e "s/nd2/$4/g" \
-    -e "s/nd3/$5/g" \
-    -e "s/nd4/$6/g" \
-    -e "s/reference_year/$2/g" \
-    -e "s/run_version/$1/g" \
+    -e "s/nd1/$thr/g" \
+    -e "s/nd2/$fou/g" \
+    -e "s/nd3/$fiv/g" \
+    -e "s/ref_year/$2/g" \
+    -e "s/run_gen/$1/g" \
     > infile.in
 
     echo " * infile.in created"

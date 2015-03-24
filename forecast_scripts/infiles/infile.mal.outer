@@ -1,8 +1,8 @@
 3.1          # version of inputfile (limits.dat)            DO NOT CHANGE
-TP4          # (rungen)   Version number of run 
-2015         # Reference year for simulation  (365. for spinup)
- 190 00      # (nday1)    First day of integration NOTE FORMAT F9.2
- 195 00      # (nday2)    Last day of integration  NOTE FORMAT F9.2
+run_gen          # (rungen)   Version number of run 
+ref_year         # Reference year for simulation  (365. for spinup)
+ nd1         # (nday1)    First day of integration NOTE FORMAT F9.2
+ nd3         # (nday2)    Last day of integration  NOTE FORMAT F9.2
 ecnc2 era40  # forcing option, month, ecmwf, ncepr, ecmo, ecnc
  200.0       # temperature relaxation time scale (F in blkdat.input)
  200.0       # salinity    relaxation time scale
@@ -13,3 +13,7 @@ F  6         # lnesti, nestdti - read and apply nesting bnd cond at nestdto inte
 F CSR F F    # Tides (true,  CSR/FES, apply currents)
 F            # lgridp     Activate storage of gridpoint information
 # Days     Assi  Diagno.  Restart            (1992 for first synoptic experiment)
+   nd1     F     T        T
+   nd2     F     T        T
+   nd3     F     T        T
+~                               
