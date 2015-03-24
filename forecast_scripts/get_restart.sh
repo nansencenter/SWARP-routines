@@ -2,16 +2,17 @@
 #Get latest restart from the internal repo to the working dir
 
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
-
-if [ 1 -eq 0 ] then
-   # proper location
+echo "Type 0 for launch, 1 for test"
+read vl
+if [ $vl -eq 0 ]
+then
+   #proper location
    tp4dir="/work/timill/Model_Setups/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
    xdir="$tp4dir/expt_01.0"                     # location of expt directory
 else
-   # test location
-   tp4dir=`pwd`
-   mkdir -p expt_01.0
-   mkdir -p expt_01.0/data
+   #test location
+   xdir="$HOME/giacomo"
+   mkdir -p $xdir/data
 fi
 
 cyear=`date -u +%Y`			# current year
@@ -19,20 +20,19 @@ cmon=`date -u +%m`			# current month
 cday=`date -d "yesterday" '+%j'`	# current day
 pyear=`expr $cyear - 1`			# previous year
 
-cd $rdir
-#Looking for restarts in current year (${year_now}) or previous year..."
-if [ -f ./$cyear/TP4restart${cyear}*.tar.gz ]
+cd $rdir/${cyear}
+#Looking for restarts in current year (${cyear}) or previous year..."
+if [ -f TP4restart${cyear}*.tar.gz ]
 then
-   cd ./$cyear
    # loop over all files in current year
    # - last file is most recent date
    for f in TP4restart${cyear}_*.tar.gz
    do
       echo $f
    done
-elif [ -f ./$pyear/TP4restart${pyear}_*.tar.gz ]
+elif [ -f ${rdir}/${pyear}/TP4restart${pyear}_*.tar.gz ]
 then
-   cd ./$pyear
+   cd ${rdir}/${pyear}
    # loop over all files in previous year
    # - last file is most recent date
    for f in TP4restart${pyear}_*.tar.gz
@@ -40,8 +40,8 @@ then
       echo $f
    done
 else
-   echo "No recent restarts in $rdir"
-   echo "(none from $cyear or $pyear)."
+   echo "No recent restarts in ${rdir}"
+   echo "(none from ${cyear} or ${pyear})."
    echo " "
    exit
 fi
@@ -68,7 +68,6 @@ ufil=${f0}ICE.uf
 # - rename files
 
 ddir="$xdir/data"
-cd $ddir
 
 if [ ! -f $afil ]
 then
