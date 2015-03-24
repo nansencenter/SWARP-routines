@@ -1,87 +1,75 @@
-####!bash
-# get latest restart
-# draft!! to be tested
-P=`pwd`
+#!/bin/bash
+#Get latest restart from the internal repo to the working dir
 
-restart_dir="$P/test"      # directory with restarts
+rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
 tp4dir="$P"                # location of TP4a0.12 directory (where forecast will be done)
 xdir="$tp4dir/expt_01.0"   # location of expt directory
 
-date_now=`date -ju "+%Y%m%d"`
-year_now=${date_now:0:4}      # current year
-month_now=${date_now:4:2}     # current month
-day_now=${date_now:6:2}       # current day
-year_prev=$((year_now-1))     # previous year
+cyea=`date -u +%Y`			# current year
+cmon=`date -u +%m`			# current month
+cday=`date -d "yesterday" '+%j'`	# current day
+pyea=`expr $cyea - 1`			# previous year
 
-cd $restart_dir
-echo "Looking for restarts in current year (${year_now}) or previous year..."
-echo " "
-if [ -f TP4restart${year_now}_*.tar.gz ]
+cd $rdir
+#Looking for restarts in current year (${year_now}) or previous year..."
+if [ -f ./$cyea/TP4restart${cyea}*.tar.gz ]
 then
+   cd ./$cyea
    # loop over all files in current year
    # - last file is most recent date
-   for f in TP4restart${year_now}_*.tar.gz
+   for f in TP4restart${cyea}_*.tar.gz
    do
       echo $f
    done
-elif [ -f TP4restart${year_prev}_*.tar.gz ]
+elif [ -f ./$pyea/TP4restart${pyea}_*.tar.gz ]
 then
+   cd ./$pyea
    # loop over all files in previous year
    # - last file is most recent date
-   for f in TP4restart${year_prev}_*.tar.gz
+   for f in TP4restart${pyea}_*.tar.gz
    do
       echo $f
    done
 else
-   echo "No recent restarts in $restart_dir"
-   echo "(none from $year_now or $year_prev)."
+   echo "No recent restarts in $rdir"
+   echo "(none from $cyea or $pyea)."
    echo " "
    exit
 fi
 
 echo "Most recent restart: $f"
-echo "Unpacking and copying to $data_dir..."
+echo "Unpacking and copying to $xdir..."
 echo " "
-cd $P
 
 # $f is now most recent restart
-restart_year=${f:10:4}  # year of restart
-jday=${f:15:3}          # julian day of restart
-hr=00                   # hour of restart
-# hr=${f:19:2}            # hour of restart
-restart_date=`jul2date $jday $restart_year 1 1`
-restart_mon=${restart_date:4:2}
-restart_day=${restart_date:6:2}
+ryea=${f:10:4}	# year of restart
+jday=${f:15:3}	# julian day of restart
+hr=${f:19:2}	# hour of restart
 
 # names of restart files we will finally use
-f0=TP4restart${restart_year}_${jday}_${hr}
-afil=${f0}.a
-bfil=${f0}.b
+f0=TP4restart${ryea}_${jday}_${hr}
+afil=${f0}_mem001.a
+bfil=${f0}_mem001.b
 ufil=${f0}ICE.uf
 
-# go to $data_dir
+
+# go to the data in $xdir
 # if the most recent restart is NOT already there, then:
 # - unpack restart there
 # - rename files
-data_dir=$xdir/data
-echo $data_dir
-echo $xdir
 
-cd $data_dir
+ddir="$xdir/data"
+cd $ddir
+
 if [ ! -f $afil ]
 then
-   echo tar -xvf $restart_dir/$f
-   tar -xvf $restart_dir/$f
+   echo tar -xvf $rdir/$f
+   tar -xvf $rdir/$f
    echo " "
-   echo mv ${f0}_mem001.a       $afil
-   echo mv ${f0}_mem001.b       $bfil
-   echo mv ${f0}ICE_mem001.uf   $ufil
+   echo mv $afil $ddir
+   echo mv $bfil $ddir
+   echo mv $ufil $ddir
    echo " "
-   #
-   mv ${f0}_mem001.a       $afil
-   mv ${f0}_mem001.b       $bfil
-   # mv ${f0}ICE_mem001.uf   $ufil
-   mv ${f0}ICE.uf          $ufil
 else
    echo "Restart files already present in $data_dir:"
    echo $afil
@@ -90,13 +78,13 @@ else
    echo " "
 fi
 
-# TODO calculate days between current date
+# calculate days between current date
 # and latest restart - if too old (>2 weeks?) send warning
-days_since_restart=`date2jul $date_now $restart_year $restart_mon $restart_day`
-if [ $days_since_restart -ge 15 ]
+dsr=`expr $cday - $jday` #Days Since Restart
+if [ $dsr -ge 14 ]
 then
-   echo "Warning old restart"
-   # TODO send email
+   echo "Restarts too old"
+   exit
 fi
 
 # now we need to edit:

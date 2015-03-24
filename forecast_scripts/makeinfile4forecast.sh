@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/usr/bin/ksh
 # ======================================================================
 # Six arguments:
 # 1. run_version
@@ -9,7 +9,8 @@
 # 6. to_day (+2 at 00:00 and 12:00UTC)
 # Other infile parameters must be changed in infile.mal
 # ======================================================================
-MAINDIR=/home/nersc/bergh/Realtime
+#MAINDIR=/home/nersc/bergh/Realtime
+MAINDIR=$HOME/SWARP-routines/forecast_scripts
 
 if [ $# -ne 6 ]
 then
