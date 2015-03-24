@@ -7,7 +7,7 @@ ecnc2 era40  # forcing option, month, ecmwf, ncepr, ecmo, ecnc
  200.0       # temperature relaxation time scale (F in blkdat.input)
  200.0       # salinity    relaxation time scale
 F  2         # laverage n Accumulate monthly averages every n hours
-T  T         # Switch on and accumulate (T) or overwrite (F) daily averages 
+T  F         # Switch on and accumulate (T) or overwrite (F) daily averages
 F  6         # lnesto, nestdto - saves nesting bnd cond at nestdto intervals
 F  6         # lnesti, nestdti - read and apply nesting bnd cond at nestdto intervals
 F CSR F F    # Tides (true,  CSR/FES, apply currents)
@@ -16,4 +16,3 @@ F            # lgridp     Activate storage of gridpoint information
    nd1     F     T        T
    nd2     F     T        T
    nd3     F     T        T
-~                               

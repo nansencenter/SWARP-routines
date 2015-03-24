@@ -2,42 +2,51 @@
 #Get latest restart from the internal repo to the working dir
 
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
+
 echo "Type 0 for launch, 1 for test"
 read vl
 if [ $vl -eq 0 ]
 then
    #proper location
-   tp4dir="/work/timill/Model_Setups/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
+   tp4dir="/work/timill/RealTime/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
    xdir="$tp4dir/expt_01.0"                     # location of expt directory
+   ddir="$xdir/data"
 else
    #test location
    xdir="$HOME/giacomo"
    mkdir -p $xdir/data
+   ddir="$xdir/data"
 fi
 
 cyear=`date -u +%Y`			# current year
 cmon=`date -u +%m`			# current month
 cday=`date -d "yesterday" '+%j'`	# current day
 pyear=`expr $cyear - 1`			# previous year
+ceye=`find /${rdir}/${cyear} -name TP4restart${cyear}*`
+ceye=( $ceye )
+peye=`find /${rdir}/${pyear} -name TP4restart${pyear}*`
+peye=( $peye )
+cyfil=${rdir}/${cyear}/TP4restart${cyear}*
+pyfil=${rdir}/${pyear}/TP4restart${pyear}*
+shopt -s nullglob
 
-cd $rdir/${cyear}
 #Looking for restarts in current year (${cyear}) or previous year..."
-if [ -f TP4restart${cyear}*.tar.gz ]
+if [ ${#cyfil[@]} -gt 0 ]
 then
    # loop over all files in current year
    # - last file is most recent date
-   for f in TP4restart${cyear}_*.tar.gz
+   for f in ${ceye}
    do
-      echo $f
+	f=$(basename $f)
    done
-elif [ -f ${rdir}/${pyear}/TP4restart${pyear}_*.tar.gz ]
+elif [ ${#pyfil[@]} -gt 0 ]
 then
-   cd ${rdir}/${pyear}
+   cd ${rdir}/${peye}
    # loop over all files in previous year
    # - last file is most recent date
-   for f in TP4restart${pyear}_*.tar.gz
+   for f in ${pyfil}
    do
-      echo $f
+	f=$(basename $f)
    done
 else
    echo "No recent restarts in ${rdir}"
@@ -67,19 +76,21 @@ ufil=${f0}ICE.uf
 # - unpack restart there
 # - rename files
 
-ddir="$xdir/data"
+
 
 if [ ! -f $afil ]
 then
-   echo tar -xvf $rdir/$f
-   tar -xvf $rdir/$f
+   tar -zxvf $rdir/${ryea}/$f0.tar.gz
+   mv $afil $ddir
+   mv $bfil $ddir
+   mv $ufil $ddir
    echo " "
    echo mv $afil $ddir
    echo mv $bfil $ddir
    echo mv $ufil $ddir
    echo " "
 else
-   echo "Restart files already present in $data_dir:"
+   echo "Restart files already present in $ddir:"
    echo $afil
    echo $bfil
    echo $ufil
@@ -89,7 +100,8 @@ fi
 # calculate days between current date
 # and latest restart - if too old (>2 weeks?) send warning
 dsr=`expr $cday - $jday` #Days Since Restart
-if [ $dsr -ge 14 ]
+
+if [ $dsr -gt 13 ]
 then
    echo "Restarts too old"
    exit
