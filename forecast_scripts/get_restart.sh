@@ -70,12 +70,12 @@ echo "Unpacking..."
 echo " "
 
 # $f is now most recent restart
-ryea=${f:10:4}	# year of restart
+ryear=${f:10:4}	# year of restart
 jday=${f:15:3}	# julian day of restart
 hr=${f:19:2}	# hour of restart
 
 # names of restart files we will finally use
-f0=TP4restart${ryea}_${jday}_${hr}
+f0=TP4restart${ryear}_${jday}_${hr}
 afil0=${f0}_mem001.a
 bfil0=${f0}_mem001.b
 ufil0=${f0}ICE.uf
@@ -91,7 +91,7 @@ ufil=${f0}ICE.uf
 
 if [ ! -f $ddir/$afil ]
 then
-   tar -zxvf $rdir/${ryea}/$f0.tar.gz
+   tar -zxvf $rdir/${ryear}/$f0.tar.gz
    mv $afil0 $ddir/$afil
    mv $bfil0 $ddir/$bfil
    mv $ufil0 $ddir/$ufil
