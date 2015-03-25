@@ -10,17 +10,17 @@
 # Other infile parameters must be changed in infile.mal
 # ======================================================================
 #MAINDIR=/home/nersc/bergh/Realtime
-MAINDIR=$HOME/giacomo/SWARP-routines/forecast_scripts
+#MAINDIR=$HOME/giacomo/SWARP-routines/forecast_scripts
 
 # set SWARP_ROUTINES with this line in ~/.bash_profile
 # (NB set to correct path where routines are)
 # export SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
-#MAINDIR=$SWARP_ROUTINES/forecast_scripts
+MAINDIR=$SWARP_ROUTINES/forecast_scripts
 
 # set place of realtime model in .bash_profile also
 tp4dir=$TP4_REALTIME
-#xdir=$tp4dir/expt_01.1
-xdir=$MAINDIR/infiles
+xdir=$tp4dir/expt_01.1
+#xdir=$MAINDIR/infiles
 
 if [ $# -ne 5 ]
 then
