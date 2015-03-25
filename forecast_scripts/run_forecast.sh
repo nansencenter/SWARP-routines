@@ -1,5 +1,5 @@
 # get restart
-get_restart.sh # get restart file
+topaz_get_restart.sh # get restart file
 # output year and date of forecast
 
 #################################################################

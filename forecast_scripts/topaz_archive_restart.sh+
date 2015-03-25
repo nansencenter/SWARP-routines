@@ -16,7 +16,7 @@ nm=`date -u '+%m'`
 om=`date -d "yesterday" '+%m'`
 oy=`date -d "yesterday" '+%Y'`
 odir=$bdir/$oy
-if [$nm !== $om] #moving log is older than 1 month
+if [ $nm !== $om ] #moving log is older than 1 month
 then
 	mv $odir/TP4rlog $odir/TP4rlog$om
 fi
