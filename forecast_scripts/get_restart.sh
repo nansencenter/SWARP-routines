@@ -3,13 +3,23 @@
 
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
 
-echo "Type 0 for launch, 1 for test"
-read vl
-if [ $vl -eq 0 ]
+if [ $# -eq 1 ]
+then
+   v1=$1
+elif [ $# -eq 0 ]
+then
+   echo "Using default - proper location"
+   v1=0
+else
+   echo "Wrong number of inputs to get_restart.sh"
+   exit
+fi
+
+if [ $v1 -eq 0 ]
 then
    #proper location
-   tp4dir="/work/timill/RealTime/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
-   xdir="$tp4dir/expt_01.0"                     # location of expt directory
+   tp4dir="/work/timill/RealTime_Models/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
+   xdir="$tp4dir/expt_01.1"                     # location of expt directory
    ddir="$xdir/data"
 else
    #test location
@@ -56,7 +66,7 @@ else
 fi
 
 echo "Most recent restart: $f"
-echo "Unpacking and copying to $xdir..."
+echo "Unpacking..."
 echo " "
 
 # $f is now most recent restart
@@ -66,8 +76,11 @@ hr=${f:19:2}	# hour of restart
 
 # names of restart files we will finally use
 f0=TP4restart${ryea}_${jday}_${hr}
-afil=${f0}_mem001.a
-bfil=${f0}_mem001.b
+afil0=${f0}_mem001.a
+bfil0=${f0}_mem001.b
+ufil0=${f0}ICE.uf
+afil=${f0}.a
+bfil=${f0}.b
 ufil=${f0}ICE.uf
 
 
@@ -76,18 +89,16 @@ ufil=${f0}ICE.uf
 # - unpack restart there
 # - rename files
 
-
-
-if [ ! -f $afil ]
+if [ ! -f $ddir/$afil ]
 then
    tar -zxvf $rdir/${ryea}/$f0.tar.gz
-   mv $afil $ddir
-   mv $bfil $ddir
-   mv $ufil $ddir
+   mv $afil0 $ddir/$afil
+   mv $bfil0 $ddir/$bfil
+   mv $ufil0 $ddir/$ufil
    echo " "
-   echo mv $afil $ddir
-   echo mv $bfil $ddir
-   echo mv $ufil $ddir
+   echo mv $afil0 $ddir/$afil
+   echo mv $bfil0 $ddir/$bfil
+   echo mv $ufil0 $ddir/$ufil
    echo " "
 else
    echo "Restart files already present in $ddir:"
