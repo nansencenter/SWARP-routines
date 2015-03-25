@@ -10,7 +10,16 @@
 # Other infile parameters must be changed in infile.mal
 # ======================================================================
 #MAINDIR=/home/nersc/bergh/Realtime
-MAINDIR=$HOME/SWARP-routines/forecast_scripts
+#MAINDIR=$HOME/SWARP-routines/forecast_scripts
+
+# set SWARP_ROUTINES with this line in ~/.bash_profile
+# (NB set to correct path where routines are)
+# export SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
+MAINDIR=$SWARP_ROUTINES/forecast_scripts
+
+# set place of realtime model in .bash_profile also
+tp4dir=$TP4_REALTIME
+xdir=$tp4dir/expt_01.1
 
 if [ $# -ne 5 ]
 then
@@ -41,9 +50,9 @@ else
     echo "From day:       $thr"
     echo "To day 1:       $fou"
     echo "To day 2:       $fiv"
-    if [ -f infile.in ]
+    if [ -f $xdir/infile.in ]
     then
-      rm -f infile.in
+      rm -f $xdir/infile.in
     fi
 
     cat $file | sed \
@@ -52,9 +61,9 @@ else
     -e "s/nd3/$fiv/g" \
     -e "s/ref_year/$2/g" \
     -e "s/run_gen/$1/g" \
-    > infile.in
+    > $xdir/infile.in
 
-    echo " * infile.in created"
+    echo " $xdir/infile.in created"
   else
     echo " ERROR : infile.mal does not exist" 
     exit
