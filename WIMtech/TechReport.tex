@@ -76,10 +76,12 @@ Text.
 %\caption{Set-up of the multiple floe experiments, with two different concentrations:  one at a higher concentration, about 79\% (left), and another at a lower concentration about 39\% (right).}
 %\label{pic-mult-setup}
 %\end{figure}
+
 \chapter{Cron and Crontab} \label{cron}
+%\input{CRON.tex}
 In this chapter, after a brief introduction on \textit{Cron}, the user will learn how to check and modify a \textit{Crontab} file.
 \section{Introduction}
-\textit{Cron} is a software utility time-based for \textbf{Unix-like} operating systems. \textit{Crontab} is a text file that guides \textit{Cron} providing the time and nature of its operations; it is possible for every user to have a personal \textit{Crontab}. These tasks will run regardless of whether the user is actually logged into the system.
+\textit{Cron} is a software utility time-based for \textbf{Unix-like} operating systems. \textit{Crontab} is a text file that guides \textit{Cron} providing the time and nature of its operations; it is possible for every user to have a personal \textit{Crontab}. Every \textbf{minute} \textit{Cron} checks the uploaded \textit{Cronfile} comparing it to the \textbf{system} time. These tasks will run regardless of whether the user is actually logged into the system.
 \section{Crontab editing}
 The layout of the \textit{Crontab} file (fig. \ref{crnlay}) provides 5 inputs for time and 1 for the command:
 \begin{figure}[h!]
@@ -88,22 +90,41 @@ The layout of the \textit{Crontab} file (fig. \ref{crnlay}) provides 5 inputs fo
 \caption{\textit{Crontab} file's layout with explanation}
 \label{crnlay}
 \end{figure}
-\\
 \begin{lstlisting}[language=bash]
 # This is an example of a Crontab file
-* * * * * /home/user/prog.sh	# Every minute
-15 * * * * /home/user/prog.sh	# Every hour at min 15
-12 18 * * * /home/user/prog.sh	# Every day at 18:12
-*/5 * * 1 * /home/user/prog.sh	# Every 5 minutes of January
+* * * * * /home/user/prog1.sh	# Every minute
+15 * * * * /home/user/prog2.sh	# Every hour at min 15
+# Comments don't interfere with Cron
+12 18 * * * /home/user/prog3.sh	# Every day at 18:12
+*/5 * * 1 * /home/user/prog4.sh	# Every 5 minutes of January
 \end{lstlisting} 
 \textbf{NOTE} - *\textbackslash \ will reiterate that command \\ \\
-To modify the \textit{Crontab} it's possible to upload a file previously made (\textit{i.e. mycrontab}) or to manually modify it (this will change the current user's \textit{Crontab}). \\
+To modify the \textit{Crontab} a previously written file can be uploaded (\textit{i.e. mycrontab}) or it can be manually modified (this will change the current user's). \\
 \begin{lstlisting}[language=bash]
-$ crontab mycrontab 	#loading a personal Crontab
-$ crontab -e	 	#manually modifying the Crontab
+$ crontab mycrontab 	# Uploading a personal Crontab
+$ crontab -e	 	# Manually modifying the Crontab
 \end{lstlisting}
 \section{Crontab on Hexagon}
-\textit{Cron} is working on \textbf{Hexagon} as well. 
+\textit{Cron} is working on \textbf{Hexagon} as well but since is a very busy and heavily stressed system there are a few precautions that should be remembered before setting up a \textit{Cron} job. \\ \\
+First of all you should choose a \textit{node} in which set up your \textit{Crontab}. A \textit{node} is a connection, redistribution or communication point for a network. For more information please visit (\url{http://docs.hpc.uib.no/wiki/Main_Page}). \\
+Another precaution is to use unique \textit{Crontab} file's names so that different set-ups will not be uploaded by mistake. \\ \\
+Here is shown a complete procedure for a \textit{Crontab} setup in \textbf{Hexagon}: \\
+\begin{lstlisting}[language=bash]
+$ ssh hexagon		# Personal login on Hexagon
+
+# Now a Cron-job is appended to a unique tab 
+$ echo "* * * * * /home/user/prog.sh" >> prog_cron
+
+$ ssh login1		# Login node1 (change number to change node)
+$ crontab prog_cron	# Uploading unique Crontab
+\end{lstlisting}
+Now every minute \textit{Cron} will execute \textit{prog.sh} from \textit{node1}. \\ \\
+\textbf{Remember} that the outputs of \textit{Cron} are shown in a virtual display hence are lost if not saved. It is possible to set up an automatic e-mail service that will save and send to a specified address the outputs by adding the following line in the \textit{Crontab} file:
+\begin{lstlisting}[language=bash]
+$ MAILTO=user@domain.org
+\end{lstlisting}
+
+
 \chapter{Model's Inputs Updating Procedure}
 
 %\input{MIUP.tex}
