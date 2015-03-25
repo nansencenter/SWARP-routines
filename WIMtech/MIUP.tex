@@ -1,0 +1,26 @@
+%Model's Inputs Updating Procedure
+
+In this chapter the user will be instructed on how to control the scripts used to download and storage the input files that will be used as initial conditions for the WIM model.\\
+There are four products that are updated and/or stored daily:
+\begin{itemize}
+\item TOPAZ - Weekly Restart Files
+\item WAMNSEA - Daily Waves 
+\item ECMWFR - Daily Weather
+\end{itemize}
+
+\section{TOPAZ}
+\subsection{Introduction}
+\textbf{T}owards an \textbf{O}perational \textbf{P}rediction system for the North \textbf{A}tlantic European coastal \textbf{Z}ones, simply known as TOPAZ is a coupled ocean-sea ice data assimilation system for the North Atlantic Ocean and Arctic. It is the only operational, large-scale ocean data assimilation system that uses the ensemble Kalman filter. This means that TOPAZ features a time-evolving, state-dependent estimate of the state error covariance. \\ \\
+In the regional Barents and Kara Sea forecast system (\textbf{BS1}), the TOPAZ (\textbf{TP4}) is used as an outer model in the nested system. Locally the TP4 model runs once a week for an 11 days period, with 9 days forecast, and produce initial and boundary conditions for the regional model BS1.
+\subsection{Data Gathering}
+The product consist of 3 different files:
+\begin{itemize}
+\item TP4restart\textit{YYYY\_ddd\_hh}\_mem001.a
+\item TP4restart\textit{YYYY\_ddd\_hh}\_mem001.b
+\item TP4restart\textit{YYYY\_ddd\_hh}ICE.uf
+\end{itemize}
+%ADD A BRIEF DESCRIPTION OF WHAT THE FILES ARE
+These files are weekly uploaded to the main server of the forecast system, HEXAGON, the supercomputer service at the University of Bergen.
+\begin{lstlisting}[language=bash]
+$ ssh hexagon
+\end{lstlisting}
