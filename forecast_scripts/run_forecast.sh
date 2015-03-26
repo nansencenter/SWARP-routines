@@ -55,4 +55,19 @@ fi
 #################################################################
 # Launch job
 cd $xdir
+
+# want to save archive files (TP4archv*.[ab]) every 3 hours
+cp $SWARP_ROUTINES/forecast_scripts/inputs/blkdat.input.archv_3h blkdat.input
+
+# clean data directory before run
+# rm data/TP4DAILY*
+# rm data/TP4archv*
+
+# launch job
 qsub pbsjob.sh
+#################################################################
+
+#################################################################
+# TODO save results (initial restart file,TP4DAILY*,TP4archv) on migrate
+# TODO convert files to netcdf with hyc2proj
+#################################################################
