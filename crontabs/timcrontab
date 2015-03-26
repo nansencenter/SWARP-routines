@@ -1,0 +1,10 @@
+# Crontabs of Tim on Hexagon run on node1
+# To set up cron job on ONE node, a) > ssh login1, > b) crontab timcrontab, c) > exit 
+# 1) Forecast run                                        - Every day @1900 
+# 2) Archiviation of model's products                    - Every day @2100
+#
+MAILTO=gcmdnt90@gmail.com
+MAILTO=timothy.williams@nersc.no
+
+00 19 * * * $SWARP_ROUTINES/forecast_scripts/run_forecast.sh
+00 21 * * * $SWARP_ROUTINES/forecast_scripts/wimsi_archive.sh

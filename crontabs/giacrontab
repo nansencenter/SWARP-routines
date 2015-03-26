@@ -1,0 +1,18 @@
+# Crontabs on Hexagon run on node1
+# To set up cron job on ONE node, a) > ssh login1, > b) crontab mycronfile, c) > exit 
+# 1) Update WAMNSEA wave forecast at /work/shared/WAMNSEA             - every day at 05:00
+# 2) Running the forecast simulation for the Barents Sea model        - every day at 23:30
+# 3) Running the forecast simulation for the Barents Sea + WIM model  - every day at 23:00
+# 4) Running the forecast simulation for the Topaz4 NA&AO model       - Wednesday at 00:05
+# 5) Backup script for Restart files                                  - every day at 18:00
+ 
+#MAILTO=jon.bergh@nersc.no
+MAILTO=gcmdnt90@gmail.com
+PATH=/usr/bin:/bin:$HOME/realtime:$HOME/realtime/subprogs:/local/matlab-2007b/bin
+
+00 05 * * * $HOME/giacomo/Realtime/wamnsea_update.sh 2>&1 >$HOME/giacomo/Realtime/logfiles/wamnsea-`date +"\%F-\%H"`.log 2>&1
+#30 23 * * * $HOME/Realtime/barents_forecast.sh 2>&1 >$HOME/Realtime/logfiles/barents-`date +"\%F-\%H"`.log 2>&1
+#00 06 * * * $HOME/Realtime/barents_forecast_WIM.sh 2>&1 >$HOME/Realtime/logfiles/barents_WIM-`date +"\%F-\%H"`.log 2>&1
+#00 23 * * 2 $HOME/Realtime/topaz_nesting_forecast.sh 2>&1 >$HOME/Realtime/logfiles/topaz-`date +"\%F-\%H"`.log 2>&1
+00 18 * * * $HOME/giacomo/Realtime/topaz_get_restart.sh
+
