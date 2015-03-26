@@ -29,14 +29,14 @@ then
 else
 
   echo "-------------------------------------------------------------------------"
-  echo " makeinfile4forecast.sh $1"
+  echo " make_infile4forecast.sh $1"
   echo "-------------------------------------------------------------------------"
 
   rungen=$1
   thr=`printf '%3.3d' $3`	#three digits modification
   fou=`printf '%3.3d' $4`	#three digits modification
   fiv=`printf '%3.3d' $5`	#three digits modification
-  cd ${MAINDIR}/infiles
+  cd ${MAINDIR}/inputs
   if [ -z "${rungen}" -o "${rungen}" == "TP4" ]
   then
      file=infile.mal.outer

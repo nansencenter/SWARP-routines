@@ -39,7 +39,7 @@ fi
 echo "Restart files of ${ryear}_$rday"
 echo "Forecast final day ${fc_year}_$fc_final_day"
 
-makeinfile4forecast.sh $rgen $ryear $rday $jday_today $final_day
+make_infile4forecast.sh $rgen $ryear $rday $jday_today $final_day
 xdir=$TP4_REALTIME/expt_01.1
 infile=$xdir/infile.in
 if [ $rday == $jday_today ]
