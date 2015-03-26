@@ -47,7 +47,8 @@ then
    # delete "today" line
    echo "restart day is from today"
    echo "- editing infile.in"
-   sed '17' $infile
+   sed '17d' $infile >> infile.in.replace
+   mv infile.in.replace $infile
 fi
 #################################################################
 
