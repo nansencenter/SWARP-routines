@@ -23,11 +23,12 @@ ln -s $h2p_in/extract.archv_wav .
 ln -s $h2p_in/depthlevels.in .
 
 # Info about grid from topo dir
-ln -s $h2p_in/grid.info .
-ln -s $h2p_in/regional.grid.a .
-ln -s $h2p_in/regional.grid.b .
-ln -s $h2p_in/regional.depth.a .
-ln -s $h2p_in/regional.depth.b .
+tp4_input=/work/shared/nersc/msc/ModelInput/TOPAZ4/TP4a0.12/topo
+ln -s $tp4_input/grid.info .
+ln -s $tp4_input/regional.grid.a .
+ln -s $tp4_input/regional.grid.b .
+ln -s $tp4_input/regional.depth.a .
+ln -s $tp4_input/regional.depth.b .
 
 odir=../archv_netcdf
 mkdir -p $odir
