@@ -4,7 +4,6 @@ topaz_get_restart.sh # get latest restart file
 
 #textfile outputs:
 out_restart=last_restart.txt
-out_infile=infile.txt
 
 year_today=`date -u +%Y`
 rname=`cat $out_restart`
@@ -41,8 +40,9 @@ echo "Restart files of ${ryear}_$rday"
 echo "Forecast final day ${fc_year}_$fc_final_day"
 
 makeinfile4forecast.sh $rgen $ryear $rday $jday_today $final_day
-infile=`cat $out_infile`
-if [ last_line=`tail -1 $infile | head -1` ]
+xdir=$TP4_REALTIME/expt_01.1
+infile=$xdir/infile.in
+if [ $rday == $jday_today ]
 then
    # delete "today" line
    echo "restart day is from today"
@@ -52,8 +52,7 @@ then
 fi
 #################################################################
 
-#################################################################
-# Launch job
-xdir=$TP4_REALTIME/expt_01.1
-cd $xdir
-qsub pbsjob.sh
+# #################################################################
+# # Launch job
+# cd $xdir
+# qsub pbsjob.sh

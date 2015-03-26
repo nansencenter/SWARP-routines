@@ -9,9 +9,6 @@
 # Other infile parameters must be changed in infile.mal.outer (TP4) or infile.mal
 # ======================================================================
 
-# textfile output
-out_infile=infile.txt
-
 #MAINDIR=/home/nersc/bergh/Realtime
 #MAINDIR=$HOME/giacomo/SWARP-routines/forecast_scripts
 
@@ -68,7 +65,6 @@ else
     > $xdir/infile.in
 
     echo " $xdir/infile.in created"
-    echo $xdir/infile.in > $out_infile
   else
     echo " ERROR : infile.mal does not exist" 
     exit
