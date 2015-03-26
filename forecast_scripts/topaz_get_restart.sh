@@ -1,6 +1,9 @@
 #!/bin/bash
 #Get latest restart from the internal repo to the working dir
 
+# textfile output:
+out_restart=last_restart.txt
+
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
 
 if [ $# -eq 1 ]
@@ -68,6 +71,7 @@ fi
 echo "Most recent restart: $f"
 echo "Unpacking..."
 echo " "
+echo $f > $out_restart
 
 # $f is now most recent restart
 ryear=${f:10:4}	# year of restart
@@ -76,9 +80,13 @@ hr=${f:19:2}	# hour of restart
 
 # names of restart files we will finally use
 f0=TP4restart${ryear}_${jday}_${hr}
+
+# original names
 afil0=${f0}_mem001.a
 bfil0=${f0}_mem001.b
 ufil0=${f0}ICE.uf
+
+# final names
 afil=${f0}.a
 bfil=${f0}.b
 ufil=${f0}ICE.uf
