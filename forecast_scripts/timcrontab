@@ -1,6 +1,6 @@
 # Crontabs of Tim on Hexagon run on node1
 # To set up cron job on ONE node, a) > ssh login1, > b) crontab timcrontab, c) > exit 
-# 1) 
+# 1) Forecast run                                        - Every day @1900 
 #
 MAILTO=gcmdnt90@gmail.com
 MAILTO=timothy.williams@nersc.no
