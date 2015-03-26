@@ -60,8 +60,8 @@ cd $xdir
 cp $SWARP_ROUTINES/forecast_scripts/inputs/blkdat.input.archv_3h blkdat.input
 
 # clean data directory before run
-# rm data/TP4DAILY*
-# rm data/TP4archv*
+rm data/TP4DAILY*
+rm data/TP4archv*
 
 # launch job
 qsub pbsjob.sh
