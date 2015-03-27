@@ -144,17 +144,21 @@ There are four products that are updated and/or stored daily:
 \textbf{T}owards an \textbf{O}perational \textbf{P}rediction system for the North \textbf{A}tlantic European coastal \textbf{Z}ones, simply known as TOPAZ is a coupled ocean-sea ice data assimilation system for the North Atlantic Ocean and Arctic. It is the only operational, large-scale ocean data assimilation system that uses the ensemble Kalman filter. This means that TOPAZ features a time-evolving, state-dependent estimate of the state error covariance. \\ \\
 In the regional Barents and Kara Sea forecast system (\textbf{BS1}), the TOPAZ (\textbf{TP4}) is used as an outer model in the nested system. Locally the TP4 model runs once a week for an 11 days period, with 9 days forecast, and produce initial and boundary conditions for the regional model BS1.
 \subsection{Data Gathering - last modification \today}
-The initial product consist of 3 different files that will provide initial conditions:
+The initial product consist of 3 different files that will provide initial conditions: \\
 \begin{itemize}
-\item \textbf{TP4restart\textit{YYYY\_ddd\_hh}\_mem001.a} - [\textbf{binary data}] initial conditions of the system.
+\item \textbf{TP4restart\textit{YYYY\_ddd\_hh}\_mem001.a} - [\textbf{data}] initial conditions of the system.
 \item \textbf{TP4restart\textit{YYYY\_ddd\_hh}\_mem001.b} - [\textbf{text}] information and instructions for the first file.
 \item \textbf{TP4restart\textit{YYYY\_ddd\_hh}ICE.uf} - [\textbf{data}] informations about sea ice (localization, height, etc..).
 \end{itemize}
-\textbf{NOTE} - file names could change depending on the service \\ \\
+Where \textbf{Y} is the Year, \textbf{d} is the day and \textbf{h} is the hour of the restarts release. \\ \\
+\textbf{NB} - file names could change depending on the service \\ \\
 %ADD A BRIEF DESCRIPTION OF WHAT THE FILES ARE
-These files are weekly uploaded to the main server of the forecast system, HEXAGON, the supercomputer service at the University of Bergen. Are then temporary stored in a working directory that will be cleared every two weeks hence the need of a script that will daily check and if needed archive and transfer the new data. \\
-The logic behind the script is to find all the files with \textbf{TP4restart} in their file-name and check their presence in a list of the stored files. If the file is on the list it has already been archived and the script will move on otherwise will automatically add the new files to the list and to the archive (using a \textit{tar} compression protocol). Every operation will write a report on a daily log that will be sent to a selected user (see chapter [\ref{cron}]).
+These files are weekly uploaded to the main server of the forecast system Hexagon. They will be temporary stored in a working directory that is cleared every two weeks (or else depending on the needs of the server) hence the need of a script that will daily check and if needed archive and transfer the new data. \\
+The logic behind the script is to find all the files with \textbf{TP4restart} in their file-name and check their presence in a list of the stored files. If the file is on the list it has already been archived and the script will move on otherwise will automatically add the new files to the list and to the archive (using a \textit{tar} compression protocol). Every operation will write a report on a daily log that will be sent to a selected user. This script is regularly executed by \textbf{Cron} (ch.[\ref{cron}]).
 %ADD AN UP TO DATE LIST OF THE SCRIPTS
+\chapter{WAMNSEA}
+
+\chapter{ECMWF}
 
 %\bibliographystyle{plainnum}e
 %\bibliographystyle{plainnat}
