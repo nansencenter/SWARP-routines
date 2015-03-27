@@ -5,10 +5,10 @@
 # 2. reference_year
 # 3. from_day (-1 at 00:00UTC)
 # 4. to_day (+0)
-# 5. to_day (+1)
-# 6. to_day (+2 at 00:00 and 12:00UTC)
-# Other infile parameters must be changed in infile.mal
+# 5. to_day (+2 at 00:00 and 12:00UTC)
+# Other infile parameters must be changed in infile.mal.outer (TP4) or infile.mal
 # ======================================================================
+
 #MAINDIR=/home/nersc/bergh/Realtime
 #MAINDIR=$HOME/giacomo/SWARP-routines/forecast_scripts
 
@@ -29,14 +29,14 @@ then
 else
 
   echo "-------------------------------------------------------------------------"
-  echo " makeinfile4forecast.sh $1"
+  echo " make_infile4forecast.sh $1"
   echo "-------------------------------------------------------------------------"
 
   rungen=$1
   thr=`printf '%3.3d' $3`	#three digits modification
   fou=`printf '%3.3d' $4`	#three digits modification
   fiv=`printf '%3.3d' $5`	#three digits modification
-  cd ${MAINDIR}/infiles
+  cd ${MAINDIR}/inputs
   if [ -z "${rungen}" -o "${rungen}" == "TP4" ]
   then
      file=infile.mal.outer

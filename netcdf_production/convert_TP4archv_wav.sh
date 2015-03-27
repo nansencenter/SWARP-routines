@@ -19,7 +19,7 @@ cd tmp
 
 # Info for hyc2proj
 ln -s $h2p_in/proj.in .
-ln -s $h2p_in/extract.archv . 
+ln -s $h2p_in/extract.archv_wav .
 ln -s $h2p_in/depthlevels.in .
 
 # Info about grid from topo dir
@@ -32,7 +32,7 @@ ln -s $tp4_input/regional.depth.b .
 
 odir=../archv_netcdf
 mkdir -p $odir
-for f in $pwd/TP4archv*.a
+for f in $pwd/TP4archv_wav*.a
 do
    len=${#pwd}
    g=${f:$((len+1))}
