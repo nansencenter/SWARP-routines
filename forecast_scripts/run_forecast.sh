@@ -1,5 +1,10 @@
 # get restart
-topaz_get_restart.sh # get latest restart file
+
+# paths that should be in bash_profile - does crontab not recognise these?
+SWARP_ROUTINES=$HOME/GITHUB_REPOSITORIES/SWARP_routines
+TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
+
+$SWARP_ROUTINES/forecast_scripts/topaz_get_restart.sh # get latest restart file
 # output year and date of forecast
 
 #textfile outputs:
