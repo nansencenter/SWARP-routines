@@ -19,6 +19,7 @@ out_restart=last_restart.txt
 
 year_today=`date -u +%Y`
 rname=`cat $out_restart`
+mv $out_restart $SWARP_ROUTINES/forecast_scripts
 rgen=${rname:0:3}   # eg TP4
 ryear=${rname:10:4} # year of restart file
 rday=${rname:15:3}  # julian day of restart file (1 Jan = 0)

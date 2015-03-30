@@ -15,7 +15,8 @@ h2p_in="$GIT_REPOS/SWARP-routines/netcdf_production/Input"
 WDIR="$TP4_REALTIME/expt_01.1/data"
 
 # make a "working" directory
-wdir=$TP4_REALTIME/../post_processing
+tday=`date +%Y%m%d`
+wdir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 mkdir -p $wdir
 
 # put the netcdf files here

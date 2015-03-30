@@ -1,23 +1,12 @@
 # Crontabs of Tim on Hexagon run on node1
 # To set up cron job on ONE node, a) > ssh login1, > b) crontab timcrontab, c) > exit 
-# 1) Check restarts from topaz                           - Every day @18.00
-# 2) Check wamsea                                        - Every day @18.00
+# 1) Check restarts from topaz and wamnsea               - Every day @18.00
 # 2) Forecast run                                        - Every day @19.00 
-# 3) Converting products into .nc files                  - Every day @21.00
-# 4) Merging the .nc files into one final_product        - Every day @21.10
-# 5) Transfer of the daily run's products                - Every day @21.30
-# 6) Archiviation of the daily run's products            - Every day @22.00
+# 3) Process the products                                - Every day @21.00 TODO put it inside pbsjob
 #
 MAILTO="timothy.williams@nersc.no,gcmdnt90@gmail.com"
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"
-NETCDF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/netcdf_production"
-TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
 
-00 18 * * * $FORECAST/topaz_archive_restart.sh
-00 18 * * * $FORECAST/wamnsea_update.sh
+00 18 * * * $FORECAST/archive_inputs.sh
 00 19 * * * $FORECAST/run_forecast.sh
-00 21 * * * $NETCDF/convert_TP4archv.sh
-10 21 * * * $NETCDF/merge_TP4archv.sh
-30 21 * * * $FORECAST/process_FCresults.sh
-00 22 * * * $FORECAST/collect_FCresults.sh
 

@@ -69,6 +69,10 @@ aprun -n $NMPI -m 1000M ./${EXEC}  # Run hycom
 cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 ./postprocess.sh 
 
-
+if [ 1 -eq 0 ]
+then
+   echo "Proceeding with process_FCresults.sh"
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+fi
 exit $?
 

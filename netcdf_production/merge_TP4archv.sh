@@ -3,7 +3,8 @@
 
 #########################################################################
 if [ $# -eq 0 ]; then
-   dir0="/work/timill/RealTime_Models/post_processing/archv_netcdf"
+   tday=`date +%Y%m%d`
+   dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 elif [ $# -eq 1 ]; then
    dir0=$1
 else
@@ -49,7 +50,6 @@ ofil=SWARPiceonly_forecast_start${start_date}T${start_time}Z.nc
 echo " "
 echo "Making $ofil (ncpdq)..."
 ncpdq tmp.nc $ofil
-cp $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/final_output
 
 rm -r tmp tmp.nc
 
@@ -135,3 +135,4 @@ ncatted -a field_date,global,d,,                                              $o
 
 ###########################################################################################
 
+cp $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/final_output
