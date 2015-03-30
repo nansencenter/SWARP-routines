@@ -3,22 +3,11 @@
 
 echo "Collecting data produced in date `date +%d/%m/%Y`"
 
-WDIR="/work/timill/RealTime_Models/TP4a0.12/expt_01.1/data"
-SDIR="/migrate/timill/RESULTS/TP4a0.12/SWARP_forecast/ice_only"
+# defining all the dir that will be used
+RTM=/work/timill/RealTime_Models
+DFDIR=$RTM/TP4a0.12/expt_01.1/data
+NCDIR=$RTM/post_processing/archv_netcdf
+FODIR=$RTM/results/TP4a0.12/ice_only/final_output
+WKDIR=$RTM/results/TP4a0.12/ice_only/work
 
-cd $WDIR
-
-tpday=( TP4DAILY*  )
-tparchv=( TP4archv.* )
-iy=${tpday[0]:9:4}
-id=${tpday[0]:14:3}
-echo "The archive file name will be "
-tfil=TP4DAILYarchv.$iy_$fd.tar.gz
-echo " "
-touch $tfil
-tar -zcvf $tfil $tpday $tparchv
-mkdir -p $SDIR/${yy}
-mv $tfil $SDIR/${yy}
-echo "Daily and archv files from $fd/$fy"
-echo "stored in $SDIR"
 

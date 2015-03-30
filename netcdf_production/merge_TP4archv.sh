@@ -49,6 +49,7 @@ ofil=SWARPiceonly_forecast_start${start_date}T${start_time}Z.nc
 echo " "
 echo "Making $ofil (ncpdq)..."
 ncpdq tmp.nc $ofil
+cp $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/final_output
 
 rm -r tmp tmp.nc
 

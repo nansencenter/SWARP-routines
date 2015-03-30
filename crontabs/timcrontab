@@ -3,15 +3,19 @@
 # 1) Check restarts from topaz                           - Every day @1800
 # 2) Check wamsea                                        - Every day @1800
 # 2) Forecast run                                        - Every day @1900 
-# 3) Archiviation of model's products                    - Every day @2100
-# 4) 
+# 3) Converting products into .nc files                  - Every day @2100
+# 4) Merging the .nc files into one final_product        - Every day @2110
+# 5) Archiviation of model's products                    - Every day @2130
 #
 MAILTO="timothy.williams@nersc.no,gcmdnt90@gmail.com"
-SWARP_ROUTINES="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines"
+FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"
+NETCDF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/netcdf_production"
 TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
 
-00 18 * * * $SWARP_ROUTINES/forecast_scripts/topaz_archive_restart.sh
-00 18 * * * $SWARP_ROUTINES/forecast_scripts/wamnsea_update.sh
-00 19 * * * $SWARP_ROUTINES/forecast_scripts/run_forecast.sh
-00 21 * * * $SWARP_ROUTINES/forecast_scripts/process_FCresults.sh
+00 18 * * * $FORECAST/topaz_archive_restart.sh
+00 18 * * * $FORECAST/wamnsea_update.sh
+00 19 * * * $FORECAST/run_forecast.sh
+00 21 * * * $NETCDF/convert_TP4archv.sh
+10 21 * * * $NETCDF/merge_TP4archv.sh
+30 21 * * * $FORECAST/process_FCresults.sh
 
