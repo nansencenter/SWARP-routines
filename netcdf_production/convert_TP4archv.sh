@@ -12,8 +12,17 @@
 # Info for hyc2proj
 # - copied from MSCPROGS/Input & edited
 h2p_in="$GIT_REPOS/SWARP-routines/netcdf_production/Input"
+WDIR="$TP4_REALTIME/expt_01.1/data"
 
-pwd=`pwd`
+# make a "working" directory
+wdir=$TP4_REALTIME/../post_processing
+mkdir -p $wdir
+
+# put the netcdf files here
+odir=$wdir/archv_netcdf
+mkdir -p $odir
+
+cd $wdir
 mkdir -p tmp
 cd tmp
 
@@ -30,27 +39,30 @@ ln -s $tp4_input/regional.grid.b .
 ln -s $tp4_input/regional.depth.a .
 ln -s $tp4_input/regional.depth.b .
 
-odir=../archv_netcdf
-mkdir -p $odir
-for f in $pwd/TP4archv*.a
+for f in $WDIR/TP4archv*.a
 do
-   len=${#pwd}
+   len=${#WDIR}
    g=${f:$((len+1))}
    len=${#g}
    base=${g:0:$((len-2))}
-   ln -s $f $pwd/$base.b .
+   ln -s $f $WDIR/$base.b .
 
    echo "********************************************************"
    echo "Running hyc2proj on $g..."
    echo "********************************************************"
    echo " "
 
+   echo hyc2proj $g
+   echo mv *.nc $odir
+   echo " "
    hyc2proj $g
    mv *.nc $odir
 done
 
+echo "********************************************************"
 echo "Netcdf files in $odir:"
-ls -lh $odir
+ls $odir
+echo "********************************************************"
 
-cd $pwd
+cd $wdir
 rm -r tmp
