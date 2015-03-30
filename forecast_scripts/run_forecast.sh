@@ -1,13 +1,20 @@
 # get restart
-
-# paths that should be in bash_profile - does crontab not recognise these?
-SWARP_ROUTINES=$HOME/GITHUB_REPOSITORIES/SWARP_routines
+echo "This script will: "
+echo "1) Get the restarts - topaz_get_restart.sh "
+echo "2) Prepare the infile.in - make_infile4forecast.sh"
+echo "3) Run the model - pbsjob.sh"
+echo " "
+# paths that are in bash_profile - does crontab not recognise these?
+SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
 TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
+# source $HOME/.bash_profile # try getting environment variables this way
 
+rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work # where the last_restart.txt will end up
+cd $rundir
 $SWARP_ROUTINES/forecast_scripts/topaz_get_restart.sh # get latest restart file
-# output year and date of forecast
+cd $rundir # just in case we've changed dir in script
 
-#textfile outputs:
+#textfile output:
 out_restart=last_restart.txt
 
 year_today=`date -u +%Y`
@@ -23,7 +30,7 @@ jday_today0=`expr $jday0 - 1`   # julian day of TOPAZ (0=1st Jan)
 jday_today=`printf '%3.3d' $jday_today0`
 
 # if last restart was in different year to this year:
-if [ ! $year_today -eq $ryear ]
+if [ $year_today -ne $ryear ]
 then
 	jday_today=`expr $jday_today + $rday + 1` # integer
         jday_today=`printf '%3.3d' $jday_today`   # 3 digits (compare to rday)
@@ -44,10 +51,10 @@ fi
 echo "Restart files of ${ryear}_$rday"
 echo "Forecast final day ${fc_year}_$fc_final_day"
 
-make_infile4forecast.sh $rgen $ryear $rday $jday_today $final_day
+$SWARP_ROUTINES/forecast_scripts/make_infile4forecast.sh $rgen $ryear $rday $jday_today $final_day
 xdir=$TP4_REALTIME/expt_01.1
 infile=$xdir/infile.in
-if [ $rday == $jday_today ]
+if [ $rday -eq $jday_today ]
 then
    # delete "today" line
    echo "restart day is from today"
@@ -62,7 +69,7 @@ fi
 cd $xdir
 
 # want to save archive files (TP4archv*.[ab]) every 3 hours
-cp $SWARP_ROUTINES/forecast_scripts/inputs/blkdat.input.archv_3h blkdat.input
+cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/blkdat.input.archv_3h blkdat.input
 
 # clean data directory before run
 rm data/TP4DAILY*

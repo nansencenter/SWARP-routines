@@ -6,6 +6,7 @@ out_restart=last_restart.txt
 
 rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
 
+# no variable -> uses tp4dir ; #1 manually insert the dir ; >#2 error
 if [ $# -eq 1 ]
 then
    v1=$1
