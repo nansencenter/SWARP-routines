@@ -25,5 +25,7 @@ mv $DFDIR/TP4DAILY* $TDIR/bin
 mv $NCDIR/TP4archv*.nc $TDIR/netcdf
 mv $NCDIR/SWARP*.nc $TDIR/final_output
 
-#
+#moving the info files
+TODO
+
 

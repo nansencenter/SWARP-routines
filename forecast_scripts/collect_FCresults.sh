@@ -1,26 +1,25 @@
 #!/bin/bash
-# This script will collect and archive the results of the local TP4 model
+# This script will collect and archive the whole directory with the final products of the SWARP model
 
 echo "Collecting data produced in date `date +%d/%m/%Y`"
 
 RTM=/work/timill/RealTime_Models
-DFDIR=$RTM/TP4a0.12/expt_01.1/data
-NCDIR=$RTM/post_processing/archv_netcdf
-STDIR=$RTM/results/TP4a.0.12/ice_only
+WDIR=$RTM/results/TP4a.0.12/ice_only/work
+SDIR=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecast/ice_only
 
 cd $WDIR
 
-tpday=( TP4DAILY*  )
-tparchv=( TP4archv.* )
-iy=${tpday[0]:9:4}
-id=${tpday[0]:14:3}
+cyear=`date +%Y`
+tday=`date +%d_%m_%Y`
+TDIR=$WDIR/$tday
+
 echo "The archive file name will be "
-tfil=TP4DAILYarchv.$iy_$fd.tar.gz
+tfil=SWARP_forecast_$tday.tar.gz
 echo " "
 touch $tfil
-tar -zcvf $tfil $tpday $tparchv
-mkdir -p $SDIR/${yy}
-mv $tfil $SDIR/${yy}
-echo "Daily and archv files from $fd/$fy"
-echo "stored in $SDIR"
+tar -zcvf $tfil $TDIR
+mkdir -p $SDIR/$cyear
+mv $tfil $SDIR/$cyear
+echo "SWARP products of $tday"
+echo "stored in $SDIR/$cyear"
 
