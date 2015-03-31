@@ -16,14 +16,10 @@ WDIR="$TP4_REALTIME/expt_01.1/data"
 
 # make a "working" directory
 tday=`date +%Y%m%d`
-wdir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
-mkdir -p $wdir
+sdir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
+mkdir -p $sdir
 
-# put the netcdf files here
-odir=$wdir/archv_netcdf
-mkdir -p $odir
-
-cd $wdir
+cd $sdir
 mkdir -p tmp
 cd tmp
 
@@ -54,16 +50,16 @@ do
    echo " "
 
    echo hyc2proj $g
-   echo mv *.nc $odir
+   echo mv *.nc $sdir
    echo " "
    hyc2proj $g
-   mv *.nc $odir
+   mv *.nc $sdir
 done
 
 echo "********************************************************"
-echo "Netcdf files in $odir:"
-ls $odir
+echo "Netcdf files in $sdir:"
+ls $sdir
 echo "********************************************************"
 
-cd $wdir
+cd $sdir
 rm -r tmp
