@@ -11,5 +11,5 @@ netcdf_to_grib2/out/*
 netcdf_to_grib2/figs/*
 netcdf_production/output/*
 #
-forecast_scripts/expt_01.0/*
+forecast_scripts/hidden/*
 forecast_scripts/test/*
