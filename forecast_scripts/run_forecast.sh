@@ -71,13 +71,15 @@ cd $xdir
 
 # want to save archive files (TP4archv*.[ab]) every 3 hours
 cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/blkdat.input.archv_3h blkdat.input
+cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/pbsjob.sh pbsjob.sh
 
 # clean data directory before run
 rm data/TP4DAILY*
 rm data/TP4archv*
 
 # launch job
-qsub pbsjob.sh
+qs_path=/opt/torque/2.5.13pre-up/bin/ #get from which qsub
+$qs_path/qsub pbsjob.sh
 #################################################################
 
 #################################################################

@@ -18,7 +18,7 @@ oy=`date -d "yesterday" '+%Y'`
 odir=$bdir/$oy
 if [ $nm -ne $om ] #moving log is older than 1 month
 then
-	mv $odir/TP4rlog $odir/TP4rlog$om
+	mv $odir/TP4rlog $odir/TP4rlog$om$oy
 fi
 
 echo "NEW OPERATION" >> $TP4rlog

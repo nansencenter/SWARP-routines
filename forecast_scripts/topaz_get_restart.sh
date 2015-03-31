@@ -15,7 +15,7 @@ then
    echo "Using default - proper location"
    v1=0
 else
-   echo "Wrong number of inputs to get_restart.sh"
+   echo "Wrong number of inputs to topaz_get_restart.sh"
    exit
 fi
 
@@ -34,38 +34,81 @@ fi
 
 cyear=`date -u +%Y`			# current year
 cmon=`date -u +%m`			# current month
-cday=`date -d "yesterday" '+%j'`	# current day
+# cday=`date -d "yesterday" '+%j'`	# current day (1 Jan = 0)
+cday=`date -d "today" '+%j'`	        # current day (1 Jan = 1)
+cday=`expr $cday - 1`			# current day (1 Jan = 0)
 pyear=`expr $cyear - 1`			# previous year
-ceye=`find /${rdir}/${cyear} -name TP4restart${cyear}*`
-ceye=( $ceye )
-peye=`find /${rdir}/${pyear} -name TP4restart${pyear}*`
-peye=( $peye )
-cyfil=${rdir}/${cyear}/TP4restart${cyear}*
-pyfil=${rdir}/${pyear}/TP4restart${pyear}*
-shopt -s nullglob
+# ceye=`find /${rdir}/${cyear} -name TP4restart${cyear}*`
+# ceye=( $ceye )
+# peye=`find /${rdir}/${pyear} -name TP4restart${pyear}*`
+# peye=( $peye )
+# cyfil=${rdir}/${cyear}/TP4restart${cyear}*
+# pyfil=${rdir}/${pyear}/TP4restart${pyear}*
+# shopt -s nullglob
+# 
+# #Looking for restarts in current year (${cyear}) or previous year..."
+# if [ ${#cyfil[@]} -gt 0 ]
+# then
+#    # loop over all files in current year
+#    # - last file is most recent date
+#    for f in ${ceye}
+#    do
+# 	f=$(basename $f)
+#    done
+# elif [ ${#pyfil[@]} -gt 0 ]
+# then
+#    cd ${rdir}/${peye}
+#    # loop over all files in previous year
+#    # - last file is most recent date
+#    for f in ${pyfil}
+#    do
+# 	f=$(basename $f)
+#    done
+# else
+#    echo "No recent restarts in ${rdir}"
+#    echo "(none from ${cyear} or ${pyear})."
+#    echo " "
+#    exit
+# fi
 
-#Looking for restarts in current year (${cyear}) or previous year..."
-if [ ${#cyfil[@]} -gt 0 ]
+f="unassigned"
+if [ -d $rdir/$cyear ]
 then
-   # loop over all files in current year
-   # - last file is most recent date
-   for f in ${ceye}
-   do
-	f=$(basename $f)
-   done
-elif [ ${#pyfil[@]} -gt 0 ]
-then
-   cd ${rdir}/${peye}
-   # loop over all files in previous year
-   # - last file is most recent date
-   for f in ${pyfil}
-   do
-	f=$(basename $f)
-   done
+   lfil=$rdir/$cyear/log/TP4rlist #list of restart files
+   if [ -f $lfil ]
+   then
+      f=`cat $lfil | grep "." | tail -1`
+      echo "latest restart: $f"
+      ryear=$cyear
+   else
+      echo "No restarts in current year ($cyear)"
+   fi
 else
-   echo "No recent restarts in ${rdir}"
-   echo "(none from ${cyear} or ${pyear})."
-   echo " "
+   echo "No restarts in current year ($cyear)"
+fi
+
+if [ f == 'unassigned' ]
+then
+   #search previous year
+   if [ -d $rdir/$pyear ]
+   then
+      lfil=$rdir/$pyear/log/TP4rlist #list of restart files
+      if [ -f $lfil ]
+      then
+         f=`cat $lfil | grep "." | tail -1`
+         echo "latest restart: $f"
+         ryear=$pyear
+      else
+         echo "No restarts in previous year ($pyear)"
+      fi
+   else
+      echo "No restarts in previous year ($pyear)"
+   fi
+fi
+
+if [ f == 'unassigned' ]
+then
+   echo "No recent restarts"
    exit
 fi
 
@@ -100,7 +143,9 @@ ufil=${f0}ICE.uf
 
 if [ ! -f $ddir/$afil ]
 then
-   tar -zxvf $rdir/${ryear}/$f0.tar.gz
+   cd $ddir
+   cp $rdir/${ryear}/$f0.tar.gz .
+   tar -zxvf $f0.tar.gz
    mv $afil0 $ddir/$afil
    mv $bfil0 $ddir/$bfil
    mv $ufil0 $ddir/$ufil
@@ -117,15 +162,16 @@ else
    echo " "
 fi
 
-# calculate days between current date
-# and latest restart - if too old (>2 weeks?) send warning
-dsr=`expr $cday - $jday` #Days Since Restart
-
-if [ $dsr -gt 13 ]
-then
-   echo "Restarts too old"
-   exit
-fi
+# TODO check this test
+# # calculate days between current date
+# # and latest restart - if too old (>2 weeks?) send warning
+# dsr=`expr $cday - $jday` #Days Since Restart
+# 
+# if [ $dsr -gt 13 ]
+# then
+#    echo "Restarts too old"
+#    exit
+# fi
 
 # now we need to edit:
 # - infile.in
