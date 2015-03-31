@@ -14,7 +14,8 @@
 
 # set SWARP_ROUTINES with this line in ~/.bash_profile
 # (NB set to correct path where routines are)
-# export SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
+SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
+TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 MAINDIR=$SWARP_ROUTINES/forecast_scripts
 
 # set place of realtime model in .bash_profile also

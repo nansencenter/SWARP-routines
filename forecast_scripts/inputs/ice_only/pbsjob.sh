@@ -71,6 +71,7 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 
 if [ 1 -eq 0 ]
 then
+   # extra processing for SWARP forecasts
    echo "Proceeding with process_FCresults.sh"
    /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
 fi
