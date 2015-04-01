@@ -50,7 +50,7 @@ echo "Combining unpacked files (ncrcat)..."
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPiceonly_forecast_start${start_date}T${start_time}Z.nc
+ofil=SWARPiceonly_forecast_start${tday}T${start_time}Z.nc
 
 # make final file by repacking tmp.nc
 echo " "
