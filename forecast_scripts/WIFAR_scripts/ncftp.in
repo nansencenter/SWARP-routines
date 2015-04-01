@@ -1,0 +1,3 @@
+open myocean
+get /Wave/METNO-WAM-NORDIC/*.nc
+bye

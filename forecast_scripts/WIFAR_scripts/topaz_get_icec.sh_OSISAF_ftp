@@ -1,0 +1,90 @@
+#!/bin/bash
+#Originally by Knut Arild, lightly modified by Laurent
+# Further modifications by Ann Kristin (met.no)
+USER=$(whoami)
+echo "USER is: $USER"
+MAINDIR=/home/ntnu/${USER}/TOPAZ4/Realtime_exp
+WORKDIR=/home/ntnu/${USER}/TOPAZ4
+
+if [ $# -ne 1 ]
+then
+   echo "${0}:Usage: ${0} julday"
+   exit 1
+fi
+ 
+julday=$1
+
+BASE_DIRECTORY="${WORKDIR}/EOdata/IceConcentration/"
+CURRENT_DIR=$(pwd)
+
+DATADIR=/"${BASE_DIRECTORY}DATA/"
+NORSEXDIR="${BASE_DIRECTORY}"
+
+echo "Daily binary files uploaded from mersea.met.no"
+echo "BASE Directory is: $BASE_DIRECTORY"
+echo
+
+# Get current day -- and +- 1 days
+ndays=0
+
+cd $BASE_DIRECTORY
+juldayi=`expr $julday - $ndays`
+endjulday=`expr $julday + $ndays`
+cd $DATADIR
+while [ $juldayi -le $endjulday ]
+do
+  date=`$MAINDIR/Subprogs/julday2date_short $juldayi`
+  if [ ! -f ice_conc_nh_${date}1200.nc ]
+      then 
+      echo "looking for ice_conc_nh_${date}1200.nc at met.no ftp server"
+    cat > ftp.in<<EOF
+open ftp.osisaf.met.no
+user anonymous topaz_drift@met.no
+cd prod_netcdf/ice/conc/
+passive
+bin
+get ice_conc_nh_${date}1200.nc
+bye
+EOF
+    ftp -i -n < ftp.in
+    rm ftp.in
+
+    if [ -f ice_conc_nh_${date}1200.nc ]
+    then
+      echo "OK"
+    else
+      errormessage="ICEC data read - downloading of file ice_conc_nh_${date}1200.nc failed"
+      echo $errormessage
+
+      exit 1
+    fi
+
+#    echo "Unzipping ice_conc_nh_${date}1200.nc.gz...\c "
+#    gunzip -f ice_conc_nh_${date}1200.nc.gz
+#    if [ -f ice_conc_nh_${date}1200.nc ]
+#    then
+#      echo "OK"
+#    else
+#      errormessage="ICEC data read - Uncompressing file ice_conc_nh_${date}1200.nc.gz failed"
+#      echo $errormessage     
+#
+#      exit 1
+#    fi
+    
+  fi
+  
+  juldayi=$(expr $juldayi + 1)
+
+done
+cd $BASE_DIRECTORY
+pwd
+# ./osisaf_average $julday $ndays
+# PEI: Should do some error testing here as well
+
+cd $WORKDIR/AnalysisV2/
+#ln -s -f $BASE_DIRECTORY/icec_${julday}.dat 
+ln -s -f $DATADIR/ice_conc_nh_${date}1200.nc . 
+
+echo "OSISAF Ice concentration data processed"
+cd $CURRENT_DIR
+exit 0
