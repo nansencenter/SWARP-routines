@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 # Run from cron job regularely
 # Updating the WAMNSEA data in /work/shared/nersc/msc/WAMNSEA/
 # Cron settings can be changed by editing 'mycronfile' and updating it

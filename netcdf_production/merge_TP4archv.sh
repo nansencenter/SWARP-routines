@@ -33,9 +33,15 @@ start_time=${f:18:2}0000 # HHMMSS
 
 for f in *.nc
 do
-   echo $f
-   # unpack files to make sure that scale factors are same in each file
-   ncpdq -U $f tmp/$f
+   cf=${f:9:8}
+   if [ $cf -ge $tday ]
+   then
+      echo $f
+      # unpack files to make sure that scale factors are same in each file
+      ncpdq -U $f tmp/$f
+   else
+      echo "*.nc older than actual date"
+   fi
 done
 
 #combine unpacked files
