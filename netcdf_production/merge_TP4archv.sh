@@ -4,6 +4,7 @@
 #########################################################################
 if [ $# -eq 0 ]; then
    tday=`date +%Y%m%d`
+   firstday=`date +%Y-%m-%d`
    dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 elif [ $# -eq 1 ]; then
    dir0=$1
@@ -121,7 +122,8 @@ ncatted -O -h -a references,global,c,c,"www.nersc.no"                         $o
 ncatted -O -h -a comment,global,c,c," "                                       $ofil
 ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
 ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
-ncatted -O -h -a forecast_range,global,c,c,"3 day forecast"                   $ofil
+ncatted -O -h -a forecast_startdate,global,c,c,"$firstday - time=00.00.00Z"   $ofil
+ncatted -O -h -a forecast_range,global,c,c,"5 day forecast"                   $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
 ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
 ncatted -O -h -a institution_references,global,c,c,"http://www.nersc.no/"     $ofil
@@ -133,10 +135,12 @@ ncatted -O -h -a project_references,global,c,c,"swarp.nersc.no"               $o
 ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"          $ofil
 ncatted -O -h -a operational_status,global,c,c,"test"                         $ofil
 #
-ncatted -O -h -a title,global,o,c,"SWARP Waves-in-ice forecast"               $ofil
+ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-# delete old attributes
+ncrename -v bulletin_date,restart_date $ofil #clearer
+
+# delete old attribute(s)
 ncatted -a field_date,global,d,,                                              $ofil
 
 ###########################################################################################
