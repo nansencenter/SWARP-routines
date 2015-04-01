@@ -140,7 +140,7 @@ then
 	cat > ncftp.in<<EOF
 open myocean
 cd $SHOST
-get -f wam_nsea.an.*.nc
+get -f wam_nsea.*.nc
 set confirm-close no
 bye
 EOF
