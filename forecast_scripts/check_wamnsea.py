@@ -12,6 +12,7 @@ import mod_reading as Mrdg
 # import basemap_gridlines as bmg #TODO - put Tim's basemap_gridlines function in py_funs
 
 SEND_EMAIL  = 0
+CHECK_NC    = 1
 
 # setup stereographic basemap
 # - for plotting and also for limiting search area
@@ -30,7 +31,7 @@ bm = Basemap(width=2*xmax,height=2*ymax,\
              resolution='i',projection='stere',\
              lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 
-if 1:
+if CHECK_NC:
    # define netcdf file  
    wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
    ncfil = wmsc+'wam_nsea.an.20141101.nc'#TODO should be determined from today's date
@@ -44,27 +45,28 @@ if 1:
    print(times)
    print(' ')
 
-   # get lon/lat and swh
-   slon  = 'longitude'
-   slat  = 'latitude'
-   sswh  = 'significant_wave_height'
-   lon   = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-   lat   = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-   X,Y   = bm(lon[:,:],lat[:,:],inverse=False)
+   # get lon/lat and restrict to relevant area
+   slon     = 'longitude'
+   slat     = 'latitude'
+   sswh     = 'significant_wave_height'
+   lon      = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+   lat      = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+   X,Y      = bm(lon[:,:],lat[:,:],inverse=False)
+   in_area  = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
 
    # for loop_i in range(Ntimes):
    for loop_i in [0]:
       swh   = Mrdg.nc_get_var(ncfil,sswh,time_index=loop_i)
          # swh[:,:] is a numpy masked array
       Z        = swh[:,:].data
-      in_area  = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
+      mask     = swh[:,:].mask
       Zmax     = swh[in_area].max() # restrict max calc to relevant area
       Zmin     = swh[in_area].min() # restrict max calc to relevant area
 
       # make plot
-      Z[swh[:,:].mask]  = np.NaN
+      Z[mask]  = np.NaN
          # if mask is 'True' (data is missing or invalid) set to NaN
-      f                 = plt.figure()
+      f  = plt.figure()
       bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
       print('range in '+sswh+' (m):') 
       print(Zmin,Zmax)
@@ -96,15 +98,9 @@ if 1:
 
    # filename of text file to form contents of email message 
    textfile = 'message.txt'
-   if 1:
-      f  = open(textfile,'w')
-      f.write('Hei Tim!')
-      f.close()
-   else:
-      # write a proper message to warn there are big waves near the ice
-      print(' ')
-else:
-   textfile = 'test.txt'
+   # f  = open(textfile,'w')
+   # f.write('Hei Tim!')
+   # f.close()
 
 ################################################################
 if SEND_EMAIL:
@@ -113,6 +109,12 @@ if SEND_EMAIL:
 
    # Import the email modules we'll need
    from email.mime.text import MIMEText
+
+   if CHECK_NC==0:
+      textfile = 'message.txt'
+      f  = open(textfile,'w')
+      f.write('Hei Tim!')
+      f.close()
 
    # Open a plain text file for reading.  For this example, assume that
    # the text file contains only ASCII characters.
