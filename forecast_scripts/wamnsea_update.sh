@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 # Run from cron job regularely
 # Updating the WAMNSEA data in /work/shared/nersc/msc/WAMNSEA/
 # Cron settings can be changed by editing 'mycronfile' and updating it
@@ -133,9 +133,10 @@ echo ""
 #check for missed files. the get function in ncftp will download only if the file DOESN'T exist already in the folder
 
 #NOTE if the file exists but it's different this script will overwrite said file
-#every sunday the script will check and merge every file missed in the past week
+#every DAY the script will check and merge every file missed in the past week
+
 cd $LDIR
-if [ $dayname == "Sunday" ]
+if [ $dayname == $dayname ]
 then
 	cat > ncftp.in<<EOF
 open myocean
@@ -147,7 +148,6 @@ EOF
 	ncftp < ncftp.in
 	rm ncftp.in
 	/work/apps/cdo/1.5.4-cray/bin/cdo -O mergetime *.an.${year}*.nc ./${year}/wam_nsea_${year}.nc
-	echo "Weekly update done, have a nice Sunday user"
 fi
 
 cd $MAINDIR 
