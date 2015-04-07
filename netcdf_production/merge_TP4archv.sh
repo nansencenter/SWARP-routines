@@ -145,5 +145,5 @@ ncatted -a field_date,global,d,,                                              $o
 
 ###########################################################################################
 
-mv $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
+mv $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
 

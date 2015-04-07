@@ -21,20 +21,20 @@ CHECK_NC    = 1
 rad   = 18.          # approx radius of image (degrees)
 xmax  = rad*111.e3   # half width of image [m]
 ymax  = rad*111.e3   # half height of image [m]
-cres  = 'i'          # resolution of coast (l=low,i=intermediate,h)
+cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
 #
-lat_ts   = 74.
-lon_0    = 50.
-lat_0    = 74.
+lat_ts   = 74. # deg N
+lon_0    = 50. # deg E
+lat_0    = 74. # deg N
 #
 bm = Basemap(width=2*xmax,height=2*ymax,\
-             resolution='i',projection='stere',\
+             resolution=cres,projection='stere',\
              lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 
 if CHECK_NC:
    # define netcdf file  
    wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
-   ncfil = wmsc+'wam_nsea.an.20141101.nc'#TODO should be determined from today's date
+   ncfil = wmsc+'wam_nsea.an.20141101.nc'#TODO should be determined from today's date use "fc"
    print('netcdf file = '+ncfil)
 
    # get info about nc file
@@ -53,6 +53,9 @@ if CHECK_NC:
    lat      = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
    X,Y      = bm(lon[:,:],lat[:,:],inverse=False)
    in_area  = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
+
+   # TODO read in OSISAF conc file
+   # plot conc + ice edge (15% bm.pcontour? )
 
    # for loop_i in range(Ntimes):
    for loop_i in [0]:
