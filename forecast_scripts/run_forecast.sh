@@ -82,8 +82,3 @@ qs_path=/opt/torque/2.5.13pre-up/bin/ #get from which qsub
 $qs_path/qsub pbsjob.sh
 #################################################################
 
-#################################################################
-# NB not in this script (~2h later)
-# TODO save results (initial restart file,TP4DAILY*,TP4archv) on migrate
-# TODO convert files to netcdf with hyc2proj
-#################################################################

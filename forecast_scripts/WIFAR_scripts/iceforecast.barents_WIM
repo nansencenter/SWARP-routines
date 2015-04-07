@@ -1,0 +1,5 @@
+#1st line is projection, 2nd line target dir for png, 3rd line archive dir
+m_proj('stereographic','lon',52,'lat',75,'rad',14.5,'rec','on','rot',0.0);
+/Data/topaz/Knut/html/IceForecast/Barents2
+/Data/topaz/Knut/html/IceForecast/Barents2/Archive
+#m_proj('stereographic','lon',-1.5,'lat',77,'rad',8.5,'rec','on'); # old one

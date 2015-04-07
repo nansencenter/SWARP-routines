@@ -2,7 +2,6 @@
 # To set up cron job on ONE node, a) > ssh login1, > b) crontab timcrontab, c) > exit 
 # 1) Check restarts from topaz and wamnsea               - Every day @18.00
 # 2) Forecast run                                        - Every day @19.00 
-# 3) Process the products                                - Every day @21.00 TODO put it inside pbsjob
 #
 MAILTO="timothy.williams@nersc.no,gcmdnt90@gmail.com"
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"

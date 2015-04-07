@@ -1,0 +1,12 @@
+# Crontabs on Hexagon run on node nid00128
+# 1) Update atmospheric forecast ecmwrf                         - every day at 22:00
+# 2) Running the forecast simulation for the Fram Strait model  - every day at 23:30
+# 3) Running the forecast simulation for the Barents Sea model  - every day at 23:00
+# 4) Running the forecast simulation for the Topaz4 NA&AO model - Wednesday at 00:05
+MAILTO=jon.bergh@nersc.no
+PATH=/home/nersc/intissar/bin:/opt/xt-boot/2.1.56HD/bin/snos64:/usr/bin:/bin:$HOME/realtime:$HOME/realtime/subprogs:/local/matlab-2007b/bin
+
+00 22 * * * $HOME/Realtime/ecmwfr_update.sh 2>&1 | mail -s "CRON : Update ECMWFR atmospheric forecast" jon.bergh@nersc.no
+## 30 23 * * * $HOME/Realtime/framstrait_forecast.sh 2>&1 | mail -s "CRON : Fram Strait Real-Time" jon.bergh@nersc.no
+00 23 * * * $HOME/Realtime/barents_forecast.sh 2>&1 | mail -s "CRON : BARENTS SEA Real-Time" jon.bergh@nersc.no
+00 21 * * 7 $HOME/Realtime/topaz_nesting_forecast.sh 2>&1 | mail -s "CRON : TOPAZ weekly forecast" jon.bergh@nersc.no
