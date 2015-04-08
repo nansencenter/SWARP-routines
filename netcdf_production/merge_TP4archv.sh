@@ -142,7 +142,7 @@ ncrename -a bulletin_date,restart_date $ofil #clearer
 
 # delete old attribute(s)
 ncatted -a field_date,global,d,,                                              $ofil
-
+ncatted -a history,global,d,,                                                 $ofil
 ###########################################################################################
 
 mv $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
