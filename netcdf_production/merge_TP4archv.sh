@@ -138,7 +138,7 @@ ncatted -O -h -a operational_status,global,c,c,"test"                         $o
 ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-ncrename -v bulletin_date,restart_date $ofil #clearer
+ncrename -a bulletin_date,restart_date $ofil #clearer
 
 # delete old attribute(s)
 ncatted -a field_date,global,d,,                                              $ofil
