@@ -69,4 +69,10 @@ else
         done
 	echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
+echo "Actual List:   "
+echo ""
+cat $TP4rlist #printing the list
+echo "Today's Log:   "
+echo ""
 cat $TP4rlog #printing the log
+rm $TP4rlog
