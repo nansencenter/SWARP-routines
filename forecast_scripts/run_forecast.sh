@@ -1,13 +1,23 @@
 # get restart
 echo "This script will: "
-echo "1) Get the restarts - topaz_get_restart.sh "
-echo "2) Prepare the infile.in - make_infile4forecast.sh"
-echo "3) Run the model - pbsjob.sh"
+echo "1) Create today's datelist"
+echo "2) Get the restarts - topaz_get_restart.sh "
+echo "3) Prepare the infile.in - make_infile4forecast.sh"
+echo "4) Run the model - pbsjob.sh"
 echo " "
 # paths that are in bash_profile - does crontab not recognise these?
 SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
 TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 # source $HOME/.bash_profile # try getting environment variables this way
+
+# creating the datelist
+touch datelist
+echo $(date +%Y%m%d) >> datelist
+echo $(date +%Y-%m-%d) >> datelist
+echo $(date +%Y) >> datelist
+echo $(date +%m) >> datelist
+echo $(date +%d) >> datelist
+echo $(date +%j) >> datelist
 
 rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work # where the last_restart.txt will end up
 cd $rundir

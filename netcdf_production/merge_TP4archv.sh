@@ -3,8 +3,9 @@
 
 #########################################################################
 if [ $# -eq 0 ]; then
-   tday=`date +%Y%m%d`
-   firstday=`date +%Y-%m-%d`
+   #tday=`date +%Y%m%d`
+   tday=$1
+   firstday=$2
    dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 elif [ $# -eq 1 ]; then
    dir0=$1
@@ -145,5 +146,5 @@ ncatted -a field_date,global,d,,                                              $o
 ncatted -a history,global,d,,                                                 $ofil
 ###########################################################################################
 
-mv $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
+mv /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf/$ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
 
