@@ -12,6 +12,9 @@ ldir=$bdir/$cyear/log # where to put the log file and file list (one for each ye
 
 mkdir -p $ldir # create the log dir if it doesn't exist already
 TP4rlog=$ldir/TP4rlog #keeping a log (OK if this is for current year not restart year)
+rm $TP4rlog
+touch $TP4rlog
+
 nm=`date -u '+%m'`
 om=`date -d "yesterday" '+%m'`
 oy=`date -d "yesterday" '+%Y'`

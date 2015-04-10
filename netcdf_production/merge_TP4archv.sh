@@ -2,19 +2,9 @@
 # script to extract some variables from a netcdf file
 
 #########################################################################
-if [ $# -eq 0 ]; then
-   #tday=`date +%Y%m%d`
-   tday=$1
-   firstday=$2
-   dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
-elif [ $# -eq 1 ]; then
-   dir0=$1
-else
-   echo "Usage:"
-   echo "merge_TP4archv.sh [directory name]"
-   echo "- merges netcdf files in directory into one file with ncrcat"
-   exit
-fi
+tday=$1
+firstday=$2
+dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 #########################################################################
 
 #extract start date/time of forecast
