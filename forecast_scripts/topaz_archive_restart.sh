@@ -12,6 +12,9 @@ ldir=$bdir/$cyear/log # where to put the log file and file list (one for each ye
 
 mkdir -p $ldir # create the log dir if it doesn't exist already
 TP4rlog=$ldir/TP4rlog #keeping a log (OK if this is for current year not restart year)
+rm $TP4rlog
+touch $TP4rlog
+
 nm=`date -u '+%m'`
 om=`date -d "yesterday" '+%m'`
 oy=`date -d "yesterday" '+%Y'`
@@ -69,4 +72,10 @@ else
         done
 	echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
+echo "Actual List:   "
+echo ""
+cat $TP4rlist #printing the list
+echo "Today's Log:   "
+echo ""
 cat $TP4rlog #printing the log
+rm $TP4rlog

@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script will collect and archive the results of the local TP4 model
 
-echo "Collecting data produced in date `date +%d/%m/%Y`"
+echo "Collecting data produced in date $2"
 
 # defining all the dir that will be used
 RTM=/work/timill/RealTime_Models
@@ -10,7 +10,7 @@ WKDIR=$RTM/results/TP4a0.12/ice_only/work
 FCDIR=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
 
 
-tday=`date +%Y%m%d`
+tday=$1
 TDIR=$WKDIR/$tday
 mkdir -p $WKDIR/$tday/bin
 mkdir -p $WKDIR/$tday/netcdf
