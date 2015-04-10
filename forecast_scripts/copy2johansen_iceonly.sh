@@ -11,7 +11,7 @@ touch cplog.txt
 
 # checking if everything on hexagon worked fine and if the file is ready
 # let's start with a check every 20 mins
-for tm in {0..10}
+for tm in {0..20}
 do
    cat > sftp.in<<EOF
 cd $rdy_dir
