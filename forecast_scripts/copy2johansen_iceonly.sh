@@ -9,9 +9,9 @@ mkdir -p $tmp_dir
 rm cplog.txt
 touch cplog.txt
 
-# cheching if everything on hexagon worked fine and if the file is ready
+# checking if everything on hexagon worked fine and if the file is ready
 # let's start with a check every 20 mins
-for tm in {0..10}
+for tm in {0..20}
 do
    cat > sftp.in<<EOF
 cd $rdy_dir
@@ -35,6 +35,7 @@ rm sftp.in
        echo "Looking for product $hdate" >> cplog.txt
        hex_fil=SWARPiceonly_forecast_start*T000000Z.nc  # final file
        scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+       chmod o+r $tmp_dir/$hex_fil
        if [ -f $tmp_dir/$hex_fil ]
        then
           mv $tmp_dir/* $joh_dir/

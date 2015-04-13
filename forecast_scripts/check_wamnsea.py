@@ -33,9 +33,13 @@ bm = Basemap(width=2*xmax,height=2*ymax,\
 
 if CHECK_NC:
    # define netcdf file  
+   import time
+   from datetime import date
+   tday = date.today()
+   cday = '%s%02d%02d' % (tday.year, tday.month, tday.day)
    wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
-   ncfil = wmsc+'wam_nsea.an.20141101.nc'#TODO should be determined from today's date use "fc"
-   print('netcdf file = '+ncfil)
+   ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
+   print('ne   tcdf file = ' + ncfil)
 
    # get info about nc file
    ncinfo_wav  = Mrdg.nc_getinfo(ncfil)
@@ -56,6 +60,21 @@ if CHECK_NC:
 
    # TODO read in OSISAF conc file
    # plot conc + ice edge (15% bm.pcontour? )
+   # get lon/lat and restrict to relevant area
+   osisaf = '/work/shared/nersc/msc/OSI-SAF/' + tday.year + '_nh_polstere'
+   osifil = osisaf + 'ice_conc_nh_polstere-100_multi_' + cday + '1200.nc'
+   ncfil2   = ''# TODO name of yesterday's OSISAF file
+   clon     = ''
+   clat     = ''
+   cconc    = ''
+   lon2     = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+   lat2     = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+   X2,Y2    = bm(lon[:,:],lat[:,:],inverse=False)
+   #in_area  = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
+   conc    = Mrdg.nc_get_var(ncfil,cconc)
+
+   # get 15% conc contour
+   # http://stackoverflow.com/questions/5666056/matplotlib-extracting-data-from-contour-lines
 
    # for loop_i in range(Ntimes):
    for loop_i in [0]:

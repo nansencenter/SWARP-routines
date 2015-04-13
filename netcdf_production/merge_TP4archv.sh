@@ -2,18 +2,9 @@
 # script to extract some variables from a netcdf file
 
 #########################################################################
-if [ $# -eq 0 ]; then
-   tday=`date +%Y%m%d`
-   firstday=`date +%Y-%m-%d`
-   dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
-elif [ $# -eq 1 ]; then
-   dir0=$1
-else
-   echo "Usage:"
-   echo "merge_TP4archv.sh [directory name]"
-   echo "- merges netcdf files in directory into one file with ncrcat"
-   exit
-fi
+tday=$1
+firstday=$2
+dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 #########################################################################
 
 #extract start date/time of forecast
@@ -138,12 +129,12 @@ ncatted -O -h -a operational_status,global,c,c,"test"                         $o
 ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-ncrename -v bulletin_date,restart_date $ofil #clearer
+ncrename -a bulletin_date,restart_date $ofil #clearer
 
 # delete old attribute(s)
 ncatted -a field_date,global,d,,                                              $ofil
-
+ncatted -a history,global,d,,                                                 $ofil
 ###########################################################################################
 
-mv $ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
+mv /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf/$ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
 
