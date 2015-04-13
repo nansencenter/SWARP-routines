@@ -50,10 +50,10 @@ do
    echo " "
 
    echo hyc2proj $g
-   echo mv *.nc $sdir
+   echo cp *.nc $sdir
    echo " "
    hyc2proj $g
-   mv *.nc $sdir
+   cp *.nc $sdir
 done
 
 echo "********************************************************"

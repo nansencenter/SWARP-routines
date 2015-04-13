@@ -87,8 +87,11 @@ cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/pbsjob.sh pbsjob.sh
 rm data/TP4DAILY*
 rm data/TP4archv*
 
+# clean log file - else mpijob.out gets too big
+rm log/*
+
 # launch job
-qs_path=/opt/torque/2.5.13pre-up/bin/ #get from which qsub
-$qs_path/qsub pbsjob.sh
+qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
+$qsub pbsjob.sh
 #################################################################
 
