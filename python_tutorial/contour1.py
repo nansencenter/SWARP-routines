@@ -36,7 +36,7 @@ Z = 10.0 * (Z2 - Z1)
 # the label
 fig   = plt.figure()
 cs    = plt.contour(X, Y, Z)
-# plt.clabel(cs, inline=1, fontsize=10)
+# plt.clabel(cs, inline=1, fontsize=10) # show labels on plot
 plt.title('Simplest default with labels')
 plt.savefig(figdir+'/test1.png')
 plt.close()
@@ -47,8 +47,9 @@ fig   = plt.figure()
 for nl in range(len(coll)):
    # loop over levels
    p     = coll[nl].get_paths()
-   print(nl,cs.levels[nl],len(p))
-   for ns in range(len(p)):
+   nseg  = len(p)
+   print(nl,cs.levels[nl],nseg)
+   for ns in range(nseg):
       # loop over segments
       v     = p[ns].vertices
       x     = v[:,0]
