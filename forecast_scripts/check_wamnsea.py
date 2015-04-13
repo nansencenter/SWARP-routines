@@ -34,12 +34,14 @@ bm = Basemap(width=2*xmax,height=2*ymax,\
 if CHECK_NC:
    # define netcdf file  
    import time
-   from datetime import date
+   from datetime import date, timedelta
    tday = date.today()
-   cday = '%s%02d%02d' % (tday.year, tday.month, tday.day)
+   yday = date.today() - timedelta(1)
+   cday = tday.strftime('%Y%m%d')
+   pday = yday.strftime('%Y%m%d')
    wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
    ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
-   print('ne   tcdf file = ' + ncfil)
+   print('WAMNSEA file = ' + ncfil+'\n')
 
    # get info about nc file
    ncinfo_wav  = Mrdg.nc_getinfo(ncfil)
@@ -61,20 +63,22 @@ if CHECK_NC:
    # TODO read in OSISAF conc file
    # plot conc + ice edge (15% bm.pcontour? )
    # get lon/lat and restrict to relevant area
-   osisaf = '/work/shared/nersc/msc/OSI-SAF/' + tday.year + '_nh_polstere'
-   osifil = osisaf + 'ice_conc_nh_polstere-100_multi_' + cday + '1200.nc'
-   ncfil2   = ''# TODO name of yesterday's OSISAF file
-   clon     = ''
-   clat     = ''
-   cconc    = ''
-   lon2     = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-   lat2     = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-   X2,Y2    = bm(lon[:,:],lat[:,:],inverse=False)
+   osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
+   ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
+   print('OSISAF file = '+ncfil2+'\n')
+   clon     = 'lon'
+   clat     = 'lat'
+   cconc    = 'ice_conc'
+   edge_level = 15
+   lon2     = Mrdg.nc_get_var(ncfil2,clon) # lon[:,:] is a numpy array
+   lat2     = Mrdg.nc_get_var(ncfil2,clat) # lat[:,:] is a numpy array
+   X2,Y2    = bm(lon2[:,:],lat2[:,:],inverse=False)
    #in_area  = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
-   conc    = Mrdg.nc_get_var(ncfil,cconc)
+   conc     = Mrdg.nc_get_var(ncfil2,cconc,time_index=0)
+   Z2       = conc[:,:].data
+   mask2    = conc[:,:].mask
+   Z2[mask2] = np.NaN
 
-   # get 15% conc contour
-   # http://stackoverflow.com/questions/5666056/matplotlib-extracting-data-from-contour-lines
 
    # for loop_i in range(Ntimes):
    for loop_i in [0]:
@@ -85,6 +89,7 @@ if CHECK_NC:
       Zmax     = swh[in_area].max() # restrict max calc to relevant area
       Zmin     = swh[in_area].min() # restrict max calc to relevant area
 
+      ##############################################################################
       # make plot
       Z[mask]  = np.NaN
          # if mask is 'True' (data is missing or invalid) set to NaN
@@ -95,6 +100,26 @@ if CHECK_NC:
       print(' ')
 
       bm.colorbar()
+      ##############################################################################
+
+      ##############################################################################
+      # plot ice edge
+      # (get 15% conc contour)
+      # http://stackoverflow.com/questions/5666056/matplotlib-extracting-data-from-contour-lines
+      cs1   = bm.contour(X2,Y2,Z2,[edge_level])#,'k',linewidth=2)
+      print(cs1)
+      coll1 = cs1.collections
+      p     = coll1[0].get_paths() # only one conc contour so use 0 
+      nseg  = len(p)
+      for ns in range(nseg):
+         # loop over segments
+         v     = p[ns].vertices
+         x     = v[:,0]
+         y     = v[:,1]
+         bm.plot(x,y,'--m',linewidth=1.5)
+      ##############################################################################
+
+      ##############################################################################
       #
       bm.drawcoastlines()
       bm.fillcontinents(color='gray')
