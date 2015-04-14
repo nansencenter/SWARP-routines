@@ -14,5 +14,6 @@ netcdf_production/output/*
 forecast_scripts/hidden/*
 forecast_scripts/test/*
 forecast_scripts/test_check/*
+forecast_scripts/out/*
 #
 python_tutorial/out

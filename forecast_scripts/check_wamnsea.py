@@ -12,7 +12,26 @@ import mod_reading as Mrdg
 
 SEND_EMAIL  = 0
 CHECK_NC    = 1
+odir        = 'out' # where to put temporary outputs
 
+############################################################################
+def finish_map(bm):
+   # finish_map(bm)
+   # *bm is a basemap
+   bm.drawcoastlines()
+   bm.fillcontinents(color='gray')
+
+   # draw parallels and meridians.
+   bm.drawparallels(np.arange(60.,91.,10.),\
+         labels=[True,False,True,True]) # labels = [left,right,top,bottom]
+   bm.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
+         labels=[True,False,False,True])
+   bm.drawmapboundary() # fill_color='aqua')
+
+   return
+############################################################################
+
+############################################################################
 def dist_cont2cont(xice,yice,xwav,ywav,bm):
 
   n1=len(xice)
@@ -24,11 +43,12 @@ def dist_cont2cont(xice,yice,xwav,ywav,bm):
     dist2[n]=dist1.min()
     
   imin=dist2.argmin()
-  dist=dist2[imin] #TODO want xmin,ymin on ice corresponding to dist
+  dist=dist2[imin] # want xmin,ymin on ice corresponding to dist
   xmin = xice[imin]
   ymin = yice[imin]
   lon,lat    = bm(xmin,ymin,inverse=True)
   return dist,lon,lat
+############################################################################
 
 
 # setup stereographic basemap
@@ -56,9 +76,9 @@ if CHECK_NC:
    yday = date.today() - timedelta(1)
    cday = tday.strftime('%Y%m%d')
    pday = yday.strftime('%Y%m%d')
-   #   wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
-   #   ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
-   ncfil = 'test_check/wam_nsea.fc.20150413.nc'
+   wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
+   ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
+   #ncfil = 'test_check/wam_nsea.fc.20150413.nc'
    print('WAMNSEA file = ' + ncfil+'\n')
 
    # get info about nc file
@@ -78,12 +98,12 @@ if CHECK_NC:
    X,Y      = bm(lon[:,:],lat[:,:],inverse=False)
    in_area  = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
 
-   # TODO read in OSISAF conc file
+   # read in OSISAF conc file
    # plot conc + ice edge (15% bm.pcontour? )
    # get lon/lat and restrict to relevant area
-   # osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
-   # ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
-   ncfil2 = 'test_check/ice_conc_nh_polstere-100_multi_201504121200.nc'
+   osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
+   ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
+   #ncfil2 = 'test_check/ice_conc_nh_polstere-100_multi_201504121200.nc'
    print('OSISAF file = '+ncfil2+'\n')
    clon     = 'lon'
    clat     = 'lat'
@@ -115,7 +135,10 @@ if CHECK_NC:
       Z[mask]  = np.NaN
          # if mask is 'True' (data is missing or invalid) set to NaN
 
+      ##############################################################################
       if 0:
+        # make test plot showing ice edge contour
+        # TODO try better contour finder? skimage?
         g  = plt.figure()
         bm.pcolor(X2,Y2,Z2,vmin=0,vmax=100)
         # plot ice edge
@@ -134,19 +157,13 @@ if CHECK_NC:
              x     = v[:,0]
              y     = v[:,1]
              bm.plot(x,y,'--m',linewidth=1.5)
-        bm.drawcoastlines()
-        bm.fillcontinents(color='gray')
 
-        # draw parallels and meridians.
-        bm.drawparallels(np.arange(60.,91.,10.),\
-          labels=[True,False,True,True]) # labels = [left,right,top,bottom]
-        bm.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
-          labels=[True,False,False,True])
-        bm.drawmapboundary() # fill_color='aqua')
-
-        plt.savefig('test2.png')
+        finish_map(bm)
+        figname  = odir+'/test2.png'
+        plt.savefig(figname)
         plt.close()
         g.clf()
+      ##############################################################################
 
       f  = plt.figure()
       bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
@@ -212,17 +229,24 @@ if CHECK_NC:
 
       ##############################################################################
       #
-      bm.drawcoastlines()
-      bm.fillcontinents(color='gray')
+      if 0:
+         # add test point to plot
+         # - to check if SAR image is ordered in the right place
+         # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
+         #   then use trial and error
+         # TODO add automatic estimate for SAR image? (plot points on ice edge that have high waves near them?)
+         lon_plot = 35.0
+         lat_plot = 77.114
+         print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+         x_plot,y_plot  = bm(lon_plot,lat_plot)
+         bm.plot(x_plot,y_plot,'og',markersize=5)
 
-      # draw parallels and meridians.
-      bm.drawparallels(np.arange(60.,91.,10.),\
-            labels=[True,False,True,True]) # labels = [left,right,top,bottom]
-      bm.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
-            labels=[True,False,False,True])
-      bm.drawmapboundary() # fill_color='aqua')
-      #
-      figname  = 'test.png'
+      finish_map(bm)
+
+      #TODO add date+time to title and file name
+      #TODO add label '$H_s$, m' to colorbar
+      figname  = odir+'/test.png'
+
       plt.savefig(figname)
       print('saving figure:')
       print(figname+'\n')
@@ -231,11 +255,11 @@ if CHECK_NC:
       # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
 
 
-      # TODO search in swh to find when there are large waves (>4m) in the vicinity of the ice.
-      # TODO write and send an email to warn when this happens (so we can order some SAR images)
+      # swh to find when there are large waves (>4m) in the vicinity of the ice.
+      # write and send an email to warn when this happens (so we can order some SAR images)
 
    # filename of text file to form contents of email message 
-   textfile = 'message.txt'
+   textfile = odir+'/message.txt'
    nout=len(out_list)
    if nout>0:
      SEND_EMAIL2=1
@@ -243,10 +267,17 @@ if CHECK_NC:
 
      for mm in range(nout):
        list0=out_list[mm]
-       line='\n'#TODO get info from out_list
-       for ii in range(3,-1,-1):
-         line=3*' '+str(list0[ii])+line
-
+       line='\n' #get info from out_list
+       if list0[3] >= 3 and list0[0] <= 5:
+          for ii in range(3,-1,-1):
+             line=3*' '+str(list0[ii])+line
+       elif list0[3] >= 4 and list0[0] <= 20:
+          for ii in range(3,-1,-1):
+             line=3*' '+str(list0[ii])+line
+       elif list0[3] >= 5 and list0[0] <= 50:
+          for ii in range(3,-1,-1):
+             line=3*' '+str(list0[ii])+line
+ 
        tf.write(line)
 
      tf.close()
