@@ -72,10 +72,12 @@ if CHECK_NC:
    # define netcdf file  
    import time
    from datetime import date, timedelta
-   tday = date.today()
-   yday = date.today() - timedelta(1)
-   cday = tday.strftime('%Y%m%d')
-   pday = yday.strftime('%Y%m%d')
+   tday  = date.today()
+   yday  = date.today() - timedelta(1)
+   yday2 = date.today() - timedelta(2)
+   cday  = tday.strftime('%Y%m%d')
+   pday  = yday.strftime('%Y%m%d')
+   pday2 = yday2.strftime('%Y%m%d')
    wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
    ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
    #ncfil = 'test_check/wam_nsea.fc.20150413.nc'
@@ -102,8 +104,10 @@ if CHECK_NC:
    # plot conc + ice edge (15% bm.pcontour? )
    # get lon/lat and restrict to relevant area
    osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
-   ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
    #ncfil2 = 'test_check/ice_conc_nh_polstere-100_multi_201504121200.nc'
+   ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
+   if not os.path.exists(ncfil2):
+      ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday2 + '1200.nc'
    print('OSISAF file = '+ncfil2+'\n')
    clon     = 'lon'
    clat     = 'lat'
@@ -196,36 +200,42 @@ if CHECK_NC:
       Hthresh=3
       Hmax=np.ceil(Zmax)
       Hlev=np.arange(Hthresh,Hmax,.5)
-      cs0   = bm.contour(X,Y,Z,Hlev)#,'k',linewidth=2)
-      print(cs0)
-      coll0 = cs0.collections
-      nlev0 = len(coll0)
-      dist_thresh=50.e3
-      out_list=[]
-      for nl in range(nlev0):
-        swh0=cs0.levels[nl]
-        p     = coll0[nl].get_paths() # only one conc contour so use 0 
-        nseg  = len(p)
-        for ns in range(nseg):
-           # loop over segments
-           v     = p[ns].vertices
-           x     = v[:,0]
-           y     = v[:,1]
 
-           #loop over all ice edges
-           for nl2 in range(nlev1):
-             p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
-             nseg2 = len(p2)
-             for ns2 in range(nseg2):
-                # loop over segments
-                v2    = p2[ns2].vertices
-                x2    = v2[:,0]
-                y2    = v2[:,1]
-                dist,lon_min,lat_min=dist_cont2cont(x2,y2,x,y,bm) # output (lon,lat) for ice
-                if dist<dist_thresh:
-                  dist_list=[dist,lon_min,lat_min,swh0]
-                  out_list.append(dist_list)
-           #bm.plot(x,y,'--g',linewidth=1.5)
+      if len(Hlev)==0:
+         #no waves over threshhold
+         out_list = []
+      else:
+         #some waves over threshhold
+         cs0   = bm.contour(X,Y,Z,Hlev)#,'k',linewidth=2)
+         print(cs0)
+         coll0 = cs0.collections
+         nlev0 = len(coll0)
+         dist_thresh=50.e3
+         out_list=[]
+         for nl in range(nlev0):
+           swh0=cs0.levels[nl]
+           p     = coll0[nl].get_paths() # only one conc contour so use 0 
+           nseg  = len(p)
+           for ns in range(nseg):
+              # loop over segments
+              v     = p[ns].vertices
+              x     = v[:,0]
+              y     = v[:,1]
+
+              #loop over all ice edges
+              for nl2 in range(nlev1):
+                p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
+                nseg2 = len(p2)
+                for ns2 in range(nseg2):
+                   # loop over segments
+                   v2    = p2[ns2].vertices
+                   x2    = v2[:,0]
+                   y2    = v2[:,1]
+                   dist,lon_min,lat_min=dist_cont2cont(x2,y2,x,y,bm) # output (lon,lat) for ice
+                   if dist<dist_thresh:
+                     dist_list=[dist,lon_min,lat_min,swh0]
+                     out_list.append(dist_list)
+              #bm.plot(x,y,'--g',linewidth=1.5)
 
       ##############################################################################
       #
