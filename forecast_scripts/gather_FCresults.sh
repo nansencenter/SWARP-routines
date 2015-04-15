@@ -11,6 +11,7 @@ FCDIR=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
 
 
 tday=$1
+
 TDIR=$WKDIR/$tday
 mkdir -p $WKDIR/$tday/bin
 mkdir -p $WKDIR/$tday/netcdf
@@ -29,7 +30,3 @@ cp $DFDIR/log/mpijob.out $TDIR/info
 cp $TP4_REALTIME/Build_V2.2.12_X01.1/flags $TDIR/info
 mv $FCDIR/last_restart.txt $TDIR/info
 echo "Transfer complete"
-echo ""
-echo "Producing the websitego file"
-touch $RTM/results/TP4a0.12/ice_only/website/websitego
-echo $tday > $RTM/results/TP4a0.12/ice_only/website/websitego

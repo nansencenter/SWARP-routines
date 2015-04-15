@@ -9,15 +9,16 @@ echo " "
 SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
 TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 # source $HOME/.bash_profile # try getting environment variables this way
-
 # creating the datelist
-touch datelist
-echo $(date +%Y%m%d) >> datelist
-echo $(date +%Y-%m-%d) >> datelist
-echo $(date +%Y) >> datelist
-echo $(date +%m) >> datelist
-echo $(date +%d) >> datelist
-echo $(date +%j) >> datelist
+datelist=$SWARP_ROUTINES/forecast_scripts/datelist
+rm $datelist
+touch $datelist
+echo $(date +%Y%m%d) >> $datelist
+echo $(date +%Y-%m-%d) >> $datelist
+echo $(date +%Y) >> $datelist
+echo $(date +%m) >> $datelist
+echo $(date +%d) >> $datelist
+echo $(date +%j) >> $datelist
 
 rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work # where the last_restart.txt will end up
 cd $rundir

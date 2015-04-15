@@ -7,22 +7,14 @@
 
 rdir=/work/fanf/TOPAZ_RT #restart dir
 bdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts #backup dir
-cyear=`date -u "+%Y"` # current day
+cyear=$(date -u "+%Y") # current day
 ldir=$bdir/$cyear/log # where to put the log file and file list (one for each year)
 
 mkdir -p $ldir # create the log dir if it doesn't exist already
 TP4rlog=$ldir/TP4rlog #keeping a log (OK if this is for current year not restart year)
+
 rm $TP4rlog
 touch $TP4rlog
-
-nm=`date -u '+%m'`
-om=`date -d "yesterday" '+%m'`
-oy=`date -d "yesterday" '+%Y'`
-odir=$bdir/$oy
-if [ $nm -ne $om ] #moving log is older than 1 month
-then
-	mv $odir/TP4rlog $odir/TP4rlog$om$oy
-fi
 
 echo "NEW OPERATION" >> $TP4rlog
 date >> $TP4rlog #signing the time of the operation
