@@ -11,7 +11,12 @@ TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 # source $HOME/.bash_profile # try getting environment variables this way
 # creating the datelist
 datelist=$SWARP_ROUTINES/forecast_scripts/datelist
-rm $datelist
+
+if [ -f $datelist ]
+then
+   rm $datelist
+fi
+
 touch $datelist
 echo $(date +%Y%m%d) >> $datelist
 echo $(date +%Y-%m-%d) >> $datelist
@@ -20,25 +25,27 @@ echo $(date +%m) >> $datelist
 echo $(date +%d) >> $datelist
 echo $(date +%j) >> $datelist
 
-rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work # where the last_restart.txt will end up
+rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d') # where the last_restart.txt will end up
 cd $rundir
+mkdir -p ./info
+cp $datelist ./info
 $SWARP_ROUTINES/forecast_scripts/topaz_get_restart.sh # get latest restart file
 cd $rundir # just in case we've changed dir in script
 
 #textfile output:
-out_restart=last_restart.txt
+out_restart=./info/last_restart.txt
 
-year_today=`date -u +%Y`
-rname=`cat $out_restart`
-mv $out_restart $SWARP_ROUTINES/forecast_scripts
+year_today=$(cat $datelist | sed '3!d')
+rname=$(cat $out_restart)
+
 rgen=${rname:0:3}   # eg TP4
 ryear=${rname:10:4} # year of restart file
 rday=${rname:15:3}  # julian day of restart file (1 Jan = 0)
 
 #################################################################
 # make infile
-jday0=`date -d "today" '+%j'` # julian day of today (1=1st Jan => need to change)
-jday_today0=`expr $jday0 - 1`   # julian day of TOPAZ (0=1st Jan)
+jday0=$(cat $datelist | sed '6!d') # julian day of today (1=1st Jan => need to change)
+jday_today0=$(expr $jday0 - 1)   # julian day of TOPAZ (0=1st Jan)
 jday_today=`printf '%3.3d' $jday_today0`
 
 # if last restart was in different year to this year:
@@ -49,10 +56,10 @@ then
 fi
 
 fc_days=5 # 5-day forecast check this works at/near year change
-final_day=`expr $jday_today + $fc_days`
+final_day=$(expr $jday_today + $fc_days)
 
 # print to screen - work out if last day of forecast is in a different year to current year
-ndays=`date --date="${year_today}-12-31" +%j` # days in current year
+ndays=$(date --date="${year_today}-12-31" +%j) # days in current year
 if [ $final_day -gt $((ndays-1)) ]
 then
 	fc_final_day=`expr $final_day - $ndays`
@@ -95,4 +102,4 @@ rm log/*
 qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
 $qsub pbsjob.sh
 #################################################################
-
+   

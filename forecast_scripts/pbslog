@@ -1,0 +1,2910 @@
+
+Proceeding with process_FCresults.sh
+
+********************************************************
+Running hyc2proj on TP4archv.2015_102_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_000000Z.a
+cp *.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_030000Z.a
+cp TP4archv_20150413_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_102_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_102_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150413_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_103_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_103_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150414_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_104_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_104_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150415_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_105_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_105_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150416_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_106_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_106_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150417_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_107_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_107_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150418_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_108_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_108_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150419_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_00.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_030000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_030000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_03.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_060000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_060000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_06.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_090000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_090000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc TP4archv_20150420_06.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_09.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_120000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_120000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc TP4archv_20150420_06.nc TP4archv_20150420_09.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_12.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_150000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_150000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc TP4archv_20150420_06.nc TP4archv_20150420_09.nc TP4archv_20150420_12.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_15.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_180000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_180000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc TP4archv_20150420_06.nc TP4archv_20150420_09.nc TP4archv_20150420_12.nc TP4archv_20150420_15.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_18.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_109_210000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_109_210000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc TP4archv_20150420_06.nc TP4archv_20150420_09.nc TP4archv_20150420_12.nc TP4archv_20150420_15.nc TP4archv_20150420_18.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150420_21.nc
+ 
+ 
+********************************************************
+Running hyc2proj on TP4archv.2015_110_000000Z.a...
+********************************************************
+ 
+hyc2proj TP4archv.2015_110_000000Z.a
+cp TP4archv_20150413_00.nc TP4archv_20150413_03.nc TP4archv_20150413_06.nc TP4archv_20150413_09.nc TP4archv_20150413_12.nc TP4archv_20150413_15.nc TP4archv_20150413_18.nc TP4archv_20150413_21.nc TP4archv_20150414_00.nc TP4archv_20150414_03.nc TP4archv_20150414_06.nc TP4archv_20150414_09.nc TP4archv_20150414_12.nc TP4archv_20150414_15.nc TP4archv_20150414_18.nc TP4archv_20150414_21.nc TP4archv_20150415_00.nc TP4archv_20150415_03.nc TP4archv_20150415_06.nc TP4archv_20150415_09.nc TP4archv_20150415_12.nc TP4archv_20150415_15.nc TP4archv_20150415_18.nc TP4archv_20150415_21.nc TP4archv_20150416_00.nc TP4archv_20150416_03.nc TP4archv_20150416_06.nc TP4archv_20150416_09.nc TP4archv_20150416_12.nc TP4archv_20150416_15.nc TP4archv_20150416_18.nc TP4archv_20150416_21.nc TP4archv_20150417_00.nc TP4archv_20150417_03.nc TP4archv_20150417_06.nc TP4archv_20150417_09.nc TP4archv_20150417_12.nc TP4archv_20150417_15.nc TP4archv_20150417_18.nc TP4archv_20150417_21.nc TP4archv_20150418_00.nc TP4archv_20150418_03.nc TP4archv_20150418_06.nc TP4archv_20150418_09.nc TP4archv_20150418_12.nc TP4archv_20150418_15.nc TP4archv_20150418_18.nc TP4archv_20150418_21.nc TP4archv_20150419_00.nc TP4archv_20150419_03.nc TP4archv_20150419_06.nc TP4archv_20150419_09.nc TP4archv_20150419_12.nc TP4archv_20150419_15.nc TP4archv_20150419_18.nc TP4archv_20150419_21.nc TP4archv_20150420_00.nc TP4archv_20150420_03.nc TP4archv_20150420_06.nc TP4archv_20150420_09.nc TP4archv_20150420_12.nc TP4archv_20150420_15.nc TP4archv_20150420_18.nc TP4archv_20150420_21.nc /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf
+ 
+xcspmd: idm,jdm =  800  880
+ Load grid positions from file: regional.grid.a
+ Load depths from file: regional.depth.a
+Projection:polar_stereographic
+SW Lon   : -3800.000
+NE lon   :  3800.000
+Delta lon:    12.500
+SW lat   : -5500.000
+NE lat   :  5500.000
+Delta lat:    12.500
+polar_stereographic central longitude:   -45.000
+polar_stereographic central latitude:    90.000
+polar_stereographic conv factor:     0.010
+polar_stereographic rotate to output grid:    F
+ initconfmap: not lold
+  1 Depth levels:
+Depth level :  1      5.00
+ 
+  
+ ********************************************
+ new style archv header file (archv_wav)
+ ********************************************
+  
+ The following variables (and corresponding layers) will be printed:
+ficem   
+hicem   
+Processing 2D Scalar  ficem   
+Processing 2D Scalar  hicem   
+ 
+Generated TP4archv_20150421_00.nc
+ 
+ 
+********************************************************
+Netcdf files in /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf:
+TP4archv_20150413_00.nc
+TP4archv_20150413_03.nc
+TP4archv_20150413_06.nc
+TP4archv_20150413_09.nc
+TP4archv_20150413_12.nc
+TP4archv_20150413_15.nc
+TP4archv_20150413_18.nc
+TP4archv_20150413_21.nc
+TP4archv_20150414_00.nc
+TP4archv_20150414_03.nc
+TP4archv_20150414_06.nc
+TP4archv_20150414_09.nc
+TP4archv_20150414_12.nc
+TP4archv_20150414_15.nc
+TP4archv_20150414_18.nc
+TP4archv_20150414_21.nc
+TP4archv_20150415_00.nc
+TP4archv_20150415_03.nc
+TP4archv_20150415_06.nc
+TP4archv_20150415_09.nc
+TP4archv_20150415_12.nc
+TP4archv_20150415_15.nc
+TP4archv_20150415_18.nc
+TP4archv_20150415_21.nc
+TP4archv_20150416_00.nc
+TP4archv_20150416_03.nc
+TP4archv_20150416_06.nc
+TP4archv_20150416_09.nc
+TP4archv_20150416_12.nc
+TP4archv_20150416_15.nc
+TP4archv_20150416_18.nc
+TP4archv_20150416_21.nc
+TP4archv_20150417_00.nc
+TP4archv_20150417_03.nc
+TP4archv_20150417_06.nc
+TP4archv_20150417_09.nc
+TP4archv_20150417_12.nc
+TP4archv_20150417_15.nc
+TP4archv_20150417_18.nc
+TP4archv_20150417_21.nc
+TP4archv_20150418_00.nc
+TP4archv_20150418_03.nc
+TP4archv_20150418_06.nc
+TP4archv_20150418_09.nc
+TP4archv_20150418_12.nc
+TP4archv_20150418_15.nc
+TP4archv_20150418_18.nc
+TP4archv_20150418_21.nc
+TP4archv_20150419_00.nc
+TP4archv_20150419_03.nc
+TP4archv_20150419_06.nc
+TP4archv_20150419_09.nc
+TP4archv_20150419_12.nc
+TP4archv_20150419_15.nc
+TP4archv_20150419_18.nc
+TP4archv_20150419_21.nc
+TP4archv_20150420_00.nc
+TP4archv_20150420_03.nc
+TP4archv_20150420_06.nc
+TP4archv_20150420_09.nc
+TP4archv_20150420_12.nc
+TP4archv_20150420_15.nc
+TP4archv_20150420_18.nc
+TP4archv_20150420_21.nc
+TP4archv_20150421_00.nc
+tmp
+********************************************************
+ 
+Unpacking files (ncpdq -U)...
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+TP4archv_20150417_00.nc
+TP4archv_20150417_03.nc
+TP4archv_20150417_06.nc
+TP4archv_20150417_09.nc
+TP4archv_20150417_12.nc
+TP4archv_20150417_15.nc
+TP4archv_20150417_18.nc
+TP4archv_20150417_21.nc
+TP4archv_20150418_00.nc
+TP4archv_20150418_03.nc
+TP4archv_20150418_06.nc
+TP4archv_20150418_09.nc
+TP4archv_20150418_12.nc
+TP4archv_20150418_15.nc
+TP4archv_20150418_18.nc
+TP4archv_20150418_21.nc
+TP4archv_20150419_00.nc
+TP4archv_20150419_03.nc
+TP4archv_20150419_06.nc
+TP4archv_20150419_09.nc
+TP4archv_20150419_12.nc
+TP4archv_20150419_15.nc
+TP4archv_20150419_18.nc
+TP4archv_20150419_21.nc
+TP4archv_20150420_00.nc
+TP4archv_20150420_03.nc
+TP4archv_20150420_06.nc
+TP4archv_20150420_09.nc
+TP4archv_20150420_12.nc
+TP4archv_20150420_15.nc
+TP4archv_20150420_18.nc
+TP4archv_20150420_21.nc
+TP4archv_20150421_00.nc
+ 
+Combining unpacked files (ncrcat)...
+ 
+Making SWARPiceonly_forecast_start20150417T000000Z.nc (ncpdq)...
+mv: cannot move `/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/netcdf/SWARPiceonly_forecast_start20150417T000000Z.nc' to `/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/20150417/final_output/': Not a directory
+Collecting data produced in date 2015-04-17
+Moving the TP4archv*.[ab] and TP4DAILY*.[ab]
+
+Moving the info files
+Transfer complete
+Collecting data produced in date 2015-04-17
+The archive file name will be 
+ SWARP_forecast_20150417.tar.gz 
+20150417/
+20150417/info/
+20150417/info/mpijob.out
+20150417/info/flags
+20150417/netcdf/
+20150417/netcdf/TP4archv_20150417_00.nc
+20150417/netcdf/TP4archv_20150416_00.nc
+20150417/netcdf/TP4archv_20150419_15.nc
+20150417/netcdf/TP4archv_20150417_18.nc
+20150417/netcdf/SWARPiceonly_forecast_start20150417T000000Z.nc
+20150417/netcdf/TP4archv_20150419_00.nc
+20150417/netcdf/TP4archv_20150420_00.nc
+20150417/netcdf/TP4archv_20150419_18.nc
+20150417/netcdf/TP4archv_20150414_06.nc
+20150417/netcdf/TP4archv_20150413_15.nc
+20150417/netcdf/TP4archv_20150415_18.nc
+20150417/netcdf/TP4archv_20150419_21.nc
+20150417/netcdf/TP4archv_20150419_12.nc
+20150417/netcdf/TP4archv_20150414_21.nc
+20150417/netcdf/TP4archv_20150413_00.nc
+20150417/netcdf/TP4archv_20150413_09.nc
+20150417/netcdf/TP4archv_20150414_09.nc
+20150417/netcdf/TP4archv_20150421_00.nc
+20150417/netcdf/TP4archv_20150415_00.nc
+20150417/netcdf/TP4archv_20150417_21.nc
+20150417/netcdf/TP4archv_20150414_12.nc
+20150417/netcdf/TP4archv_20150413_21.nc
+20150417/netcdf/TP4archv_20150415_15.nc
+20150417/netcdf/TP4archv_20150415_06.nc
+20150417/netcdf/TP4archv_20150415_09.nc
+20150417/netcdf/TP4archv_20150418_03.nc
+20150417/netcdf/TP4archv_20150416_21.nc
+20150417/netcdf/TP4archv_20150420_15.nc
+20150417/netcdf/TP4archv_20150417_12.nc
+20150417/netcdf/TP4archv_20150419_09.nc
+20150417/netcdf/TP4archv_20150414_03.nc
+20150417/netcdf/TP4archv_20150413_03.nc
+20150417/netcdf/TP4archv_20150413_12.nc
+20150417/netcdf/TP4archv_20150418_18.nc
+20150417/netcdf/TP4archv_20150420_06.nc
+20150417/netcdf/TP4archv_20150414_00.nc
+20150417/netcdf/TP4archv_20150420_09.nc
+20150417/netcdf/TP4archv_20150418_09.nc
+20150417/netcdf/TP4archv_20150416_03.nc
+20150417/netcdf/TP4archv_20150420_03.nc
+20150417/netcdf/TP4archv_20150415_21.nc
+20150417/netcdf/TP4archv_20150419_06.nc
+20150417/netcdf/TP4archv_20150416_12.nc
+20150417/netcdf/TP4archv_20150418_15.nc
+20150417/netcdf/TP4archv_20150418_12.nc
+20150417/netcdf/TP4archv_20150417_06.nc
+20150417/netcdf/TP4archv_20150416_09.nc
+20150417/netcdf/TP4archv_20150415_12.nc
+20150417/netcdf/TP4archv_20150419_03.nc
+20150417/netcdf/TP4archv_20150415_03.nc
+20150417/netcdf/TP4archv_20150413_18.nc
+20150417/netcdf/TP4archv_20150417_09.nc
+20150417/netcdf/TP4archv_20150414_18.nc
+20150417/netcdf/TP4archv_20150417_15.nc
+20150417/netcdf/TP4archv_20150414_15.nc
+20150417/netcdf/TP4archv_20150418_00.nc
+20150417/netcdf/TP4archv_20150417_03.nc
+20150417/netcdf/TP4archv_20150420_12.nc
+20150417/netcdf/TP4archv_20150416_06.nc
+20150417/netcdf/TP4archv_20150420_21.nc
+20150417/netcdf/TP4archv_20150420_18.nc
+20150417/netcdf/TP4archv_20150413_06.nc
+20150417/netcdf/TP4archv_20150418_06.nc
+20150417/netcdf/TP4archv_20150416_15.nc
+20150417/netcdf/TP4archv_20150418_21.nc
+20150417/netcdf/TP4archv_20150416_18.nc
+20150417/bin/
+20150417/bin/TP4archv.2015_109_060000Z.b
+20150417/bin/TP4archv.2015_105_090000Z.b
+20150417/bin/TP4archv.2015_108_000000Z.a
+20150417/bin/TP4archv.2015_110_000000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_102.a
+20150417/bin/TP4DAILY_2015_102_2015_108.a
+20150417/bin/TP4archv.2015_102_000000Z.a
+20150417/bin/TP4archv.2015_106_030000Z.b
+20150417/bin/TP4archv.2015_106_180000Z.b
+20150417/bin/TP4archv.2015_107_000000Z.a
+20150417/bin/TP4archv.2015_102_000000Z.b
+20150417/bin/TP4archv.2015_102_030000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_107.a
+20150417/bin/TP4archv.2015_104_210000Z.b
+20150417/bin/TP4archv.2015_107_180000Z.b
+20150417/bin/TP4archv.2015_104_030000Z.a
+20150417/bin/TP4archv.2015_108_060000Z.b
+20150417/bin/TP4archv.2015_102_090000Z.a
+20150417/bin/TP4archv.2015_108_210000Z.a
+20150417/bin/TP4archv.2015_109_150000Z.b
+20150417/bin/TP4archv.2015_106_000000Z.b
+20150417/bin/TP4archv.2015_109_090000Z.b
+20150417/bin/TP4archv.2015_106_210000Z.a
+20150417/bin/TP4archv.2015_103_210000Z.b
+20150417/bin/TP4DAILY_2015_102_2015_104.a
+20150417/bin/TP4archv.2015_108_090000Z.b
+20150417/bin/TP4archv.2015_102_210000Z.b
+20150417/bin/TP4archv.2015_103_000000Z.b
+20150417/bin/TP4DAILY_2015_102_2015_104.b
+20150417/bin/TP4archv.2015_104_000000Z.b
+20150417/bin/TP4archv.2015_106_210000Z.b
+20150417/bin/TP4archv.2015_103_060000Z.b
+20150417/bin/TP4archv.2015_105_060000Z.b
+20150417/bin/TP4archv.2015_108_120000Z.b
+20150417/bin/TP4DAILY_2015_102_2015_109.a
+20150417/bin/TP4archv.2015_109_210000Z.a
+20150417/bin/TP4archv.2015_108_210000Z.b
+20150417/bin/TP4archv.2015_102_210000Z.a
+20150417/bin/TP4archv.2015_103_150000Z.a
+20150417/bin/TP4archv.2015_105_000000Z.a
+20150417/bin/TP4archv.2015_107_060000Z.a
+20150417/bin/TP4archv.2015_103_180000Z.a
+20150417/bin/TP4archv.2015_108_120000Z.a
+20150417/bin/TP4archv.2015_104_060000Z.a
+20150417/bin/TP4archv.2015_108_150000Z.a
+20150417/bin/TP4archv.2015_102_060000Z.a
+20150417/bin/TP4archv.2015_103_210000Z.a
+20150417/bin/TP4archv.2015_107_000000Z.b
+20150417/bin/TP4DAILY_2015_102_2015_106.b
+20150417/bin/TP4archv.2015_109_120000Z.b
+20150417/bin/TP4archv.2015_103_060000Z.a
+20150417/bin/TP4archv.2015_103_090000Z.b
+20150417/bin/TP4archv.2015_104_210000Z.a
+20150417/bin/TP4archv.2015_103_120000Z.a
+20150417/bin/TP4archv.2015_108_090000Z.a
+20150417/bin/TP4archv.2015_106_060000Z.b
+20150417/bin/TP4archv.2015_108_060000Z.a
+20150417/bin/TP4archv.2015_109_000000Z.a
+20150417/bin/TP4archv.2015_103_030000Z.a
+20150417/bin/TP4archv.2015_106_000000Z.a
+20150417/bin/TP4archv.2015_107_060000Z.b
+20150417/bin/TP4archv.2015_106_120000Z.b
+20150417/bin/TP4archv.2015_108_030000Z.a
+20150417/bin/TP4archv.2015_104_180000Z.a
+20150417/bin/TP4archv.2015_105_150000Z.b
+20150417/bin/TP4archv.2015_109_030000Z.b
+20150417/bin/TP4archv.2015_103_150000Z.b
+20150417/bin/TP4archv.2015_103_030000Z.b
+20150417/bin/TP4archv.2015_103_180000Z.b
+20150417/bin/TP4archv.2015_106_180000Z.a
+20150417/bin/TP4archv.2015_102_030000Z.b
+20150417/bin/TP4archv.2015_102_150000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_106.a
+20150417/bin/TP4archv.2015_105_210000Z.a
+20150417/bin/TP4archv.2015_107_150000Z.a
+20150417/bin/TP4archv.2015_104_060000Z.b
+20150417/bin/TP4archv.2015_108_030000Z.b
+20150417/bin/TP4archv.2015_102_060000Z.b
+20150417/bin/TP4archv.2015_105_030000Z.a
+20150417/bin/TP4archv.2015_105_000000Z.b
+20150417/bin/TP4archv.2015_103_120000Z.b
+20150417/bin/TP4archv.2015_105_060000Z.a
+20150417/bin/TP4archv.2015_104_090000Z.b
+20150417/bin/TP4archv.2015_106_090000Z.a
+20150417/bin/TP4archv.2015_107_120000Z.b
+20150417/bin/TP4archv.2015_103_000000Z.a
+20150417/bin/TP4archv.2015_109_060000Z.a
+20150417/bin/TP4archv.2015_107_120000Z.a
+20150417/bin/TP4archv.2015_104_030000Z.b
+20150417/bin/TP4archv.2015_106_060000Z.a
+20150417/bin/TP4archv.2015_108_150000Z.b
+20150417/bin/TP4archv.2015_102_150000Z.b
+20150417/bin/TP4archv.2015_107_210000Z.a
+20150417/bin/TP4archv.2015_109_150000Z.a
+20150417/bin/TP4archv.2015_109_030000Z.a
+20150417/bin/TP4archv.2015_104_180000Z.b
+20150417/bin/TP4archv.2015_105_150000Z.a
+20150417/bin/TP4archv.2015_104_120000Z.b
+20150417/bin/TP4archv.2015_104_120000Z.a
+20150417/bin/TP4archv.2015_109_120000Z.a
+20150417/bin/TP4archv.2015_106_150000Z.b
+20150417/bin/TP4archv.2015_109_180000Z.a
+20150417/bin/TP4archv.2015_110_000000Z.b
+20150417/bin/TP4archv.2015_109_180000Z.b
+20150417/bin/TP4archv.2015_106_030000Z.a
+20150417/bin/TP4archv.2015_107_090000Z.a
+20150417/bin/TP4archv.2015_106_120000Z.a
+20150417/bin/TP4archv.2015_105_120000Z.b
+20150417/bin/TP4archv.2015_109_210000Z.b
+20150417/bin/TP4archv.2015_105_180000Z.b
+20150417/bin/TP4archv.2015_109_000000Z.b
+20150417/bin/TP4archv.2015_109_090000Z.a
+20150417/bin/TP4archv.2015_107_180000Z.a
+20150417/bin/TP4archv.2015_107_090000Z.b
+20150417/bin/TP4DAILY_2015_102_2015_107.b
+20150417/bin/TP4archv.2015_105_030000Z.b
+20150417/bin/TP4archv.2015_102_180000Z.b
+20150417/bin/TP4archv.2015_103_090000Z.a
+20150417/bin/TP4archv.2015_104_090000Z.a
+20150417/bin/TP4archv.2015_105_210000Z.b
+20150417/bin/TP4archv.2015_104_150000Z.b
+20150417/bin/TP4DAILY_2015_102_2015_103.b
+20150417/bin/TP4archv.2015_108_180000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_105.b
+20150417/bin/TP4archv.2015_105_090000Z.a
+20150417/bin/TP4archv.2015_102_120000Z.a
+20150417/bin/TP4archv.2015_104_150000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_109.b
+20150417/bin/TP4archv.2015_107_030000Z.b
+20150417/bin/TP4archv.2015_104_000000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_105.a
+20150417/bin/TP4archv.2015_108_180000Z.b
+20150417/bin/TP4archv.2015_106_150000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_103.a
+20150417/bin/TP4archv.2015_107_150000Z.b
+20150417/bin/TP4archv.2015_107_030000Z.a
+20150417/bin/TP4archv.2015_102_180000Z.a
+20150417/bin/TP4archv.2015_106_090000Z.b
+20150417/bin/TP4archv.2015_105_180000Z.a
+20150417/bin/TP4archv.2015_105_120000Z.a
+20150417/bin/TP4DAILY_2015_102_2015_108.b
+20150417/bin/TP4DAILY_2015_102_2015_102.b
+20150417/bin/TP4archv.2015_108_000000Z.b
+20150417/bin/TP4archv.2015_102_090000Z.b
+20150417/bin/TP4archv.2015_102_120000Z.b
+20150417/bin/TP4archv.2015_107_210000Z.b
+20150417/final_output/
+SWARP products of 20150417
+stored in /migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/ice_only/2015
+
+process_FCresults.sh finished its run

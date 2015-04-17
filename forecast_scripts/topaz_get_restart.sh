@@ -4,72 +4,16 @@
 # textfile output:
 out_restart=last_restart.txt
 
-rdir="/migrate/timill/restarts/TP4a0.12/SWARP_forecasts"      # directory with restarts
+# fetch datelist
+datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist
+rdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts      # directory with restarts
+ddir=/work/timill/RealTime_Models/TP4a0.12/expt_01.1/data # location of TP4a0.12 directory (where forecast will be done)
 
-# no variable -> uses tp4dir ; #1 manually insert the dir ; >#2 error
-if [ $# -eq 1 ]
-then
-   v1=$1
-elif [ $# -eq 0 ]
-then
-   echo "Using default - proper location"
-   v1=0
-else
-   echo "Wrong number of inputs to topaz_get_restart.sh"
-   exit
-fi
-
-if [ $v1 -eq 0 ]
-then
-   #proper location
-   tp4dir="/work/timill/RealTime_Models/TP4a0.12/" # location of TP4a0.12 directory (where forecast will be done)
-   xdir="$tp4dir/expt_01.1"                     # location of expt directory
-   ddir="$xdir/data"
-else
-   #test location
-   xdir="$HOME/giacomo"
-   mkdir -p $xdir/data
-   ddir="$xdir/data"
-fi
-
-cyear=`date -u +%Y`			# current year
-cmon=`date -u +%m`			# current month
-# cday=`date -d "yesterday" '+%j'`	# current day (1 Jan = 0)
-cday=`date -d "today" '+%j'`	        # current day (1 Jan = 1)
-cday=`expr $cday - 1`			# current day (1 Jan = 0)
-pyear=`expr $cyear - 1`			# previous year
-# ceye=`find /${rdir}/${cyear} -name TP4restart${cyear}*`
-# ceye=( $ceye )
-# peye=`find /${rdir}/${pyear} -name TP4restart${pyear}*`
-# peye=( $peye )
-# cyfil=${rdir}/${cyear}/TP4restart${cyear}*
-# pyfil=${rdir}/${pyear}/TP4restart${pyear}*
-# shopt -s nullglob
-# 
-# #Looking for restarts in current year (${cyear}) or previous year..."
-# if [ ${#cyfil[@]} -gt 0 ]
-# then
-#    # loop over all files in current year
-#    # - last file is most recent date
-#    for f in ${ceye}
-#    do
-# 	f=$(basename $f)
-#    done
-# elif [ ${#pyfil[@]} -gt 0 ]
-# then
-#    cd ${rdir}/${peye}
-#    # loop over all files in previous year
-#    # - last file is most recent date
-#    for f in ${pyfil}
-#    do
-# 	f=$(basename $f)
-#    done
-# else
-#    echo "No recent restarts in ${rdir}"
-#    echo "(none from ${cyear} or ${pyear})."
-#    echo " "
-#    exit
-# fi
+cyear=$(cat $datelist | sed '3!d')			# current year
+cmon=$(cat $datelist | sed '4!d')			# current month
+cday=$(cat $datelist | sed '6!d')                       # current day julian (1 Jan = 1)
+cday=`expr $cday - 1`		                	# current day julian (1 Jan = 0)
+pyear=`expr $cyear - 1`		                	# previous year
 
 f="unassigned"
 if [ -d $rdir/$cyear ]
@@ -116,6 +60,9 @@ echo "Most recent restart: $f"
 echo "Unpacking..."
 echo " "
 echo $f > $out_restart
+idir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d')/info
+mkdir -p $idir
+mv $out_restart $idir
 
 # $f is now most recent restart
 ryear=${f:10:4}	# year of restart
@@ -162,19 +109,18 @@ else
    echo " "
 fi
 
-# TODO check this test
-# # calculate days between current date
-# # and latest restart - if too old (>2 weeks?) send warning
-# dsr=`expr $cday - $jday` #Days Since Restart
-# 
-# if [ $dsr -gt 13 ]
-# then
-#    echo "Restarts too old"
-#    exit
-# fi
+# check this test
+# calculate days between current date
+# and latest restart - if too old (>2 weeks?) send warning
+dsr=$(expr $cday - $jday) #Days Since Restart
 
-# now we need to edit:
-# - infile.in
-# - pbsjob.sh
-# then do:
-# - qsub pbsjob.sh
+if [ $dsr -gt 13 ]
+then
+   touch WARNING
+   echo "Restarts too old" >> WARNING
+   echo "Check topaz_archive_restart.sh" >> WARNING
+   echo "This WARNING is in topaz_get_restart.sh" >> WARNING
+   mail -s "RESTARTS WARNING" gcmdnt90@gmail.com < WARNING
+   rm WARNING
+fi
+

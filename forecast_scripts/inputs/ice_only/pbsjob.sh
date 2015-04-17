@@ -70,8 +70,16 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 ./postprocess.sh 
 
 # extra processing for SWARP forecasts
-echo "Proceeding with process_FCresults.sh"
-/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
-
+pplog=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/pbslog
+if [ -f $pplog ]
+then
+   rm $pplog
+fi
+touch $pplog
+echo $date >> $pplog
+echo "Proceeding with process_FCresults.sh" >> $pplog
+echo "" >> $pplog
+/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh >> $pplog 2>&1 
+echo "" >> $pplog
+echo "process_FCresults.sh finished its run" >> $pplog
 exit $?
-

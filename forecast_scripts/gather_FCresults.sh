@@ -28,5 +28,4 @@ echo ""
 echo "Moving the info files"
 cp $DFDIR/log/mpijob.out $TDIR/info
 cp $TP4_REALTIME/Build_V2.2.12_X01.1/flags $TDIR/info
-mv $FCDIR/last_restart.txt $TDIR/info
 echo "Transfer complete"
