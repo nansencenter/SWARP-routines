@@ -5,6 +5,7 @@ from netCDF4 import Dataset
 import sys,os
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib import patches as patches
 from mpl_toolkits.basemap import Basemap, cm
 
 sys.path.append('../py_funs')
@@ -176,7 +177,8 @@ if CHECK_NC:
       print(Zmin,Zmax)
       print(' ')
 
-      bm.colorbar()
+      cb = plt.colorbar()
+      cb.set_label("Significant Wave Height [m]",rotation=270)
       ##############################################################################
 
       ##############################################################################
@@ -245,7 +247,6 @@ if CHECK_NC:
          # - to check if SAR image is ordered in the right place
          # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
          #   then use trial and error
-         # TODO add automatic estimate for SAR image? (plot points on ice edge that have high waves near them?)
          nout = len(out_list)
          for mm in range(nout):
           list0=out_list[mm]
@@ -270,8 +271,8 @@ if CHECK_NC:
 
       finish_map(bm)
 
-      #TODO add date+time to title and file name
-      #TODO add label '$H_s$, m' to colorbar
+      # date+time to title and file name
+      # label '$H_s$, m' to colorbar
       wav = Dataset(ncfil)
       fnday = getattr(wav,'max_time')
       fnday = fnday.replace(" ", "_")
