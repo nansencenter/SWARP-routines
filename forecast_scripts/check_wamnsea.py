@@ -6,8 +6,9 @@ import sys,os
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
+from skimage import measure
 
-sys.path.append('../py_funs')
+sys.path.append('../../py_funs')
 import mod_reading as Mrdg
 
 SEND_EMAIL  = 0
@@ -80,7 +81,7 @@ if CHECK_NC:
    pday2 = yday2.strftime('%Y%m%d')
    wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
    ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
-   #ncfil = 'test_check/wam_nsea.fc.20150413.nc'
+   #ncfil = 'wam_nsea.fc.20150413.nc'
    print('WAMNSEA file = ' + ncfil+'\n')
 
    # get info about nc file
@@ -105,10 +106,10 @@ if CHECK_NC:
    # plot conc + ice edge (15% bm.pcontour? )
    # get lon/lat and restrict to relevant area
    osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
-   #ncfil2 = 'test_check/ice_conc_nh_polstere-100_multi_201504121200.nc'
    ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
    if not os.path.exists(ncfil2):
       ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday2 + '1200.nc'
+   #ncfil2 = 'ice_conc_nh_polstere-100_multi_201504121200.nc'
    print('OSISAF file = '+ncfil2+'\n')
    clon     = 'lon'
    clat     = 'lat'
@@ -141,9 +142,8 @@ if CHECK_NC:
          # if mask is 'True' (data is missing or invalid) set to NaN
 
       ##############################################################################
-      if 0:
-        # make test plot showing ice edge contour
-        # TODO try better contour finder? skimage?
+      if 1:
+        # make test plot showing ice edge contour with bm.contour
         g  = plt.figure()
         bm.pcolor(X2,Y2,Z2,vmin=0,vmax=100)
         # plot ice edge
@@ -161,7 +161,17 @@ if CHECK_NC:
              v     = p[ns].vertices
              x     = v[:,0]
              y     = v[:,1]
-             bm.plot(x,y,'--m',linewidth=1.5)
+             bm.plot(x,y,'k',linewidth=1)
+
+        # make test plot showing ice edge contour with skimage.measure.find_contours
+        conc = measure.find_contours(Z2,edge_level)
+        for el in conc:
+          ell = np.array(el).tolist()
+          for n in range(len(ell)):
+            if np.str(ell[n][0]) == 'nan' or np.str(ell[n][1]) == 'nan':
+              print 'nan'
+            else:
+              bm.plot([ell[n][0]],[ell[n][1]],'r',linewidth=1 ) 
 
         finish_map(bm)
         figname  = odir+'/test2.png'
