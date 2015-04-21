@@ -1,0 +1,11 @@
+
+conc = measure.find_contours(Z2,edge_level)
+cont = np.zeros((1120,760))
+
+for el in conc:
+  ell = np.array(el).tolist()
+  for n in range(len(ell)):
+    if np.str(ell[n][0]) == 'nan' or np.str(ell[n][1]) == 'nan':
+      print 'nan'
+    else:
+      cont[ell[n][0]][ell[n][1]] = 100
