@@ -95,6 +95,7 @@ if CHECK_NC:
    slon     = 'longitude'
    slat     = 'latitude'
    sswh     = 'significant_wave_height'
+   fnday    = 'max_time'
    lon      = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
    lat      = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
    X,Y      = bm(lon[:,:],lat[:,:],inverse=False)
@@ -239,24 +240,44 @@ if CHECK_NC:
 
       ##############################################################################
       #
-      if 0:
+      if 1:
          # add test point to plot
          # - to check if SAR image is ordered in the right place
          # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
          #   then use trial and error
          # TODO add automatic estimate for SAR image? (plot points on ice edge that have high waves near them?)
-         lon_plot = 35.0
-         lat_plot = 77.114
-         print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-         x_plot,y_plot  = bm(lon_plot,lat_plot)
-         bm.plot(x_plot,y_plot,'og',markersize=5)
+         nout = len(out_list)
+         for mm in range(nout):
+          list0=out_list[mm]
+          if list0[3] >= 3 and list0[0] <= 5:
+             lon_plot = list0[1]
+             lat_plot = list0[2]
+             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+             x_plot,y_plot  = bm(lon_plot,lat_plot)
+             bm.plot(x_plot,y_plot,'og',markersize=5)
+          elif list0[3] >= 4 and list0[0] <= 20:
+             lon_plot = list0[1]
+             lat_plot = list0[2]
+             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+             x_plot,y_plot  = bm(lon_plot,lat_plot)
+             bm.plot(x_plot,y_plot,'og',markersize=5)
+          elif list0[3] >= 5 and list0[0] <= 50:
+             lon_plot = list0[1]
+             lat_plot = list0[2]
+             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+             x_plot,y_plot  = bm(lon_plot,lat_plot)
+             bm.plot(x_plot,y_plot,'og',markersize=5)
 
       finish_map(bm)
 
       #TODO add date+time to title and file name
       #TODO add label '$H_s$, m' to colorbar
-      figname  = odir+'/test.png'
-
+      wav = Dataset(ncfil)
+      fnday = getattr(wav,'max_time')
+      fnday = fnday.replace(" ", "_")
+      fnday = fnday.replace(":", "")
+      fnday = fnday.replace("-", "")
+      figname  = odir+'/'+fnday+'.png'
       plt.savefig(figname)
       print('saving figure:')
       print(figname+'\n')
@@ -269,7 +290,7 @@ if CHECK_NC:
       # write and send an email to warn when this happens (so we can order some SAR images)
 
    # filename of text file to form contents of email message 
-   textfile = odir+'/message.txt'
+   textfile = odir+'/'+fnday+'_list.txt'
    nout=len(out_list)
    if nout>0:
      SEND_EMAIL2=1

@@ -136,5 +136,6 @@ ncatted -a field_date,global,d,,                                              $o
 ncatted -a history,global,d,,                                                 $ofil
 ###########################################################################################
 
-mv /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf/$ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
+mkdir -p /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
+mv $ofil ../final_output/
 

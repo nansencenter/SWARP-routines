@@ -7,6 +7,7 @@ then
    $SWARP_ROUTINES/netcdf_production/merge_TP4archv.sh   $(cat $datelist | sed '1!d') $(cat $datelist | sed '2!d') #$1 $2
    $SWARP_ROUTINES/forecast_scripts/gather_FCresults.sh  $(cat $datelist | sed '1!d') $(cat $datelist | sed '2!d') #$1 $2 
    $SWARP_ROUTINES/forecast_scripts/collect_FCresults.sh $(cat $datelist | sed '1!d') $(cat $datelist | sed '2!d') #$1 $2
+   mv $datelist /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d')/info/
 else
    mail -s "process forecast problems" gcmdnt90@gmail.com < echo "datelist file not found, check ASAP"
 fi
