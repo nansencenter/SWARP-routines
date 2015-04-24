@@ -1,68 +1,83 @@
 #!/bin/bash
 #Get latest restart from the internal repo to the working dir
 
-# textfile output:
-out_restart=last_restart.txt
+# EMAIL ADDRESS
+# email="user1@domain.com,user2@domain.com,etc..."
+# ====================================================================================
+email="gcmdnt90@gmail.com"
+# ====================================================================================
 
-# fetch datelist
-datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist
+# DIRECTORIES AND DATELIST
+fcdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
+datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist.txt
 rdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts      # directory with restarts
 ddir=/work/timill/RealTime_Models/TP4a0.12/expt_01.1/data # location of TP4a0.12 directory (where forecast will be done)
+logdir=$fcdir/logs
+mkdir -p $logdir
+
+# TEXTFILE AND LOG
+out_restart=$fcdir/last_restart.txt
+log=$logdir/tp_get_log.txt
+
+touch $log
 
 cyear=$(cat $datelist | sed '3!d')			# current year
 cmon=$(cat $datelist | sed '4!d')			# current month
 cday=$(cat $datelist | sed '6!d')                       # current day julian (1 Jan = 1)
-cday=`expr $cday - 1`		                	# current day julian (1 Jan = 0)
-pyear=`expr $cyear - 1`		                	# previous year
+cday=$(expr $cday - 1)		                	# current day julian (1 Jan = 0)
+pyear=$(expr $cyear - 1)		              	# previous year
 
 f="unassigned"
 if [ -d $rdir/$cyear ]
 then
-   lfil=$rdir/$cyear/log/TP4rlist #list of restart files
+   lfil=$rdir/$cyear/log/tp_archive_list.txt                       #list of restart files
    if [ -f $lfil ]
    then
       f=`cat $lfil | grep "." | tail -1`
-      echo "latest restart: $f"
+      echo "latest restart: $f"                    >> $log
       ryear=$cyear
    else
-      echo "No restarts in current year ($cyear)"
+      echo "Restart file's list NOT FOUND in $rdir/$cyear"         >> $log
+      echo "Either check topaz_archive_restart or topaz_get_restart" >> $log
+      mail -s "WARNING - Restart list NOT FOUND" $email < $log
    fi
 else
-   echo "No restarts in current year ($cyear)"
-fi
-
-if [ f == 'unassigned' ]
-then
+   echo "No restarts in current year ($cyear)"     >> $log
    #search previous year
    if [ -d $rdir/$pyear ]
    then
-      lfil=$rdir/$pyear/log/TP4rlist #list of restart files
+      lfil=$rdir/$pyear/log/tp_archive_list.txt                    #list of restart files
       if [ -f $lfil ]
       then
          f=`cat $lfil | grep "." | tail -1`
-         echo "latest restart: $f"
+         echo "latest restart: $f"                 >> $log
          ryear=$pyear
       else
-         echo "No restarts in previous year ($pyear)"
+         echo "Restart file's list NOT FOUND in $rdir/$pyear"         >> $log
+         echo "Either check topaz_archive_restart or topaz_get_restart" >> $log
+         mail -s "WARNING - Restart list NOT FOUND" $email < $log
       fi
-   else
-      echo "No restarts in previous year ($pyear)"
    fi
 fi
 
-if [ f == 'unassigned' ]
+if [ $f == 'unassigned' ]
 then
-   echo "No recent restarts"
+   echo "No recent restarts"i                                     >> $log
+   echo "Couldn't find any restart's lists"                       >> $log
+   echo "Check ASAP topaz_archive_restart and topaz_get_restart"  >> $log
+   mail -s "WARNING 2 - Restart list NOT FOUND" $email < $log
    exit
 fi
 
-echo "Most recent restart: $f"
-echo "Unpacking..."
-echo " "
+echo "Most recent restart: $f"                                    >> $log
+echo "Unpacking..."                                               >> $log
+echo " "                                                          >> $log
 echo $f > $out_restart
+
+# CREATING DAILY INFO DIR
 idir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d')/info
 mkdir -p $idir
-mv $out_restart $idir
+mv $out_restart $idir/
 
 # $f is now most recent restart
 ryear=${f:10:4}	# year of restart
@@ -96,17 +111,17 @@ then
    mv $afil0 $ddir/$afil
    mv $bfil0 $ddir/$bfil
    mv $ufil0 $ddir/$ufil
-   echo " "
-   echo mv $afil0 $ddir/$afil
-   echo mv $bfil0 $ddir/$bfil
-   echo mv $ufil0 $ddir/$ufil
-   echo " "
+   echo " "                                              >> $log
+   echo mv $afil0 $ddir/$afil                            >> $log
+   echo mv $bfil0 $ddir/$bfil                            >> $log
+   echo mv $ufil0 $ddir/$ufil                            >> $log
+   echo " "                                              >> $log                                              
 else
-   echo "Restart files already present in $ddir:"
-   echo $afil
-   echo $bfil
-   echo $ufil
-   echo " "
+   echo "Restart files already present in $ddir:"        >> $log
+   echo $afil                                            >> $log
+   echo $bfil                                            >> $log
+   echo $ufil                                            >> $log
+   echo " "                                              >> $log
 fi
 
 # check this test
@@ -116,11 +131,11 @@ dsr=$(expr $cday - $jday) #Days Since Restart
 
 if [ $dsr -gt 13 ]
 then
-   touch WARNING
-   echo "Restarts too old" >> WARNING
-   echo "Check topaz_archive_restart.sh" >> WARNING
-   echo "This WARNING is in topaz_get_restart.sh" >> WARNING
-   mail -s "RESTARTS WARNING" gcmdnt90@gmail.com < WARNING
-   rm WARNING
+   echo "Restarts too old"                               >> $log
+   echo "Check topaz_archive_restart.sh"                 >> $log
+   echo "This WARNING is in topaz_get_restart.sh"        >> $log
+   mail -s "TP4 restarts are too old" $email < $log
 fi
+
+mv $log $fcdir/logs/
 

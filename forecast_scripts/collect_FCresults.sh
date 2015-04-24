@@ -1,6 +1,9 @@
 #!/bin/bash
 # This script will collect and archive the whole directory with the final products of the SWARP model
 
+# AS LONG AS THE OTHER SCRIPTS WORK I DON'T SEE HOW THIS SIMPLE ONE COULD FAIL.
+#TODO FOR FUTURE ALLERTS?
+
 echo "Collecting data produced in date $2"
 
 RTM=/work/timill/RealTime_Models

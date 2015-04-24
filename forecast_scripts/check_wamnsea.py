@@ -5,11 +5,9 @@ from netCDF4 import Dataset
 import sys,os
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib import patches as patches
 from mpl_toolkits.basemap import Basemap, cm
-from skimage import measure
 
-sys.path.append('../../py_funs')
+sys.path.append('../py_funs')
 import mod_reading as Mrdg
 
 SEND_EMAIL  = 0
@@ -162,20 +160,21 @@ if CHECK_NC:
              v     = p[ns].vertices
              x     = v[:,0]
              y     = v[:,1]
-             bm.plot(x,y,'k',linewidth=1)
-
-        # make test plot showing ice edge contour with skimage.measure.find_contours
-        conc = measure.find_contours(Z2,edge_level)
-        for el in conc:
-          ell = np.array(el).tolist()
-          for n in range(len(ell)):
-            if np.str(ell[n][0]) == 'nan' or np.str(ell[n][1]) == 'nan':
-              print 'nan'
-            else:
-              bm.plot([ell[n][0]],[ell[n][1]],'r',linewidth=1 ) 
+             bm.plot(x,y,'m',linewidth=1)
 
         finish_map(bm)
-        figname  = odir+'/test2.png'
+        figname  = odir+'/bm_contour.png'
+        plt.savefig(figname)
+        plt.close()
+        g.clf()
+        # make test plot showing ice edge contour with threshold 
+        g = plt.figure()
+        Z3 = Z2
+        Z3[Z3<15]=0
+        Z3[Z3>=15]=1
+        bm.pcolor(X2,Y2,Z3,vmin=0,vmax=1)
+        finish_map(bm)
+        figname  = odir+'/threshold_contour.png'
         plt.savefig(figname)
         plt.close()
         g.clf()

@@ -4,69 +4,104 @@
 #18-03-15 VERSION: creating a TP4restart LIST that will register the name of every restart already archived
 #I thought that reading through a text file would be faster than checking the whole work folder
 
+# EMAIL ADDRESS FOR THE WEEKLY UPDATE
+# email="user1@domain.com,user2@domain2.com,etc..."
+# =========================================================================================================
+email="gcmdnt90@gmail.com"
+# =========================================================================================================
 
-rdir=/work/fanf/TOPAZ_RT #restart dir
-bdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts #backup dir
-cyear=$(date -u "+%Y") # current day
-ldir=$bdir/$cyear/log # where to put the log file and file list (one for each year)
+# DIRECTORIES AND TIME DEFINITION
+rdir=/work/fanf/TOPAZ_RT 
+bdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts 
+fcldir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs
+cyear=$(date +%Y) 
+pyear=$(expr $cyear - 1)
+tday=$(date +%Y%m%d-%A)
+tdd=$(date +%d)
 
-mkdir -p $ldir # create the log dir if it doesn't exist already
-TP4rlog=$ldir/TP4rlog #keeping a log (OK if this is for current year not restart year)
+# CREATING THE LOG DIRECTORY AND FILE
+ldir=$bdir/$cyear/log 
+mkdir -p $ldir
+TP4rlog=$ldir/tp_archive_log.txt
+TP4rlist=$ldir/tp_archive_list.txt
+tmplist=$ldir/tmp_list.txt
 
-rm $TP4rlog
+if ! [ -f "$TP4rlisit" ]
+then
+   cp $bdir/$pyear/TP4rlist $ldir/
+fi
+
 touch $TP4rlog
 
-echo "NEW OPERATION" >> $TP4rlog
-date >> $TP4rlog #signing the time of the operation
+# FETCHING OPERATION
+echo $tday  >> $TP4rlog
+echo ''     >> $TP4rlog
 
-pckg=TP4restart*_mem001.a #looking for restarts (just check *.a files)
-eye=`find ${rdir} -name $pckg` #gathering all the restarts
-eye=( $eye ) #string into array
-baselist="" #empty archive variable
-for el in "${eye[@]}" #analizing one by one the restart files
+pckg=TP4restart*_mem001.a                                            # looking for restarts (just check *.a files)
+eye=`find ${rdir} -name $pckg`                                       # gathering all the restarts
+eye=( $eye )                                                         # string into array
+baselist=""                                                          # empty archive variable
+for el in "${eye[@]}"                                                # analizing one by one the restart files
 	do
-	if [ -f $el ] #checking their existence
+	if [ -f $el ]                                                # checking their existence
 	then
-                afil=$(basename $el) # *.a filename without full path
-                base=${afil%%_mem001.a} #cutting _mem001.a
-		dcre=${base#TP4restart} #cutting TP4restart
+                afil=$(basename $el)                                 # *.a filename without full path
+                base=${afil%%_mem001.a}                              # cutting _mem001.a
+		dcre=${base#TP4restart}                              # cutting TP4restart
                 bfil=$rdir/${base}_mem001.b
                 ufil=$rdir/${base}ICE.uf
-                ryear=${dcre%%_*} #keeping the year, want to distinguish between ops year and file year
-                TP4rlist=$bdir/$ryear/log/TP4rlist #path to the LIST
+                ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
+                TP4rlist=$bdir/$ryear/log/tp_archive_list                   # path to the LIST
 
-		if grep -Fxq "$base" $TP4rlist #checking their presence in the LIST (we treat the 3 files as a unique set)
+		if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST (we treat the 3 files as a unique set)
 		then
-			echo "$base CHECKED" >> $TP4rlog #file present -> check confirmation
+			echo "$base CHECKED" >> $TP4rlog             # file present -> check confirmation
 		else 
-			echo "$base" >> $TP4rlist #file not present -> update the LIST                      
-			baselist="$baselist $base" #adding the file group to the transfer variable
+			echo "$base" >> $TP4rlist                    # file not present -> update the LIST                      
+			baselist="$baselist $base"                   # adding the file group to the transfer variable
 		fi
 	else
-		echo "MISSING RESTART FILES" >> $TP4rlog
+		echo "MISSING RESTART FILES in $rdir" >> $TP4rlog
+                echo "Check if the restarts are still uploaded on $rdir" >> $TP4rlog
+                mail -s "WARNING - TOPAZ restart files" $email < $TP4rlog
 		exit
 	fi
 done
-if [ -z "$baselist" ] #if baselist is empty there are no new restart files
+
+# ARCHIVING OPERATION
+if [ -z "$baselist" ]                                             # if baselist is empty there are no new restart files
 then
-	echo "NO MODIFICATIONS - ARCHIVE UP TO DATE" >> $TP4rlog
+     echo " NO MODIFICATIONS - ARCHIVE UP TO DATE " >> $TP4rlog
 else
-        for base in $baselist
-        do
-           afil=${base}_mem001.a
-           bfil=${base}_mem001.b
-           ufil=${base}ICE.uf
-	   dcre=${base#TP4restart} #cutting TP4restart
-           ryear=${dcre%%_*} #keeping the year, we want to distinguish between ops year and file year
-           tfil=${bdir}/$ryear/$base.tar.gz # tar file to create
-           tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil #remove /work/fanf/TOPAZ_RT from inside tar file
-           echo "$base set -ADDED" >> $TP4rlog
-        done
-	echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
+     for base in $baselist
+     do
+        afil=${base}_mem001.a
+        bfil=${base}_mem001.b
+        ufil=${base}ICE.uf
+        dcre=${base#TP4restart}                                   # cutting TP4restart
+        ryear=${dcre%%_*}                                         # keeping the year, we want to distinguish between ops year and file year
+        tfil=${bdir}/$ryear/$base.tar.gz                          # tar file to create
+        tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil              # remove /work/fanf/TOPAZ_RT from inside tar file
+        echo "$base set -ADDED" >> $TP4rlog
+     done
+     echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
-echo "Actual List:   "
-echo ""
-cat $TP4rlist #printing the list
-echo "Today's Log:   "
-echo ""
-cat $TP4rlog #printing the log
+echo "Up-to-date List:   " >> $TP4rlog
+echo ""                    >> $TP4rlog
+cat $TP4rlist              >> $TP4rlog                               # printing the list
+echo ""                    >> $TP4rlog
+echo ""                    >> $TP4rlog
+
+cp $TP4rlog $fcldir/
+
+if [ "$(date +%A)" == "Monday" ]
+then
+   touch $tmplist
+   sed '1d' $TP4rlist >> $tmplist
+   mv $tmplist $TP4rlist
+   rm $tmplist
+   weekn=$(expr $(date +%d) / 7)
+   mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
+   mv $TP4rlog 
+fi
+

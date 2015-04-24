@@ -1,6 +1,8 @@
 #!/bin/bash
 # script to extract some variables from a netcdf file
 
+# NO NEED FOR A MAIL ALLERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
+
 #########################################################################
 tday=$1
 firstday=$2
@@ -9,13 +11,20 @@ dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 
 #extract start date/time of forecast
 # and put it into output filename
-odir=`pwd`  # output file will be placed in current directory
+odir=$(pwd)  # output file will be placed in current directory
 cd $dir0
 mkdir -p tmp
 
-echo " "
-echo "Unpacking files (ncpdq -U)..."
+# LOG
+log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/merge_log.txt
+if [ -f "$log" ]
+then
+   rm $log
+fi
+touch $log
 
+echo " "                                              >> $log
+echo "Unpacking files (ncpdq -U)..."                  >> $log
 
 flist=(*.nc)
 f=${flist[0]}
@@ -32,21 +41,21 @@ do
       # unpack files to make sure that scale factors are same in each file
       ncpdq -U $f tmp/$f
    else
-      echo "*.nc older than actual date"
+      echo "*.nc older than actual date"              >> $log
    fi
 done
 
 #combine unpacked files
-echo " "
-echo "Combining unpacked files (ncrcat)..."
+echo " "                                              >> $log
+echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
 ofil=SWARPiceonly_forecast_start${tday}T${start_time}Z.nc
 
 # make final file by repacking tmp.nc
-echo " "
-echo "Making $ofil (ncpdq)..."
+echo " "                                              >> $log
+echo "Making $ofil (ncpdq)..."                        >> $log
 ncpdq tmp.nc $ofil
 
 rm -r tmp tmp.nc
@@ -138,4 +147,3 @@ ncatted -a history,global,d,,                                                 $o
 
 mkdir -p /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
 mv $ofil ../final_output/
-

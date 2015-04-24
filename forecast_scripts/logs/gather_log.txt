@@ -1,0 +1,8 @@
+Collecting data produced in date 2015-04-24
+Moving the TP4archv*.[ab] and TP4DAILY*.[ab]
+Archv* files NOT present
+DAILY* files NOT present
+Moving the info files
+mpijob file present
+flags file present
+Transfer complete

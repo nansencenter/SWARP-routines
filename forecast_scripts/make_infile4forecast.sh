@@ -9,30 +9,33 @@
 # Other infile parameters must be changed in infile.mal.outer (TP4) or infile.mal
 # ======================================================================
 
-#MAINDIR=/home/nersc/bergh/Realtime
-#MAINDIR=$HOME/giacomo/SWARP-routines/forecast_scripts
+# EMAIL ADDRESS
+# email="user1@domain1.com,user2@domain2.com,etc..."
+# ======================================================================
+email="gcmdnt90@gmail.com"
+# ======================================================================
 
-# set SWARP_ROUTINES with this line in ~/.bash_profile
-# (NB set to correct path where routines are)
+# CREATING DIRECTORIES
 SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
 TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 MAINDIR=$SWARP_ROUTINES/forecast_scripts
+xdir=/work/timill/RealTime_Models/TP4a0.12/expt_01.1
 
-# set place of realtime model in .bash_profile also
-tp4dir=$TP4_REALTIME
-xdir=$tp4dir/expt_01.1
-#xdir=$MAINDIR/infiles
+# CREATING LOG
+logdir=$MAINDIR/logs
+mkdir -p $logdir
+log=$logdir/mk_infile_log.txt
+touch $log
 
 if [ $# -ne 5 ]
 then
-  echo "Usage: $0 <5 inputs> (see script)"
+  echo "Usage: $0 <5 inputs> (see script)"                  >> $log
+  mail -s "Make_infile4forecast.sh FAILED" $email < $log
   exit
 else
-
-  echo "-------------------------------------------------------------------------"
-  echo " make_infile4forecast.sh $1"
-  echo "-------------------------------------------------------------------------"
-
+  echo "-------------------------------------------------------------------------"  >> $log 
+  echo " make_infile4forecast.sh $1"                                                >> $log
+  echo "-------------------------------------------------------------------------"  >> $log
   rungen=$1
   thr=`printf '%3.3d' $3`	#three digits modification
   fou=`printf '%3.3d' $4`	#three digits modification
@@ -47,11 +50,11 @@ else
   
   if [ -f $file ]
   then
-    echo "Run version:    $1"
-    echo "Reference year: $2"
-    echo "From day:       $thr"
-    echo "To day 1:       $fou"
-    echo "To day 2:       $fiv"
+    echo "Run version:    $1"                                                       >> $log
+    echo "Reference year: $2"                                                       >> $log
+    echo "From day:       $thr"                                                     >> $log 
+    echo "To day 1:       $fou"                                                     >> $log 
+    echo "To day 2:       $fiv"                                                     >> $log 
     if [ -f $xdir/infile.in ]
     then
       rm -f $xdir/infile.in
@@ -65,10 +68,18 @@ else
     -e "s/run_gen/$1/g" \
     > $xdir/infile.in
 
-    echo " $xdir/infile.in created"
+    echo " $xdir/infile.in created"                                                 >> $log
   else
-    echo " ERROR : infile.mal does not exist" 
+    echo " ERROR : infile.mal does not exist"                                       >> $log
+    mail -s "Make_infile4forecast.sh FAILED" $email < $log
     exit
   fi
 fi
+
+# CLEANING THE LOG EVERY WEEK
+if [ $(date +%A) == "Monday" ]
+then
+   rm $log
+fi
+
 

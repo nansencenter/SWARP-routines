@@ -1,0 +1,12 @@
+Launching topaz_get_restart @ 
+Launching make_infile4forecast @ 
+Launching pbsjob @ 
+pbsjob done @ 
+Launching topaz_get_restart @ 
+Launching make_infile4forecast @ 
+Launching pbsjob @ 
+pbsjob done @ 
+Launching topaz_get_restart @ 
+Launching make_infile4forecast @ 
+Launching pbsjob @ 
+pbsjob done @ 
