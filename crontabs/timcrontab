@@ -10,13 +10,12 @@
 # 2) Forecast run                                        - Every day @02.00 
 # 3) Download validation data from OSI_SAF               - Every day @12.00 
 #
+#MAILTO="gcmdnt90@gmail.com"
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"
 VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
 
 # get wamnsea waves as early as possible
-05 * * * * $FORECAST/wamnsea_update.sh
-
-MAILTO="gcmdnt90@gmail.com"
+00 * * * * $FORECAST/wamnsea_update.sh
 
 # TP4 restarts less urgent
 00 18 * * * $FORECAST/topaz_archive_restart.sh

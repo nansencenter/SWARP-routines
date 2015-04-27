@@ -1,7 +1,7 @@
-Collecting data produced in date 2015-04-24
+Collecting data produced in date 2015-04-27
 Moving the TP4archv*.[ab] and TP4DAILY*.[ab]
-Archv* files NOT present
-DAILY* files NOT present
+Archv* files present
+DAILY* files present
 Moving the info files
 mpijob file present
 flags file present

@@ -32,7 +32,31 @@ Unpacking files (ncpdq -U)...
 *.nc older than actual date
 *.nc older than actual date
 *.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
+*.nc older than actual date
  
 Combining unpacked files (ncrcat)...
  
-Making SWARPiceonly_forecast_start20150424T000000Z.nc (ncpdq)...
+Making SWARPiceonly_forecast_start20150427T000000Z.nc (ncpdq)...

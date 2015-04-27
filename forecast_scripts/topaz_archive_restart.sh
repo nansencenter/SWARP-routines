@@ -26,7 +26,7 @@ TP4rlog=$ldir/tp_archive_log.txt
 TP4rlist=$ldir/tp_archive_list.txt
 tmplist=$ldir/tmp_list.txt
 
-if ! [ -f "$TP4rlisit" ]
+if ! [ -f "$TP4rlist" ]
 then
    cp $bdir/$pyear/TP4rlist $ldir/
 fi
@@ -99,9 +99,8 @@ then
    touch $tmplist
    sed '1d' $TP4rlist >> $tmplist
    mv $tmplist $TP4rlist
-   rm $tmplist
    weekn=$(expr $(date +%d) / 7)
    mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
-   mv $TP4rlog 
+   rm $TP4rlog 
 fi
 

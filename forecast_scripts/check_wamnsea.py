@@ -14,6 +14,12 @@ SEND_EMAIL  = 0
 CHECK_NC    = 1
 odir        = 'out' # where to put temporary outputs
 
+#print 'Select the contour method:   '
+#print 'Type 0 for basemap contour package'
+#print 'Type 1 for Threshold method'
+#chc = raw_input()
+chc = '1'
+
 ############################################################################
 def finish_map(bm):
    # finish_map(bm)
@@ -76,9 +82,10 @@ if CHECK_NC:
    yday  = date.today() - timedelta(1)
    yday2 = date.today() - timedelta(2)
    cday  = tday.strftime('%Y%m%d')
+   cyear = tday.strftime('%Y')
    pday  = yday.strftime('%Y%m%d')
    pday2 = yday2.strftime('%Y%m%d')
-   wmsc  = '/work/shared/nersc/msc/WAMNSEA/'
+   wmsc  = '/work/shared/nersc/msc/WAMNSEA/'+ cyear + '/forecasts/'
    ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
    #ncfil = 'wam_nsea.fc.20150413.nc'
    print('WAMNSEA file = ' + ncfil+'\n')
@@ -129,206 +136,395 @@ if CHECK_NC:
    check_list=[Ntimes-1]
    for loop_i in check_list:
       swh   = Mrdg.nc_get_var(ncfil,sswh,time_index=loop_i)
-         # swh[:,:] is a numpy masked array
+      # swh[:,:] is a numpy masked array
       Z        = swh[:,:].data
       mask     = swh[:,:].mask
       Zmax     = swh[in_area].max() # restrict max calc to relevant area
       Zmin     = swh[in_area].min() # restrict max calc to relevant area
 
       ##############################################################################
+
       # make plot
       Z[mask]  = np.NaN
          # if mask is 'True' (data is missing or invalid) set to NaN
 
       ##############################################################################
-      if 1:
-        # make test plot showing ice edge contour with bm.contour
-        g  = plt.figure()
-        bm.pcolor(X2,Y2,Z2,vmin=0,vmax=100)
-        # plot ice edge
-        # (get 15% conc contour)
-        # http://stackoverflow.com/questions/5666056/matplotlib-extracting-data-from-contour-lines
-        cs1   = bm.contour(X2,Y2,Z2,[edge_level])#,'k',linewidth=2)
-        print(cs1)
-        coll1 = cs1.collections
-        nlev1 = len(coll1)
-        for nl in range(nlev1):
-          p     = coll1[nl].get_paths() # only one conc contour so use 0 
-          nseg  = len(p)
-          for ns in range(nseg):
-             # loop over segments
-             v     = p[ns].vertices
-             x     = v[:,0]
-             y     = v[:,1]
-             bm.plot(x,y,'m',linewidth=1)
 
-        finish_map(bm)
-        figname  = odir+'/bm_contour.png'
-        plt.savefig(figname)
-        plt.close()
-        g.clf()
-        # make test plot showing ice edge contour with threshold 
-        g = plt.figure()
-        Z3 = Z2
-        Z3[Z3<15]=0
-        Z3[Z3>=15]=1
-        bm.pcolor(X2,Y2,Z3,vmin=0,vmax=1)
-        finish_map(bm)
-        figname  = odir+'/threshold_contour.png'
-        plt.savefig(figname)
-        plt.close()
-        g.clf()
-      ##############################################################################
-
-      f  = plt.figure()
-      bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
-      print('range in '+sswh+' (m):') 
-      print(Zmin,Zmax)
-      print(' ')
-
-      cb = plt.colorbar()
-      cb.set_label("Significant Wave Height [m]",rotation=270)
-      ##############################################################################
-
-      ##############################################################################
-      # plot ice edge
-      # (get 15% conc contour)
-      # http://stackoverflow.com/questions/5666056/matplotlib-extracting-data-from-contour-lines
-      cs1   = bm.contour(X2,Y2,Z2,[edge_level])#,'k',linewidth=2)
-      coll1 = cs1.collections
-      nlev1 = len(coll1)
-      for nl in range(nlev1):
-        p     = coll1[nl].get_paths() # only one conc contour so use 0 
-        nseg  = len(p)
-        for ns in range(nseg):
-           # loop over segments
-           v     = p[ns].vertices
-           x     = v[:,0]
-           y     = v[:,1]
-           bm.plot(x,y,'--m',linewidth=1.5)
-      ##############################################################################
-
-      ##############################################################################
-      Hthresh=3
-      Hmax=np.ceil(Zmax)
-      Hlev=np.arange(Hthresh,Hmax,.5)
-
-      if len(Hlev)==0:
-         #no waves over threshhold
-         out_list = []
-      else:
-         #some waves over threshhold
-         cs0   = bm.contour(X,Y,Z,Hlev)#,'k',linewidth=2)
-         print(cs0)
-         coll0 = cs0.collections
-         nlev0 = len(coll0)
-         dist_thresh=50.e3
-         out_list=[]
-         for nl in range(nlev0):
-           swh0=cs0.levels[nl]
-           p     = coll0[nl].get_paths() # only one conc contour so use 0 
+      if 0:
+         # make test plot showing ice edge contour with bm.contour
+         g  = plt.figure()
+         bm.pcolor(X2,Y2,Z2,vmin=0,vmax=100)
+         # plot ice edge
+         # (get 15% conc contour)
+         # http://stackoverflow.com/questions/5666056/matplotlib-extracting-data-from-contour-lines
+         cs1   = bm.contour(X2,Y2,Z2,[edge_level])#,'k',linewidth=2)
+         print(cs1)
+         coll1 = cs1.collections
+         nlev1 = len(coll1)
+         for nl in range(nlev1):
+           p     = coll1[nl].get_paths() # only one conc contour so use 0 
            nseg  = len(p)
            for ns in range(nseg):
               # loop over segments
               v     = p[ns].vertices
               x     = v[:,0]
               y     = v[:,1]
+              bm.plot(x,y,'m',linewidth=1)
 
-              #loop over all ice edges
-              for nl2 in range(nlev1):
-                p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
-                nseg2 = len(p2)
-                for ns2 in range(nseg2):
-                   # loop over segments
-                   v2    = p2[ns2].vertices
-                   x2    = v2[:,0]
-                   y2    = v2[:,1]
-                   dist,lon_min,lat_min=dist_cont2cont(x2,y2,x,y,bm) # output (lon,lat) for ice
-                   if dist<dist_thresh:
-                     dist_list=[dist,lon_min,lat_min,swh0]
-                     out_list.append(dist_list)
-              #bm.plot(x,y,'--g',linewidth=1.5)
+         finish_map(bm)
+         figname  = odir+'/bm_contour.png'
+         plt.savefig(figname)
+         plt.close()
+         g.clf()
 
       ##############################################################################
-      #
-      if 1:
-         # add test point to plot
-         # - to check if SAR image is ordered in the right place
-         # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
-         #   then use trial and error
-         nout = len(out_list)
-         for mm in range(nout):
-          list0=out_list[mm]
-          if list0[3] >= 3 and list0[0] <= 5:
-             lon_plot = list0[1]
-             lat_plot = list0[2]
-             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-             x_plot,y_plot  = bm(lon_plot,lat_plot)
-             bm.plot(x_plot,y_plot,'og',markersize=5)
-          elif list0[3] >= 4 and list0[0] <= 20:
-             lon_plot = list0[1]
-             lat_plot = list0[2]
-             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-             x_plot,y_plot  = bm(lon_plot,lat_plot)
-             bm.plot(x_plot,y_plot,'og',markersize=5)
-          elif list0[3] >= 5 and list0[0] <= 50:
-             lon_plot = list0[1]
-             lat_plot = list0[2]
-             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-             x_plot,y_plot  = bm(lon_plot,lat_plot)
-             bm.plot(x_plot,y_plot,'og',markersize=5)
 
-      finish_map(bm)
+         # make test plot showing ice edge contour with threshold 
+         g = plt.figure()
+         Z4 = Z2
+         Z4[Z4<15]=0
+         Z4[Z4>=15]=1
+         thenans = np.isnan(Z4)
+         Z4[thenans] = 0
+         bm.contour(X2,Y2,Z4,1)
+         finish_map(bm)
+         figname  = odir+'/threshold_contour.png'
+         plt.savefig(figname)
+         plt.close()
+         g.clf()
 
-      # date+time to title and file name
-      # label '$H_s$, m' to colorbar
-      wav = Dataset(ncfil)
-      fnday = getattr(wav,'max_time')
-      fnday = fnday.replace(" ", "_")
-      fnday = fnday.replace(":", "")
-      fnday = fnday.replace("-", "")
-      figname  = odir+'/'+fnday+'.png'
-      plt.savefig(figname)
-      print('saving figure:')
-      print(figname+'\n')
-      plt.close()
-      f.clf()
-      # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
+      ################################################################################
+      if chc == '0':
+
+          ################################################################################
+          # SENSIBLE POINTS WITH BM.CONTOUR
+          ################################################################################
+    
+          # Plotting waves
+          f  = plt.figure()
+          bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
+          print('range in '+sswh+' (m):') 
+          print(Zmin,Zmax)
+          print(' ')
+    
+          cb = plt.colorbar()
+          cb.set_label("Significant Wave Height [m]",rotation=270)
+    
+    
+    
+          ##############################################################################
+          # plot ice edge
+          # (get 15% conc contour)
+          ##############################################################################
+    
+          cs1   = bm.contour(X2,Y2,Z2,[edge_level])#,'k',linewidth=2)
+          coll1 = cs1.collections
+          nlev1 = len(coll1)
+          for nl in range(nlev1):
+            p     = coll1[nl].get_paths() # only one conc contour so use 0 
+            nseg  = len(p)
+            for ns in range(nseg):
+               # loop over segments
+               v     = p[ns].vertices
+               x     = v[:,0]
+               y     = v[:,1]
+               bm.plot(x,y,'k',linewidth=1.5)
+    
+          ##############################################################################
+    
+          # working on the waves threshold
+          Hthresh=3
+          Hmax=np.ceil(Zmax)
+          Hlev=np.arange(Hthresh,Hmax,.5)
+    
+          if len(Hlev)==0:
+             #no waves over threshhold
+             out_list = []
+          else:
+             #some waves over threshhold
+             cs0   = bm.contour(X,Y,Z,Hlev)#,'k',linewidth=2)
+             print(cs0)
+             coll0 = cs0.collections
+             nlev0 = len(coll0)
+             dist_thresh=50.e3
+             out_list=[]
+             for nl in range(nlev0):
+               swh0=cs0.levels[nl]
+               p     = coll0[nl].get_paths() # only one conc contour so use 0 
+               nseg  = len(p)
+               for ns in range(nseg):
+                  # loop over segments
+                  v     = p[ns].vertices
+                  x     = v[:,0]
+                  y     = v[:,1]
+    
+                  #loop over all ice edges
+                  for nl2 in range(nlev1):
+                    p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
+                    nseg2 = len(p2)
+                    for ns2 in range(nseg2):
+                       # loop over segments
+                       v2    = p2[ns2].vertices
+                       x2    = v2[:,0]
+                       y2    = v2[:,1]
+                       dist,lon_min,lat_min=dist_cont2cont(x2,y2,x,y,bm) # output (lon,lat) for ice
+                       if dist<dist_thresh:
+                         dist_list=[dist,lon_min,lat_min,swh0]
+                         out_list.append(dist_list)
+    
+          ##############################################################################
+    
+          if 1:
+             # add test point to plot
+             # - to check if SAR image is ordered in the right place
+             # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
+             #   then use trial and error
+             nout = len(out_list)
+             for mm in range(nout):
+              list0=out_list[mm]
+              if list0[3] >= 3 and list0[0] <= 5:
+                 lon_plot = list0[1]
+                 lat_plot = list0[2]
+                 print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                 x_plot,y_plot  = bm(lon_plot,lat_plot)
+                 bm.plot(x_plot,y_plot,'og',markersize=5)
+              elif list0[3] >= 4 and list0[0] <= 20:
+                 lon_plot = list0[1]
+                 lat_plot = list0[2]
+                 print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                 x_plot,y_plot  = bm(lon_plot,lat_plot)
+                 bm.plot(x_plot,y_plot,'og',markersize=5)
+              elif list0[3] >= 5 and list0[0] <= 50:
+                 lon_plot = list0[1]
+                 lat_plot = list0[2]
+                 print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                 x_plot,y_plot  = bm(lon_plot,lat_plot)
+                 bm.plot(x_plot,y_plot,'og',markersize=5)
+    
+          finish_map(bm)
+    
+          # date+time to title and file name
+          # label '$H_s$, m' to colorbar
+          wav = Dataset(ncfil)
+          fnday = getattr(wav,'max_time')
+          fnday = fnday.replace(" ", "_")
+          fnday = fnday.replace(":", "")
+          fnday = fnday.replace("-", "")
+          figname  = odir+'/img/'+fnday+'.png'
+          plt.savefig(figname)
+          print('saving figure:')
+          print(figname+'\n')
+          plt.close()
+          f.clf()
+          # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
+    
+    
+          # swh to find when there are large waves (>4m) in the vicinity of the ice.
+          # write and send an email to warn when this happens (so we can order some SAR images)
+    
+          # filename of text file to form contents of email message 
+          textfile = odir+'/lst/'+fnday+'_list.txt'
+          nout=len(out_list)
+          if nout>0:
+            SEND_EMAIL2=1
+            tf=open(textfile,'w')
+    
+            for mm in range(nout):
+              list0=out_list[mm]
+              line='\n' #get info from out_list
+              if list0[3] >= 3 and list0[0] <= 5:
+                 for ii in range(3,-1,-1):
+                    line=3*' '+str(list0[ii])+line
+              elif list0[3] >= 4 and list0[0] <= 20:
+                 for ii in range(3,-1,-1):
+                    line=3*' '+str(list0[ii])+line
+              elif list0[3] >= 5 and list0[0] <= 50:
+                 for ii in range(3,-1,-1):
+                    line=3*' '+str(list0[ii])+line
+     
+              tf.write(line)
+    
+            tf.close()
+          else:
+            SEND_EMAIL2=0
+          # f  = open(textfile,'w')
+          # f.write('Hei Tim!')
+          # f.close()
+
+      #############################################################################
+      elif chc == '1':
+
+         ##############################################################################
+         # SENSIBLE POINTS WITH THRESHOLD
+         ##############################################################################
+
+         # Plotting waves
+         f  = plt.figure()
+         bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
+         print('range in '+sswh+' (m):') 
+         print(Zmin,Zmax)
+         print(' ')
+
+         cb = plt.colorbar()
+         cb.set_label("Significant Wave Height [m]",rotation=270)
+
+         ##############################################################################
+         # plot ice edge
+         # (get 15% conc contour)
+         ##############################################################################
+
+         # ice pack
+         Z3 = Z2
+         Zval = np.ma.array(Z3)
+         Z3 = np.ma.masked_where(Zval < 15, Zval)
+         bm.pcolor(X2,Y2,Z3)
+
+         # ice edge contour with threshold 
+         Z4 = Z2
+         Z4[Z4<15]=0
+         Z4[Z4>=15]=1
+         thenans = np.isnan(Z4)
+         Z4[thenans] = 0
+         cs1 = bm.contour(X2,Y2,Z4,1)
+         coll1 = cs1.collections
+         nlev1 = len(coll1)
+         print nlev1
+         for nl in range(nlev1):
+           p     = coll1[nl].get_paths() # only one conc contour so use 0 
+           nseg  = len(p)
+           print nseg
+           for ns in range(nseg):
+              v = p[ns].vertices
+              x = v[:,0]
+              y = v[:,1]
+              bm.plot(x,y,'k',linewidth=1.5)
+
+              ##############################################################################
+
+              # working on the waves threshold
+              Hthresh=3
+              Hmax=np.ceil(Zmax)
+              Hlev=np.arange(Hthresh,Hmax,.5)
+
+              if len(Hlev)==0:
+                 #no waves over threshhold
+                 out_list = []
+              else:
+                 #some waves over threshhold
+                 cs0   = bm.contour(X,Y,Z,Hlev)
+                 print(cs0)
+                 coll0 = cs0.collections
+                 nlev0 = len(coll0)
+                 dist_thresh=50.e3
+                 out_list=[]
+                 for nl in range(nlev0):
+                   swh0=cs0.levels[nl]
+                   p     = coll0[nl].get_paths() # only one conc contour so use 0 
+                   nseg  = len(p)
+                   for ns in range(nseg):
+                      # loop over segments
+                      v     = p[ns].vertices
+                      x     = v[:,0]
+                      y     = v[:,1]
+
+                      #loop over all ice edges
+                      for nl2 in range(nlev1):
+                        p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
+                        nseg2 = len(p2)
+                        for ns2 in range(nseg2):
+                           # loop over segments
+                           v2    = p2[ns2].vertices
+                           x2    = v2[:,0]
+                           y2    = v2[:,1]
+                           dist,lon_min,lat_min=dist_cont2cont(x2,y2,x,y,bm) # output (lon,lat) for ice
+                           if dist<dist_thresh:
+                             dist_list=[dist,lon_min,lat_min,swh0]
+                             out_list.append(dist_list)
+
+            ##############################################################################
+
+         if 1:
+            # add test point to plot
+            # - to check if SAR image is ordered in the right place
+            # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
+            #   then use trial and error
+            nout = len(out_list)
+            for mm in range(nout):
+             list0=out_list[mm]
+             if list0[3] >= 3 and list0[0] <= 5:
+                lon_plot = list0[1]
+                lat_plot = list0[2]
+                print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                x_plot,y_plot  = bm(lon_plot,lat_plot)
+                bm.plot(x_plot,y_plot,'og',markersize=5)
+             elif list0[3] >= 4 and list0[0] <= 20:
+                lon_plot = list0[1]
+                lat_plot = list0[2]
+                print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                x_plot,y_plot  = bm(lon_plot,lat_plot)
+                bm.plot(x_plot,y_plot,'og',markersize=5)
+             elif list0[3] >= 5 and list0[0] <= 50:
+                lon_plot = list0[1]
+                lat_plot = list0[2]
+                print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                x_plot,y_plot  = bm(lon_plot,lat_plot)
+                bm.plot(x_plot,y_plot,'og',markersize=5)
+
+         finish_map(bm)
+
+         # date+time to title and file name
+         # label '$H_s$, m' to colorbar
+         wav = Dataset(ncfil)
+         fnday = getattr(wav,'max_time')
+         fnday = fnday.replace(" ", "_")
+         fnday = fnday.replace(":", "")
+         fnday = fnday.replace("-", "")
+         figname  = odir+'/img/'+fnday+'_threshold.png'
+         plt.savefig(figname)
+         print('saving figure:')
+         print(figname+'\n')
+         plt.close()
+         f.clf()
+         # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
 
 
-      # swh to find when there are large waves (>4m) in the vicinity of the ice.
-      # write and send an email to warn when this happens (so we can order some SAR images)
+         # swh to find when there are large waves (>4m) in the vicinity of the ice.
+         # write and send an email to warn when this happens (so we can order some SAR images)
 
-   # filename of text file to form contents of email message 
-   textfile = odir+'/'+fnday+'_list.txt'
-   nout=len(out_list)
-   if nout>0:
-     SEND_EMAIL2=1
-     tf=open(textfile,'w')
+         # filename of text file to form contents of email message 
+         textfile = odir+'/lst/'+fnday+'_threshold_list.txt'
+         nout=len(out_list)
+         if nout>0:
+           SEND_EMAIL2=1
+           tf=open(textfile,'w')
 
-     for mm in range(nout):
-       list0=out_list[mm]
-       line='\n' #get info from out_list
-       if list0[3] >= 3 and list0[0] <= 5:
-          for ii in range(3,-1,-1):
-             line=3*' '+str(list0[ii])+line
-       elif list0[3] >= 4 and list0[0] <= 20:
-          for ii in range(3,-1,-1):
-             line=3*' '+str(list0[ii])+line
-       elif list0[3] >= 5 and list0[0] <= 50:
-          for ii in range(3,-1,-1):
-             line=3*' '+str(list0[ii])+line
- 
-       tf.write(line)
+           for mm in range(nout):
+             list0=out_list[mm]
+             line='\n' #get info from out_list
+             if list0[3] >= 3 and list0[0] <= 5:
+                for ii in range(3,-1,-1):
+                   line=3*' '+str(list0[ii])+line
+             elif list0[3] >= 4 and list0[0] <= 20:
+                for ii in range(3,-1,-1):
+                   line=3*' '+str(list0[ii])+line
+             elif list0[3] >= 5 and list0[0] <= 50:
+                for ii in range(3,-1,-1):
+                   line=3*' '+str(list0[ii])+line
+       
+             tf.write(line)
 
-     tf.close()
-   else:
-     SEND_EMAIL2=0
-   # f  = open(textfile,'w')
-   # f.write('Hei Tim!')
-   # f.close()
+           tf.close()
+         else:
+           SEND_EMAIL2=0
+         # f  = open(textfile,'w')
+         # f.write('Hei Tim!')
+         # f.close()
+      else:
+         print 'ERROR: Please type 0 for bm.contour or 1 for threshold'
+         exit
 
 ################################################################
+# EMAIL SYSTEM
 if SEND_EMAIL and SEND_EMAIL2:
    # import smtplib for the actual sending function
    import smtplib
