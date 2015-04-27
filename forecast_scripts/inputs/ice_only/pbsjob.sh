@@ -49,6 +49,13 @@ EXEC=hycom
 # EXEC=hycom+pat
 # EXEC=hycom+apa
 
+# SWARP post-processing option
+# 0 - do nothing after postprocess.sh
+# 1 - run ice-only PP:
+#     /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+# 2 - run waves-in-ice PP:
+SWARP_PP=1
+
 # Enter directory from where the job was submitted
 cd $PBS_O_WORKDIR       ||  { echo "Could not go to dir $PBS_O_WORKDIR  "; exit 1; }
 
@@ -70,6 +77,13 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 ./postprocess.sh 
 
 # extra processing for SWARP forecasts
-/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+if [ $SWARP_PP -eq 1 ]
+then
+   # SWARP post-processing - ice only version
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+elif [ $SWARP_PP -eq 2 ]
+then
+   # SWARP post-processing - waves version
+fi
 
 exit $?
