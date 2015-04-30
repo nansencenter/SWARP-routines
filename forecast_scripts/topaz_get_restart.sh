@@ -2,9 +2,9 @@
 #Get latest restart from the internal repo to the working dir
 
 # EMAIL ADDRESS
-# email="user1@domain.com,user2@domain.com,etc..."
+address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # ====================================================================================
-email="gcmdnt90@gmail.com"
+email=$(cat $address)
 # ====================================================================================
 
 # DIRECTORIES AND DATELIST
@@ -19,7 +19,15 @@ mkdir -p $logdir
 out_restart=$fcdir/last_restart.txt
 log=$logdir/tp_get_log.txt
 
+if [ $(date +%A) == "Monday" ]
+then
+   mail -s "Weekly tp_get_restart log" $email < $log
+   rm $log
+fi
+
 touch $log
+echo $date  >> $log
+echo ""     >> $log
 
 cyear=$(cat $datelist | sed '3!d')			# current year
 cmon=$(cat $datelist | sed '4!d')			# current month
@@ -137,5 +145,5 @@ then
    mail -s "TP4 restarts are too old" $email < $log
 fi
 
-mv $log $fcdir/logs/
+cp $log $fcdir/logs/
 

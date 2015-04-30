@@ -6,9 +6,10 @@
 # (Cron version V5.0 -- $Id: crontab.c,v 1.12 2004/01/23 18:56:42 vixie Exp $)
 # Crontabs of Tim on Hexagon run on node1
 # To set up cron job on ONE node, a) > ssh login1, > b) crontab timcrontab, c) > exit 
-# 1) Check restarts from topaz and wamnsea               - Every day @18.00
-# 2) Forecast run                                        - Every day @02.00 
-# 3) Download validation data from OSI_SAF               - Every day @12.00 
+# 1) Check restarts from wamnsea                         - Every hour
+# 2) Check restarts from topaz                           - Every day @ 1800
+# 3) Forecast run                                        - Every day @ 0200 
+# 4) Download validation data from OSI_SAF               - Every day @ 1200 
 #
 #MAILTO="gcmdnt90@gmail.com"
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"

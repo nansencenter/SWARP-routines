@@ -5,12 +5,10 @@
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
 
-# EMAIL USED FOR WARNINGS
-# email="name1@domain1.com,name2@domain2.com,name3@domain1.com,etc..."
+# EMAIL 
+address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # ==============================================================================
-
-email="gcmdnt90@gmail.com"
-
+email=$(cat $address)
 # ==============================================================================
 
 # TIMEOUT OF THE SCRIPT

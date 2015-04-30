@@ -84,6 +84,7 @@ then
 elif [ $SWARP_PP -eq 2 ]
 then
    # SWARP post-processing - waves version
+   echo "waves version not ready yet"
 fi
 
 exit $?

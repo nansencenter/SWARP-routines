@@ -2,9 +2,9 @@
 # This script will collect and archive the results of the local TP4 model
 
 # EMAIL ADDRESS
-# email="user1@domain.com,user2@domain.com,etc..."
+address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # =============================================================================
-email="gcmdnt90@gmail.com"
+email=$(cat $address)
 # =============================================================================
 
 # defining all the dir that will be used

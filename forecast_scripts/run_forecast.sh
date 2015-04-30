@@ -19,7 +19,7 @@ TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 logdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs
 mkdir -p $logdir
 log=$logdir/run_forecast_log.txt
-if [ -f $log ]:
+if [ -f "$log" ]:
 then
    rm $log
 fi
@@ -28,7 +28,7 @@ touch $log
 # CREATING THE DATELIST 
 datelist=$SWARP_ROUTINES/forecast_scripts/datelist.txt
 
-if [ -f $datelist ]
+if [ -f "$datelist" ]
 then
    rm $datelist
 fi
@@ -105,7 +105,7 @@ fi
 #################################################################
 
 # Launch job
-echo "Launching pbsjob @ $date"                  >> $log
+echo "Launching pbsjob @ $(date)"                  >> $log
 cd $xdir
 
 # want to save archive files (TP4archv*.[ab]) every 3 hours
@@ -113,11 +113,11 @@ cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/blkdat.input.archv_3h blkdat
 cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/pbsjob.sh pbsjob.sh
 
 # clean data directory before run
-if [ -f data/TP4DAILY* ]
+if [ -f "./data/TP4DAILY*" ]
 then
    rm data/TP4DAILY*
 fi
-if [ -f data/TP4archv* ]
+if [ -f "./data/TP4archv*" ]
 then
    rm data/TP4archv*
 fi
@@ -130,5 +130,5 @@ qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
 $qsub pbsjob.sh
 #################################################################
    
-echo "pbsjob done @ $date"                  >> $log
+echo "pbsjob done @ $(date)"                  >> $log
 

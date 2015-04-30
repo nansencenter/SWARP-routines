@@ -3,9 +3,9 @@
 # - to be run from data
 
 # EMAIL ADDRESS
-# email="user1@domain.com,user2@domain.com,etc..."
+address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # ==================================================================================
-email="gcmdnt90@gmail.com"
+email=$(cat $address)
 # ==================================================================================
 
 # In .bash_profile:

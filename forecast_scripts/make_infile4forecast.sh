@@ -10,9 +10,9 @@
 # ======================================================================
 
 # EMAIL ADDRESS
-# email="user1@domain1.com,user2@domain2.com,etc..."
+address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # ======================================================================
-email="gcmdnt90@gmail.com"
+email=$(cat $address)
 # ======================================================================
 
 # CREATING DIRECTORIES
