@@ -57,7 +57,8 @@ else
       lfil=$rdir/$pyear/log/tp_archive_list.txt                    #list of restart files
       if [ -f $lfil ]
       then
-         f=`cat $lfil | grep "." | tail -1`
+         sort $lfil -o $lfil
+         f=$(cat $lfil | tail -1)
          echo "latest restart: $f"                 >> $log
          ryear=$pyear
       else
@@ -145,5 +146,5 @@ then
    mail -s "TP4 restarts are too old" $email < $log
 fi
 
-cp $log $fcdir/logs/
+mv $log $fcdir/logs/
 

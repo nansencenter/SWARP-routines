@@ -53,11 +53,12 @@ for el in "${eye[@]}"                                                # analizing
                 ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
                 TP4rlist=$bdir/$ryear/log/tp_archive_list                   # path to the LIST
 
-		if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST (we treat the 3 files as a unique set)
+		if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST
 		then
 			echo "$base CHECKED" >> $TP4rlog             # file present -> check confirmation
 		else 
 			echo "$base" >> $TP4rlist                    # file not present -> update the LIST                      
+                        sort $TP4rlist -o $TP4rlist                  # sort the list
 			baselist="$baselist $base"                   # adding the file group to the transfer variable
 		fi
 	else
@@ -82,7 +83,7 @@ else
         ryear=${dcre%%_*}                                         # keeping the year, we want to distinguish between ops year and file year
         tfil=${bdir}/$ryear/$base.tar.gz                          # tar file to create
         tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil              # remove /work/fanf/TOPAZ_RT from inside tar file
-        echo "$base set -ADDED" >> $TP4rlog
+        echo "$base -ADDED" >> $TP4rlog
      done
      echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
@@ -96,9 +97,17 @@ cp $TP4rlog $fcldir/
 
 if [ "$(date +%A)" == "Monday" ]
 then
-   touch $tmplist
-   sed '1d' $TP4rlist >> $tmplist
-   mv $tmplist $TP4rlist
+   nol=$(cat $TP4rlist | wc -l)
+   if [ "$nol" -gt 4 ]
+   then
+      tbr=$(cat tp_archive_list.txt | sed '1!d')
+      touch $tmplist
+      echo "The following file will be removed from the list:  "  >> $TP4rlog
+      echo $tbr                                                   >> $TP4rlog
+      rm /work/timill/RealTime_Models/TP4a0.12/expt_01.1/data/${tbr}*
+      sed '1d' $TP4rlist >> $tmplist
+      mv $tmplist $TP4rlist
+   fi
    weekn=$(expr $(date +%d) / 7)
    mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
    rm $TP4rlog 

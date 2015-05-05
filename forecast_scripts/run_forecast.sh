@@ -19,7 +19,7 @@ TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
 logdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs
 mkdir -p $logdir
 log=$logdir/run_forecast_log.txt
-if [ -f "$log" ]:
+if [ -f "$log" ]
 then
    rm $log
 fi
@@ -41,11 +41,10 @@ echo $(date +%m)           >> $datelist
 echo $(date +%d)           >> $datelist
 echo $(date +%j)           >> $datelist
 
+rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d') # where the last_restart.txt will end up
 cd $rundir
 mkdir -p ./info
 cp $datelist ./info
-
-rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d') # where the last_restart.txt will end up
 
 # RUNNING TOPAZ_GET_RESTART
 echo "Launching topaz_get_restart @ $date"                     >> $log
