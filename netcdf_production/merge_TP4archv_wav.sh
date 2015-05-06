@@ -1,45 +1,61 @@
+#!/bin/bash
 # script to extract some variables from a netcdf file
 
+# NO NEED FOR A MAIL ALLERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
+
 #########################################################################
-if [ $# -ne 1 ]; then
-   echo "Usage:"
-   echo "merge_TP4archv.sh [directory name]"
-   echo "- merges netcdf files in directory into one file with ncrcat"
-   exit
-fi
-dir0=$1
+tday=$1
+firstday=$2
+dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 #########################################################################
 
-# TODO extract start date/time of forecast
+#extract start date/time of forecast
 # and put it into output filename
-odir=`pwd`  # output file will be placed in current directory
+odir=$(pwd)  # output file will be placed in current directory
 cd $dir0
 mkdir -p tmp
 
-echo " "
-echo "Unpacking files (ncpdq -U)..."
+# LOG
+log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/merge_log.txt
+if [ -f "$log" ]
+then
+   rm $log
+fi
+touch $log
+
+echo " "                                              >> $log
+echo "Unpacking files (ncpdq -U)..."                  >> $log
+
+flist=(*.nc)
+f=${flist[0]}
+#get start of forecast
+start_date=${f:9:8} # check date
+start_time=${f:18:2}0000 # HHMMSS
+
 for f in *.nc
 do
-   echo $f
-   #get start of forecast
-   start_date=${f:18:8}
-   start_time=${f:27:6}
-
-   # unpack files to make sure that scale factors are same in each file
-   ncpdq -U $f tmp/$f
+   cf=${f:9:8}
+   if [ "$cf" -ge "$tday" ]
+   then
+      echo $f
+      # unpack files to make sure that scale factors are same in each file
+      ncpdq -U $f tmp/$f
+   else
+      echo "*.nc older than actual date"              >> $log
+   fi
 done
 
 #combine unpacked files
-echo " "
-echo "Combining unpacked files (ncrcat)..."
+echo " "                                              >> $log
+echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPwavesice_forecast_start${start_date}T${start_time}Z.nc
+ofil=SWARPwavesice_forecast_start${tday}T${start_time}Z.nc
 
 # make final file by repacking tmp.nc
-echo " "
-echo "Making $ofil (ncpdq)..."
+echo " "                                              >> $log
+echo "Making $ofil (ncpdq)..."                        >> $log
 ncpdq tmp.nc $ofil
 
 rm -r tmp tmp.nc
@@ -106,7 +122,8 @@ ncatted -O -h -a references,global,c,c,"www.nersc.no"                         $o
 ncatted -O -h -a comment,global,c,c," "                                       $ofil
 ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
 ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
-ncatted -O -h -a forecast_range,global,c,c,"3 day forecast"                   $ofil
+ncatted -O -h -a forecast_startdate,global,c,c,"$firstday - time=00.00.00Z"   $ofil
+ncatted -O -h -a forecast_range,global,c,c,"2.5 day forecast"                 $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
 ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
 ncatted -O -h -a institution_references,global,c,c,"http://www.nersc.no/"     $ofil
@@ -118,12 +135,15 @@ ncatted -O -h -a project_references,global,c,c,"swarp.nersc.no"               $o
 ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"          $ofil
 ncatted -O -h -a operational_status,global,c,c,"test"                         $ofil
 #
-ncatted -O -h -a title,global,o,c,"SWARP Waves-in-ice forecast"               $ofil
+ncatted -O -h -a title,global,o,c,"SWARP waves in ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-# delete old attributes
-ncatted -a field_date,global,d,,                                              $ofil
+#ncrename -a bulletin_date,restart_date $ofil #clearer
 
+# delete old attribute(s)
+ncatted -a field_date,global,d,,                                              $ofil
+ncatted -a history,global,d,,                                                 $ofil
 ###########################################################################################
 
-mv $ofil $odir
+mkdir -p /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
+mv $ofil ../final_output/

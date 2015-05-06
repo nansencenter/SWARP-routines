@@ -13,6 +13,6 @@ F  6         # lnesti, nestdti - read and apply nesting bnd cond at nestdto inte
 F CSR F F    # Tides (true,  CSR/FES, apply currents)
 F            # lgridp     Activate storage of gridpoint information
 # Days     Assi  Diagno.  Restart            (1992 for first synoptic experiment)
-   nd1.00     F     T        T
-   nd2.00     F     T        T
-   nd3.00     F     T        T
+   nd1.00  F     T        T
+   nd2.00  F     T        T
+   nd3.00  F     T        F

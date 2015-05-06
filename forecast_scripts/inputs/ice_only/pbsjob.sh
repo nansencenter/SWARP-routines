@@ -5,7 +5,7 @@
 #PBS -S /bin/bash
 #
 # give the job a name
-#PBS -N "TP4x011fc"
+#PBS -N "TP4x012fc"
 #
 #  Specify the project the job belongs to
 #
@@ -80,11 +80,11 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 if [ $SWARP_PP -eq 1 ]
 then
    # SWARP post-processing - ice only version
-   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ice_only/process_FCresults.sh
 elif [ $SWARP_PP -eq 2 ]
 then
    # SWARP post-processing - waves version
-   echo "waves version not ready yet"
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/process_FCresults_wav.sh
 fi
 
 exit $?

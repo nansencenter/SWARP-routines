@@ -28,7 +28,7 @@ tmplist=$ldir/tmp_list.txt
 
 if ! [ -f "$TP4rlist" ]
 then
-   cp $bdir/$pyear/TP4rlist $ldir/
+   cp $bdir/$pyear/$TP4rlist $ldir/
 fi
 
 touch $TP4rlog
@@ -51,7 +51,6 @@ for el in "${eye[@]}"                                                # analizing
                 bfil=$rdir/${base}_mem001.b
                 ufil=$rdir/${base}ICE.uf
                 ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
-                TP4rlist=$bdir/$ryear/log/tp_archive_list                   # path to the LIST
 
 		if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST
 		then

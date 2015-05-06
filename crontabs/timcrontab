@@ -11,7 +11,9 @@
 # 3) Forecast run                                        - Every day @ 0200 
 # 4) Download validation data from OSI_SAF               - Every day @ 1200 
 #
-#MAILTO="gcmdnt90@gmail.com"
+
+#MAILTO="user@domain.com"
+
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"
 VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
 
@@ -22,7 +24,7 @@ VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
 00 18 * * * $FORECAST/topaz_archive_restart.sh
 
 # run forecast as early as possible
-00 02 * * * $FORECAST/run_forecast.sh
+00 02 * * * $FORECAST/ice_only/run_forecast.sh
 
 # get ice conc for validation and wave warning
 00 12 * * * $VALIDATION/get_osisaf_conc.sh
