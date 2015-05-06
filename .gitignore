@@ -19,3 +19,4 @@ forecast_scripts/logs/*
 forecast_scripts/datelist.txt
 #
 python_tutorial/out
+validation/SWARP*
