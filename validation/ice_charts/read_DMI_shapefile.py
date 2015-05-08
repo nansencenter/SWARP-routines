@@ -3,6 +3,14 @@ import numpy as np
 import shapefile
 from mpl_toolkits.basemap import Basemap, cm
 from matplotlib import pyplot as plt
+from matplotlib import lines as mlines
+
+swarp = os.getenv('SWARP_ROUTINES')
+pyswarp  = swarp+'/py_funs'
+if pyswarp not in sys.path:
+   sys.path.append(pyswarp)
+
+import ordered_set as ordset
 
 ############################################################################
 def finish_map(bm):
@@ -21,7 +29,8 @@ def finish_map(bm):
    return
 ############################################################################
 
-indir    = 'test_inputs'
+# indir    = 'test_inputs'
+indir    = 'test_inputs2'
 fnames   = os.listdir(indir)
 snames   = []
 
@@ -110,6 +119,7 @@ for fname in snames:
 
    ####################################################
    # plot outlines of polygons (colour-coded)
+   # for key in ['FC']:
    for key in form_cats:
       print('\nPlotting MIZ according to '+key+'...')
       fig   = plt.figure()
@@ -144,6 +154,8 @@ for fname in snames:
 
       if 0:
          # only plot single polygon as a test
+         PLOT_COMBINED  = 0
+
          # tval     = 0#n=0
          # tval     = 10#n=14
          tval     = 14#n=33
@@ -153,7 +165,10 @@ for fname in snames:
          n        = MIZforms[tval][0]
          lst      = MIZforms[tval][1]
 
-         figname  = outdir+'/'+fname+'_MIZpoly'+str(n)+'.png'
+         cdate    = fname[:8]
+         if not os.path.exists(outdir+cdate):
+            os.mkdir(outdir+cdate)
+         figname  = outdir+'/'+cdate+'/'+fname+'_MIZpoly'+str(n)+'.png'
          ttl      = 'Polygon '+str(n)+': FA='
 
          if lst[0]>0:
@@ -174,10 +189,23 @@ for fname in snames:
       else:
          # plot all polygons in MIZ
          to_plot  = range(len(MIZforms))
-         figname  = outdir+'/'+fname+'_MIZ_'+key+'.png'
+         cdate    = fname[:8]
+         if not os.path.exists(outdir+cdate):
+            os.mkdir(outdir+cdate)
+
+         PLOT_COMBINED  = 0
+         if PLOT_COMBINED==0:
+            figname  = outdir+'/'+cdate+'/'+fname+'_MIZ_'+key+'.png'
+         else:
+            figname  = outdir+'/'+cdate+'/'+fname+'_MIZ_'+key+'2.png'
          ttl      = 'All polygons in MIZ - using '+key
    
       ####################################################
+      Ncols = len(MIZcols)
+      x_all = []
+      y_all = []
+
+      Ndone  = 0 # need to 
       for m in to_plot:
          n     = MIZforms[m][0]
          fdct  = MIZforms[m][1]
@@ -185,6 +213,9 @@ for fname in snames:
          # print(n)
          # print(lst)
          # print(val)
+
+         #########################################################
+         Mpolys   = []
          if val<=MIZthresh:
             col   = MIZcols[val+1] # colour corresponding to this value
             #
@@ -194,10 +225,63 @@ for fname in snames:
             x  = []
             y  = []
             for p in range(len(pts)):
-               x.append(pts[p][0])
-               y.append(pts[p][1])
+               p0 = pts[p][0]
+               p1 = pts[p][1]
+               x.append(p0)
+               y.append(p1)
+
+               if PLOT_COMBINED==1:
+                  # test if point in (x_all,y_all) already
+                  i0 = -1
+                  if (p0 in x_all):
+                     i0 = x_all.index(p0)
+                  i1 = -1
+                  if (p1 in y_all):
+                     i1 = y_all.index(p1)
+
+                  # if x in x_all and y in y_all already,
+                  # check if they have the same index
+                  # if not add to list
+                  if not((i0==i1) and (i0>=0)):
+                     x_all.append(p0)
+                     y_all.append(p1)
+
+         # #  TODO use shapely to convert (x,y) to geometric object 
+         # # usable in operations (eg disjoint,
+         # # unary union = merge overlapping polys into single poly)
+         # import shapely.geometry as shgeom
+         # import shapely.ops      as shops
+
+         # poly  = shgeom.Polygon(pts)
+         # if Ndone==0:
+         #    Mp = shgeom.MultiPolygon([poly])
+         # else:
+         #    Mp = shops.unary_union([Mp,poly]) # this should automatically merge neighbouring polygons
+
+         # Ndone = Ndone+1
+         #########################################################
+
    
-         bm.plot(np.array(x),np.array(y),col,latlon=True)
+         #########################################################
+         if PLOT_COMBINED==0:
+            bm.plot(np.array(x),np.array(y),col,latlon=True)
+         #########################################################
+
+      #########################################################
+      if PLOT_COMBINED==1:
+         print("Doing plot now...")
+         bm.plot(np.array(x_all),np.array(y_all),'.k',latlon=True)
+      ####################################################
+
+      ####################################################
+      # Draw legend
+      # MIZvals     = ['X','0','1','2','3','4'] # values of forms which will be in MIZ (floe size < 500m)
+      # MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
+      Ncols    = len(MIZcols)
+      handles  = Ncols*[0]
+      for m in range(Ncols):
+         handles[m]  = mlines.Line2D([], [], color=MIZcols[m],label=MIZvals[m]) # also eg marker='*',markersize='15'
+      plt.legend(handles=handles)
       ####################################################
    
       finish_map(bm)
