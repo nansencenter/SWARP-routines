@@ -1,16 +1,23 @@
 import os,sys
 import numpy as np
-import shapefile
 from mpl_toolkits.basemap import Basemap, cm
 from matplotlib import pyplot as plt
 from matplotlib import lines as mlines
+
+# pyshp->shapefile info:
+# https://pypi.python.org/pypi/pyshp
+import shapefile
+
+# shapely info:
+# official docs: http://toblerity.org/shapely/shapely.geometry.html
+# more demos: http://toblerity.org/shapely/manual.html
+import shapely.geometry as shgeom
+import shapely.ops      as shops
 
 swarp = os.getenv('SWARP_ROUTINES')
 pyswarp  = swarp+'/py_funs'
 if pyswarp not in sys.path:
    sys.path.append(pyswarp)
-
-import ordered_set as ordset
 
 ############################################################################
 def finish_map(bm):
@@ -29,8 +36,153 @@ def finish_map(bm):
    return
 ############################################################################
 
-# indir    = 'test_inputs'
-indir    = 'test_inputs2'
+############################################################################
+def xy2coords(x,y):
+   # convert x,y list to list of coordinates (tuples)
+
+   pts   = []
+   for n in range(len(x)):
+      pts.append((x[n],y[n]))
+
+   return pts
+############################################################################
+
+############################################################################
+def coords2xy(pts):
+   # convert list of coordinates (tuples) to x,y list
+
+   x  = []
+   y  = []
+   for n in range(len(pts)):
+      x.append(pts[n][0])
+      y.append(pts[n][1])
+
+   return np.array(x),np.array(y)
+############################################################################
+
+############################################################################
+def plot_coords(bm,pts,**kwargs):
+
+   x,y   = coords2xy(pts)
+   bm.plot(x,y,**kwargs)
+
+   return
+############################################################################
+
+############################################################################
+def make_valid_poly(shp):
+
+   pts      = shp.points
+   Nparts   = len(shp.parts)
+   if Nparts==1:
+      poly  = shgeom.Polygon(pts)
+   else:
+      polys    = []
+
+      # all parts but last
+      for n in range(Nparts-1):
+         i0 = shp.parts[n]
+         i1 = shp.parts[n+1]
+         pn = shgeom.Polygon(pts[i0:i1])
+         polys.append(pn)
+
+      # last part
+      for n in [Nparts-1]:
+         i0 = shp.parts[n]
+         i1 = len(pts)
+         pn = shgeom.Polygon(pts[i0:i1])
+         polys.append(pn)
+
+      if 1:
+         # just take 1st poly
+         poly  = polys[0]
+      else:
+         # include all parts
+         # TODO include these?
+         # TODO does unary_union remove holes
+         poly  = shgeom.MultiPolygon(polys)
+
+   return poly
+
+   # valid_poly  = poly.is_valid
+   # if not valid_poly:
+
+   #    print("polygon invalid")
+   #    print(shops.unary_union(poly).is_valid)
+   #    bbox     = shp.bbox
+   #    lon_av   = .5*(bbox[0]+bbox[2])
+   #    lat_av   = .5*(bbox[1]+bbox[3])
+   #    lat_rng  = .5*(bbox[3]-bbox[1])
+
+   #    env   = poly.envelope
+   #    pts2  = env.boundary.coords
+
+   #    sd = env.symmetric_difference(poly)
+   #    print(sd)
+   #    len(sd.geoms)
+   #    # plot_coords(plt,pts,color='k',linestyle='.')
+   #    # plot_coords(plt,pts2)
+   #    # plt.show()
+
+   #    ######################################################################
+   #    # make a basemap to project lons,lats to x,y
+   #    rad   = 2*lat_rng  # approx radius of image (degrees)
+   #    xmax  = rad*111.e3   # half width of image [m]
+   #    ymax  = rad*111.e3   # half height of image [m]
+   #    cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
+   #    #
+   #    bm = Basemap(width=2*xmax,height=2*ymax,\
+   #                 resolution=cres,projection='stere',\
+   #                 lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
+
+   #    if 1:
+   #       lons,lats   = coords2xy(pts)
+   #    else:
+   #       lons,lats   = poly.boundary.coords.xy
+   #       lons        = np.array(lons)
+   #       lats        = np.array(lats)
+   #    x,y         = bm(lons,lats,inverse=False)
+   #    ######################################################################
+
+   #    ######################################################################
+   #    # get usual distance between points:
+   #    # (assumes mostly in order)
+   #    # for perc in range(0,101,10):
+   #    #    print(np.percentile(dist,perc))
+   #    xbad  = []
+   #    ybad  = []
+   #    x0 = x.copy()
+   #    y0 = y.copy()
+   #    while (not valid_poly):
+   #       dist  = np.sqrt(pow(x0[1:]-x0[:-1],2)+pow(y0[1:]-y0[:-1],2))
+   #       xok   = x0[:-1][dist<dist.max()]
+   #       yok   = y0[:-1][dist<dist.max()]
+   #       xbad.append(x0[:-1][dist==dist.max()])
+   #       ybad.append(y0[:-1][dist==dist.max()])
+
+   #       # for n in length(xbad):
+   #       #    xn = xbad[n]
+   #       #    yn = ybad[n]
+   #       
+   #       lons,lats   = bm(xok,yok,inverse=True)
+   #       pts         = xy2coords(lons,lats)
+   #       poly        = shgeom.Polygon(pts)
+   #       valid_poly  = poly.is_valid
+
+   #       Nrm   = len(ybad)
+   #       print('removed '+str(Nrm))
+   #       bm.plot(xok,yok)
+   #       bm.plot(x,y,'.k')
+   #       plt.show()
+
+   #       if Nrm>15:
+   #          sys.exit('ho')
+
+   # return poly
+############################################################################
+
+indir    = 'test_inputs'
+# indir    = 'test_inputs2'
 fnames   = os.listdir(indir)
 snames   = []
 
@@ -123,6 +275,8 @@ for fname in snames:
    for key in form_cats:
       print('\nPlotting MIZ according to '+key+'...')
       fig   = plt.figure()
+
+      ####################################################
       if 1:
          # manually set plot domain
          rad   = 30.          # approx radius of image (degrees)
@@ -151,6 +305,7 @@ for fname in snames:
                             urcrnrlon=lon1,urcrnrlat=lat1,\
                             resolution='i',projection='stere',\
                             lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
+      ####################################################
 
       if 0:
          # only plot single polygon as a test
@@ -166,8 +321,8 @@ for fname in snames:
          lst      = MIZforms[tval][1]
 
          cdate    = fname[:8]
-         if not os.path.exists(outdir+cdate):
-            os.mkdir(outdir+cdate)
+         if not os.path.exists(outdir+'/'+cdate):
+            os.mkdir(outdir+'/'+cdate)
          figname  = outdir+'/'+cdate+'/'+fname+'_MIZpoly'+str(n)+'.png'
          ttl      = 'Polygon '+str(n)+': FA='
 
@@ -190,8 +345,8 @@ for fname in snames:
          # plot all polygons in MIZ
          to_plot  = range(len(MIZforms))
          cdate    = fname[:8]
-         if not os.path.exists(outdir+cdate):
-            os.mkdir(outdir+cdate)
+         if not os.path.exists(outdir+'/'+cdate):
+            os.mkdir(outdir+'/'+cdate)
 
          PLOT_COMBINED  = 0
          if PLOT_COMBINED==0:
@@ -205,7 +360,7 @@ for fname in snames:
       x_all = []
       y_all = []
 
-      Ndone  = 0 # need to 
+      MPlist   = []
       for m in to_plot:
          n     = MIZforms[m][0]
          fdct  = MIZforms[m][1]
@@ -215,74 +370,60 @@ for fname in snames:
          # print(val)
 
          #########################################################
-         Mpolys   = []
          if val<=MIZthresh:
             col   = MIZcols[val+1] # colour corresponding to this value
             #
             shp   = sf.shape(n)
             pts   = shp.points
             #
-            x  = []
-            y  = []
-            for p in range(len(pts)):
-               p0 = pts[p][0]
-               p1 = pts[p][1]
-               x.append(p0)
-               y.append(p1)
-
-               if PLOT_COMBINED==1:
-                  # test if point in (x_all,y_all) already
-                  i0 = -1
-                  if (p0 in x_all):
-                     i0 = x_all.index(p0)
-                  i1 = -1
-                  if (p1 in y_all):
-                     i1 = y_all.index(p1)
-
-                  # if x in x_all and y in y_all already,
-                  # check if they have the same index
-                  # if not add to list
-                  if not((i0==i1) and (i0>=0)):
-                     x_all.append(p0)
-                     y_all.append(p1)
-
-         # #  TODO use shapely to convert (x,y) to geometric object 
-         # # usable in operations (eg disjoint,
-         # # unary union = merge overlapping polys into single poly)
-         # import shapely.geometry as shgeom
-         # import shapely.ops      as shops
-
-         # poly  = shgeom.Polygon(pts)
-         # if Ndone==0:
-         #    Mp = shgeom.MultiPolygon([poly])
-         # else:
-         #    Mp = shops.unary_union([Mp,poly]) # this should automatically merge neighbouring polygons
-
-         # Ndone = Ndone+1
-         #########################################################
-
-   
-         #########################################################
-         if PLOT_COMBINED==0:
-            bm.plot(np.array(x),np.array(y),col,latlon=True)
+            if PLOT_COMBINED==0:
+               plot_coords(bm,pts,color=col,latlon=True)
+            else:
+               # merge polygons
+               poly  = make_valid_poly(shp)
+               MPlist.append(poly)
+               # print('appending poly')
+               # print(len(MPlist))
+               # if 0:
+               #    # test unary union
+               #    uu = shops.unary_union(MPlist)
+               #    print('unary union ok')
          #########################################################
 
       #########################################################
       if PLOT_COMBINED==1:
-         print("Doing plot now...")
-         bm.plot(np.array(x_all),np.array(y_all),'.k',latlon=True)
-      ####################################################
+         # MP = shgeom.MultiPolygon(MPlist)
+         MP = shops.unary_union(MPlist)
+         if not hasattr(MP,'geoms'):
+            MP = shgeom.MultiPolygon(MP)
+         print('len(MP)='+str(len(MP.geoms)))
+         # MP = shops.cascaded_union(MP)
+         # MP = shops.unary_union(MP)
 
-      ####################################################
-      # Draw legend
-      # MIZvals     = ['X','0','1','2','3','4'] # values of forms which will be in MIZ (floe size < 500m)
-      # MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
-      Ncols    = len(MIZcols)
-      handles  = Ncols*[0]
-      for m in range(Ncols):
-         handles[m]  = mlines.Line2D([], [], color=MIZcols[m],label=MIZvals[m]) # also eg marker='*',markersize='15'
-      plt.legend(handles=handles)
-      ####################################################
+         print("Doing plot now...")
+         Ngrps = len(MP.geoms)
+         
+         cols  = ['c','b','g','m','r'] # colours corresponding to each form categatory 
+         for m in range(Ngrps):
+            Ninner   = len(MP.geoms[m].interiors)
+            print('No of interior regions')
+            print([m,Ninner])
+            q0    = shgeom.Polygon(MP.geoms[m].exterior)
+            pts   = q0.boundary.coords
+            m_    = np.mod(m,len(cols))
+            plot_coords(bm,pts,color=cols[m_],latlon=True)
+         ####################################################
+      else:
+         ####################################################
+         # Draw legend
+         # MIZvals     = ['X','0','1','2','3','4'] # values of forms which will be in MIZ (floe size < 500m)
+         # MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
+         Ncols    = len(MIZcols)
+         handles  = Ncols*[0]
+         for m in range(Ncols):
+            handles[m]  = mlines.Line2D([], [], color=MIZcols[m],label=MIZvals[m]) # also eg marker='*',markersize='15'
+         plt.legend(handles=handles)
+         ####################################################
    
       finish_map(bm)
       plt.title(ttl,y='1.06')
@@ -290,3 +431,4 @@ for fname in snames:
       plt.close()
       fig.clf()
       print('Saving to '+figname)
+      #########################################################
