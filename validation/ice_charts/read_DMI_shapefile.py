@@ -103,82 +103,6 @@ def make_valid_poly(shp):
          poly  = shgeom.MultiPolygon(polys)
 
    return poly
-
-   # valid_poly  = poly.is_valid
-   # if not valid_poly:
-
-   #    print("polygon invalid")
-   #    print(shops.unary_union(poly).is_valid)
-   #    bbox     = shp.bbox
-   #    lon_av   = .5*(bbox[0]+bbox[2])
-   #    lat_av   = .5*(bbox[1]+bbox[3])
-   #    lat_rng  = .5*(bbox[3]-bbox[1])
-
-   #    env   = poly.envelope
-   #    pts2  = env.boundary.coords
-
-   #    sd = env.symmetric_difference(poly)
-   #    print(sd)
-   #    len(sd.geoms)
-   #    # plot_coords(plt,pts,color='k',linestyle='.')
-   #    # plot_coords(plt,pts2)
-   #    # plt.show()
-
-   #    ######################################################################
-   #    # make a basemap to project lons,lats to x,y
-   #    rad   = 2*lat_rng  # approx radius of image (degrees)
-   #    xmax  = rad*111.e3   # half width of image [m]
-   #    ymax  = rad*111.e3   # half height of image [m]
-   #    cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
-   #    #
-   #    bm = Basemap(width=2*xmax,height=2*ymax,\
-   #                 resolution=cres,projection='stere',\
-   #                 lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
-
-   #    if 1:
-   #       lons,lats   = coords2xy(pts)
-   #    else:
-   #       lons,lats   = poly.boundary.coords.xy
-   #       lons        = np.array(lons)
-   #       lats        = np.array(lats)
-   #    x,y         = bm(lons,lats,inverse=False)
-   #    ######################################################################
-
-   #    ######################################################################
-   #    # get usual distance between points:
-   #    # (assumes mostly in order)
-   #    # for perc in range(0,101,10):
-   #    #    print(np.percentile(dist,perc))
-   #    xbad  = []
-   #    ybad  = []
-   #    x0 = x.copy()
-   #    y0 = y.copy()
-   #    while (not valid_poly):
-   #       dist  = np.sqrt(pow(x0[1:]-x0[:-1],2)+pow(y0[1:]-y0[:-1],2))
-   #       xok   = x0[:-1][dist<dist.max()]
-   #       yok   = y0[:-1][dist<dist.max()]
-   #       xbad.append(x0[:-1][dist==dist.max()])
-   #       ybad.append(y0[:-1][dist==dist.max()])
-
-   #       # for n in length(xbad):
-   #       #    xn = xbad[n]
-   #       #    yn = ybad[n]
-   #       
-   #       lons,lats   = bm(xok,yok,inverse=True)
-   #       pts         = xy2coords(lons,lats)
-   #       poly        = shgeom.Polygon(pts)
-   #       valid_poly  = poly.is_valid
-
-   #       Nrm   = len(ybad)
-   #       print('removed '+str(Nrm))
-   #       bm.plot(xok,yok)
-   #       bm.plot(x,y,'.k')
-   #       plt.show()
-
-   #       if Nrm>15:
-   #          sys.exit('ho')
-
-   # return poly
 ############################################################################
 
 indir    = 'test_inputs'
@@ -271,8 +195,8 @@ for fname in snames:
 
    ####################################################
    # plot outlines of polygons (colour-coded)
-   # for key in ['FC']:
-   for key in form_cats:
+   # for key in form_cats:
+   for key in ['FC']:
       print('\nPlotting MIZ according to '+key+'...')
       fig   = plt.figure()
 
@@ -348,7 +272,7 @@ for fname in snames:
          if not os.path.exists(outdir+'/'+cdate):
             os.mkdir(outdir+'/'+cdate)
 
-         PLOT_COMBINED  = 0
+         PLOT_COMBINED  = 1
          if PLOT_COMBINED==0:
             figname  = outdir+'/'+cdate+'/'+fname+'_MIZ_'+key+'.png'
          else:
