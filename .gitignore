@@ -20,3 +20,9 @@ forecast_scripts/datelist.txt
 #
 python_tutorial/out
 validation/SWARP*
+#
+validation/ice_charts/test_outputs/*
+validation/ice_charts/test_inputs/*
+!validation/ice_charts/test_inputs/*.imz
+!validation/ice_charts/test_inputs/*.txt
+validation/ice_charts/test_inputs2/*
