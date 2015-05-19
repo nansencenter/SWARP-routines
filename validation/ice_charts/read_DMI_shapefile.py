@@ -232,39 +232,33 @@ for fname in snames:
                             lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
       ####################################################
 
-      if 0:
+      if 1:
          # only plot single polygon as a test
          PLOT_COMBINED  = 0
 
          # tval     = 0#n=0
          # tval     = 10#n=14
-         tval     = 14#n=33
-         # tval     = 28#n=72
+         # tval     = 14#n=33
+         tval     = 28#n=72
          # tval     = 29#n=73
          to_plot  = [tval]
          n        = MIZforms[tval][0]
-         lst      = MIZforms[tval][1]
+         dct      = MIZforms[tval][1]
 
          cdate    = fname[:8]
          if not os.path.exists(outdir+'/'+cdate):
             os.mkdir(outdir+'/'+cdate)
          figname  = outdir+'/'+cdate+'/'+fname+'_MIZpoly'+str(n)+'.png'
-         ttl      = 'Polygon '+str(n)+': FA='
 
-         if lst[0]>0:
-            ttl   = ttl+str(lst[0])+', FB='
-         else:
-            ttl   = ttl+"'X', FB="
-
-         if lst[1]>0:
-            ttl   = ttl+str(lst[1])+', FC='
-         else:
-            ttl   = ttl+"'X', FC="
-
-         if lst[2]>0:
-            ttl   = ttl+str(lst[2])
-         else:
-            ttl   = ttl+"'X'"
+         ttl   = 'Polygon '+str(n)+': '
+         for key in dct.keys():
+            ttl   = ttl+key+'='
+            val   = dct[key]
+            if val>=0:
+               ttl   = ttl+str(val)+', '
+            else:
+               ttl   = ttl+"'X', "
+         ttl   = ttl[:-2]
 
       else:
          # plot all polygons in MIZ
