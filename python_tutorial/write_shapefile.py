@@ -3,7 +3,7 @@ import os,sys
 import shapefile
 import shapely
 
-def xy2list(x,y)
+def xy2list(x,y):
    
    lst   = []
    for n in range(len(x)):
@@ -12,7 +12,7 @@ def xy2list(x,y)
    return lst
 
 ############################################################################
-def prepMultiPolygon4ShapeFile(MP)
+def prepMultiPolygon4ShapeFile(MP):
    # convert shapely MultiPolygon to form usable by shapefile
    # also calculate field values
    Np          = len(MP.geoms)
