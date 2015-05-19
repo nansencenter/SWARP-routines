@@ -251,7 +251,8 @@ for fname in snames:
       print('\nPlotting MIZ according to '+key+'...')
       fig   = plt.figure()
 
-      if 0:
+      PLOT_ALL = 1
+      if PLOT_ALL==0:
          # only plot single polygon as a test
          PLOT_COMBINED  = 0
 
@@ -292,7 +293,7 @@ for fname in snames:
          if not os.path.exists(outdir+'/'+cdate):
             os.mkdir(outdir+'/'+cdate)
 
-         PLOT_COMBINED  = 1
+         PLOT_COMBINED  = 1 # merge neighbouring MIZ polygons together
          if PLOT_COMBINED==0:
             figname  = outdir+'/'+cdate+'/'+fname+'_MIZ_'+key+'.png'
          else:
@@ -336,13 +337,10 @@ for fname in snames:
 
       #########################################################
       if PLOT_COMBINED==1:
-         # MP = shgeom.MultiPolygon(MPlist)
-         MP = shops.unary_union(MPlist)
+         MP = shops.unary_union(MPlist) # merge neighbouring polygons
          if not hasattr(MP,'geoms'):
             MP = shgeom.MultiPolygon(MP)
          print('len(MP)='+str(len(MP.geoms)))
-         # MP = shops.cascaded_union(MP)
-         # MP = shops.unary_union(MP)
 
          print("Doing plot now...")
          Ngrps = len(MP.geoms)

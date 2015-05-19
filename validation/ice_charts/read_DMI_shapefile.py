@@ -232,7 +232,8 @@ for fname in snames:
                             lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
       ####################################################
 
-      if 1:
+      PLOT_ALL = 0
+      if PLOT_ALL==0:
          # only plot single polygon as a test
          PLOT_COMBINED  = 0
 
