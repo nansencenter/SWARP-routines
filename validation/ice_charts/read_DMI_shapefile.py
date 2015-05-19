@@ -108,6 +108,7 @@ def make_valid_poly(shp):
 indir    = 'test_inputs'
 # indir    = 'test_inputs2'
 fnames   = os.listdir(indir)
+print(fnames)
 snames   = []
 
 outdir   = 'test_outputs'
