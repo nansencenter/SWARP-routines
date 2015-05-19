@@ -105,75 +105,80 @@ def extract_shapefile_info(sfile,get_holes=True):
    return out
 ############################################################################
 
-# ############################################################################
-# def prepMultiPolygon4ShapeFile(MP):
-#    # convert shapely MultiPolygon to form usable by shapefile
-#    # also calculate field values
-#    Np          = len(MP.geoms)
-#    parts_list  = Np*[0]
-#    rec_list    = Np*[0]
-# 
-#    for n in range(Np):
-#       parts = []
-# 
-#       ############################################################################
-#       poly  = MP.geoms[n]
-#       q     = poly.exterior
-#       x,y   = q.boundary.coords.xy
-#       lst   = xy2list(x,y)
-# 
-#       # record list: [Area]
-#       # TODO do stereographic projection
-#       #      > calc area,perimeter and width
-#       rec_list.append([q.area])
-#       
-#       # pyshp: if points are anti-clockwise, the points are treated as exterior ones
-#       # TODO check if shapely does the same
-#       parts = [lst]
-# 
-#       Nint  = len(poly.interiors)
-#       for m in range(Nint):
-#          x,y   = poly.interiors[m].boundary.coords.xy
-#          lst   = xy2list(x,y)
-# 
-#          # pyshp: if points are clockwise, the points are treated as interior ones
-#          # TODO check if shapely does the same
-#          parts.append(lst)
-#       ############################################################################
-#       
-#       parts_list.append(parts)
-#    return parts_list,rec_list
-# ############################################################################
-# 
-# ############################################################################
-# def MultiPolygon2ShapeFile(MP,filename):
-#    # save MultiPolygon to shapefile
-#    # 1. convert shapely MultiPolygon to form usable by shapefile
-#    # 2. save shapefile
-# 
-# 
-#    w  = shapefile.Writer(shapefile.POLYGON)
-# 
-#    # define attributes
-#    w.field('Area','N','40') # name,type ('C'=character, 'N'=number), size (?)
-# 
-#    # TODO calculate these and add fields for them
-#    # w.field('Perimeter','N','40')
-#    # w.field('Width','N','40')
-# 
-#    parts_list,rec_list  = prepMultiPolygon4ShapeFile(MP)
-# 
-#    Nrec  = len(parts_list)
-#    for n in range(Nrec):
-#       # add polygons
-#       w.poly(parts=parts_list[n])
-#       w.record(rec_list[n])
-# 
-#    # save file
-#    w.save(filename)
-# 
-#    return
-# ############################################################################
+############################################################################
+def prepMultiPolygon4ShapeFile(MP):
+   # convert shapely MultiPolygon to form usable by shapefile
+   # also calculate field values
+   Np          = len(MP.geoms)
+   parts_list  = Np*[0]
+   rec_list    = Np*[0]
+
+   for n in range(Np):
+      parts = []
+
+      ############################################################################
+      # record list: [AREA_ID]
+      rec_list[n] = [n]
+      # TODO do stereographic projection
+      #      > calc area,perimeter and width and append
+      #      > eg rec_list[n].append(Area)
+      ############################################################################
+
+      ############################################################################
+      poly  = MP.geoms[n]
+      q     = shgeom.Polygon(poly.exterior)
+      x,y   = q.boundary.coords.xy
+      lst   = xy2list(x,y)
+
+      # pyshp: if points are anti-clockwise, the points are treated as exterior ones
+      # TODO check if shapely does the same
+      parts = [lst]
+
+      Nint  = len(poly.interiors)
+      for m in range(Nint):
+         q     = shgeom.Polygon(poly.interiors[m])
+         x,y   = q.boundary.coords.xy
+         lst   = xy2list(x,y)
+
+         # pyshp: if points are clockwise, the points are treated as interior ones
+         # TODO check if shapely does the same
+         parts.append(lst)
+      ############################################################################
+      
+      parts_list[n]  = parts
+   return parts_list,rec_list
+############################################################################
+
+############################################################################
+def MultiPolygon2ShapeFile(MP,filename):
+   # save MultiPolygon to shapefile
+   # 1. convert shapely MultiPolygon to form usable by shapefile
+   # 2. save shapefile
+
+   w  = shapefile.Writer(shapefile.POLYGON)
+
+   # define attributes
+   w.field('AREA_ID','N','40')
+
+   # TODO calculate these and add fields for them
+   # w.field('Area','N','40') # name,type ('C'=character, 'N'=number), size (?)
+   # w.field('Perimeter','N','40')
+   # w.field('Width','N','40')
+
+   parts_list,rec_list  = prepMultiPolygon4ShapeFile(MP)
+
+   Nrec  = len(parts_list)
+   for n in range(Nrec):
+      # add polygons
+      w.poly(parts=parts_list[n])
+      rec   = rec_list[n]
+      w.record(AREA_ID=rec[0])
+
+   # save file
+   w.save(filename)
+
+   return
+############################################################################
 
 # w  = shapefile.Writer(shapefile.POLYGON)
 # 

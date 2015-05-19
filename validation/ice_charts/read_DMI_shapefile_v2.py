@@ -29,14 +29,14 @@ def start_map(bbox,cres='i'):
    lon1  = bbox[2]
    lat1  = bbox[3]
    #
-   fac      = 1.5
+   fac      = 2
    rad      = .5*fac*(lat1-lat0) #degrees
    width    = 2*rad*111.e3
    height   = 2*rad*111.e3
    #
    lon_av   = .5*(lon0+lon1)
    lat_av   = .5*(lat0+lat1)
-   if 0:
+   if 1:
       print('radius (deg lat) ='+str(rad))
       print('width (km) ='+str(width/1.e3))
       print('height (km) ='+str(height/1.e3))
@@ -345,13 +345,14 @@ for fname in snames:
          print("Doing plot now...")
          Ngrps = len(MP.geoms)
          
+         ####################################################
          cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
          for m in range(Ngrps):
             Ninner   = len(MP.geoms[m].interiors)
             print('No of interior regions')
             print([m,Ninner])
             #
-            m_    = np.mod(m,len(cols))
+            m_ = np.mod(m,len(cols))
             SFU.plot_poly(MP.geoms[m],pobj=bm,color=cols[m_],plot_holes=True,latlon=True)
          ####################################################
       else:
@@ -371,5 +372,44 @@ for fname in snames:
       plt.savefig(figname)
       plt.close()
       fig.clf()
-      print('Saving to '+figname)
+      print('Saving figure to '+figname)
       #########################################################
+
+      if PLOT_COMBINED==1:
+         # save MP to shapefile
+         ofil  = 'test_outputs/test.shp'
+         print('\nSaving MultiPolygon to shapefile: '+ofil+'\n')
+         SFU.MultiPolygon2ShapeFile(MP,ofil)
+
+         if 1:
+            #########################################################
+            # test shapefile
+            print('Testing write to '+ofil+'...')
+            sf2      = shapefile.Reader(ofil)
+            sf2_info = SFU.extract_shapefile_info(sf2,get_holes=True)
+            #
+            fig2  = plt.figure()
+            bm2   = start_map(sf2.bbox)
+            cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
+
+            for m in range(sf2.numRecords):
+               poly  = sf2_info[m][0]
+               rec   = sf2_info[m][1]
+
+               print('Looking at polygon '+str(m))
+               for key2 in rec.keys():
+                  print(key2+' = '+str(rec[key2]))
+
+               Ninner   = len(poly.interiors)
+               print('No of interior regions: '+str(Ninner)+'\n')
+               m_    = np.mod(m,len(cols))
+               col   = cols[m_]
+               SFU.plot_poly(poly,pobj=bm2,plot_holes=True,color=col,latlon=True)
+
+            finish_map(bm2)
+            figname2 = 'test_outputs/test_shp.png'
+            plt.savefig(figname2)
+            plt.close()
+            fig2.clf()
+            print('Saving figure to '+figname2+'\n')
+            #########################################################
