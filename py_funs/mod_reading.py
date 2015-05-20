@@ -11,7 +11,8 @@ class proj_obj:
       if att_vals is not None:
          for n in range(len(att_names)):
             setattr(self,att_names[n],att_vals[n])
-         else:
+      else:
+         for n in range(len(att_names)):
             setattr(self,att_names[n],0)
 ##########################################################
 
@@ -233,3 +234,81 @@ def print_grib_messages(grb2fil,N=None):
 
    gr.close()
 ###########################################################
+
+##############################################################
+def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
+   # routine to get the array from the .a (binary) file
+   # * fmt_size = size in bytes of each entry)
+   #   > default = 4 (real*4/single precision)
+   recs     = nx*ny
+   rec_size = recs*fmt_size
+   #
+   data  = fid.read(rec_size)
+   if fmt_size==4:
+      fmt_py   = 'f' # python string for single
+   else:
+      fmt_py   = 'd' # python string for double
+
+   fld   = struct.unpack(recs*fmt_py,data)
+   fld   = np.array(fld)
+
+   if order!='fortran':
+      fld   = fld.reshape((nx,ny))  # array order follows python/c convention
+                                    # (index increases across array)
+   else:
+      fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
+                                                # python/c and fortran/matlab 
+
+   return fld
+##############################################################
+
+##############################################################
+def get_array_from_HYCOM_binary(afile,recno,dims=None,afile_grid='regional.grid.a'):
+   # routine to get the array from the .a (binary) file
+   # * fmt_size = size in bytes of each entry)
+   #   > default = 4 (real*4/single precision)
+
+   ######################################################################
+   # get size of grid
+   if dims is None:
+      # check regional.grid.b file for size of grid
+      bfile = afile_grid[:-1]+'.b'
+      bid   = open(bfile,'r')
+      nx    = int( bid.readline().split()[0] )
+      ny    = int( bid.readline().split()[0] )
+      bid.close()
+   else:
+      nx = dims[0]
+      ny = dims[1]
+   ######################################################################
+
+   ######################################################################
+   # set record size, skip to record number
+   fmt_size = 8      # HYCOM files are double precision
+   if fmt_size==4:
+      fmt_py   = 'f' # python string for single
+   else:
+      fmt_py   = 'd' # python string for double
+
+   n0       = 4096   # HYCOM stores records in multiples of 4096
+   Nhyc     = (1+(nx*ny)/n0)*n0
+   rec_size = Nhyc*fmt_size
+   #
+   aid   = open(afile,'rb')
+   for n in range(1,recno):
+      aid.seek(rec_size)
+   ######################################################################
+
+   # read data and close file
+   data  = aid.read(rec_size)
+   aid.close()
+
+   # rearrange into correctly sized array
+   fld   = struct.unpack(recs*fmt_py,data)
+   fld   = np.array(fld[0:nx*ny]) # select the 1st nx,ny - rest of the Nhyc record is rubbish
+   fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
+                                             # python/c and fortran/matlab 
+
+   return fld
+##############################################################
+
