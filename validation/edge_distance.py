@@ -1,5 +1,4 @@
-# Set up email alert for when WAMNSEA waves become very large
-# - possibly limit search to near ice?
+# Calculation of the minimum distance between model product and OSI-SAF daily average
 
 from netCDF4 import Dataset
 import sys,os
@@ -7,19 +6,12 @@ import glob
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
+from skimage import measure as ms
 
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
 
-SEND_EMAIL  = 0
-CHECK_NC    = 1
-odir        = 'out' # where to put temporary outputs
-
-#print 'Select the contour method:   '
-#print 'Type 0 for basemap contour package'
-#print 'Type 1 for Threshold method'
-#chc = raw_input()
-chc = '1'
+# Functions to be called
 
 ############################################################################
 def finish_map(bm):
@@ -39,22 +31,25 @@ def finish_map(bm):
 ############################################################################
 
 ############################################################################
-def dist_cont2cont(xm,ym,xf,yf,bm):
-
-  n1=len(xm)
-  dist2=np.zeros(n1)
-  for n in range(n1):
-    x1n=xm[n]
-    y1n=ym[n]
-    dist1=np.sqrt(pow(xf-x1n,2)+pow(yf-y1n,2))
-    dist2[n]=dist1.min()
-  
-  imin=dist2.argmin()
-  dist=dist2[imin] # want xmin,ymin on ice corresponding to dist
-  xmin = xm[imin]
-  ymin = ym[imin]
-  lon,lat    = bm(xmin,ymin,inverse=True)
-  return dist,lon,lat
+def dist_edges(mdl,osi,bm):
+	nmdl	= zip(*mdl_c)
+	nosi	= zip(*osi_c)
+	xm		= nmdl[0]
+	ym		= nmdl[1]
+	xf		= nosi[0]
+	yf		= nosi[1]
+	dist = []
+	for n, el in enumerate(xm):
+		dist2 = np.zeros(shape=0)
+		dist4	= []
+		for m, em in enumerate(xf):
+			dist1	=	np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
+			dist2	= np.append(dist2,dist1)
+		dist3	= np.amin(dist2)
+		lon,lat	= bm(xm[n],ym[n],inverse=True)
+		dist4	= [dist3,lon,lat]
+		dist.append(dist4)
+	return dist
 ############################################################################
 
 # setup stereographic basemap
@@ -74,8 +69,9 @@ bm = Basemap(width=2*xmax,height=2*ymax,\
              resolution=cres,projection='stere',\
              lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 
-if CHECK_NC:
-#   # define product file  
+# GETTING THE NC FILES
+
+#   # define product file
 #   import time
 #   from datetime import date, timedelta
 #   tday  = date.today()
@@ -85,136 +81,112 @@ if CHECK_NC:
 #   cyear = tday.strftime('%Y')
 #   pday  = yday.strftime('%Y%m%d')
 #   pday2 = yday2.strftime('%Y%m%d')
-   print("Data files:   ")
-   print glob.glob("./data/*.nc")
-#   date = raw_input('Insert date [YYYYMMDD]: ')   
-   date='20150414'
-####################################################################################
-
-   # DEFINING EDGE LEVELS
-   edge_levels = [.15]   # conc thresholds
+print("Data files:   ")
+print glob.glob("./data/*.nc")
+#   date = raw_input('Insert date [YYYYMMDD]: ')
+date='20150414'
 
 ####################################################################################
+# DEFINING EDGE LEVELS
+edge_levels = [.15]   # conc thresholds
+####################################################################################
 
-   # READ TP4 DAILY 
-   ncfil = ''.join( glob.glob('./data/TP4DAILY_start*_dump'+date+'.nc'))
-   print('TP4DAILY ice_only file = ' +ncfil+'\n')
-   slon     = 'longitude'
-   slat     = 'latitude'
-   sconc    = 'fice'
-   lon      = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-   lat      = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-   X,Y      = bm(lon[:,:],lat[:,:],inverse=False)
-   conc     = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-   Z        = conc[:,:].data
-   mask     = conc[:,:].mask
-   Z[mask]  = np.NaN
+# READ TP4 DAILY
+ncfil = ''.join( glob.glob('./data/TP4DAILY_start*_dump'+date+'.nc'))
+print('TP4DAILY ice_only file = ' +ncfil+'\n')
+slon     = 'longitude'
+slat     = 'latitude'
+sconc    = 'fice'
+lon      = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+lat      = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+X,Y      = bm(lon[:,:],lat[:,:],inverse=False)
+conc     = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+Z        = conc[:,:].data
+mask     = conc[:,:].mask
+Z[mask]  = np.NaN
 
-   # READ IN OSI-SAF FILE
-   ncfil2 = './data/ice_conc_nh_polstere-100_multi_'+date+'1200.nc'
-   print('OSISAF file = '+ncfil2+'\n')
-   clon     = 'lon'
-   clat     = 'lat'
-   cconc    = 'ice_conc'  
-   lon2     = Mrdg.nc_get_var(ncfil2,clon) # lon[:,:] is a numpy array
-   lat2     = Mrdg.nc_get_var(ncfil2,clat) # lat[:,:] is a numpy array
-   X2,Y2    = bm(lon2[:,:],lat2[:,:],inverse=False)
-   conc     = Mrdg.nc_get_var(ncfil2,cconc,time_index=0)
-   Z2       = conc[:,:].data
-   mask2    = conc[:,:].mask
-   Z2[mask2] = np.NaN
+# READ IN OSI-SAF FILE
+ncfil2 = './data/ice_conc_nh_polstere-100_multi_'+date+'1200.nc'
+print('OSISAF file = '+ncfil2+'\n')
+clon     = 'lon'
+clat     = 'lat'
+cconc    = 'ice_conc'
+lon2     = Mrdg.nc_get_var(ncfil2,clon) # lon[:,:] is a numpy array
+lat2     = Mrdg.nc_get_var(ncfil2,clat) # lat[:,:] is a numpy array
+X2,Y2    = bm(lon2[:,:],lat2[:,:],inverse=False)
+conc     = Mrdg.nc_get_var(ncfil2,cconc,time_index=0)
+Z2       = conc[:,:].data
+mask2    = conc[:,:].mask
+Z2[mask2] = np.NaN
 
-   # LOOP THROUGH THE EDGE LEVELS
-   for edge in edge_levels:
-      g  = plt.figure()
-      out_list    = []
+# MIN DIST BETWEEN EDGES (SKIMAGE)
 
-      #Z3    = np.copy(Z)
-      #Z3[Z3<edge] = 0
-      #Z3[Z3>=edge]= 1
-      #thenans     = np.isnan(Z3)
-      #Z3[thenans] = 0
-      #Z4    = np.copy(Z2)
-      #Z4[Z4<edge] = 0
-      #Z4[Z4>=edge]= 1
-      #thenans     = np.isnan(Z4)
-      #Z4[thenans] = 0
-      #cs1   = bm.contour(X,Y,Z3,[edge])
-      #coll1 = cs1.collections
-      #nlev1 = len(coll1)
-      #cs2   = bm.contour(X2,Y2,Z4,[edge])
-      #coll2 = cs2.collections
-      #nlev2 = len(coll2)
+MIN_SKI	=	1
 
-      cs1   = bm.contour(X,Y,Z,[edge])
-      coll1 = cs1.collections
-      nlev1 = len(coll1)
-      cs2   = bm.contour(X2,Y2,Z2,[edge])
-      coll2 = cs2.collections
-      nlev2 = len(coll2)
-      for nl in range(nlev1):
-         p     = coll1[nl].get_paths() # only one conc contour so use 0 
-         nseg  = len(p)
-         the_list   = []
-         for ns in range(nseg):
-            # loop over segments
-            v     = p[ns].vertices
-            x     = v[:,0]
-            y     = v[:,1]
-            bm.plot(x,y,'m',linewidth=0.5)
-            out_list = []
-            for nl in range(nlev2):
-               p2    = coll2[nl].get_paths()
-               nseg2 = len(p2)
-               for ns in range(nseg2):
-                  v2    = p2[ns].vertices
-                  x2    = v2[:,0]
-                  y2    = v2[:,1]
-                  bm.plot(x2,y2,'y',linewidth=0.5)
-                  dist,lon_min,lat_min=dist_cont2cont(x,y,x2,y2,bm)
-                  dist_list   = [dist,lon_min,lat_min]
-                  out_list.append(dist_list)
-            pts   = len(v)
-            nseg3 = nseg2 - 1
-            print('segment = '+str(ns))
-            print('length of segment = '+str(pts))
-            print('valid segments = '+str(nseg2))
-            for nn in range(pts):
-               ptlist   = []
-               for mm in range(nseg3):
-                  ptlist   = out_list[nn+(pts*mm)]
-               ptlist   = min(ptlist)
-               the_list.append(ptlist)             
+# MIN DIST BETWEEN EDGES (BMCONTOUR)
+# it's not really working, probably I haven't really understood how the bm.contour command works
+# TODO
 
-      finish_map(bm)
-      figname  = 'outputs/'+date+'_'+str(edge)+'_map.png'
-      plt.savefig(figname)
-      plt.close()
-      g.clf()
-      points   = np.array(the_list)
-      textfile = 'outputs/'+date+'_'+str(edge)+'_dist_list.txt'
-      np.savetxt(textfile,points) 
-   
-   f  = plt.figure()
-   for el in edge_levels:
-      pts   = []
-      file  = 'outputs/'+date+'_'+str(el)+'_dist_list.txt' 
-      with open(file) as infile:
-         for line in infile:
-            pts.append(line.strip().split(' '))
-      pts = np.asarray(pts)
-      plt.plot(range(len(pts)),pts[:,0])
-      
-   #finish_map(bm)
-   #thetime  = times[loop_i]
-   figname  = 'outputs/'+date+'_dist.png'
-   plt.savefig(figname)
-   plt.close()
-   f.clf()
+MIN_BM	= 1
+
+if MIN_BM:
+	f	= plt.figure()
+	# LOOP THROUGH THE EDGE LEVELS
+	for edge in edge_levels:
+		g				= plt.figure()
+		cs1			= bm.contour(X,Y,Z,[edge])
+		coll1		= cs1.collections
+		nlev1		= len(coll1)
+		cs2			= bm.contour(X2,Y2,Z2,[edge])
+		coll2		= cs2.collections
+		nlev2		= len(coll2)
+		mdl_c		= []
+		osi_c		= []
+		ptlist	= []
+		out_list	= []
+		for nl in range(nlev1):
+			p     = coll1[nl].get_paths() # only one conc contour so use 0
+			nseg  = len(p)
+			for ns in range(nseg):
+				# loop over segments
+				v     = p[ns].vertices
+				x     = v[:,0]
+				y     = v[:,1]
+				for el in v:
+					mdl_c.append(el)
+		for nl in range(nlev2):
+			p2    = coll2[nl].get_paths()
+			nseg2 = len(p2)
+			for ns in range(nseg2):
+				v2    = p2[ns].vertices
+				x2    = v2[:,0]
+				y2    = v2[:,1]
+				for el in v2:
+					osi_c.append(el)
+
+		ptlist	= dist_edges(mdl_c,osi_c,bm)
+							
+		finish_map(bm)
+		figname  = 'outputs/'+date+'_'+str(edge)+'_map.png'
+		plt.savefig(figname)
+		plt.close()
+		g.clf()
+		pts = []
+		for n, el in enumerate(ptlist):
+			pts.append(ptlist[n][0])
+		points = np.asarray(pts)
+		plt.plot(range(len(points)),points)
+		textfile = 'outputs/'+date+'_'+str(edge)+'_dist_list.txt'
+		np.savetxt(textfile,points)
+
+	figname  = 'outputs/'+date+'_dist.png'
+	plt.savefig(figname)
+	plt.close()
+	f.clf()
 
 #      ##############################################################################
 #
-#         # make test plot showing ice edge contour with threshold 
+#         # make test plot showing ice edge contour with threshold
 #         g = plt.figure()
 #         Z4 = np.copy(Z2)
 #         Z4[Z4<15]=0
@@ -233,29 +205,29 @@ if CHECK_NC:
 #      ################################################################################
 #      # SENSIBLE POINTS WITH BM.CONTOUR
 #      ################################################################################
-# 
+#
 #      # Plotting waves
 #      f  = plt.figure()
 #      bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
-#      print('range in '+sswh+' (m):') 
+#      print('range in '+sswh+' (m):')
 #      print(Zmin,Zmax)
 #      print(' ')
-# 
+#
 #      cb = plt.colorbar()
 #      cb.set_label("Significant Wave Height [m]",rotation=270)
-# 
-# 
-# 
+#
+#
+#
 #      ##############################################################################
 #      # plot ice edge
 #      # (get 15% conc contour)
 #      ##############################################################################
-# 
+#
 #      cs1   = bm.contour(X2,Y2,Z2,[edge_level])#,'k',linewidth=2)
 #      coll1 = cs1.collections
 #      nlev1 = len(coll1)
 #      for nl in range(nlev1):
-#        p     = coll1[nl].get_paths() # only one conc contour so use 0 
+#        p     = coll1[nl].get_paths() # only one conc contour so use 0
 #        nseg  = len(p)
 #        for ns in range(nseg):
 #           # loop over segments
@@ -263,14 +235,14 @@ if CHECK_NC:
 #           x     = v[:,0]
 #           y     = v[:,1]
 #           bm.plot(x,y,'m',linewidth=1.5)
-# 
+#
 #      ##############################################################################
-# 
+#
 #      # working on the waves threshold
 #      Hthresh=3
 #      Hmax=np.ceil(Zmax)
 #      Hlev=np.arange(Hthresh,Hmax,.5)
-# 
+#
 #      if len(Hlev)==0:
 #         #no waves over threshhold
 #         out_list = []
@@ -284,17 +256,17 @@ if CHECK_NC:
 #         out_list=[]
 #         for nl in range(nlev0):
 #           swh0=cs0.levels[nl]
-#           p     = coll0[nl].get_paths() # only one conc contour so use 0 
+#           p     = coll0[nl].get_paths() # only one conc contour so use 0
 #           nseg  = len(p)
 #           for ns in range(nseg):
 #              # loop over segments
 #              v     = p[ns].vertices
 #              x     = v[:,0]
 #              y     = v[:,1]
-# 
+#
 #              #loop over all ice edges
 #              for nl2 in range(nlev1):
-#                p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
+#                p2    = coll0[nl2].get_paths() # only one conc contour so use 0
 #                nseg2 = len(p2)
 #                for ns2 in range(nseg2):
 #                   # loop over segments
@@ -305,9 +277,9 @@ if CHECK_NC:
 #                   if dist<dist_thresh:
 #                     dist_list=[dist,lon_min,lat_min,swh0]
 #                     out_list.append(dist_list)
-# 
+#
 #      ##############################################################################
-# 
+#
 #      if 1:
 #         # add test point to plot
 #         # - to check if SAR image is ordered in the right place
@@ -334,9 +306,9 @@ if CHECK_NC:
 #             print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
 #             x_plot,y_plot  = bm(lon_plot,lat_plot)
 #             bm.plot(x_plot,y_plot,'og',markersize=5)
-# 
+#
 #      finish_map(bm)
-# 
+#
 #      # date+time to title and file name
 #      # label '$H_s$, m' to colorbar
 #      wav = Dataset(ncfil)
@@ -351,18 +323,18 @@ if CHECK_NC:
 #      plt.close()
 #      f.clf()
 #      # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
-# 
-# 
+#
+#
 #      # swh to find when there are large waves (>4m) in the vicinity of the ice.
 #      # write and send an email to warn when this happens (so we can order some SAR images)
-# 
-#      # filename of text file to form contents of email message 
+#
+#      # filename of text file to form contents of email message
 #      textfile = odir+'/lst/'+fnday+'_list.txt'
 #      nout=len(out_list)
 #      if nout>0:
 #        SEND_EMAIL2=1
 #        tf=open(textfile,'w')
-# 
+#
 #        for mm in range(nout):
 #          list0=out_list[mm]
 #          line='\n' #get info from out_list
@@ -375,9 +347,9 @@ if CHECK_NC:
 #          elif list0[3] >= 5 and list0[0] <= 50:
 #             for ii in range(3,-1,-1):
 #                line=3*' '+str(list0[ii])+line
-#  
+#
 #          tf.write(line)
-# 
+#
 #        tf.close()
 #      else:
 #        SEND_EMAIL2=0
@@ -394,7 +366,7 @@ if CHECK_NC:
 #      # Plotting waves
 #      f  = plt.figure()
 #      bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
-#      print('range in '+sswh+' (m):') 
+#      print('range in '+sswh+' (m):')
 #      print(Zmin,Zmax)
 #      print(' ')
 #
@@ -412,7 +384,7 @@ if CHECK_NC:
 #      Z3 = np.ma.masked_where(Zval < 15, Zval)
 #      bm.pcolor(X2,Y2,Z3,cmap='Greys')
 #
-#      # ice edge contour with threshold 
+#      # ice edge contour with threshold
 #      Z4 = np.copy(Z2)
 #      Z4[Z4<15]=0
 #      Z4[Z4>=15]=1
@@ -423,7 +395,7 @@ if CHECK_NC:
 #      nlev4 = len(coll4)
 #      print nlev4
 #      for nl in range(nlev4):
-#        p4    = coll4[nl].get_paths() # only one conc contour so use 0 
+#        p4    = coll4[nl].get_paths() # only one conc contour so use 0
 #        nseg4 = len(p4)
 #        print nseg4
 #        for ns in range(nseg4):
@@ -452,7 +424,7 @@ if CHECK_NC:
 #              out_list=[]
 #              for nl in range(nlev0):
 #                swh0=cs0.levels[nl]
-#                p     = coll0[nl].get_paths() # only one conc contour so use 0 
+#                p     = coll0[nl].get_paths() # only one conc contour so use 0
 #                nseg  = len(p)
 #                for ns in range(nseg):
 #                   # loop over segments
@@ -462,7 +434,7 @@ if CHECK_NC:
 #
 #                   #loop over all ice edges
 #                   for nl2 in range(nlev1):
-#                     p2    = coll0[nl2].get_paths() # only one conc contour so use 0 
+#                     p2    = coll0[nl2].get_paths() # only one conc contour so use 0
 #                     nseg2 = len(p2)
 #                     for ns2 in range(nseg2):
 #                        # loop over segments
@@ -524,7 +496,7 @@ if CHECK_NC:
 #      # swh to find when there are large waves (>4m) in the vicinity of the ice.
 #      # write and send an email to warn when this happens (so we can order some SAR images)
 #
-#      # filename of text file to form contents of email message 
+#      # filename of text file to form contents of email message
 #      textfile = odir+'/lst/'+fnday+'_threshold_list.txt'
 #      nout=len(out_list)
 #      if nout>0:
@@ -543,7 +515,7 @@ if CHECK_NC:
 #          elif list0[3] >= 5 and list0[0] <= 50:
 #             for ii in range(3,-1,-1):
 #                line=3*' '+str(list0[ii])+line
-#    
+#
 #          tf.write(line)
 #
 #        tf.close()
