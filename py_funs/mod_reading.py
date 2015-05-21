@@ -240,6 +240,9 @@ def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
    # routine to get the array from the .a (binary) file
    # * fmt_size = size in bytes of each entry)
    #   > default = 4 (real*4/single precision)
+
+   import struct
+
    recs     = nx*ny
    rec_size = recs*fmt_size
    #
@@ -268,11 +271,21 @@ def get_array_from_HYCOM_binary(afile,recno,dims=None,afile_grid='regional.grid.
    # * fmt_size = size in bytes of each entry)
    #   > default = 4 (real*4/single precision)
 
+   import struct
+
    ######################################################################
    # get size of grid
    if dims is None:
-      # check regional.grid.b file for size of grid
-      bfile = afile_grid[:-1]+'.b'
+      if 'regional.grid' in afile:
+         # afile is a grid file
+         # - check .b file for size of grid
+         bfile = afile[:-2]+'.b'
+      else:
+         # check regional.grid.b file for size of grid
+         bfile = afile_grid[:-2]+'.b'
+         if os.path.exists(bfile):
+            sys.exit('Grid file not present: '+bfile)
+
       bid   = open(bfile,'r')
       nx    = int( bid.readline().split()[0] )
       ny    = int( bid.readline().split()[0] )
@@ -284,7 +297,7 @@ def get_array_from_HYCOM_binary(afile,recno,dims=None,afile_grid='regional.grid.
 
    ######################################################################
    # set record size, skip to record number
-   fmt_size = 8      # HYCOM files are double precision
+   fmt_size = 4      # HYCOM files are single precision
    if fmt_size==4:
       fmt_py   = 'f' # python string for single
    else:
@@ -304,11 +317,13 @@ def get_array_from_HYCOM_binary(afile,recno,dims=None,afile_grid='regional.grid.
    aid.close()
 
    # rearrange into correctly sized array
-   fld   = struct.unpack(recs*fmt_py,data)
+   fld   = struct.unpack('>'+Nhyc*fmt_py,data) # NB BIG-ENDIAN so need '>'
    fld   = np.array(fld[0:nx*ny]) # select the 1st nx,ny - rest of the Nhyc record is rubbish
    fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
                                              # python/c and fortran/matlab 
 
+   land_thresh          = 1.e30# on land 1.2677e30 
+   fld[fld>land_thresh] = np.nan
+
    return fld
 ##############################################################
-

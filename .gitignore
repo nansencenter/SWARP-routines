@@ -19,6 +19,7 @@ forecast_scripts/logs/*
 forecast_scripts/datelist.txt
 #
 python_tutorial/out
+python_tutorial/eg_TP4files
 validation/SWARP*
 #
 validation/ice_charts/test_outputs/*

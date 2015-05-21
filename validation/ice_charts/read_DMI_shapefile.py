@@ -2,7 +2,7 @@ import os,sys
 import numpy as np
 from mpl_toolkits.basemap import Basemap, cm
 from matplotlib import pyplot as plt
-from matplotlib import lines as mlines
+from matplotlib import lines  as mlines
 
 # pyshp->shapefile info:
 # https://pypi.python.org/pypi/pyshp
@@ -19,84 +19,8 @@ pyswarp  = swarp+'/py_funs'
 if pyswarp not in sys.path:
    sys.path.append(pyswarp)
 
-import shapefile_utils as SFU
-
-############################################################################
-def start_map(bbox,cres='i'):
-   # set plot domain from bbox
-   lon0  = bbox[0]
-   lat0  = bbox[1]
-   lon1  = bbox[2]
-   lat1  = bbox[3]
-   #
-   fac      = 2
-   rad      = .5*fac*(lat1-lat0) #degrees
-   width    = 2*rad*111.e3
-   height   = 2*rad*111.e3
-   #
-   lon_av   = .5*(lon0+lon1)
-   lat_av   = .5*(lat0+lat1)
-   if 1:
-      print('radius (deg lat) ='+str(rad))
-      print('width (km) ='+str(width/1.e3))
-      print('height (km) ='+str(height/1.e3))
-      print('lon_av (deg E) ='+str(lon_av))
-      print('lat_av (deg N) ='+str(lat_av))
-   #
-   bm = Basemap(width=width,height=height,\
-                resolution=cres,projection='stere',\
-                lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
-   return bm
-############################################################################
-
-############################################################################
-def finish_map(bm):
-   # finish_map(bm)
-   # *bm is a basemap
-
-   def get_nice_meridians(lonmin,lonmax):
-      lonrng   = lonmax-lonmin
-
-      if lonrng>80:
-         dl = 20.
-      elif lonrng>35:
-         dl = 10.
-      elif lonrng>15:
-         dl = 5.
-      elif lonrng>8:
-         dl = 2.
-      elif lonrng>4:
-         dl = 1.
-      elif lonrng>2:
-         dl = .5
-      elif lonrng>1:
-         dl = .25
-      else:
-         dl    = lonrng/4.
-         ldl   = np.log10(dl)
-         dl0   = -int(np.fix(ldl))
-         nd    = 1+dl0 # no of dp to round to
-         dl    = np.round(dl,nd)
-
-      l0 = (np.round(lonmin/dl)-2)*dl
-      return np.arange(l0,lonmax,dl)
-
-   # coast/land
-   bm.drawcoastlines()
-   bm.fillcontinents(color='gray')
-
-   # draw parallels and meridians.
-   merids   = get_nice_meridians(bm.lonmin,bm.lonmax)
-   parals   = get_nice_meridians(bm.latmin,bm.latmax)
-
-   bm.drawparallels(parals,\
-         labels=[True,False,True,True]) # labels = [left,right,top,bottom]
-   bm.drawmeridians(merids,latmax=90.,\
-         labels=[True,False,False,True])
-   bm.drawmapboundary() # fill_color='aqua')
-
-   return
-############################################################################
+import shapefile_utils  as SFU
+import fns_plotting     as Mplt
 
 ############################################################################
 def xy2coords(x,y):
@@ -282,7 +206,7 @@ for fname in snames:
 
          # bounding box of the single shape
          bbox  = sf.shape(n).bbox
-         bm    = start_map(bbox,cres='f')
+         bm    = Mplt.start_map(bbox,cres='f')
          print('bbox=')
          print(bbox)
 
@@ -302,7 +226,7 @@ for fname in snames:
 
          # set plot domain from overall bbox
          bbox  = sf.bbox # [lonmin,latmin,lonmax,latmax]
-         bm    = start_map(bbox)
+         bm    = Mplt.start_map(bbox)
       ####################################################
    
       ####################################################
@@ -367,7 +291,7 @@ for fname in snames:
          plt.legend(handles=handles)
          ####################################################
    
-      finish_map(bm)
+      Mplt.finish_map(bm)
       plt.title(ttl,y='1.06')
       plt.savefig(figname)
       plt.close()
@@ -389,7 +313,7 @@ for fname in snames:
             sf2_info = SFU.extract_shapefile_info(sf2,get_holes=True)
             #
             fig2  = plt.figure()
-            bm2   = start_map(sf2.bbox)
+            bm2   = Mplt.start_map(sf2.bbox)
             cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
 
             for m in range(sf2.numRecords):
@@ -406,7 +330,7 @@ for fname in snames:
                col   = cols[m_]
                SFU.plot_poly(poly,pobj=bm2,plot_holes=True,color=col,latlon=True)
 
-            finish_map(bm2)
+            Mplt.finish_map(bm2)
             figname2 = 'test_outputs/test_shp.png'
             plt.savefig(figname2)
             plt.close()
