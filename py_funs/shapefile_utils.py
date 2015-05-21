@@ -1,8 +1,3 @@
-import shapefile
-import shapely.geometry as shgeom
-import shapely.ops      as shops
-import numpy as np
-
 ############################################################################
 def DMI_form_dictionary():
 
@@ -26,8 +21,21 @@ def xy2list(x,y):
 ############################################################################
 
 ############################################################################
+def xy2tuple_list(x,y):
+   # make list of tuples from x,y
+   
+   lst   = []
+   for n in range(len(x)):
+      lst.append((x[n],y[n]))
+
+   return lst
+############################################################################
+
+############################################################################
 def get_poly(shp,get_holes=True):
    # convert points from a shapefile shape into a shapely polygon
+
+   import shapely.geometry as shgeom
 
    pts   = shp.points
    Npts  = len(pts)
@@ -57,6 +65,8 @@ def get_poly(shp,get_holes=True):
 ############################################################################
 def plot_poly(poly,pobj=None,plot_holes=True,**kwargs):
 
+   import shapely.geometry as shgeom
+
    if pobj is None:
       from matplotlib import pyplot as plt
       pobj  = plt
@@ -72,6 +82,34 @@ def plot_poly(poly,pobj=None,plot_holes=True,**kwargs):
       for q in qi:
          x,y   = shgeom.Polygon(q).boundary.coords.xy
          pobj.plot(x,y,linestyle='--',**kwargs)
+
+   return
+############################################################################
+
+############################################################################
+def plot_Mpoly(MP,pobj=None,colors=None,plot_holes=True,**kwargs):
+   # plot MultiPolygon MP
+   import numpy as np
+   import shapely.geometry as shgeom
+
+   if pobj is None:
+      from matplotlib import pyplot as plt
+      pobj  = plt
+   
+   col   = None
+   Ng    = len(MP.geoms)
+
+   for m,poly in enumerate(MP.geoms):
+      if colors is not None:
+         m_    = np.mod(m,len(colors))
+         col   = colors[m_]
+
+      L  = len(shgeom.Polygon(poly.exterior).boundary.coords)
+      plot_poly(poly,pobj=pobj,color=col,plot_holes=plot_holes,**kwargs)
+      if ((not poly.is_valid) and (L>50)) or (L>50):
+         print("polgon "+str(m)+' ('+str(Ng)+'): '+str(len(poly.interiors))+' interiors')
+         print('Valid: '+str(poly.is_valid))
+         print('Length of boundary: '+str(L) +'\n')
 
    return
 ############################################################################
@@ -109,6 +147,8 @@ def extract_shapefile_info(sfile,get_holes=True):
 def prepMultiPolygon4ShapeFile(MP):
    # convert shapely MultiPolygon to form usable by shapefile
    # also calculate field values
+   import shapely.geometry as shgeom
+
    Np          = len(MP.geoms)
    parts_list  = Np*[0]
    rec_list    = Np*[0]
@@ -155,6 +195,7 @@ def MultiPolygon2ShapeFile(MP,filename):
    # 1. convert shapely MultiPolygon to form usable by shapefile
    # 2. save shapefile
 
+   import shapefile
    w  = shapefile.Writer(shapefile.POLYGON)
 
    # define attributes
@@ -180,29 +221,25 @@ def MultiPolygon2ShapeFile(MP,filename):
    return
 ############################################################################
 
-# w  = shapefile.Writer(shapefile.POLYGON)
-# 
-# # define attributes
-# w.field('Area','N','40') # name,type ('C'=character, 'N'=number), size (?)
-# w.field('Perimeter','N','40')
-# w.field('Width','N','40')
-# 
-# # add a polygon
-# coords_list = [[1,5],[5,5],[5,1],[3,3],[1,1],[1,5]]
-# w.poly(parts=[coords_list])
-# w.record(Area=40,Perimeter=80,Width=5)
-# 
-# # add another polygon
-# w.poly(parts=[coords_list])
-# w.record(Area=50,Perimeter=70,Width=6)
-# 
-# # save file
-# w.save('test')
-# 
-# if 1:
-#    sf    = shapefile.Reader('test.shp')
-#    Nrec  = sf.numRecords
-#    print('number of records: '+str(Nrec))
-#    # for i in range(Nrec):
-#    for i in [0]:
-#       shp   = sf.shape(i)
+############################################################################
+def SKcontours2MP(contours,x,y):
+
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   plist = []
+   for cont in contours:
+      ivec  = np.array(cont[:,0],dtype=int)
+      jvec  = np.array(cont[:,1],dtype=int)
+      #
+      xvec  = x[ivec,jvec]
+      yvec  = y[ivec,jvec]
+      tups  = xy2tuple_list(xvec,yvec)
+      #
+      poly  = shgeom.Polygon(tups)
+      if 1:#poly.is_valid:
+         plist.append(poly)
+
+   MP = shgeom.MultiPolygon(plist)
+   return MP
+############################################################################
