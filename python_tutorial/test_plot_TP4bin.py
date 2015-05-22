@@ -22,8 +22,9 @@ def get_grid(grid_dir='.'):
 
    return plon,plat,depths,nx,ny
 
-if 0:
-   vbl   = 'ficem'
+if 1:
+   # vbl   = 'ficem'
+   vbl   = 'fice' #daily average
    Vmax  = 1.
    Vmin  = 0.
    Bc    = 0.  # look for contours of this binary array from getbin
@@ -35,7 +36,8 @@ if 0:
       B[V>.15] = 1.
       return B
 elif 0:
-   vbl   = 'hicem'
+   # vbl   = 'hicem'
+   vbl   = 'hice'
    Vmax  = 5.
    Vmin  = 0.
    Bc    = np.nan  # look for contours of this binary array from getbin
@@ -66,15 +68,21 @@ print('*******************************************************'+'\n')
 tdir  = 'eg_TP4files'
 plon,plat,depths,nx,ny  = get_grid(tdir)
 # 
-afil  = tdir+'/TP4archv_wav.2015_139_180000.a'
-bfil  = afil[:-2]+'.b'
-if 0:
-   vlst  = {'ficem':1,'hicem':2,'dfloe':3,'swh':4,'mwp':5}
+if 1:
+   afil  = tdir+'/TP4DAILY_2015_140_2015_140.a'
 else:
-   # make dictionary from bfil to get record number in afil
-   vlst  = Mrdg.get_record_numbers_HYCOM(bfil)
+   afil  = tdir+'/TP4archv_wav.2015_139_180000.a'
+bfil  = afil[:-2]+'.b'
+
+# make dictionary from bfil to get record number in afil
+vlst  = Mrdg.get_record_numbers_HYCOM(bfil)
+if 'TP4DAILY' in afil:
+   # add extra keys (ficem/fice,hicem/hice difference)
+   vlst.update({'ficem':vlst['fice']})
+   vlst.update({'hicem':vlst['hice']})
 
 # get recno from dictionary created from bfil
+print(vlst)
 recno = vlst[vbl]
 V     = Mrdg.get_array_from_HYCOM_binary(afil,recno,dims=(nx,ny))
 #print('recno='+str(recno))
