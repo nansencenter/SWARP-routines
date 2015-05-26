@@ -17,6 +17,34 @@ def unit_vector(v):
    norm  = vector_norm(v)
    return v/norm
 #########################################################
+def calc_perimeter(coords):
+   import numpy as np
+   import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
+
+   p0       = shgeom.Point(coords[0])
+   Nc       = len(coords)
+   P        = 0
+   spacings = []
+   for n in range(1,Nc):
+       p1 = shgeom.Point(coords[n])
+       ds = p0.distance(p1)
+       P  = P+ds
+       spacings.append(ds)
+       p0 = p1
+
+   spacings     = np.array(spacings)
+   resolution   = np.mean(spacings)
+   perimeter    = P
+   return perimeter,spacings,resolution
+
+#########################################################
+def xy2coords(x,y):
+   # return list of tuples: [(x[0],y[0]),(x[1],y[1]),...]
+   import numpy as np
+   v     = np.vstack([x,y]).transpose()
+   tup   = [tuple(xy) for xy in v]
+   return tup
+#########################################################
 
 #########################################################
 class dirichlet_fund_soln:
@@ -35,20 +63,22 @@ class dirichlet_fund_soln:
 
       import numpy as np
       import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-      from shapely.prepared import prep
 
       self.coords    = coords
+      N0             = len(coords)
+      self.length    = N0
       self.func_vals = func_vals
-      self.calc_perimeter() # gets spacings between points and perimeter
+      self.perimeter,self.spacings,self.resolution = calc_perimeter(coords) # gets spacings between points and perimeter
+      #
+      self.shapely_polygon  = shgeom.Polygon(coords)
 
       # get points around boundary of polygon, then
       # expand points by an amount related to the spacings of the coords
-      self.shapely_polygon  = prep(shgeom.Polygon(coords))
-      eps   = self.resolution/2.
-      poly  = self.shapely_polygon.buffer(eps)
-
-      # put singularities (z_n) on the boundary of expanded polygon
-      self.singularities   = poly.exterior.boundary.coords
+      self.buffer_resolution  = 16 # default buffer resolution
+                                   # (number of segments used to approximate a quarter circle around a point.)
+      get_sings = True
+      while get_sings:
+         get_sings   = self._get_singularities()
 
       # solve Laplace's eqn (get a_n)
       self.solve_laplace_eqn()
@@ -61,29 +91,104 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def calc_perimeter(self):
-      import numpy as np
-      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
+   def _get_singularities(self):
 
-      p0       = shgeom.Point(coords[0])
-      Nc       = len(coords)
-      P        = 0
-      spacings = []
-      for n in range(1,Nc):
-         p1 = shgeom.Point(coords[n])
-         ds = p0.distance(p1)
-         P  = P+ds
-         spacings.append(ds)
+      bufres   = self.buffer_resolution
+      eps      = self.resolution/2.
+      poly     = self.shapely_polygon.buffer(eps,resolution=bufres)
 
-      self.spacings     = np.array(spacings)
-      self.resolution   = np.mean(self.spacings)
-      self.perimeter    = P
-      return
+      # put singularities (z_n) on the boundary of expanded polygon
+      self.singularities            = poly.exterior.coords
+      N1                            = len(self.singularities)
+      self.number_of_singularities  = N1
+
+      # check the number of singularities:
+      do_check = self._check_singularities()
+      # do_check = False # accept automatically
+
+      return do_check
    #######################################################
+
+   #######################################################
+   def _check_singularities(self):
+      # don't want too many singularities
+      import numpy as np
+
+      N0 = self.length
+      N1 = self.number_of_singularities
+
+      # set limits for N1
+      Nthresh  = 100
+      frac     = .2
+      if N0<=Nthresh:
+         # if N0<=Nthresh, try to get N1~N0
+         Ntarget  = N0
+      else:
+         # try to get N1~frac*N0, if frac*N0<Nthresh
+         Ntarget  = int(np.max(np.round(frac*N0),Nthresh))
+
+      if N1>Ntarget:
+         # reduce the number of sing's by increasing spacing between points
+         coords                        = self.singularities
+         perimeter,spacings,resolution = calc_perimeter(coords)
+         #
+         s_target    = N1/float(Ntarget)*resolution # increase mean spacing between points
+         new_coords  = [coords[0]]
+         #
+         ss = 0
+         s0 = 0
+         s1 = s0+s_target
+         for n,c0 in enumerate(coords[1:]):
+            ss = ss+spacings[n]
+            if ss>=s1:
+               new_coords.append(c0)
+               s0 = s1
+               s1 = s0+s_target
+
+         # update list of singularities:
+         self.singularities            = new_coords
+         self.number_of_singularities  = len(new_coords)
+
+         # no need to call _get_singularities again
+         check_again = False
+      elif N1<Ntarget:
+         fac                     = int(np.ceil(1.2*Nmax/float(N1)))
+         self.buffer_resolution  = fac*self.buffer_resolution
+
+         # need to call _get_singularities again,
+         # to reset the singularities and check them
+         check_again = True
+
+      return check_again
+   #######################################################
+
+   # #######################################################
+   # move this outside class to make it more general
+   # def calc_perimeter(self):
+   #    import numpy as np
+   #    import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
+
+   #    p0       = shgeom.Point(self.coords[0])
+   #    Nc       = len(self.coords)
+   #    P        = 0
+   #    spacings = []
+   #    for n in range(1,Nc):
+   #       p1 = shgeom.Point(self.coords[n])
+   #       ds = p0.distance(p1)
+   #       P  = P+ds
+   #       spacings.append(ds)
+   #       p0 = p1
+
+   #    self.spacings     = np.array(spacings)
+   #    self.resolution   = np.mean(self.spacings)
+   #    self.perimeter    = P
+   #    return
+   # #######################################################
 
    #######################################################
    def solve_laplace_eqn(self):
       import numpy as np
+      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
 
       Nc = len(self.coords)
       Ns = len(self.singularities)
@@ -109,19 +214,29 @@ class dirichlet_fund_soln:
    def eval_solution(self,x,y):
 
       import numpy as np
+      from shapely.prepared import prep   # want "contains" function
+      import shapely.geometry as shgeom
+
       Nx    = x.size
-      F     = np.zeros(Nx)+np.nan
+      F     = np.zeros(Nx)
       shp   = x.shape
       x     = x.reshape(Nx)
       y     = y.reshape(Nx)
 
-      for m in range(Nx): # points to evaluate F at
+      poly2 = prep(self.shapely_polygon)
+      for m in range(Nx):
+         # loop over points to evaluate F at
          p0 = shgeom.Point((x[m],y[m]))
-         if self.shapely_polygon.contains(p0):
+
+         # check if p0 is inside the domain
+         if poly2.intersects(p0):
+            # add contribution from each singularity
             for n,c1 in enumerate(self.singularities): # singularities
                p1    = shgeom.Point(c1)
                R     = p0.distance(p1)
                F[m]  = F[m]+self.sing_coeffs[n]*np.log(R)
+         else:
+            F[m]  = np.nan
 
       return F.reshape(shp)
    #######################################################
