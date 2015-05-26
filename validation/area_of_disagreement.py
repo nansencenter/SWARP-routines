@@ -76,14 +76,15 @@ V     = Mrdg.get_array_from_HYCOM_binary(afil,recno,dims=(nx,ny))
 ##################################################################
 date		= '20150520'
 # READ TP4 DAILY
-ncfil		= ''.join( glob.glob('./data/TP4DAILY_start*_dump'+date+'.nc'))
+ncfil		= ''.join( glob.glob(tdir+'/TP4DAILY_start*_dump'+date+'.nc'))
 slon		= 'longitude'
 slat		= 'latitude'
 sconc		= 'fice'
 lon			= Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
 lat			= Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
 conc		= Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-tlon		=
+tlon		=	lon[:,:]
+tlat		= lat[:,:]
 Z				= conc[:,:].data
 mask		= conc[:,:].mask
 Z[mask]	= np.NaN
@@ -108,4 +109,5 @@ Z2[mask2]	= np.NaN
 
 
 # PRINT OUT NAME OF VARIABLES - TO BE USED ONLY UNTIL WE WORK IN IPYTHON
-print('For model: plon,plat,V - For OSI: olon,olat,Z2')
+info	=	'For model: binary(plon,plat,V), nc (tlon,tlat,Z) - For OSI: olon,olat,Z2'
+print(info)
