@@ -82,7 +82,7 @@ if 0:
    orders   = [2,3,5]
    coeffs   = [.2,1.3,.5]
 else:
-   orders   = [3]
+   orders   = [1]
    coeffs   = [1.]
 
 # solve Dirichlet problem
@@ -91,8 +91,9 @@ coords      = GP.xy2coords(x,y)
 fun_sol     = GP.dirichlet_fund_soln(coords,func_vals)
 
 fdir  = 'out/funsol'
-Vmin  = -.2
-Vmax  = .2
+Vmin  = func_vals.min()
+Vmax  = func_vals.max()
+print(Vmin,Vmax)
 dc    = (Vmax-Vmin)/20.
 clev  = np.arange(Vmin,Vmax+dc,dc)
 if not os.path.exists(fdir):
