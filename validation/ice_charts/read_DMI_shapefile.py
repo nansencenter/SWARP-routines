@@ -2,7 +2,7 @@ import os,sys
 import numpy as np
 from mpl_toolkits.basemap import Basemap, cm
 from matplotlib import pyplot as plt
-from matplotlib import lines as mlines
+from matplotlib import lines  as mlines
 
 # pyshp->shapefile info:
 # https://pypi.python.org/pypi/pyshp
@@ -19,22 +19,8 @@ pyswarp  = swarp+'/py_funs'
 if pyswarp not in sys.path:
    sys.path.append(pyswarp)
 
-############################################################################
-def finish_map(bm):
-   # finish_map(bm)
-   # *bm is a basemap
-   bm.drawcoastlines()
-   bm.fillcontinents(color='gray')
-
-   # draw parallels and meridians.
-   bm.drawparallels(np.arange(60.,91.,10.),\
-         labels=[True,False,True,True]) # labels = [left,right,top,bottom]
-   bm.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
-         labels=[True,False,False,True])
-   bm.drawmapboundary() # fill_color='aqua')
-
-   return
-############################################################################
+import shapefile_utils  as SFU
+import fns_plotting     as Mplt
 
 ############################################################################
 def xy2coords(x,y):
@@ -108,7 +94,6 @@ def make_valid_poly(shp):
 indir    = 'test_inputs'
 # indir    = 'test_inputs2'
 fnames   = os.listdir(indir)
-print(fnames)
 snames   = []
 
 outdir   = 'test_outputs'
@@ -120,55 +105,43 @@ for fname in fnames:
    if ext[1]=='.shp':
       snames.append(ext[0])
 
+# MIZ definition stuff
+form_cats   = ['FA','FB','FC']
+form_vals   = SFU.DMI_form_dictionary()
+MIZthresh   = 4 # in MIZ if (FA<=MIZthresh) or (FB<=MIZthresh) or (FC<=MIZthresh)
+
+# string values (for plotting later)
+MIZvals  = ['X'] # values of forms which will be in MIZ (floe size < 500m)
+for n in range(MIZthresh+1):
+   MIZvals.append(str(n))
+MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
+
 for fname in snames:
    fname_full  = indir+"/"+fname+'.shp'
    print('\nOpening '+fname_full+'...')
    sf    = shapefile.Reader(fname_full)
    print('Processing '+fname_full+'...')
    #
-
-   fields   = sf.fields
-   Nfields  = len(fields)
-
-   ####################################################
-   # get indices of the three "forms"
-   form_cats   = ['FA','FB','FC']
-   Ncats       = len(form_cats)
-   form_vals   = {'X':-1,'-9':np.NaN}
-
-   for m in range(11):
-      form_vals.update({str(m):m})
-
-   MIZvals     = ['X','0','1','2','3','4'] # values of forms which will be in MIZ (floe size < 500m)
-   MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
-   MIZthresh   = 4 # in MIZ if (FA<=MIZthresh) or (FA<=MIZthresh) or (FA<=MIZthresh)
-
-   # make a dictionary from sf.fields:
-   sdct  = {}
-   for n in range(1,Nfields):
-      sdct.update({fields[n][0]:n-1})
-   ####################################################
+   sf_info  = SFU.extract_shapefile_info(sf,get_holes=True)
 
    ####################################################
    # find MIZ from values of FA,FB,FC
-   recs     = sf.shapeRecords()
-   Npolys   = len(recs)
-
+   Npolys   = len(sf_info)
    MIZforms = []
+
    print('\nTesting if polygons are in the MIZ...')
    for n in range(Npolys):
 
-      rec   = recs[n].record
-      lst   = [n]
-      isMIZ = False
-
+      shp_info = sf_info[n]
+      lut      = shp_info[1]
+      lst      = [n]
+      isMIZ    = False
 
       # Try to define MIZ:
       fdct  = {}
       for key in form_cats:
-         ind_m = sdct[key]
-         sval  = rec[ind_m]     # string 
-         val   = form_vals[sval]# convert from string to integer with form_vals dictionary
+         sval  = lut[key]        # string 
+         val   = form_vals[sval] # convert from string to integer with form_vals dictionary
          fdct.update({key:val})
          
          # define MIZ if any of the forms are <= threshhold
@@ -198,73 +171,44 @@ for fname in snames:
    # plot outlines of polygons (colour-coded)
    # for key in form_cats:
    for key in ['FC']:
+
       print('\nPlotting MIZ according to '+key+'...')
       fig   = plt.figure()
 
-      ####################################################
-      if 1:
-         # manually set plot domain
-         rad   = 30.          # approx radius of image (degrees)
-         xmax  = rad*111.e3   # half width of image [m]
-         ymax  = rad*111.e3   # half height of image [m]
-         cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
-         #
-         lat_ts   = 60. # deg N
-         lon_0    = -20.# deg E
-         lat_0    = 60. # deg N
-         #
-         bm = Basemap(width=2*xmax,height=2*ymax,\
-                      resolution=cres,projection='stere',\
-                      lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
-      else:
-         # set plot domain from bbox
-         bbox  = sf.bbox # [lonmin,latmin,lonmax,latmax]
-         lon0  = bbox[0]
-         lat0  = bbox[1]
-         lon1  = bbox[2]
-         lat1  = bbox[3]
-         #
-         lon_av   = .5*(lon0+lon1)
-         lat_av   = .5*(lat0+lat1)
-         bm       = Basemap(llcrnrlon=lon0,llcrnrlat=lat0,\
-                            urcrnrlon=lon1,urcrnrlat=lat1,\
-                            resolution='i',projection='stere',\
-                            lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
-      ####################################################
-
-      if 0:
+      PLOT_ALL = 1
+      if PLOT_ALL==0:
          # only plot single polygon as a test
          PLOT_COMBINED  = 0
 
          # tval     = 0#n=0
          # tval     = 10#n=14
-         tval     = 14#n=33
-         # tval     = 28#n=72
+         # tval     = 14#n=33
+         tval     = 28#n=72 #has holes (islands)
          # tval     = 29#n=73
          to_plot  = [tval]
          n        = MIZforms[tval][0]
-         lst      = MIZforms[tval][1]
+         dct      = MIZforms[tval][1]
 
          cdate    = fname[:8]
          if not os.path.exists(outdir+'/'+cdate):
             os.mkdir(outdir+'/'+cdate)
          figname  = outdir+'/'+cdate+'/'+fname+'_MIZpoly'+str(n)+'.png'
-         ttl      = 'Polygon '+str(n)+': FA='
 
-         if lst[0]>0:
-            ttl   = ttl+str(lst[0])+', FB='
-         else:
-            ttl   = ttl+"'X', FB="
+         ttl   = 'Polygon '+str(n)+': '
+         for key in dct.keys():
+            ttl   = ttl+key+'='
+            val   = dct[key]
+            if val>=0:
+               ttl   = ttl+str(val)+', '
+            else:
+               ttl   = ttl+"'X', "
+         ttl   = ttl[:-2]
 
-         if lst[1]>0:
-            ttl   = ttl+str(lst[1])+', FC='
-         else:
-            ttl   = ttl+"'X', FC="
-
-         if lst[2]>0:
-            ttl   = ttl+str(lst[2])
-         else:
-            ttl   = ttl+"'X'"
+         # bounding box of the single shape
+         bbox  = sf.shape(n).bbox
+         bm    = Mplt.start_map(bbox,cres='f')
+         print('bbox=')
+         print(bbox)
 
       else:
          # plot all polygons in MIZ
@@ -273,12 +217,17 @@ for fname in snames:
          if not os.path.exists(outdir+'/'+cdate):
             os.mkdir(outdir+'/'+cdate)
 
-         PLOT_COMBINED  = 1
+         PLOT_COMBINED  = 1 # merge neighbouring MIZ polygons together
          if PLOT_COMBINED==0:
             figname  = outdir+'/'+cdate+'/'+fname+'_MIZ_'+key+'.png'
          else:
             figname  = outdir+'/'+cdate+'/'+fname+'_MIZ_'+key+'2.png'
          ttl      = 'All polygons in MIZ - using '+key
+
+         # set plot domain from overall bbox
+         bbox  = sf.bbox # [lonmin,latmin,lonmax,latmax]
+         bm    = Mplt.start_map(bbox)
+      ####################################################
    
       ####################################################
       Ncols = len(MIZcols)
@@ -290,22 +239,17 @@ for fname in snames:
          n     = MIZforms[m][0]
          fdct  = MIZforms[m][1]
          val   = fdct[key]
-         # print(n)
-         # print(lst)
-         # print(val)
 
          #########################################################
          if val<=MIZthresh:
             col   = MIZcols[val+1] # colour corresponding to this value
-            #
-            shp   = sf.shape(n)
-            pts   = shp.points
+            poly  = sf_info[n][0]
             #
             if PLOT_COMBINED==0:
-               plot_coords(bm,pts,color=col,latlon=True)
+               SFU.plot_poly(poly,pobj=bm,plot_holes=True,color=col,latlon=True)
+               #plot_coords(bm,pts,color=col,latlon=True)
             else:
                # merge polygons
-               poly  = make_valid_poly(shp)
                MPlist.append(poly)
                # print('appending poly')
                # print(len(MPlist))
@@ -317,26 +261,23 @@ for fname in snames:
 
       #########################################################
       if PLOT_COMBINED==1:
-         # MP = shgeom.MultiPolygon(MPlist)
-         MP = shops.unary_union(MPlist)
+         MP = shops.unary_union(MPlist) # merge neighbouring polygons
          if not hasattr(MP,'geoms'):
             MP = shgeom.MultiPolygon(MP)
          print('len(MP)='+str(len(MP.geoms)))
-         # MP = shops.cascaded_union(MP)
-         # MP = shops.unary_union(MP)
 
          print("Doing plot now...")
          Ngrps = len(MP.geoms)
          
-         cols  = ['c','b','g','m','r'] # colours corresponding to each form categatory 
+         ####################################################
+         cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
          for m in range(Ngrps):
             Ninner   = len(MP.geoms[m].interiors)
             print('No of interior regions')
             print([m,Ninner])
-            q0    = shgeom.Polygon(MP.geoms[m].exterior)
-            pts   = q0.boundary.coords
-            m_    = np.mod(m,len(cols))
-            plot_coords(bm,pts,color=cols[m_],latlon=True)
+            #
+            m_ = np.mod(m,len(cols))
+            SFU.plot_poly(MP.geoms[m],pobj=bm,color=cols[m_],plot_holes=True,latlon=True)
          ####################################################
       else:
          ####################################################
@@ -350,10 +291,49 @@ for fname in snames:
          plt.legend(handles=handles)
          ####################################################
    
-      finish_map(bm)
+      Mplt.finish_map(bm)
       plt.title(ttl,y='1.06')
       plt.savefig(figname)
       plt.close()
       fig.clf()
-      print('Saving to '+figname)
+      print('Saving figure to '+figname)
       #########################################################
+
+      if PLOT_COMBINED==1:
+         # save MP to shapefile
+         ofil  = 'test_outputs/test.shp'
+         print('\nSaving MultiPolygon to shapefile: '+ofil+'\n')
+         SFU.MultiPolygon2ShapeFile(MP,ofil)
+
+         if 1:
+            #########################################################
+            # test shapefile
+            print('Testing write to '+ofil+'...')
+            sf2      = shapefile.Reader(ofil)
+            sf2_info = SFU.extract_shapefile_info(sf2,get_holes=True)
+            #
+            fig2  = plt.figure()
+            bm2   = Mplt.start_map(sf2.bbox)
+            cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
+
+            for m in range(sf2.numRecords):
+               poly  = sf2_info[m][0]
+               rec   = sf2_info[m][1]
+
+               print('Looking at polygon '+str(m))
+               for key2 in rec.keys():
+                  print(key2+' = '+str(rec[key2]))
+
+               Ninner   = len(poly.interiors)
+               print('No of interior regions: '+str(Ninner)+'\n')
+               m_    = np.mod(m,len(cols))
+               col   = cols[m_]
+               SFU.plot_poly(poly,pobj=bm2,plot_holes=True,color=col,latlon=True)
+
+            Mplt.finish_map(bm2)
+            figname2 = 'test_outputs/test_shp.png'
+            plt.savefig(figname2)
+            plt.close()
+            fig2.clf()
+            print('Saving figure to '+figname2+'\n')
+            #########################################################
