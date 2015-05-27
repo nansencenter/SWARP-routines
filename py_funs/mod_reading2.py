@@ -11,8 +11,7 @@ class proj_obj:
       if att_vals is not None:
          for n in range(len(att_names)):
             setattr(self,att_names[n],att_vals[n])
-      else:
-         for n in range(len(att_names)):
+         else:
             setattr(self,att_names[n],0)
 ##########################################################
 
@@ -121,16 +120,15 @@ def nc_getinfo(ncfil,time_index=None):
    tu    = time.units
    lst   = tu.split()
    date2 = lst[2]
-   date3 = lst[3]
-   date_all = date2+'T'+date3+'Z'
    # i0    = tu.index('-')
    # date0 = tu[i0-4:i0+6]
    # i1    = tu.index(':')
    # date1 = tu[i1-2:i1+6]
    # #
-   # date2    = date0+'T'+date1+'Z'
-   time_fmt = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1 12:00:00
-   refpoint = datetime.strptime(date_all,time_fmt)
+   # date2    = date0+date1+'Z'
+   # time_fmt = '%Y-%m-%dT0%H:%M:%SZ' # eg 1950-1-1T12:00:00Z
+   time_fmt = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1T12:00:00Z
+   refpoint = datetime.strptime(date2,time_fmt)
    #
    if time_info[0]=='second':
       ncinfo.reftime = refpoint+timedelta(seconds=reftime_u)
@@ -238,158 +236,3 @@ def print_grib_messages(grb2fil,N=None):
 
    gr.close()
 ###########################################################
-
-##############################################################
-def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
-   # routine to get the array from the .a (binary) file
-   # * fmt_size = size in bytes of each entry)
-   #   > default = 4 (real*4/single precision)
-
-   import struct
-
-   recs     = nx*ny
-   rec_size = recs*fmt_size
-   #
-   data  = fid.read(rec_size)
-   if fmt_size==4:
-      fmt_py   = 'f' # python string for single
-   else:
-      fmt_py   = 'd' # python string for double
-
-   fld   = struct.unpack(recs*fmt_py,data)
-   fld   = np.array(fld)
-
-   if order!='fortran':
-      fld   = fld.reshape((nx,ny))  # array order follows python/c convention
-                                    # (index increases across array)
-   else:
-      fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
-                                                # python/c and fortran/matlab 
-
-   return fld
-##############################################################
-
-##############################################################
-def get_array_from_HYCOM_binary(afile,recno,dims=None,grid_dir='.'):
-   # routine to get the array from the .a (binary) file
-   # * fmt_size = size in bytes of each entry)
-   #   > default = 4 (real*4/single precision)
-
-   import struct
-
-   ######################################################################
-   # get size of grid
-   if dims is None:
-      if 'regional.grid' in afile:
-         # afile is a grid file
-         # - check .b file for size of grid
-         bfile = afile[:-2]+'.b'
-      else:
-         # check regional.grid.b file for size of grid
-         bfile = grid_dir+'/regional.grid.b'
-         if os.path.exists(bfile):
-            sys.exit('Grid file not present: '+bfile)
-
-      bid   = open(bfile,'r')
-      nx    = int( bid.readline().split()[0] )
-      ny    = int( bid.readline().split()[0] )
-      bid.close()
-   else:
-      nx = dims[0]
-      ny = dims[1]
-   ######################################################################
-
-   ######################################################################
-   # set record size, skip to record number
-   fmt_size = 4      # HYCOM files are single precision
-   if fmt_size==4:
-      fmt_py   = 'f' # python string for single
-   else:
-      fmt_py   = 'd' # python string for double
-
-   n0       = 4096   # HYCOM stores records in multiples of 4096
-   Nhyc     = (1+(nx*ny)/n0)*n0
-   rec_size = Nhyc*fmt_size
-   #
-   aid   = open(afile,'rb')
-   for n in range(1,recno):
-      aid.seek(rec_size,1) # seek in bytes (1: reference is current position)
-   ######################################################################
-
-   # read data and close file
-   data  = aid.read(rec_size)
-   aid.close()
-
-   # rearrange into correctly sized array
-   fld   = struct.unpack('>'+Nhyc*fmt_py,data) # NB BIG-ENDIAN so need '>'
-   fld   = np.array(fld[0:nx*ny]) # select the 1st nx,ny - rest of the Nhyc record is rubbish
-   fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
-                                             # python/c and fortran/matlab 
-
-   land_thresh          = 1.e30# on land 1.2677e30 
-   fld[fld>land_thresh] = np.nan
-
-   return fld
-##############################################################
-
-##############################################################
-def get_record_numbers_HYCOM(bfile):
-   # routine to get the array from the .a (binary) file
-   # * fmt_size = size in bytes of each entry)
-   #   > default = 4 (real*4/single precision)
-
-
-   bid   = open(bfile,'r')
-   word  = bid.readline().split()[0] # 1st word in line 
-   while word!='field':
-      word  = bid.readline().split()[0] # 1st word in line 
-
-   # have found table title
-   n     = 0
-   lut   = {}
-   lin   = bid.readline()
-   EOF   = (lin=='')
-   while not EOF:
-      n     = n+1
-      word  = lin.split()[0] # 1st word in line 
-      lut.update({word:n})
-      #
-      lin   = bid.readline()
-      EOF   = (lin=='')
-
-   bid.close()
-   return lut
-   ######################################################################
-
-   ######################################################################
-   # set record size, skip to record number
-   fmt_size = 4      # HYCOM files are single precision
-   if fmt_size==4:
-      fmt_py   = 'f' # python string for single
-   else:
-      fmt_py   = 'd' # python string for double
-
-   n0       = 4096   # HYCOM stores records in multiples of 4096
-   Nhyc     = (1+(nx*ny)/n0)*n0
-   rec_size = Nhyc*fmt_size
-   #
-   aid   = open(afile,'rb')
-   for n in range(1,recno):
-      aid.seek(rec_size)
-   ######################################################################
-
-   # read data and close file
-   data  = aid.read(rec_size)
-   aid.close()
-
-   # rearrange into correctly sized array
-   fld   = struct.unpack('>'+Nhyc*fmt_py,data) # NB BIG-ENDIAN so need '>'
-   fld   = np.array(fld[0:nx*ny]) # select the 1st nx,ny - rest of the Nhyc record is rubbish
-   fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
-                                             # python/c and fortran/matlab 
-
-   land_thresh          = 1.e30# on land 1.2677e30 
-   fld[fld>land_thresh] = np.nan
-
-   return fld
-##############################################################

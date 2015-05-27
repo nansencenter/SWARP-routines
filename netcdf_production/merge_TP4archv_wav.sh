@@ -6,43 +6,32 @@
 #########################################################################
 tday=$1
 firstday=$2
-dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
+dir0=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/netcdf
+odir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/final_product  
 #########################################################################
 
 #extract start date/time of forecast
 # and put it into output filename
-odir=$(pwd)  # output file will be placed in current directory
+
 cd $dir0
 mkdir -p tmp
 
 # LOG
-log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/merge_log.txt
+log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/merge_wav_log.txt
 if [ -f "$log" ]
 then
    rm $log
 fi
 touch $log
 
+echo $date                                            >> $log
 echo " "                                              >> $log
 echo "Unpacking files (ncpdq -U)..."                  >> $log
 
-flist=(*.nc)
-f=${flist[0]}
-#get start of forecast
-start_date=${f:9:8} # check date
-start_time=${f:18:2}0000 # HHMMSS
-
 for f in *.nc
 do
-   cf=${f:9:8}
-   if [ "$cf" -ge "$tday" ]
-   then
-      echo $f
-      # unpack files to make sure that scale factors are same in each file
-      ncpdq -U $f tmp/$f
-   else
-      echo "*.nc older than actual date"              >> $log
-   fi
+   echo $f
+   ncpdq -U $f tmp/$f
 done
 
 #combine unpacked files
@@ -51,7 +40,7 @@ echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPwavesice_forecast_start${tday}T${start_time}Z.nc
+ofil=SWARPwavesice_forecast_start${tday}T.nc
 
 # make final file by repacking tmp.nc
 echo " "                                              >> $log

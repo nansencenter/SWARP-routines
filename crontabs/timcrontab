@@ -6,10 +6,6 @@
 # (Cron version V5.0 -- $Id: crontab.c,v 1.12 2004/01/23 18:56:42 vixie Exp $)
 # Crontabs of Tim on Hexagon run on node1
 # To set up cron job on ONE node, a) > ssh login1, > b) crontab timcrontab, c) > exit 
-# 1) Check restarts from wamnsea                         - Every hour
-# 2) Check restarts from topaz                           - Every day @ 1800
-# 3) Forecast run                                        - Every day @ 0200 
-# 4) Download validation data from OSI_SAF               - Every day @ 1200 
 #
 
 #MAILTO="user@domain.com"
@@ -23,8 +19,15 @@ VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
 # TP4 restarts less urgent
 00 18 * * * $FORECAST/topaz_archive_restart.sh
 
-# run forecast as early as possible
+# run ice_only forecast as early as possible
 00 02 * * * $FORECAST/ice_only/run_forecast.sh
 
 # get ice conc for validation and wave warning
 00 12 * * * $VALIDATION/get_osisaf_conc.sh
+
+# run check_wamsea.py
+10 12 * * * python $FORECAST/alert_waves/check_wamnsea.py
+
+# run the WAVE if it didn't run already
+00 06 * * * $FORECAST/wavesice/run_forecast_wav.sh
+

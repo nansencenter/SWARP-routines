@@ -60,70 +60,75 @@ cd $rundir
 mkdir -p ./info
 cp $datelist ./info
 
-# RUNNING TOPAZ_GET_RESTART
-echo "Launching topaz_get_restart_wav @ $date"                     >> $log
-$fcdir/wavesice/topaz_get_restart_wav.sh                                # get latest restart file
-cd $rundir                                                     # just in case we've changed dir in script
-
-# GETTING INFOS FROM LAST_RESTART
-out_restart=$rundir/info/last_restart.txt
-
-rname=$(cat $out_restart)
-
-rgen=${rname:0:3}                                              # eg TP4
-ryear=${rname:10:4}                                            # year of restart file
-rday=${rname:15:3}                                             # julian day of restart file (1 Jan = 0)
-
-#################################################################
-
-# MAKE INFILE 
-echo "Launching make_infile4forecast_wav @ $date"                  >> $log
-
-
-
-# print to screen - work out if last day of forecast is in a different year to current year
-ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year
-if [ $final_day_mi4f -gt $(($ndays-1)) ]
+cday=$(cat $datelist | sed '1!d')
+if [ -f $rundir/$cday/final_product/* ]
 then
-	fc_final_day=$(expr $final_day - $ndays)
-	fc_year=$(expr $cyear + 1)
+   exit
 else
-	fc_year=$cyear
+   # RUNNING TOPAZ_GET_RESTART
+   echo "Launching topaz_get_restart_wav @ $date"                     >> $log
+   $fcdir/wavesice/topaz_get_restart_wav.sh                                # get latest restart file
+   cd $rundir                                                     # just in case we've changed dir in script
+
+   # GETTING INFOS FROM LAST_RESTART
+   out_restart=$rundir/info/last_restart.txt
+
+   rname=$(cat $out_restart)
+
+   rgen=${rname:0:3}                                              # eg TP4
+   ryear=${rname:10:4}                                            # year of restart file
+   rday=${rname:15:3}                                             # julian day of restart file (1 Jan = 0)
+
+   #################################################################
+
+   # MAKE INFILE 
+   echo "Launching make_infile4forecast_wav @ $date"                  >> $log
+
+
+
+   # print to screen - work out if last day of forecast is in a different year to current year
+   ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year
+   if [ $final_day_mi4f -gt $(($ndays-1)) ]
+   then
+           fc_final_day=$(expr $final_day - $ndays)
+           fc_year=$(expr $cyear + 1)
+   else
+           fc_year=$cyear
+   fi
+   echo "Restart files of ${cyear}_${jday_today}"                  >> $log
+   echo "Forecast final day ${fc_year}_${fc_final_day}"            >> $log
+
+   $SWARP_ROUTINES/forecast_scripts/wavesice/make_infile4forecast_wav.sh $rgen $ryear $rday $final_day_mi4f
+   xdir=$TP4_REALTIME/expt_01.2
+   infile=$xdir/infile.in
+
+   ###############################################################
+
+   # Launch job
+   echo "Launching pbsjob @ $(date)"                  >> $log
+   cd $xdir
+
+   # want to save archive files (TP4archv*.[ab]) every 3 hours
+   cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/blkdat.input .
+   cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/pbsjob.sh pbsjob.sh
+
+   # clean data directory before run
+   if [ -f "./data/TP4DAILY*" ]
+   then
+      rm data/TP4DAILY*
+   fi
+   if [ -f "./data/TP4archv*" ]
+   then
+      rm data/TP4archv*
+   fi
+
+   # clean log file - else mpijob.out gets too big
+   rm log/*
+
+   # launch job
+   qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
+   $qsub pbsjob.sh
+   #################################################################
+      
+   echo "pbsjob done @ $(date)"                  >> $log
 fi
-echo "Restart files of ${cyear}_${jday_today}"                  >> $log
-echo "Forecast final day ${fc_year}_${fc_final_day}"            >> $log
-
-$SWARP_ROUTINES/forecast_scripts/wavesice/make_infile4forecast_wav.sh $rgen $ryear $jday_today $final_day_mi4f
-xdir=$TP4_REALTIME/expt_01.2
-infile=$xdir/infile.in
-
-###############################################################
-
-# Launch job
-echo "Launching pbsjob @ $(date)"                  >> $log
-cd $xdir
-
-# want to save archive files (TP4archv*.[ab]) every 3 hours
-cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/blkdat.input .
-cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/pbsjob.sh pbsjob.sh
-
-# clean data directory before run
-if [ -f "./data/TP4DAILY*" ]
-then
-   rm data/TP4DAILY*
-fi
-if [ -f "./data/TP4archv*" ]
-then
-   rm data/TP4archv*
-fi
-
-# clean log file - else mpijob.out gets too big
-rm log/*
-
-# launch job
-qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
-$qsub pbsjob.sh
-#################################################################
-   
-echo "pbsjob done @ $(date)"                  >> $log
-

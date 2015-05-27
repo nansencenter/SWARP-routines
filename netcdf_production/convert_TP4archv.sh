@@ -34,6 +34,7 @@ cd tmp
 # Info for hyc2proj
 ln -s $h2p_in/proj.in .
 ln -s $h2p_in/extract.archv . 
+ln -s $h2p_in/extract.daily . 
 ln -s $h2p_in/depthlevels.in .
 
 # Info about grid from topo dir
@@ -44,6 +45,7 @@ ln -s $tp4_input/regional.grid.b .
 ln -s $tp4_input/regional.depth.a .
 ln -s $tp4_input/regional.depth.b .
 
+# CONVERT ARCH
 if [ $(ls $ddir | tail -1) ]
 then
    for f in $ddir/TP4archv*.a
@@ -67,6 +69,33 @@ then
       done
 else
    "No archv* files in $ddir" >> $log
+   mail -s "Convert_TP4archv FAILED" $email < $log
+fi
+
+# CONVERT DAILY
+if [ $(ls $ddir | tail -1) ]
+then
+   for f in $ddir/TP4DAILY*.a
+      do
+         len=${#ddir}
+         g=${f:$((len+1))}
+         len=${#g}
+         base=${g:0:$((len-2))}
+         ln -s $f $ddir/$base.b .
+
+         echo "********************************************************"
+         echo "Running hyc2proj on $g..."
+         echo "********************************************************"
+         echo " "
+
+         echo hyc2proj $g
+         echo cp *.nc $sdir
+         echo " "
+         hyc2proj $g
+         cp *.nc $sdir
+      done
+else
+   "No DAILY* files in $ddir" >> $log
    mail -s "Convert_TP4archv FAILED" $email < $log
 fi
 echo "********************************************************"

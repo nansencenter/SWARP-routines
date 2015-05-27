@@ -16,7 +16,7 @@ cyear=${tday::4}
 cd $WDIR
 
 echo "The archive file name will be "
-tfil=SWARP_forecast_$tday.tar.gz
+tfil=SWARP_ice_only_forecast_$tday.tar.gz
 echo " $tfil "
 touch $tfil
 tar -zcvf $tfil -C $WDIR $tday
