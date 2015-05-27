@@ -2,7 +2,7 @@
 # FETCH DAILY BINARY FILES
 
 # IF NOT INPUT TAKE ICE_ONLY ELSE WAVESICE
-echo "Type the ice for ICE_ONLY or waves for WAVESICE followed by [ENTER]:  "
+echo "Type the ""ice"" for ICE_ONLY or ""waves"" for WAVESICE followed by [ENTER]:  "
 read typo
 echo "Type the date of the run (YYYYMMDD), followed by [ENTER]:  "
 read fdate
@@ -43,7 +43,10 @@ then
    echo "[ENTER] to confirm"
    read ok
    echo "please wait..."
-   cp $wdir/${daily}*${steve}* ./
+   cp $wdir/${daily}_*_*_*${steve}* ./
+else
+   echo "Please enter either ""ice"" or "" waves"" "
+   exit
 fi
 
 
@@ -94,4 +97,3 @@ year=${fdate:0:4}
 osidir=/work/shared/nersc/msc/OSI-SAF/${year}_nh_polstere
 osifil=*${thedate}*.nc
 cp $osidir/$osifil ./
-

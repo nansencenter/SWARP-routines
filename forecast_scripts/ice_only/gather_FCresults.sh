@@ -8,9 +8,8 @@ email=$(cat $address)
 # =============================================================================
 
 # defining all the dir that will be used
-RTM=/work/timill/RealTime_Models
-DFDIR=$RTM/TP4a0.12/expt_01.1
-WKDIR=$RTM/results/TP4a0.12/ice_only/work
+DFDIR=/work/timill/RealTime_Models/TP4a0.12/expt_01.1
+WKDIR=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work
 FCDIR=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
 
 # LOG

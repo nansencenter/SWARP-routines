@@ -118,14 +118,18 @@ def nc_getinfo(ncfil,time_index=None):
       time_info[0]   = 'second'
    #
    tu    = time.units
-   i0    = tu.index('-')
-   date0 = tu[i0-4:i0+6]
-   i1    = tu.index(':')
-   date1 = tu[i1-2:i1+6]
-   #
-   date2    = date0+'T'+date1+'Z'
-   time_fmt = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1T12:00:00Z
-   refpoint = datetime.strptime(date2,time_fmt)
+   lst   = tu.split()
+   date2 = lst[2]
+   date3 = lst[3]
+   date_all = date2+'T'+date3+'Z'
+   # i0    = tu.index('-')
+   # date0 = tu[i0-4:i0+6]
+   # i1    = tu.index(':')
+   # date1 = tu[i1-2:i1+6]
+   # #
+   # date2    = date0+'T'+date1+'Z'
+   time_fmt = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1 12:00:00
+   refpoint = datetime.strptime(date_all,time_fmt)
    #
    if time_info[0]=='second':
       ncinfo.reftime = refpoint+timedelta(seconds=reftime_u)

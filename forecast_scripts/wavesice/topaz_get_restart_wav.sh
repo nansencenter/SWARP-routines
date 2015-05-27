@@ -33,6 +33,8 @@ cyear=$(cat $datelist | sed '3!d')			# current year
 cmon=$(cat $datelist | sed '4!d')			# current month
 cday=$(cat $datelist | sed '6!d')                       # current day julian (1 Jan = 1)
 pyear=$(expr $cyear - 1)		              	# previous year
+pday=$(expr $cday - 1)
+pday=`printf '%3.3d' $pday`
 
 base_restart=TP4restart${cyear}_${cday}_00
 TP4restart=$ddir/${base_restart}
@@ -42,7 +44,12 @@ echo "Looking for: $TP4restart"                             >> $log
 
 if [ -f $TP4restart.a ] && [ -f $TP4restart.b ] && [ -f ${TP4restart}ICE.uf ]
 then
-   rm $wdir/TP4restart*
+   if [ $cday == 000 ]
+   then
+      rm $wdir/TP4restart${pyear}*
+   else
+      rm $wdir/TP4restart${cyear}_{$pday}*
+   fi
    mv ${TP4restart}* $wdir/
 elif [ -f $wdir/${base_restart}.a ] && [ -f $wdir/${base_restart}.b ] && [ -f $wdir/${base_restart}ICE.uf ]
 then
@@ -54,6 +61,8 @@ else
    mail -s "WARNING - daily ice_only restarts NOT found" $email < $log
    $fcdir/backup_forecast.sh
 fi
+
+
 
 echo ""                                                     >> $log
 

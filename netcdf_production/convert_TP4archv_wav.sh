@@ -36,6 +36,7 @@ cd tmp
 # Info for hyc2proj
 ln -s $h2p_in/proj.in .
 ln -s $h2p_in/extract.archv_wav .
+ln -s $h2p_in/extract.daily
 ln -s $h2p_in/depthlevels.in .
 
 # Info about grid from topo dir
@@ -46,9 +47,35 @@ ln -s $tp4_input/regional.grid.b .
 ln -s $tp4_input/regional.depth.a .
 ln -s $tp4_input/regional.depth.b .
 
+# CONVERT ARCH
 if [ $(ls $ddir | tail -1) ]
 then
    for f in $ddir/TP4archv_wav*.a
+   do
+      len=${#ddir}
+      g=${f:$((len+1))}
+      len=${#g}
+      base=${g:0:$((len-2))}
+      ln -s $f $ddir/$base.b .
+
+      echo "********************************************************"
+      echo "Running hyc2proj on $g..."
+      echo "********************************************************"
+      echo " "
+
+      hyc2proj $g
+      mv *.nc $sdir
+   done
+   echo "Binary files converted into .nc"       >> $log
+else
+   echo "NO archv* files in $ddir"              >> $log 
+   mail -s "Convert_TP4archv_wav FAILED" $email < $log
+fi
+
+# CONVERT DAILY
+if [ $(ls $ddir | tail -1) ]
+then
+   for f in $ddir/TP4DAILY*.a
    do
       len=${#ddir}
       g=${f:$((len+1))}
