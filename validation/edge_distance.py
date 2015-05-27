@@ -44,7 +44,8 @@ def dist_edges(mdl,osi,bm):
 		dist4	= []
 		for m, em in enumerate(xf):
 			dist1	=	np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
-			dist2	= np.append(dist2,dist1)
+			distt	= [dist1,xf[m],yf[m]]
+			dist2	= np.append(dist2,distt)
 		dist3	= np.amin(dist2)
 		lon,lat	= bm(xm[n],ym[n],inverse=True)
 		dist4	= [dist3,lon,lat]
@@ -84,7 +85,7 @@ bm = Basemap(width=2*xmax,height=2*ymax,\
 print("Data files:   ")
 print glob.glob("./data/*.nc")
 #   date = raw_input('Insert date [YYYYMMDD]: ')
-date='20150414'
+date='20150513'
 
 ####################################################################################
 # DEFINING EDGE LEVELS
