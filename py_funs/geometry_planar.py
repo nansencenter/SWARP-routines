@@ -1,6 +1,15 @@
 #########################################################
 def area_polygon_euclidean(x,y):
    # area of a polygon in Euclidean space
+   # - negative if traveling in a clockwise direction
+   # http://www.wikihow.com/Calculate-the-Area-of-a-Polygon
+   import numpy as np
+
+   # repeat last point
+   if x[0]!=x[-1]:
+      x  = np.array(list(x).append(x[0]))
+      y  = np.array(list(y).append(y[0]))
+
    A  = x[:-1]*y[1:]-x[1:]*y[:-1]
 
    return .5*np.sum(A)
@@ -17,25 +26,66 @@ def unit_vector(v):
    norm  = vector_norm(v)
    return v/norm
 #########################################################
+
+#########################################################
 def calc_perimeter(coords):
    import numpy as np
-   import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
 
-   p0       = shgeom.Point(coords[0])
-   Nc       = len(coords)
-   P        = 0
-   spacings = []
+   x0,y0 = coords[0]
+   Nc    = len(coords)
+   P     = 0 # perimeter
+
    for n in range(1,Nc):
-       p1 = shgeom.Point(coords[n])
-       ds = p0.distance(p1)
+       x1,y1   = coords[n]
+       dx      = x1-x0
+       dy      = y1-y0
+       #
+       ds = np.sqrt(dx*dx+dy*dy)
+       th = np.atan2(dy,dx)
+       P  = P+ds
+       #
+       x0,y0   = x1,y1
+
+   return P
+#########################################################
+
+#########################################################
+def curve_info(coords,closed=True):
+   import numpy as np
+
+   x0,y0 = coords[0]
+   Nc    = len(coords)
+   P     = 0   # perimeter
+
+   th_vec   = []  # direction of tangent to curve
+   spacings = []  # distance between points
+   for n in range(1,Nc):
+       x1,y1   = coords[n]
+       dx      = x1-x0
+       dy      = y1-y0
+       #
+       ds = np.sqrt(dx*dx+dy*dy)
+       th = np.arctan2(dy,dx)
        P  = P+ds
        spacings.append(ds)
-       p0 = p1
+       th_vec.append(th)
+       x0,y0   = x1,y1
 
-   spacings     = np.array(spacings)
+   if closed and coords[0]!=coords[-1]:
+      # last point on curve is first
+      x1,y1   = coords[0]
+      dx      = x1-x0
+      dy      = y1-y0
+      #
+      ds = np.sqrt(dx*dx+dy*dy)
+      th = np.arctan2(dy,dx)
+      P  = P+ds
+      spacings.append(ds)
+      th_vec.append(th)
+
    resolution   = np.mean(spacings)
-   perimeter    = P
-   return perimeter,spacings,resolution
+   return P,resolution,np.array(spacings),np.array(th_vec)
+#########################################################
 
 #########################################################
 def xy2coords(x,y):
@@ -47,247 +97,16 @@ def xy2coords(x,y):
 #########################################################
 
 #########################################################
-class dirichlet_fund_soln:
-   # solve Dirichlet problem to get coefficients of expansion
-   # F(z)=\sum_n.a_n.log|z-z_n|
-   # (F satisfies Laplace's eqn)
-   # this functions solves it and makes the mapping F
-   
-   #######################################################
-   # INITIALISATION
-   #######################################################
-
-   #######################################################
-   def __init__(self,coords,func_vals):
-      # initialise object
-
-      import numpy as np
-      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-
-      self.coords    = coords
-      N0             = len(coords)
-      self.length    = N0
-      self.func_vals = func_vals
-      self.perimeter,self.spacings,self.resolution = calc_perimeter(coords) # gets spacings between points and perimeter
-      #
-      self.shapely_polygon  = shgeom.Polygon(coords)
-
-      # get points around boundary of polygon, then
-      # expand points by an amount related to the spacings of the coords
-      self.buffer_resolution  = 16 # default buffer resolution
-                                   # (number of segments used to approximate a quarter circle around a point.)
-      get_sings = True
-      while get_sings:
-         get_sings   = self._get_singularities()
-
-      # solve Laplace's eqn (get a_n)
-      self.solve_laplace_eqn()
-
-      return
-   #######################################################
-
-   #######################################################
-   # FUNCTIONS FOR INITIALISATION OF THE PLANE BELOW:
-   #######################################################
-
-   #######################################################
-   def _get_singularities(self):
-
-      bufres   = self.buffer_resolution
-      eps      = self.resolution/2.
-      poly     = self.shapely_polygon.buffer(eps,resolution=bufres)
-
-      # put singularities (z_n) on the boundary of expanded polygon
-      self.singularities            = poly.exterior.coords
-      N1                            = len(self.singularities)
-      self.number_of_singularities  = N1
-
-      # check the number of singularities:
-      do_check = self._check_singularities()
-      # do_check = False # accept automatically
-
-      return do_check
-   #######################################################
-
-   #######################################################
-   def _check_singularities(self):
-      # don't want too many singularities
-      import numpy as np
-
-      N0 = self.length
-      N1 = self.number_of_singularities
-
-      # set limits for N1
-      Nthresh  = 100
-      frac     = .2
-      if N0<=Nthresh:
-         # if N0<=Nthresh, try to get N1~N0
-         Ntarget  = N0
-      else:
-         # try to get N1~frac*N0, if frac*N0<Nthresh
-         Ntarget  = int(np.max(np.round(frac*N0),Nthresh))
-
-      if N1>Ntarget:
-         # reduce the number of sing's by increasing spacing between points
-         coords                        = self.singularities
-         perimeter,spacings,resolution = calc_perimeter(coords)
-         #
-         s_target    = N1/float(Ntarget)*resolution # increase mean spacing between points
-         new_coords  = [coords[0]]
-         #
-         ss = 0
-         s0 = 0
-         s1 = s0+s_target
-         for n,c0 in enumerate(coords[1:]):
-            ss = ss+spacings[n]
-            if ss>=s1:
-               new_coords.append(c0)
-               s0 = s1
-               s1 = s0+s_target
-
-         # update list of singularities:
-         self.singularities            = new_coords
-         self.number_of_singularities  = len(new_coords)
-
-         # no need to call _get_singularities again
-         check_again = False
-      elif N1<Ntarget:
-         fac                     = int(np.ceil(1.2*Nmax/float(N1)))
-         self.buffer_resolution  = fac*self.buffer_resolution
-
-         # need to call _get_singularities again,
-         # to reset the singularities and check them
-         check_again = True
-
-      return check_again
-   #######################################################
-
-   # #######################################################
-   # move this outside class to make it more general
-   # def calc_perimeter(self):
-   #    import numpy as np
-   #    import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-
-   #    p0       = shgeom.Point(self.coords[0])
-   #    Nc       = len(self.coords)
-   #    P        = 0
-   #    spacings = []
-   #    for n in range(1,Nc):
-   #       p1 = shgeom.Point(self.coords[n])
-   #       ds = p0.distance(p1)
-   #       P  = P+ds
-   #       spacings.append(ds)
-   #       p0 = p1
-
-   #    self.spacings     = np.array(spacings)
-   #    self.resolution   = np.mean(self.spacings)
-   #    self.perimeter    = P
-   #    return
-   # #######################################################
-
-   #######################################################
-   def solve_laplace_eqn(self):
-      import numpy as np
-      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-
-      Nc = len(self.coords)
-      Ns = len(self.singularities)
-      M  = np.zeros((Nc,Ns))
-      for m,c0 in enumerate(self.coords): # rows of matrix (eqn's)
-         p0 = shgeom.Point(c0)
-         for n,c1 in enumerate(self.singularities): # cols of matrix (var's)
-            p1       = shgeom.Point(c1)
-            R        = p0.distance(p1)
-            M[m,n]   = np.log(R)
-
-      # solve in a least squares sense:
-      # M*a=self.func_vals
-      self.sing_coeffs  = np.linalg.lstsq(M,self.func_vals)[0]
-      return
-   #######################################################
-
-   #######################################################
-   # EXTERNAL FUNCTIONS THE CLASS PROVIDES
-   #######################################################
-
-   #######################################################
-   def eval_solution(self,x,y):
-
-      import numpy as np
-      from shapely.prepared import prep   # want "contains" function
-      import shapely.geometry as shgeom
-
-      Nx    = x.size
-      F     = np.zeros(Nx)
-      shp   = x.shape
-      x     = x.reshape(Nx)
-      y     = y.reshape(Nx)
-
-      poly2 = prep(self.shapely_polygon)
-      for m in range(Nx):
-         # loop over points to evaluate F at
-         p0 = shgeom.Point((x[m],y[m]))
-
-         # check if p0 is inside the domain
-         if poly2.intersects(p0):
-            # add contribution from each singularity
-            for n,c1 in enumerate(self.singularities): # singularities
-               p1    = shgeom.Point(c1)
-               R     = p0.distance(p1)
-               F[m]  = F[m]+self.sing_coeffs[n]*np.log(R)
-         else:
-            F[m]  = np.nan
-
-      return F.reshape(shp)
-   #######################################################
-
-   #######################################################
-   def plot_solution(self,pobj=None,plot_boundary=True):
-      import numpy as np
-      import shapefile_utils as SFU
-
-      if pobj is None:
-         # set a plot object if none exists
-         from matplotlib import pyplot as pobj
-      
-      poly  = self.shapely_polygon
-      if plot_boundary:
-         # just plot values of F at boundary
-         ss = np.concatenate([[0],self.spacings])
-         pobj.plot(ss,self.func_vals,'.k',markersize=1.5)
-         # 
-         x,y   = poly.exterior.boundary.coords.xy
-         F     = self.eval_function(x,y)
-         pobj.plot(ss,self.func_vals,'b')
-      else:
-         # plot F everywhere
-         SFU.plot_polygon(poly,color='k',linewidth=2)
-         bbox  = poly.bbox
-         eps   = self.resolution/2.
-
-         # get a grid to plot F on:
-         x0 = bbox[0]
-         y0 = bbox[1]
-         x1 = bbox[2]
-         y1 = bbox[3]
-         x  = np.arange(x0,x1+eps,eps)
-         y  = np.arange(y0,y1+eps,eps)
-
-         # make pcolor/contour plot
-         nlevels  = 10
-         X,Y      = np.meshgrid(x,y)
-         F        = self.eval_solution(X,Y)
-         pobj.pcolor(X,Y,F)
-         pobj.contour(X,Y,F,nlevels)
-
-      return
-   #######################################################
-
-##########################################################
+def coords2xy(coords):
+   # convert list of tuples: [(x[0],y[0]),(x[1],y[1]),...]
+   # to x,y numpy arrays
+   import numpy as np
+   x,y   = np.array(coords).transpose()
+   return x,y
+#########################################################
 
 ##########################################################
 class plane:
-
 
    #######################################################
    # INITIALISATION
