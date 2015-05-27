@@ -14,42 +14,42 @@ echo "Correspond to the following hycom julian day:   $jday"
 echo ""
 
 if [ $typo == "ice" ]
-	then
-  daily=TP4DAILY*
-  wdir=$ICE_RESULTS/$fdate/bin
-  for file in $wdir/$daily
-  do
-	  echo ${file##*/}
-	done
-	echo "Enter last 3 numbers (hycom julian day):  "
-	read steve
-	thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
-	echo "You chose to copy products from: $thedate"
-	echo "[ENTER] to confirm"
-  read ok
-	echo "please wait..."
-	rm ./*.nc
-	cp $wdir/${daily}*${steve}* ./
+then
+   daily=TP4DAILY*
+   wdir=$ICE_RESULTS/$fdate/bin
+   for file in $wdir/$daily
+   do
+     echo ${file##*/}
+   done
+   echo "Enter last 3 numbers (hycom julian day):  "
+   read steve
+   thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
+   echo "You chose to copy products from: $thedate"
+   echo "[ENTER] to confirm"
+   read ok
+   echo "please wait..."
+   rm *.nc
+   cp $wdir/${daily}*${steve}* ./
 elif [ $typo == "waves" ]
 then
-	daily=TP4DAILY*
-	wdir=$WAVES_RESULTS/$fdate/bin
-	for file in $wdir/$daily
-	do
-		echo ${file##*/}
-	done
-	echo "Enter last 3 numbers (hycom julian day):  "
-	read steve
-  thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
-	echo "You chose to copy products from: $thedate"
-	echo "[ENTER] to confirm"
-  read ok
-  echo "please wait..."
-  rm ./*.nc
-  cp $wdir/${daily}_*_*_*${steve}* ./
-	else
-  echo "Please enter either ""ice"" or "" waves"" "
-  exit
+   daily=TP4DAILY*
+   wdir=$WAVES_RESULTS/$fdate/bin
+   for file in $wdir/$daily
+   do
+      echo ${file##*/}
+   done
+   echo "Enter last 3 numbers (hycom julian day):  "
+   read steve
+   thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
+   echo "You chose to copy products from: $thedate"
+   echo "[ENTER] to confirm"
+   read ok
+   echo "please wait..."
+   rm *.nc
+   cp $wdir/${daily}_*_*_*${steve}* ./
+else
+   echo "Please enter either ""ice"" or "" waves"" "
+   exit
 fi
 
 
