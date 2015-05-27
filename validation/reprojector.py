@@ -4,6 +4,7 @@ from netCDF4 import Dataset
 import sys,os
 import glob
 import numpy as np
+import subprocess
 from matplotlib import pyplot as plt 
 from mpl_toolkits.basemap import Basemap, cm
 from skimage import measure as ms
@@ -26,11 +27,14 @@ def finish_map(m):
 	return
 ############################################################################
 
+# DATE
+date = raw_input('Insert date (YYYYMMDD):	')
+fcday	= raw_input('Forecast day 0,1,2 (#):	')
+typo	= 'waves'
+subprocess.call(['./data/fetch_daily.sh',date,fcday,typo])
+
 # DEFINING THE BASEMAP
 m = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
-
-# DATE
-date='20150513'
 
 # READ TP4 DAILY
 ncfil = ''.join( glob.glob('./data/TP4DAILY_start*_dump'+date+'.nc'))
@@ -61,6 +65,7 @@ X2,Y2    = m(lon2[:,:],lat2[:,:],inverse=False)
 Z2       = conc[:,:].data
 mask2    = conc[:,:].mask
 Z2[mask2] = np.NaN
+ZO				= Z2/100
 
 # REPROJECTION
 X3 = X.reshape(X.size)
@@ -70,25 +75,46 @@ C = [X3,Y3]
 C = np.array(C)
 C = C.T
 
-Z4 = grd(C,Z3,(X2,Y2),method='nearest')
-Z5 = grd(C,Z3,(X2,Y2),method='linear')
-Z6 = grd(C,Z3,(X2,Y2),method='cubic')
+ZN = grd(C,Z3,(X2,Y2),method='nearest')
+ZL = grd(C,Z3,(X2,Y2),method='linear')
+ZC = grd(C,Z3,(X2,Y2),method='cubic')
 
-plt.figure(0) 
-plt.imshow(Z2)
-plt.title('OSI')
+# BINARY
+BO					= np.copy(ZO)
+BO[BO<.15]	= 0
+BO[BO>=.15]	= 1
+thenans			= np.isnan(BO)
+BO[thenans]	= 0
 
-plt.figure(1)
-plt.imshow(Z4)
-plt.title('NRS')
+BN					= np.copy(ZN)
+BN[BN<.15]	= 0
+BN[BN>=.15]	= 1
+thenans			= np.isnan(BN)
+BN[thenans]	= 0
 
-plt.figure(2)
-plt.imshow(Z5)
-plt.title('LIN')
+BL					= np.copy(ZL)
+BL[BL<.15]	= 0
+BL[BL>=.15]	= 1
+thenans			= np.isnan(BL)
+BL[thenans]	= 0
 
-plt.figure(3)
-plt.imshow(Z6)
-plt.title('CUB')
+# PLOT RESULTS
+#plt.figure(0) 
+#plt.imshow(ZO)
+#plt.title('OSI')
+#
+#plt.figure(1)
+#plt.imshow(ZN)
+#plt.title('NRS')
+#
+#plt.figure(2)
+#plt.imshow(ZL)
+#plt.title('LIN')
+#
+#plt.figure(3)
+#plt.imshow(ZC)
+#plt.title('CUB')
+#
+#plt.show()
 
-plt.show()
 
