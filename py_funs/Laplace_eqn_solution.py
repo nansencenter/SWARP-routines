@@ -65,9 +65,15 @@ class dirichlet_fund_soln:
       print('\nCalculating error on the boundary...\n')
       self._eval_solution_boundary()
 
-      # evaluate normal derivative -> stream function on boundary:
-      print('\nCalculating normal derivative -> stream function on the boundary...\n')
-      self._eval_derivs_boundary()
+      if 0:
+         # evaluate normal derivative -> stream function on boundary:
+         print('\nCalculating normal derivative -> stream function on the boundary...\n')
+         self._eval_derivs_boundary()
+
+      # else:
+      #    # get branch cuts (shouldn't pass through solution region)
+      #    # - this is used by the eval_stream_func function
+      #    self._get_branch_cuts()
 
       return
    #######################################################
@@ -98,25 +104,26 @@ class dirichlet_fund_soln:
    #######################################################
 
    # #######################################################
-   # move this outside class to make it more general
-   # def calc_perimeter(self):
-   #    import numpy as np
+   # def _get_branch_cuts(self)
+   #    import numpy            as np
    #    import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
+   #    import geometry_planar  as GP
 
-   #    p0       = shgeom.Point(self.coords[0])
-   #    Nc       = len(self.coords)
-   #    P        = 0
-   #    spacings = []
-   #    for n in range(1,Nc):
-   #       p1 = shgeom.Point(self.coords[n])
-   #       ds = p0.distance(p1)
-   #       P  = P+ds
-   #       spacings.append(ds)
-   #       p0 = p1
+   #    sings       = self.singularities
+   #    poly        = shgeom.Polygon(sings)
+   #    Ns          = len(sings)
+   #    branch_cut  = Ns*[0]
 
-   #    self.spacings     = np.array(spacings)
-   #    self.resolution   = np.mean(self.spacings)
-   #    self.perimeter    = P
+   #    for i,sing in enumerate(sings):
+   #       th    = np.pi/2.+self.tangent_dirn[i]
+   #       isec  = GP.line_intersection_polygon(self.shapely_polygon,sing,th)
+   #       if isec.geom_type=='Point':
+   #          # only one intersection (1st point)
+   #          branch_cut[i]  = [(0,th)]
+   #       else:
+   #          # multiple
+   #          xy = list(isec.coords)
+
    #    return
    # #######################################################
 
