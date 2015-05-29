@@ -16,6 +16,190 @@ def area_polygon_euclidean(x,y):
 #########################################################
 
 #########################################################
+def line_splits_polygon(poly,isec,shortest=True):
+
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   # line should split polygon into
+   if 'shapely' in str(type(isec)):
+      isec  = list(isec.coords)
+
+   c0 = isec[0]
+   c1 = isec[-1]
+   p0 = shgeom.Point(c0)
+   p1 = shgeom.Point(c1)
+
+   i0    = None
+   i1    = None
+   lst   = list(poly.boundary.coords)
+   N     = len(lst)
+
+   if c0 in poly.boundary.coords: 
+      i0    = lst.index(c0)
+      i0m1  = lst.index(c0)
+   if c1 in poly.boundary.coords: 
+      i1    = lst.index(c1)
+      i1p1  = i1
+
+   
+   if i0 is None:
+      # c0 not already present:
+      # find the member of list that is closest:
+      d0 = p0.distance(poly)
+      for i,cc in enumerate(lst):
+         ip1   = np.mod(i+1,N)
+         lin   = shgeom.LineString([cc,lst[ip1]])
+
+         if p0.distance(lin)==d0:
+            i0    = ip1
+            i0m1  = i
+            break
+
+   if i1 is None:
+      # c1 not already present:
+      # find the member of list that is closest:
+      d1 = p1.distance(poly)
+      for i,cc in enumerate(lst):
+         ip1   = np.mod(i+1,N)
+         lin   = shgeom.LineString([cc,lst[ip1]])
+
+         if p1.distance(lin)==d1:
+            i1    = i
+            i1p1  = ip1
+            break
+
+   if i0<i1:
+      clst1 = lst[i0:i1+1]       # go anti-clockwise between points
+   else:
+      clst1 = lst[i0:]
+      clst1.extend(lst[:i1+1])
+
+   if i1p1<i0m1:
+      clst2 = lst[i1p1:i0m1+1]
+   else:
+      clst2 = lst[i1p1:]         # get rest of points (exclude i1, include i1p1)
+      clst2.extend(lst[:i0m1+1]) # get rest (include i0m1, not i0)
+
+   # reverse direction so i=0 corresp's to c0
+   clst2.reverse()
+
+   L1 = shgeom.LineString(clst1).length
+   L2 = shgeom.LineString(clst2).length
+
+   if shortest:
+      # choose shortest line
+      clst  = clst1
+      # if len(clst2)<len(clst):
+      if L2<L1:
+         clst  = clst2
+   else:
+      # choose longest line
+      clst  = clst1
+      # if len(clst2)>len(clst):
+      if L2>L1:
+         clst  = clst2
+
+   # make sure the initial points are included
+   if c0 not in clst:
+      clst.insert(0,c0)
+   if c1 not in clst:
+      clst.append(c1)
+   
+   return clst
+#########################################################
+
+#########################################################
+def line_splits_polygon_in2(pol,isec):
+
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   # line should split polygon into 2
+   if 'shapely' not in str(type(isec)):
+      isec  = shgeom.LineString(isec)
+
+   bb       = pol.boundary.union(isec)
+   MPlist   = []
+   MPlist2  = []
+   P0       = pol.boundary.coords[0]
+
+   for n,gg in enumerate(bb.geoms):
+
+      print(gg)
+      print(gg!=isec)
+      if gg!=isec:
+         if P0 not in gg.coords:
+            # normal polygon
+            print('normal polygon')
+            MPlist.append(shgeom.Polygon(gg))
+         else:
+            print('contains '+str(P0))
+            # boundary can be artificially split by 1st point also
+            # this list should be merged into one polygon later
+            MPlist2.extend(list(gg.coords))
+
+   # turn MPlist2 into shapely polygon and append to MPlist
+   MPlist.append(shgeom.Polygon(MPlist2))
+
+   return MPlist
+#########################################################
+
+#########################################################
+def line_intersection_polygon(coords,line_pt1,line_dir):
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   if type(line_pt1)!=type((0,0)):
+      raise ValueError('line_intersection_rectangle: input line_pt1 should be a tuple')
+   else:
+      x0 = line_pt1[0]
+      y0 = line_pt1[1]
+      p0 = shgeom.Point(line_pt1)
+
+   # make coords a shapely polygon and find intersection
+   pol   = shgeom.Polygon(coords)
+   P     = pol.length        # perimeter
+   D     = p0.distance(pol)  # shortest distance to rectangle
+
+   # make a linestring
+   L     = 2*(D+P)            # length of line - if it is in right direction it should intersect
+   u     = np.array([np.cos(line_dir),np.sin(line_dir)])
+   x1    = x0+u[0]*L
+   y1    = y0+u[1]*L
+   lin   = shgeom.LineString([line_pt1,(x1,y1)])
+
+   # intersection
+   isec  = lin.intersection(pol)
+
+   return isec
+#########################################################
+
+#########################################################
+def xy2polar_coords(x,y=None):
+   import numpy as np
+
+   use_tups = (y is None)
+   if use_tups:
+      # x is a tuple list
+      xy = np.array(x)
+      x  = xy[:,0]
+      y  = xy[:,1]
+
+   r  = np.sqrt(x*x+y*y)
+   th = np.arctan2(y,x)
+
+   if not use_tups:
+      out   = (r,th)
+   else:
+      # return list of tuples
+      # (in same way that input was passed in)
+      out   = xy2coords(r,th)
+
+   return out
+#########################################################
+
+#########################################################
 def vector_norm(v):
    import numpy as np
    return np.sqrt(v.dot(v))
