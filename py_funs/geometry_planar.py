@@ -16,7 +16,39 @@ def area_polygon_euclidean(x,y):
 #########################################################
 
 #########################################################
-def line_splits_polygon(poly,isec,shortest=True):
+def arctan2_branch(y,x=None,linedir=None):
+   # returns an angle in interval: linedir+(-pi,pi]
+
+   import numpy as np
+
+   if x is None:
+      # y is coord seq
+      print(y)
+      x,y      = np.array(y).transpose()
+      reshape  = 0
+   else:
+      Nx       = x.size
+      shp      = x.shape
+      x        = x.reshape((Nx))
+      y        = y.reshape((Nx))
+      reshape  = 1
+
+   if linedir is None:
+      linedir  = np.pi
+
+   rot   = np.pi-linedir # anti-clockwise rotation (towards negative real axis)
+   w     = np.log(np.exp(1j*rot)*(x+1j*y))-1j*rot
+
+   if reshape:
+      out   = w.imag.reshape(shp)
+   else:
+      out   = w.imag
+   
+   return out
+#########################################################
+
+#########################################################
+def line_splits_polygon_boundary(poly,isec,shortest=True):
 
    import shapely.geometry as shgeom
    import numpy as np
@@ -110,6 +142,94 @@ def line_splits_polygon(poly,isec,shortest=True):
 #########################################################
 
 #########################################################
+def line_splits_polygon(pol,line_pt1,linedir):
+
+   isec_types,\
+      branch_line = line_intersection_polygon(pol,line_pt1,linedir)
+
+   icl         = isec_types.crossing_lines
+   Ncl         = len(icl)
+   MPlist      = []
+
+   if Ncl>=1:
+      pol1,pol2   = line_splits_polygon_in2(pol,icl[0])
+
+      if Ncl==1:
+
+         ################################################################
+         # don't need to split further
+         # - just sort in decreasing size
+         if pol1.length>=pol2.length:
+            MPlist   = [pol1,pol2]
+         else:
+            MPlist   = [pol2,pol1]
+         ################################################################
+
+      else:
+
+         ################################################################
+         # loop over remaining crossing lines
+         for i in range(1,Ncl):
+            pol3,pol4   = line_splits_polygon_in2(pol,icl[i])
+            # split pol into another 2 poly's
+            if not pol3.intersects(pol1):
+               # pol3,pol1 are disjoint polygons
+               # NB ordering corresponds
+               MPlist.extend([pol1,pol3])
+
+               # => pol2,pol4 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol2.intersection(pol4)
+
+            elif not pol4.intersects(pol1):
+               # pol4,pol1 are disjoint polygons
+               MPlist.extend([pol1,pol4])
+
+               # => pol2,pol3 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol2.intersection(pol3)
+
+            elif not pol4.intersects(pol2):
+               # pol4,pol2 are disjoint polygons
+               MPlist.extend([pol2,pol4])
+
+               # => pol1,pol3 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol1.intersection(pol3)
+
+            else:
+               # pol3,pol2 are disjoint polygons
+               MPlist.extend([pol2,pol3])
+
+               # => pol1,pol4 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol1.intersection(pol4)
+
+            # list may have repeated members so reduce it each timestep
+            MPlist   = list(set(MPlist))
+         ################################################################
+
+         ################################################################
+         # loop through again to match ordering of MPlist to icl
+         MPlist1  = []
+         for lin in icl:
+            for poly in MPlist:
+               if lin.intersects(poly):
+                  MPlist1.append(poly)
+                  MPlist.remove(poly)
+                  break
+         ################################################################
+
+         ################################################################
+         # finished looping: pol is last polygon
+         # (connecting polygon)
+         MPlist1.append(pol)
+         ################################################################
+
+   return MPlist1,isec_types,branch_line
+#########################################################
+
+#########################################################
 def line_splits_polygon_in2(pol,isec):
 
    import shapely.geometry as shgeom
@@ -146,19 +266,100 @@ def line_splits_polygon_in2(pol,isec):
 #########################################################
 
 #########################################################
-def line_intersection_polygon(coords,line_pt1,line_dir):
+def line_intersection_polygon(pol,line_pt1,line_dir):
    import shapely.geometry as shgeom
    import numpy as np
 
+   #####################################################################
+   class intersection_types:
+      # sort out intersections into points, lines and tangent lines
+
+      def __init__(self,isec,pol):
+         self.tangent_points  = []
+         self.tangent_lines   = []
+         self.crossing_lines  = []
+
+         if isec.geom_type=='Point':
+            # intersection is a single point (line just touches curve)
+            # print('tangent point')
+            # print(ii)
+            self.tangent_points.append(isec)
+
+         elif isec.geom_type=='LineString':
+            # intersection is a single line
+            # print('line')
+
+            if isec.intersection(pol.boundary)==isec:
+               # intersection is part of the boundary
+               # (doesn't make a new polygon)
+               # print('tangent line')
+               # print(ii)
+               self.tangent_lines.append(isec)
+
+            else:
+               # intersection is not part of the boundary
+               # (will make a new polygon)
+               # print('crossing line')
+               # print(ii)
+               self.crossing_lines.append(isec)
+
+         else:
+            # collection
+            # print('collection')
+            # print(isec)
+
+            for ii in isec.geoms:
+               # print(ii.geom_type)
+
+               if ii.geom_type=='Point':
+                  # intersection is a single point (line just touches curve)
+                  # print('tangent point')
+                  # print(ii)
+                  self.tangent_points.append(ii)
+
+               elif ii.geom_type=='LineString':
+                  # intersection is a single line
+                  # print('line')
+
+                  if ii.intersection(pol.boundary)==ii:
+                     # intersection is part of the boundary
+                     # (doesn't make a new polygon)
+                     # print('tangent line')
+                     # print(ii)
+                     self.tangent_lines.append(ii)
+                  else:
+                     # intersection is not part of the boundary
+                     # (will make a new polygon)
+                     # print('crossing line')
+                     # print(ii)
+                     self.crossing_lines.append(ii)
+
+         # more information
+         self.number_of_crossing_lines = len(self.crossing_lines)
+         self.number_of_tangent_lines  = len(self.tangent_lines)
+         self.number_of_tangent_points = len(self.tangent_points)
+         self.number_of_geometries     = self.number_of_tangent_points+\
+                                         self.number_of_tangent_lines+\
+                                         self.number_of_crossing_lines
+
+         return
+      # finish of __init__
+      #####################################################################
+
+   # end of class
+   #####################################################################
+
    if type(line_pt1)!=type((0,0)):
-      raise ValueError('line_intersection_rectangle: input line_pt1 should be a tuple')
+      raise ValueError('line_intersection_polygon: input line_pt1 should be a tuple')
    else:
       x0 = line_pt1[0]
       y0 = line_pt1[1]
       p0 = shgeom.Point(line_pt1)
 
-   # make coords a shapely polygon and find intersection
-   pol   = shgeom.Polygon(coords)
+   # make pol a shapely polygon if it isn't already
+   if 'shapely' not in str(type(pol)):
+      pol   = shgeom.Polygon(pol)
+
    P     = pol.length        # perimeter
    D     = p0.distance(pol)  # shortest distance to rectangle
 
@@ -170,9 +371,10 @@ def line_intersection_polygon(coords,line_pt1,line_dir):
    lin   = shgeom.LineString([line_pt1,(x1,y1)])
 
    # intersection
-   isec  = lin.intersection(pol)
+   isec        = lin.intersection(pol)
+   isec_sorted = intersection_types(isec,pol)
 
-   return isec
+   return isec_sorted,lin
 #########################################################
 
 #########################################################
