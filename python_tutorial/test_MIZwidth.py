@@ -68,7 +68,7 @@ clev  = np.arange(Vmin,Vmax+dc,dc)
 if not os.path.exists(fdir):
    os.mkdir(fdir)
 
-if 1:
+if 0:
    fig   = plt.figure()
 
    # plot test solution:
@@ -96,13 +96,16 @@ if 1:
 
 if 1:
    # plot boundary values
-   fvals_ap1   = fun_sol.eval_solution(x[:-1],y[:-1])
-   fvals_ap    = fun_sol.func_vals_approx
    fig   = plt.figure()
-   ss = np.cumsum(fun_sol.spacings)
-   plt.plot(ss,fun_sol.func_vals)
-   plt.plot(ss,fvals_ap,'--r')
-   plt.plot(ss,fvals_ap1,'.g')
+   fun_sol.plot_solution(plot_boundary=True,pobj=plt,show=False)
+   #   x2,y2       = np.array(fun_sol.coords).transpose() # coords can be reversed
+   #   fvals_ap1   = fun_sol.eval_solution(x2,y2)
+   #   fvals_ap    = fun_sol.func_vals_approx
+   #   fig         = plt.figure()
+   #   ss          = fun_sol.get_arc_length()[:-1]
+   #   plt.plot(ss,fun_sol.func_vals,'.k')
+   #   plt.plot(ss,fvals_ap,'-b')
+   #   plt.plot(ss,fvals_ap1,'--r')
    figname  = fdir+'/test_bdy.png'
    print('\nSaving to figure '+figname+'\n')
    plt.savefig(figname)
@@ -120,7 +123,7 @@ if 1:
    plt.colorbar()
 
    # contours
-   plt.contour(X,Y,G,clev,colors='k')
+   plt.contour(X,Y,F,clev,colors='k')
 
    # plot boundary of region where Laplace's eqn will be solved
    SFU.plot_poly(poly,color='b',linewidth=2)
@@ -135,7 +138,7 @@ if 1:
    plt.close()
    fig.clf()
 
-if 1:
+if 0:
    # test tangent derivative
    F_s   = fun_sol.tangent_deriv
    ss    = np.cumsum(fun_sol.spacings)
@@ -152,7 +155,7 @@ if 1:
    plt.close()
    fig.clf()
 
-if 1:
+if 0:
    # test gradient:
    if not even:
       dy = .1
