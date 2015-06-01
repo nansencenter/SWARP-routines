@@ -7,16 +7,20 @@ def area_polygon_euclidean(x,y):
 
    # repeat last point
    if x[0]!=x[-1]:
-      x  = np.array(list(x).append(x[0]))
-      y  = np.array(list(y).append(y[0]))
+      x  = list(x)
+      x.append(x[0])
+      x  = np.array(x)
+      #
+      y  = list(y)
+      y.append(y[0])
+      y  = np.array(y)
 
    A  = x[:-1]*y[1:]-x[1:]*y[:-1]
-
    return .5*np.sum(A)
 #########################################################
 
 #########################################################
-def arctan2_branch(y,x=None,linedir=None):
+def arctan2_branch(y,x=None,branch_point=None,branch_dir=None):
    # returns an angle in interval: linedir+(-pi,pi]
 
    import numpy as np
@@ -33,10 +37,14 @@ def arctan2_branch(y,x=None,linedir=None):
       y        = y.reshape((Nx))
       reshape  = 1
 
-   if linedir is None:
-      linedir  = np.pi
+   if branch_dir is None:
+      branch_dir  = np.pi
 
-   rot   = np.pi-linedir # anti-clockwise rotation (towards negative real axis)
+   if branch_point is not None:
+      x  = x-branch_point[0]
+      y  = y-branch_point[1]
+
+   rot   = np.pi-branch_dir # anti-clockwise rotation (towards negative real axis)
    w     = np.log(np.exp(1j*rot)*(x+1j*y))-1j*rot
 
    if reshape:
@@ -45,6 +53,40 @@ def arctan2_branch(y,x=None,linedir=None):
       out   = w.imag
    
    return out
+#########################################################
+
+#########################################################
+def make_arctan2_cts(atan2):
+   import numpy as np
+
+   # on a polygon boundary (for example),
+   # arctan2 should be continuous (for it to be analytic inside the polygon)
+   
+   Nx    = len(atan2)
+   nvec  = np.arange(Nx)
+
+   #######################################################################
+   # check if branch cut intersects polygon (atan2 jumps by 2\pi):
+   diff        = 0*atan2
+   diff[:-1]   = atan2[1:]-atan2[:-1]
+   diff[-1]    = atan2[0] -atan2[-1]
+   #
+   jj = nvec[diff>1.5*np.pi]
+   for j in jj:
+      jp1         = np.mod(j+1,Nx)
+      atan2[jp1:] = atan2[jp1:]-2*np.pi
+
+   # check if branch cut intersects polygon (atan2 drops by 2\pi):
+   diff[:-1]   = atan2[1:]-atan2[:-1]
+   diff[-1]    = atan2[0] -atan2[-1]
+   #
+   jj = nvec[diff<-1.5*np.pi]
+   for j in jj:
+      jp1         = np.mod(j+1,Nx)
+      atan2[jp1:] = atan2[jp1:]+2*np.pi
+   #######################################################################
+
+   return atan2
 #########################################################
 
 #########################################################
@@ -457,17 +499,20 @@ def curve_info(coords,closed=True):
        th_vec.append(th)
        x0,y0   = x1,y1
 
-   if closed and coords[0]!=coords[-1]:
-      # last point on curve is first
+   if closed:
+      # last point on curve should be first
       x1,y1   = coords[0]
       dx      = x1-x0
       dy      = y1-y0
       #
       ds = np.sqrt(dx*dx+dy*dy)
       th = np.arctan2(dy,dx)
-      P  = P+ds
-      spacings.append(ds)
-      th_vec.append(th)
+      if ds>0.:
+         # last and first are different,
+         # so add them
+         P  = P+ds
+         spacings.append(ds)
+         th_vec.append(th)
 
    resolution   = np.mean(spacings)
    return P,resolution,np.array(spacings),np.array(th_vec)
