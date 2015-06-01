@@ -107,9 +107,9 @@ class arctan2_polygon:
          xc,yc = GP.coords2xy(dsk_c.centroid.coords)
          xd,yd = GP.coords2xy(dsk_d.centroid.coords)
 
-         Ac = GP.arctan2_branch(yc-y0,xc-x0,linedir=linedir)
-         Ad = GP.arctan2_branch(yd-y0,xd-x0,linedir=linedir)
-         Ai = GP.arctan2_branch(yi-y0,xi-x0,linedir=linedir)
+         Ac = GP.arctan2_branch(yc-y0,xc-x0,branch_dir=linedir)
+         Ad = GP.arctan2_branch(yd-y0,xd-x0,branch_dir=linedir)
+         Ai = GP.arctan2_branch(yi-y0,xi-x0,branch_dir=linedir)
 
          ##################################################################################################
          # correction inside the disjoint polygon
