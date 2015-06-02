@@ -13,3 +13,17 @@ netcdf_production/output/*
 #
 forecast_scripts/hidden/*
 forecast_scripts/test/*
+forecast_scripts/test_check/*
+forecast_scripts/out/*
+forecast_scripts/logs/*
+forecast_scripts/datelist.txt
+#
+python_tutorial/out
+python_tutorial/eg_TP4files
+validation/SWARP*
+#
+validation/ice_charts/test_outputs/*
+validation/ice_charts/test_inputs/*
+!validation/ice_charts/test_inputs/*.imz
+!validation/ice_charts/test_inputs/*.txt
+validation/ice_charts/test_inputs2/*

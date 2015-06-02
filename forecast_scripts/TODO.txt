@@ -1,3 +1,0 @@
-Save results after run
-Post-processing with hyc2proj
-Daily check to see if model has been deleted (from $TP4_REALTIME)

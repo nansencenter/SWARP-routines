@@ -5,7 +5,7 @@
 #PBS -S /bin/bash
 #
 # give the job a name
-#PBS -N "TP4x011fc"
+#PBS -N "TP4x012fc"
 #
 #  Specify the project the job belongs to
 #
@@ -49,6 +49,13 @@ EXEC=hycom
 # EXEC=hycom+pat
 # EXEC=hycom+apa
 
+# SWARP post-processing option
+# 0 - do nothing after postprocess.sh
+# 1 - run ice-only PP:
+#     /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+# 2 - run waves-in-ice PP:
+SWARP_PP=1
+
 # Enter directory from where the job was submitted
 cd $PBS_O_WORKDIR       ||  { echo "Could not go to dir $PBS_O_WORKDIR  "; exit 1; }
 
@@ -70,8 +77,24 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 ./postprocess.sh 
 
 # extra processing for SWARP forecasts
-echo "Proceeding with process_FCresults.sh"
-/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+if [ $SWARP_PP -eq 1 ]
+then
+   # SWARP post-processing - ice only version
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ice_only/process_FCresults.sh
+elif [ $SWARP_PP -eq 2 ]
+then
+   # SWARP post-processing - waves version
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/process_FCresults_wav.sh
+fi
+
+datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist.txt
+cday=$(cat $datelist | sed '1!d')
+cyear=$(cat $datelist | sed '3!d')
+
+# LAUNCH THE WAVE JOB ONLY IF WE HAVE ALREADY DOWNLOADED THE WAMNSEA PRODUCT
+if [ -f /work/shared/nersc/msc/WAMNSEA/$cyear/forecasts/wam_nsea.fc.$cday.nc ]
+then
+   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/run_forecast_wav.sh
+fi
 
 exit $?
-

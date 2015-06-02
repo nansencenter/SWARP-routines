@@ -1,0 +1,97 @@
+
+SIvalidate.R
+ Main validation R code
+ Required library:
+  RNetCDF
+ Calls processes from the following files:
+  biasDistance.R
+  categorizeNA.R
+  categorize.R
+  categoryOverlap.R
+  geoDistance.R
+  mapVector.R
+  MIZconfusionMatrix.R
+  ncVarSizes.R
+  RMSdistance.R
+  rootMeanSquare.R
+  setMIZgridX.R
+ Writes results to
+  SIconfusionResult.dat
+  SIvalidationResult.dat
+
+
+sample.sh
+ Sample script to run validation software, requires fimex
+
+iceChart.ncml
+ Input file for downloading TOPAZ results from THREDDS, used in sample.sh
+
+
+RESULTS:
+
+Contents of...
+
+
+  SIvalidationResult.dat :
+
+ one row for each day
+  col. 1: #hours since 2000-01-01 00:00:00
+  col. 2: day no. in present time series (starts at 1)
+  col. 3: day no. on file w/ ice chart data that matches model date
+  col. 4: RMS model-ice chart offset inside MIZ(*)
+  col. 5: RMS model-ice chart offset where ice chart & model overlaps
+  col. 6: length of observed ice edge, in #grids (model)
+  col. 7: length of modelled ice edge, in #grids (model)
+  col. 8: bias in distance from ice edge representation from model and ice
+           chart results; >0 when ice extent is larger in model (in km)
+  col. 9: RMS of distance from ice edge representation from model and
+           ice chart results (in km)
+  col. 10: #grids with ice chart ice conc. <0.1
+  col. 11: #grids with ice chart ice conc. in interval (0.1  ,0.35 )
+  col. 12: #grids with ice chart ice conc. in interval (0.35 ,0.625)
+  col. 13: #grids with ice chart ice conc. in interval (0.625,0.85 )
+  col. 14: #grids with ice chart ice conc. >0.85
+  col. 15: #grids with model ice conc. <0.1
+  col. 16: #grids with model ice conc. in interval (0.1  ,0.35 )
+  col. 17: #grids with model ice conc. in interval (0.35 ,0.625)
+  col. 18: #grids with model ice conc. in interval (0.625,0.85 )
+  col. 19: #grids with model ice conc. >0.85
+  col. 20: #grids with ice conc. <0.1                      in both prod.s
+  col. 21: #grids with ice conc. in interval (0.1  ,0.35 ) in both prod.s
+  col. 22: #grids with ice conc. in interval (0.35 ,0.625) in both prod.s
+  col. 23: #grids with ice conc. in interval (0.625,0.85 ) in both prod.s
+  col. 24: #grids with ice conc. >0.85                     in both prod.s
+ (*) MIZ (marginal ice zone) is here the region which is within 200km
+      of the region where the ice chart ice conc. is in the interval
+      (0.1,0.85)
+ Note that #grids are for model grids
+  (ice chart data are averaged over model grids)
+ NA values represent dates w/ no available ice chart data
+
+
+SIconfusionResult.dat :
+
+ Each group of 5 lines represent validation for one day. For lines
+ within a group:
+  line 1: #grids with model ice conc. <0.1
+  line 2: #grids with model ice conc. in interval (0.1  ,0.35 )
+  line 3: #grids with model ice conc. in interval (0.35 ,0.625)
+  line 4: #grids with model ice conc. in interval (0.625,0.85 )
+  line 5: #grids with model ice conc. >0.85
+  col. 1: #grids with ice chart ice conc. <0.1 outside MIZ(*)
+  col. 2: #grids with ice chart ice conc. <0.1 inside MIZ
+  col. 3: #grids with ice chart ice conc. in interval (0.1  ,0.35 )
+  col. 4: #grids with ice chart ice conc. in interval (0.35 ,0.625)
+  col. 5: #grids with ice chart ice conc. in interval (0.625,0.85 )
+  col. 6: #grids with ice chart ice conc. >0.85 inside MIZ
+  col. 7: #grids with ice chart ice conc. >0.85 outside MIZ(*)
+ (*) MIZ (marginal ice zone) is here the region which is within 200km
+      of the region where the ice chart ice conc. is in the interval
+      (0.1,0.85)
+ Note that #grids are for model grids
+  (ice chart data are averaged over model grids)
+ NOTE! For days with no available ice chart results, the #grids from
+       the model product for the various intervals are multiplied
+       by -1, and given on the "diagonal"
+       (col.s 2 and 6 are excluded from the analysis)
+

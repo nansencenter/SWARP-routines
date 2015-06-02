@@ -1,6 +1,8 @@
 #!/bin/bash
 # script to extract some variables from a netcdf file
 
+# NO NEED FOR A MAIL ALLERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
+
 #########################################################################
 tday=$1
 firstday=$2
@@ -9,13 +11,20 @@ dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 
 #extract start date/time of forecast
 # and put it into output filename
-odir=`pwd`  # output file will be placed in current directory
+odir=$(pwd)  # output file will be placed in current directory
 cd $dir0
 mkdir -p tmp
 
-echo " "
-echo "Unpacking files (ncpdq -U)..."
+# LOG
+log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/merge_log.txt
+if [ -f "$log" ]
+then
+   rm $log
+fi
+touch $log
 
+echo " "                                              >> $log
+echo "Unpacking files (ncpdq -U)..."                  >> $log
 
 flist=(*.nc)
 f=${flist[0]}
@@ -26,27 +35,27 @@ start_time=${f:18:2}0000 # HHMMSS
 for f in *.nc
 do
    cf=${f:9:8}
-   if [ $cf -ge $tday ]
+   if [ "$cf" -ge "$tday" ]
    then
       echo $f
       # unpack files to make sure that scale factors are same in each file
       ncpdq -U $f tmp/$f
    else
-      echo "*.nc older than actual date"
+      echo "*.nc older than actual date"              >> $log
    fi
 done
 
 #combine unpacked files
-echo " "
-echo "Combining unpacked files (ncrcat)..."
+echo " "                                              >> $log
+echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPiceonly_forecast_start${tday}T${start_time}Z.nc
+ofil=SWARPiceonly_forecast_start${tday}T.nc
 
 # make final file by repacking tmp.nc
-echo " "
-echo "Making $ofil (ncpdq)..."
+echo " "                                              >> $log
+echo "Making $ofil (ncpdq)..."                        >> $log
 ncpdq tmp.nc $ofil
 
 rm -r tmp tmp.nc
@@ -129,12 +138,12 @@ ncatted -O -h -a operational_status,global,c,c,"test"                         $o
 ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-ncrename -a bulletin_date,restart_date $ofil #clearer
+#ncrename -a bulletin_date,restart_date $ofil #clearer
 
 # delete old attribute(s)
 ncatted -a field_date,global,d,,                                              $ofil
 ncatted -a history,global,d,,                                                 $ofil
 ###########################################################################################
 
-mv /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf/$ofil /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output/
-
+mkdir -p /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
+mv $ofil ../final_output/

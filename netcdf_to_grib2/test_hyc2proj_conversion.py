@@ -11,7 +11,7 @@ import mod_grib2_setup as m_g2s
 
 ncgv        = m_rdg.nc_get_var
 KEEP_MASK   = 1
-DO_TEST     = 0
+DO_TEST     = 1
 
 #######################################################################
 if DO_TEST==1:
@@ -19,7 +19,7 @@ if DO_TEST==1:
    tindx    = 0#time index to test
    vindx    = 0#variable index to test
    #
-   PLOT_OPT = 0 # 0: no plot
+   PLOT_OPT = 2 # 0: no plot
                 # 1: simple plot with imshow
                 # 2: more complicated plot with basemap
 #######################################################################
