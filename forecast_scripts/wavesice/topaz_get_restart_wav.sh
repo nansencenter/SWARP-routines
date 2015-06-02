@@ -48,7 +48,7 @@ then
    then
       rm $wdir/TP4restart${pyear}*
    else
-      rm $wdir/TP4restart${cyear}_{$pday}*
+      rm $wdir/TP4restart${cyear}_${pday}*
    fi
    mv ${TP4restart}* $wdir/
 elif [ -f $wdir/${base_restart}.a ] && [ -f $wdir/${base_restart}.b ] && [ -f $wdir/${base_restart}ICE.uf ]
