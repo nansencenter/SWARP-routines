@@ -7,7 +7,7 @@ import numpy as np
 import subprocess
 from matplotlib import pyplot as plt 
 from mpl_toolkits.basemap import Basemap, cm
-from skimage import measure as ms
+from skimage import measure as msr
 from scipy.interpolate import griddata as grd
 
 sys.path.append('../py_funs')
@@ -44,8 +44,8 @@ def binary_diff(data1,data2,thresh):
 	odata[odata<thresh]		= 0
 	odata[odata>=thresh]	= 1	
 	ddata									= odata - mdata
-	#thenans								= np.isnan(ddata)
-	#ddata[thenans]				= 0
+	thenans								= np.isnan(ddata)
+	ddata[thenans]				= 0
 	return(ddata)
 ###########################################################################
 ###########################################################################
@@ -83,6 +83,7 @@ def get_stats(data,name):
 	return()
 ###########################################################################
 ###########################################################################
+# FINDS THE CONT OF THE MDL(2) AND THE CONT OF OSI(-2)
 def binary_cont(X,Y,D,O,M):
 	ND = np.copy(D)
 	for m,el in enumerate(X2):
@@ -106,36 +107,78 @@ def binary_cont(X,Y,D,O,M):
 					elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
 						ND[hor][ver] = -1
 	return(ND)
-###########################################################################
-
 ############################################################################
-class area_of_disagreement:
-	def __init__(self,area,perimeter,clon,clat,widths):
-		self.area				=	(self == -1 and self == 1).sum()
-		self.perimeter	=	perimeter
-		self.clon				=	clon
-		self.clat				= clat
-		self.widths			= widths
-	def contours2widths(self,[other arguments]):
-		
-	def dist_edges(D):
-	dist	= []
-	mdl		=	np.copy(D)
-	
-	for n,en in enumerate(D):
-		for m,em in enumerate(D[n]):
-			if
-			dist2 = np.zeros(shape=0)
-			dist4 = []
-			for m, em in enumerate(xf):
-				dist1 = np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
-				distt = [dist1,xf[m],yf[m]]
-				dist2 = np.append(dist2,distt)
-			dist3 = np.amin(dist2)
-			lon,lat = bm(xm[n],ym[n],inverse=True)
-			dist4 = [dist3,lon,lat]
-			dist.append(dist4)
-	return dist
+############################################################################
+def find_poly(D,O,M):
+	ND		= np.copy(D)
+	pos		= msr.find_contours(D,.9)
+	neg		= msr.find_contours(D,-.9)
+	poly	=[]
+#	for n,el in enumerate(neg):
+#		if len(neg[n]) > 5:
+#			poly.append(neg[n])
+#	for n,el in enumerate(pos):
+#		if len(pos[n]) > 5:
+#			poly.append(pos[n])	
+	pos				=	np.array(pos)
+	neg				= np.array(neg)
+	mdl_cont	= []
+	osi_cont	= []
+# now we need to distinguish the 2 borders
+	for num,pol in enumerate(pos):
+		for num2,pts in enumerate(pol):
+			pos_mdl	= []
+			pos_osi	= []
+			around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
+			for hor,ver in around:
+				if O[hor][ver] == M[hor][ver] == 1:
+					pos_mdl.append(pts)	
+				elif O[hor][ver] == M[hor][ver] == 0:
+					pos_osi.append(pts)
+			mdl_cont.append(pos_mdl)
+			osi_cont.append(pos_osi)
+	for num,pol in enumerate(neg):
+		for num2,pts in enumerate(pol):
+			neg_mdl	= []
+			neg_osi	= []
+			around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
+			for hor,ver in around:
+				if O[hor][ver] == M[hor][ver] == 1:
+					neg_mdl.append(pts)	
+				elif O[hor][ver] == M[hor][ver] == 0:
+					neg_osi.append(pts)
+			mdl_cont.append(neg_mdl)
+			osi_cont.append(neg_osi)
+	return(mdl_cont,osi_cont)
+#############################################################################
+###########################################################################
+#class area_of_disagreement:
+#	def __init__(self,area,perimeter,clon,clat,widths):
+#		self.area				=	(self == -1 and self == 1).sum()
+#		self.perimeter	=	perimeter
+#		self.clon				=	clon
+#		self.clat				= clat
+#		self.widths			= widths
+#	def contours2widths(self,[other arguments]):
+#		
+#	def dist_edges(D):
+#	dist	= []
+#	mdl		=	np.copy(D)
+#	
+#	for n,en in enumerate(D):
+#		for m,em in enumerate(D[n]):
+#			if
+#			dist2 = np.zeros(shape=0)
+#			dist4 = []
+#			for m, em in enumerate(xf):
+#				dist1 = np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
+#				distt = [dist1,xf[m],yf[m]]
+#				dist2 = np.append(dist2,distt)
+#			dist3 = np.amin(dist2)
+#			lon,lat = bm(xm[n],ym[n],inverse=True)
+#			dist4 = [dist3,lon,lat]
+#			dist.append(dist4)
+#	return dist
 ############################################################################
 ###########################################################################
 
