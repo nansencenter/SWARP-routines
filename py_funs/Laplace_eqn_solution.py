@@ -10,7 +10,7 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def __init__(self,coords,func_vals,solve_exactly=True):
+   def __init__(self,coords,func_vals,singularities=None):
       # initialise object
 
       import numpy as np
@@ -66,10 +66,18 @@ class dirichlet_fund_soln:
       self.buffer_resolution  = 16 # default buffer resolution
                                    # (number of segments used to approximate a quarter circle around a point.)
 
-      self.solve_exactly   = solve_exactly
-         # if True: number of singularities and number of boundary points should be the same
+      # self.solve_exactly   = solve_exactly
+      # # if True: number of singularities and number of boundary points should be the same
 
-      get_sings = True
+      if singularities is None:
+         get_sings = True
+      else:
+         get_sings                     = False
+         self.singularities            = singularities 
+         self.number_of_singularities  = len(self.singularities)
+         print('Number of boundary points : '+str(self.number_of_points))
+         print('Number of singularities   : '+str(self.number_of_singularities)+'\n')
+
       while get_sings:
          # May need a couple of repetitions if too few singularities are found
          get_sings   = self._get_singularities()
@@ -145,12 +153,15 @@ class dirichlet_fund_soln:
 
       self.number_of_singularities  = len(self.singularities)
 
-      # check the number of singularities:
-      if 0:
+      if 1:
+         # check the number of singularities:
          do_check = self._check_singularities()
       else:
-         do_check = False # accept automatically
+         # accept automatically
+         do_check = False
          print('Warning: not checking singularities')
+         print('Number of boundary points : '+str(self.number_of_points))
+         print('Number of singularities   : '+str(self.number_of_singularities)+'\n')
 
       return do_check
    #######################################################
@@ -166,14 +177,16 @@ class dirichlet_fund_soln:
 
       # set limits for N1
       Nthresh  = 100
-      frac     = .2
+      frac     = 1.2
+      # frac     = .2
 
-      if self.solve_exactly:
-         # number of singularities and number of boundary points should be the same
-         Ntarget  = N0
-      elif N0<=Nthresh:
+      # if self.solve_exactly:
+      #    # number of singularities and number of boundary points should be the same
+      #    # - this doesn't work too well - need more sing's
+      #    Ntarget  = N0
+      if N0<=Nthresh:
          # if N0<=Nthresh, try to get N1~N0
-         Ntarget  = N0
+         Ntarget  = N0+30
       else:
          # try to get N1~frac*N0, if frac*N0<Nthresh
          Ntarget  = int(np.max(np.round(frac*N0),Nthresh))
@@ -185,7 +198,7 @@ class dirichlet_fund_soln:
 
       check_again = False
       # NB this applies to the case where N1==Ntarget
-      # NB also if N1==Ntarget, we can reduce N1 to Ntarget exactly in 1 go
+      # NB also if N1>=Ntarget, we can reduce N1 to Ntarget exactly in 1 go
 
       if N1>Ntarget:
 
@@ -208,42 +221,37 @@ class dirichlet_fund_soln:
                s0 = s1
                s1 = s0+s_target
 
-         # no need to call _get_singularities again in this case
-         N2 = len(new_coords)
-         if not self.solve_exactly:
+         #######################################################################
+         # update list of singularities:
+         N2                            = len(new_coords)
+         self.singularities            = new_coords
+         self.number_of_singularities  = N2
+         #######################################################################
+
+         if N2>Ntarget:
 
             #######################################################################
-            # update list of singularities:
+            # delete a few points randomly from new_coords to get right number
+            Ndel  = N2-Ntarget
+            while Ndel>0:
+               idel  = np.random.randint(N2)
+               new_coords.remove(new_coords[idel])
+               N2    = len(new_coords)
+               Ndel  = N2-Ntarget
+
+            # update list of singularities
             self.singularities            = new_coords
             self.number_of_singularities  = N2
             #######################################################################
 
-         elif N2>N0:
-
-            #######################################################################
-            # if self solve_exactly:
-            # delete a few points randomly from new_coords to get right number
-            Ndel  = N2-N0
-            while Ndel>0:
-               idel        = np.random.randint(N2)
-               new_coords  = list(new_coords).remove(new_coords[idel])
-               N2          = len(new_coords)
-               Ndel        = N2-N0
-
-            # update list of singularities
-            self.singularities            = np.array(new_coords)
-            self.number_of_singularities  = N2
-            #######################################################################
-
          ##########################################################################
-         else:
+         elif N2<Ntarget:
 
             #######################################################################
-            # if self solve_exactly:
             # get some more points from self.singularities
             # *this adds more at start preferentially
             # but shouldn't matter since it won't be too many
-            Nadd  = N0-N2
+            Nadd  = Ntarget-N2
             iadd  = 0
 
             for coord in self.singularities:
@@ -255,7 +263,7 @@ class dirichlet_fund_soln:
                   new_coords  = list(new_coords)
                   new_coords.insert(iadd,coord)
                   N2          = len(new_coords)
-                  Nadd        = N0-N2
+                  Nadd        = Ntarget-N2
 
                   # new element so still need to increase point at which to place 
                   iadd  = iadd+1
@@ -276,6 +284,8 @@ class dirichlet_fund_soln:
 
          ##########################################################################
          # set up for another iteration
+         # TODO this may not be the best way
+         # - perhaps add more points on line segments of polygon
          fac                     = int(np.ceil(1.2*Nmax/float(N1)))
          self.buffer_resolution  = fac*self.buffer_resolution
 
@@ -306,8 +316,6 @@ class dirichlet_fund_soln:
 
       # solve in a least squares sense:
       # M*a=self.func_vals
-      print(M.shape)
-      print(self.func_vals.shape)
       self.sing_coeffs  = np.linalg.lstsq(M,self.func_vals)[0]
       return
    #######################################################
@@ -542,8 +550,39 @@ class dirichlet_fund_soln:
 
       return out
    #######################################################
-
 ##########################################################
+
+#######################################################
+def dirichlet_stream_func(coords=None,potential=None,func_vals=None):
+   # CALL: stream = dirichlet_stream_func(potential=potential)
+   # inputs:
+   # > potential: dirichlet_fund_soln object
+   #     - solution to Dirichlet problem with boundary values potential.func_vals
+   #
+   # OR:
+   #
+   # CALL: stream = dirichlet_stream_func(coords=coords,func_vals=None):
+   # inputs:
+   # > coords: list of points (polygon boundary)
+   # > func_vals: value of function at each point in coords
+   # use these to calculate "potential" object
+   #     - solution to Dirichlet problem with boundary values func_vals
+   # 
+   # outputs:
+   # > stream: dirichlet_fund_soln object
+   #     -  solution to Dirichlet problem with boundary values potential.stream_func_bdy
+
+   if potential is None:
+      if (func_vals is None) or (coords is None):
+         raise ValueError('Please pass in either potential or func_vals and coords')
+      else:
+         potential   = dirichlet_fund_soln(coords,func_vals)
+
+   stream   = dirichlet_fund_soln(1*potential.coords,\
+      1*potential.stream_func_bdy,singularities=1*potential.singularities)
+
+   return stream
+#######################################################
 
 ##################################################
 class multipole:
