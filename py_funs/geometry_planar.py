@@ -1,9 +1,446 @@
 #########################################################
 def area_polygon_euclidean(x,y):
    # area of a polygon in Euclidean space
-   A  = x[:-1]*y[1:]-x[1:]*y[:-1]
+   # - negative if traveling in a clockwise direction
+   # http://www.wikihow.com/Calculate-the-Area-of-a-Polygon
+   import numpy as np
 
+   # repeat last point
+   if x[0]!=x[-1]:
+      x  = list(x)
+      x.append(x[0])
+      x  = np.array(x)
+      #
+      y  = list(y)
+      y.append(y[0])
+      y  = np.array(y)
+
+   A  = x[:-1]*y[1:]-x[1:]*y[:-1]
    return .5*np.sum(A)
+#########################################################
+
+#########################################################
+def arctan2_branch(y,x=None,branch_point=None,branch_dir=None):
+   # returns an angle in interval: linedir+(-pi,pi]
+
+   import numpy as np
+
+   if x is None:
+      # y is coord seq
+      print(y)
+      x,y      = np.array(y).transpose()
+      reshape  = 0
+   else:
+      Nx       = x.size
+      shp      = x.shape
+      x        = x.reshape((Nx))
+      y        = y.reshape((Nx))
+      reshape  = 1
+
+   if branch_dir is None:
+      branch_dir  = np.pi
+
+   if branch_point is not None:
+      x  = x-branch_point[0]
+      y  = y-branch_point[1]
+
+   rot   = np.pi-branch_dir # anti-clockwise rotation (towards negative real axis)
+   w     = np.log(np.exp(1j*rot)*(x+1j*y))-1j*rot
+
+   if reshape:
+      out   = w.imag.reshape(shp)
+   else:
+      out   = w.imag
+   
+   return out
+#########################################################
+
+#########################################################
+def make_arctan2_cts(atan2):
+   import numpy as np
+
+   # on a polygon boundary (for example),
+   # arctan2 should be continuous (for it to be analytic inside the polygon)
+   
+   Nx    = len(atan2)
+   nvec  = np.arange(Nx)
+
+   #######################################################################
+   # check if branch cut intersects polygon (atan2 jumps by 2\pi):
+   diff        = 0*atan2
+   diff[:-1]   = atan2[1:]-atan2[:-1]
+   diff[-1]    = atan2[0] -atan2[-1]
+   #
+   jj = nvec[diff>1.5*np.pi]
+   for j in jj:
+      jp1         = np.mod(j+1,Nx)
+      atan2[jp1:] = atan2[jp1:]-2*np.pi
+
+   # check if branch cut intersects polygon (atan2 drops by 2\pi):
+   diff[:-1]   = atan2[1:]-atan2[:-1]
+   diff[-1]    = atan2[0] -atan2[-1]
+   #
+   jj = nvec[diff<-1.5*np.pi]
+   for j in jj:
+      jp1         = np.mod(j+1,Nx)
+      atan2[jp1:] = atan2[jp1:]+2*np.pi
+   #######################################################################
+
+   return atan2
+#########################################################
+
+#########################################################
+def line_splits_polygon_boundary(poly,isec,shortest=True):
+
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   # line should split polygon into
+   if 'shapely' in str(type(isec)):
+      isec  = list(isec.coords)
+
+   c0 = isec[0]
+   c1 = isec[-1]
+   p0 = shgeom.Point(c0)
+   p1 = shgeom.Point(c1)
+
+   i0    = None
+   i1    = None
+   lst   = list(poly.boundary.coords)
+   N     = len(lst)
+
+   if c0 in poly.boundary.coords: 
+      i0    = lst.index(c0)
+      i0m1  = lst.index(c0)
+   if c1 in poly.boundary.coords: 
+      i1    = lst.index(c1)
+      i1p1  = i1
+
+   
+   if i0 is None:
+      # c0 not already present:
+      # find the member of list that is closest:
+      d0 = p0.distance(poly)
+      for i,cc in enumerate(lst):
+         ip1   = np.mod(i+1,N)
+         lin   = shgeom.LineString([cc,lst[ip1]])
+
+         if p0.distance(lin)==d0:
+            i0    = ip1
+            i0m1  = i
+            break
+
+   if i1 is None:
+      # c1 not already present:
+      # find the member of list that is closest:
+      d1 = p1.distance(poly)
+      for i,cc in enumerate(lst):
+         ip1   = np.mod(i+1,N)
+         lin   = shgeom.LineString([cc,lst[ip1]])
+
+         if p1.distance(lin)==d1:
+            i1    = i
+            i1p1  = ip1
+            break
+
+   if i0<i1:
+      clst1 = lst[i0:i1+1]       # go anti-clockwise between points
+   else:
+      clst1 = lst[i0:]
+      clst1.extend(lst[:i1+1])
+
+   if i1p1<i0m1:
+      clst2 = lst[i1p1:i0m1+1]
+   else:
+      clst2 = lst[i1p1:]         # get rest of points (exclude i1, include i1p1)
+      clst2.extend(lst[:i0m1+1]) # get rest (include i0m1, not i0)
+
+   # reverse direction so i=0 corresp's to c0
+   clst2.reverse()
+
+   L1 = shgeom.LineString(clst1).length
+   L2 = shgeom.LineString(clst2).length
+
+   if shortest:
+      # choose shortest line
+      clst  = clst1
+      # if len(clst2)<len(clst):
+      if L2<L1:
+         clst  = clst2
+   else:
+      # choose longest line
+      clst  = clst1
+      # if len(clst2)>len(clst):
+      if L2>L1:
+         clst  = clst2
+
+   # make sure the initial points are included
+   if c0 not in clst:
+      clst.insert(0,c0)
+   if c1 not in clst:
+      clst.append(c1)
+   
+   return clst
+#########################################################
+
+#########################################################
+def line_splits_polygon(pol,line_pt1,linedir):
+
+   isec_types,\
+      branch_line = line_intersection_polygon(pol,line_pt1,linedir)
+
+   icl         = isec_types.crossing_lines
+   Ncl         = len(icl)
+   MPlist      = []
+
+   if Ncl>=1:
+      pol1,pol2   = line_splits_polygon_in2(pol,icl[0])
+
+      if Ncl==1:
+
+         ################################################################
+         # don't need to split further
+         # - just sort in decreasing size
+         if pol1.length>=pol2.length:
+            MPlist   = [pol1,pol2]
+         else:
+            MPlist   = [pol2,pol1]
+         ################################################################
+
+      else:
+
+         ################################################################
+         # loop over remaining crossing lines
+         for i in range(1,Ncl):
+            pol3,pol4   = line_splits_polygon_in2(pol,icl[i])
+            # split pol into another 2 poly's
+            if not pol3.intersects(pol1):
+               # pol3,pol1 are disjoint polygons
+               # NB ordering corresponds
+               MPlist.extend([pol1,pol3])
+
+               # => pol2,pol4 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol2.intersection(pol4)
+
+            elif not pol4.intersects(pol1):
+               # pol4,pol1 are disjoint polygons
+               MPlist.extend([pol1,pol4])
+
+               # => pol2,pol3 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol2.intersection(pol3)
+
+            elif not pol4.intersects(pol2):
+               # pol4,pol2 are disjoint polygons
+               MPlist.extend([pol2,pol4])
+
+               # => pol1,pol3 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol1.intersection(pol3)
+
+            else:
+               # pol3,pol2 are disjoint polygons
+               MPlist.extend([pol2,pol3])
+
+               # => pol1,pol4 are big ones
+               # => reduce size of big polygon "pol"
+               pol   = pol1.intersection(pol4)
+
+            # list may have repeated members so reduce it each timestep
+            MPlist   = list(set(MPlist))
+         ################################################################
+
+         ################################################################
+         # loop through again to match ordering of MPlist to icl
+         MPlist1  = []
+         for lin in icl:
+            for poly in MPlist:
+               if lin.intersects(poly):
+                  MPlist1.append(poly)
+                  MPlist.remove(poly)
+                  break
+         ################################################################
+
+         ################################################################
+         # finished looping: pol is last polygon
+         # (connecting polygon)
+         MPlist1.append(pol)
+         ################################################################
+
+   return MPlist1,isec_types,branch_line
+#########################################################
+
+#########################################################
+def line_splits_polygon_in2(pol,isec):
+
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   # line should split polygon into 2
+   if 'shapely' not in str(type(isec)):
+      isec  = shgeom.LineString(isec)
+
+   bb       = pol.boundary.union(isec)
+   MPlist   = []
+   MPlist2  = []
+   P0       = pol.boundary.coords[0]
+
+   for n,gg in enumerate(bb.geoms):
+
+      print(gg)
+      print(gg!=isec)
+      if gg!=isec:
+         if P0 not in gg.coords:
+            # normal polygon
+            print('normal polygon')
+            MPlist.append(shgeom.Polygon(gg))
+         else:
+            print('contains '+str(P0))
+            # boundary can be artificially split by 1st point also
+            # this list should be merged into one polygon later
+            MPlist2.extend(list(gg.coords))
+
+   # turn MPlist2 into shapely polygon and append to MPlist
+   MPlist.append(shgeom.Polygon(MPlist2))
+
+   return MPlist
+#########################################################
+
+#########################################################
+def line_intersection_polygon(pol,line_pt1,line_dir):
+   import shapely.geometry as shgeom
+   import numpy as np
+
+   #####################################################################
+   class intersection_types:
+      # sort out intersections into points, lines and tangent lines
+
+      def __init__(self,isec,pol):
+         self.tangent_points  = []
+         self.tangent_lines   = []
+         self.crossing_lines  = []
+
+         if isec.geom_type=='Point':
+            # intersection is a single point (line just touches curve)
+            # print('tangent point')
+            # print(ii)
+            self.tangent_points.append(isec)
+
+         elif isec.geom_type=='LineString':
+            # intersection is a single line
+            # print('line')
+
+            if isec.intersection(pol.boundary)==isec:
+               # intersection is part of the boundary
+               # (doesn't make a new polygon)
+               # print('tangent line')
+               # print(ii)
+               self.tangent_lines.append(isec)
+
+            else:
+               # intersection is not part of the boundary
+               # (will make a new polygon)
+               # print('crossing line')
+               # print(ii)
+               self.crossing_lines.append(isec)
+
+         else:
+            # collection
+            # print('collection')
+            # print(isec)
+
+            for ii in isec.geoms:
+               # print(ii.geom_type)
+
+               if ii.geom_type=='Point':
+                  # intersection is a single point (line just touches curve)
+                  # print('tangent point')
+                  # print(ii)
+                  self.tangent_points.append(ii)
+
+               elif ii.geom_type=='LineString':
+                  # intersection is a single line
+                  # print('line')
+
+                  if ii.intersection(pol.boundary)==ii:
+                     # intersection is part of the boundary
+                     # (doesn't make a new polygon)
+                     # print('tangent line')
+                     # print(ii)
+                     self.tangent_lines.append(ii)
+                  else:
+                     # intersection is not part of the boundary
+                     # (will make a new polygon)
+                     # print('crossing line')
+                     # print(ii)
+                     self.crossing_lines.append(ii)
+
+         # more information
+         self.number_of_crossing_lines = len(self.crossing_lines)
+         self.number_of_tangent_lines  = len(self.tangent_lines)
+         self.number_of_tangent_points = len(self.tangent_points)
+         self.number_of_geometries     = self.number_of_tangent_points+\
+                                         self.number_of_tangent_lines+\
+                                         self.number_of_crossing_lines
+
+         return
+      # finish of __init__
+      #####################################################################
+
+   # end of class
+   #####################################################################
+
+   if type(line_pt1)!=type((0,0)):
+      raise ValueError('line_intersection_polygon: input line_pt1 should be a tuple')
+   else:
+      x0 = line_pt1[0]
+      y0 = line_pt1[1]
+      p0 = shgeom.Point(line_pt1)
+
+   # make pol a shapely polygon if it isn't already
+   if 'shapely' not in str(type(pol)):
+      pol   = shgeom.Polygon(pol)
+
+   P     = pol.length        # perimeter
+   D     = p0.distance(pol)  # shortest distance to rectangle
+
+   # make a linestring
+   L     = 2*(D+P)            # length of line - if it is in right direction it should intersect
+   u     = np.array([np.cos(line_dir),np.sin(line_dir)])
+   x1    = x0+u[0]*L
+   y1    = y0+u[1]*L
+   lin   = shgeom.LineString([line_pt1,(x1,y1)])
+
+   # intersection
+   isec        = lin.intersection(pol)
+   isec_sorted = intersection_types(isec,pol)
+
+   return isec_sorted,lin
+#########################################################
+
+#########################################################
+def xy2polar_coords(x,y=None):
+   import numpy as np
+
+   use_tups = (y is None)
+   if use_tups:
+      # x is a tuple list
+      xy = np.array(x)
+      x  = xy[:,0]
+      y  = xy[:,1]
+
+   r  = np.sqrt(x*x+y*y)
+   th = np.arctan2(y,x)
+
+   if not use_tups:
+      out   = (r,th)
+   else:
+      # return list of tuples
+      # (in same way that input was passed in)
+      out   = xy2coords(r,th)
+
+   return out
 #########################################################
 
 #########################################################
@@ -17,25 +454,69 @@ def unit_vector(v):
    norm  = vector_norm(v)
    return v/norm
 #########################################################
+
+#########################################################
 def calc_perimeter(coords):
    import numpy as np
-   import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
 
-   p0       = shgeom.Point(coords[0])
-   Nc       = len(coords)
-   P        = 0
-   spacings = []
+   x0,y0 = coords[0]
+   Nc    = len(coords)
+   P     = 0 # perimeter
+
    for n in range(1,Nc):
-       p1 = shgeom.Point(coords[n])
-       ds = p0.distance(p1)
+       x1,y1   = coords[n]
+       dx      = x1-x0
+       dy      = y1-y0
+       #
+       ds = np.sqrt(dx*dx+dy*dy)
+       th = np.atan2(dy,dx)
+       P  = P+ds
+       #
+       x0,y0   = x1,y1
+
+   return P
+#########################################################
+
+#########################################################
+def curve_info(coords,closed=True):
+   import numpy as np
+
+   x0,y0 = coords[0]
+   Nc    = len(coords)
+   P     = 0   # perimeter
+
+   th_vec   = []  # direction of tangent to curve
+   spacings = []  # distance between points
+   for n in range(1,Nc):
+       x1,y1   = coords[n]
+       dx      = x1-x0
+       dy      = y1-y0
+       #
+       ds = np.sqrt(dx*dx+dy*dy)
+       th = np.arctan2(dy,dx)
        P  = P+ds
        spacings.append(ds)
-       p0 = p1
+       th_vec.append(th)
+       x0,y0   = x1,y1
 
-   spacings     = np.array(spacings)
+   if closed:
+      # last point on curve should be first
+      x1,y1   = coords[0]
+      dx      = x1-x0
+      dy      = y1-y0
+      #
+      ds = np.sqrt(dx*dx+dy*dy)
+      th = np.arctan2(dy,dx)
+      if ds>0.:
+         # last and first are different,
+         # so add them
+         P  = P+ds
+         spacings.append(ds)
+         th_vec.append(th)
+
    resolution   = np.mean(spacings)
-   perimeter    = P
-   return perimeter,spacings,resolution
+   return P,resolution,np.array(spacings),np.array(th_vec)
+#########################################################
 
 #########################################################
 def xy2coords(x,y):
@@ -47,247 +528,16 @@ def xy2coords(x,y):
 #########################################################
 
 #########################################################
-class dirichlet_fund_soln:
-   # solve Dirichlet problem to get coefficients of expansion
-   # F(z)=\sum_n.a_n.log|z-z_n|
-   # (F satisfies Laplace's eqn)
-   # this functions solves it and makes the mapping F
-   
-   #######################################################
-   # INITIALISATION
-   #######################################################
-
-   #######################################################
-   def __init__(self,coords,func_vals):
-      # initialise object
-
-      import numpy as np
-      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-
-      self.coords    = coords
-      N0             = len(coords)
-      self.length    = N0
-      self.func_vals = func_vals
-      self.perimeter,self.spacings,self.resolution = calc_perimeter(coords) # gets spacings between points and perimeter
-      #
-      self.shapely_polygon  = shgeom.Polygon(coords)
-
-      # get points around boundary of polygon, then
-      # expand points by an amount related to the spacings of the coords
-      self.buffer_resolution  = 16 # default buffer resolution
-                                   # (number of segments used to approximate a quarter circle around a point.)
-      get_sings = True
-      while get_sings:
-         get_sings   = self._get_singularities()
-
-      # solve Laplace's eqn (get a_n)
-      self.solve_laplace_eqn()
-
-      return
-   #######################################################
-
-   #######################################################
-   # FUNCTIONS FOR INITIALISATION OF THE PLANE BELOW:
-   #######################################################
-
-   #######################################################
-   def _get_singularities(self):
-
-      bufres   = self.buffer_resolution
-      eps      = self.resolution/2.
-      poly     = self.shapely_polygon.buffer(eps,resolution=bufres)
-
-      # put singularities (z_n) on the boundary of expanded polygon
-      self.singularities            = poly.exterior.coords
-      N1                            = len(self.singularities)
-      self.number_of_singularities  = N1
-
-      # check the number of singularities:
-      do_check = self._check_singularities()
-      # do_check = False # accept automatically
-
-      return do_check
-   #######################################################
-
-   #######################################################
-   def _check_singularities(self):
-      # don't want too many singularities
-      import numpy as np
-
-      N0 = self.length
-      N1 = self.number_of_singularities
-
-      # set limits for N1
-      Nthresh  = 100
-      frac     = .2
-      if N0<=Nthresh:
-         # if N0<=Nthresh, try to get N1~N0
-         Ntarget  = N0
-      else:
-         # try to get N1~frac*N0, if frac*N0<Nthresh
-         Ntarget  = int(np.max(np.round(frac*N0),Nthresh))
-
-      if N1>Ntarget:
-         # reduce the number of sing's by increasing spacing between points
-         coords                        = self.singularities
-         perimeter,spacings,resolution = calc_perimeter(coords)
-         #
-         s_target    = N1/float(Ntarget)*resolution # increase mean spacing between points
-         new_coords  = [coords[0]]
-         #
-         ss = 0
-         s0 = 0
-         s1 = s0+s_target
-         for n,c0 in enumerate(coords[1:]):
-            ss = ss+spacings[n]
-            if ss>=s1:
-               new_coords.append(c0)
-               s0 = s1
-               s1 = s0+s_target
-
-         # update list of singularities:
-         self.singularities            = new_coords
-         self.number_of_singularities  = len(new_coords)
-
-         # no need to call _get_singularities again
-         check_again = False
-      elif N1<Ntarget:
-         fac                     = int(np.ceil(1.2*Nmax/float(N1)))
-         self.buffer_resolution  = fac*self.buffer_resolution
-
-         # need to call _get_singularities again,
-         # to reset the singularities and check them
-         check_again = True
-
-      return check_again
-   #######################################################
-
-   # #######################################################
-   # move this outside class to make it more general
-   # def calc_perimeter(self):
-   #    import numpy as np
-   #    import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-
-   #    p0       = shgeom.Point(self.coords[0])
-   #    Nc       = len(self.coords)
-   #    P        = 0
-   #    spacings = []
-   #    for n in range(1,Nc):
-   #       p1 = shgeom.Point(self.coords[n])
-   #       ds = p0.distance(p1)
-   #       P  = P+ds
-   #       spacings.append(ds)
-   #       p0 = p1
-
-   #    self.spacings     = np.array(spacings)
-   #    self.resolution   = np.mean(self.spacings)
-   #    self.perimeter    = P
-   #    return
-   # #######################################################
-
-   #######################################################
-   def solve_laplace_eqn(self):
-      import numpy as np
-      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-
-      Nc = len(self.coords)
-      Ns = len(self.singularities)
-      M  = np.zeros((Nc,Ns))
-      for m,c0 in enumerate(self.coords): # rows of matrix (eqn's)
-         p0 = shgeom.Point(c0)
-         for n,c1 in enumerate(self.singularities): # cols of matrix (var's)
-            p1       = shgeom.Point(c1)
-            R        = p0.distance(p1)
-            M[m,n]   = np.log(R)
-
-      # solve in a least squares sense:
-      # M*a=self.func_vals
-      self.sing_coeffs  = np.linalg.lstsq(M,self.func_vals)[0]
-      return
-   #######################################################
-
-   #######################################################
-   # EXTERNAL FUNCTIONS THE CLASS PROVIDES
-   #######################################################
-
-   #######################################################
-   def eval_solution(self,x,y):
-
-      import numpy as np
-      from shapely.prepared import prep   # want "contains" function
-      import shapely.geometry as shgeom
-
-      Nx    = x.size
-      F     = np.zeros(Nx)
-      shp   = x.shape
-      x     = x.reshape(Nx)
-      y     = y.reshape(Nx)
-
-      poly2 = prep(self.shapely_polygon)
-      for m in range(Nx):
-         # loop over points to evaluate F at
-         p0 = shgeom.Point((x[m],y[m]))
-
-         # check if p0 is inside the domain
-         if poly2.intersects(p0):
-            # add contribution from each singularity
-            for n,c1 in enumerate(self.singularities): # singularities
-               p1    = shgeom.Point(c1)
-               R     = p0.distance(p1)
-               F[m]  = F[m]+self.sing_coeffs[n]*np.log(R)
-         else:
-            F[m]  = np.nan
-
-      return F.reshape(shp)
-   #######################################################
-
-   #######################################################
-   def plot_solution(self,pobj=None,plot_boundary=True):
-      import numpy as np
-      import shapefile_utils as SFU
-
-      if pobj is None:
-         # set a plot object if none exists
-         from matplotlib import pyplot as pobj
-      
-      poly  = self.shapely_polygon
-      if plot_boundary:
-         # just plot values of F at boundary
-         ss = np.concatenate([[0],self.spacings])
-         pobj.plot(ss,self.func_vals,'.k',markersize=1.5)
-         # 
-         x,y   = poly.exterior.boundary.coords.xy
-         F     = self.eval_function(x,y)
-         pobj.plot(ss,self.func_vals,'b')
-      else:
-         # plot F everywhere
-         SFU.plot_polygon(poly,color='k',linewidth=2)
-         bbox  = poly.bbox
-         eps   = self.resolution/2.
-
-         # get a grid to plot F on:
-         x0 = bbox[0]
-         y0 = bbox[1]
-         x1 = bbox[2]
-         y1 = bbox[3]
-         x  = np.arange(x0,x1+eps,eps)
-         y  = np.arange(y0,y1+eps,eps)
-
-         # make pcolor/contour plot
-         nlevels  = 10
-         X,Y      = np.meshgrid(x,y)
-         F        = self.eval_solution(X,Y)
-         pobj.pcolor(X,Y,F)
-         pobj.contour(X,Y,F,nlevels)
-
-      return
-   #######################################################
-
-##########################################################
+def coords2xy(coords):
+   # convert list of tuples: [(x[0],y[0]),(x[1],y[1]),...]
+   # to x,y numpy arrays
+   import numpy as np
+   x,y   = np.array(coords).transpose()
+   return x,y
+#########################################################
 
 ##########################################################
 class plane:
-
 
    #######################################################
    # INITIALISATION
