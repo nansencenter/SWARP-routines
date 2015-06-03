@@ -76,7 +76,6 @@ def convertlat_geodetic2conformal(e,phi,inverse=False,radians=True):
    return chi
 #######################################################
 
-
 #######################################################
 def greatcircledist(lat1, lon1, lat2, lon2, R):
 
@@ -87,8 +86,18 @@ def greatcircledist(lat1, lon1, lat2, lon2, R):
    # length and has the same units as the radius of the sphere, R.  (If R is
    # 1, then RNG is effectively arc length in radians.)
 
-   a     = pow( np.sin((lat2-lat1)/2),2) + np.cos(lat1)*np.cos(lat2)*pow(np.sin((lon2-lon1)/2.),2)
+   a     = pow( np.sin((lat2-lat1)/2.),2) + np.cos(lat1)*np.cos(lat2)*pow(np.sin((lon2-lon1)/2.),2)
    rng   = R*2.*np.arctan2(np.sqrt(a),np.sqrt(1 - a))
+
+   # more accurate formula for close points
+   nvec  = range(len(rng))
+   for n in nvec[rng<5.e3]:
+      dphi     = lat2[n]-lat1[n]
+      dlam     = lon2[n]-lon1[n]
+      rng[n]  = R*2*np.arcsin(np.sqrt(\
+         pow(np.sin(dphi/2),2)+np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
+         ))
+   
    return rng
 #######################################################
 
