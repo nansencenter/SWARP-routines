@@ -109,76 +109,109 @@ def binary_cont(X,Y,D,O,M):
 	return(ND)
 ############################################################################
 ############################################################################
-def find_poly(D,O,M):
-	ND		= np.copy(D)
-	pos		= msr.find_contours(D,.9)
-	neg		= msr.find_contours(D,-.9)
-	poly	=[]
-#	for n,el in enumerate(neg):
-#		if len(neg[n]) > 5:
-#			poly.append(neg[n])
-#	for n,el in enumerate(pos):
-#		if len(pos[n]) > 5:
-#			poly.append(pos[n])	
-	pos				=	np.array(pos)
-	neg				= np.array(neg)
-	mdl_cont	= []
-	osi_cont	= []
-# now we need to distinguish the 2 borders
-	for num,pol in enumerate(pos):
-		for num2,pts in enumerate(pol):
-			pos_mdl	= []
-			pos_osi	= []
-			around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
-			for hor,ver in around:
-				if O[hor][ver] == M[hor][ver] == 1:
-					pos_mdl.append(pts)	
-				elif O[hor][ver] == M[hor][ver] == 0:
-					pos_osi.append(pts)
-			mdl_cont.append(pos_mdl)
-			osi_cont.append(pos_osi)
-	for num,pol in enumerate(neg):
-		for num2,pts in enumerate(pol):
-			neg_mdl	= []
-			neg_osi	= []
-			around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
-			for hor,ver in around:
-				if O[hor][ver] == M[hor][ver] == 1:
-					neg_mdl.append(pts)	
-				elif O[hor][ver] == M[hor][ver] == 0:
-					neg_osi.append(pts)
-			mdl_cont.append(neg_mdl)
-			osi_cont.append(neg_osi)
-	return(mdl_cont,osi_cont)
+#def find_poly(D,O,M):
+#	ND		= np.copy(D)
+#	pos		= msr.find_contours(D,.9)
+#	neg		= msr.find_contours(D,-.9)
+#	poly	=[]
+##	for n,el in enumerate(neg):
+##		if len(neg[n]) > 5:
+##			poly.append(neg[n])
+##	for n,el in enumerate(pos):
+##		if len(pos[n]) > 5:
+##			poly.append(pos[n])	
+#	pos				=	np.array(pos)
+#	neg				= np.array(neg)
+#	mdl_cont	= []
+#	osi_cont	= []
+## now we need to distinguish the 2 borders
+#	for num,pol in enumerate(pos):
+#		for num2,pts in enumerate(pol):
+#			pos_mdl	= []
+#			pos_osi	= []
+#			around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
+#			for hor,ver in around:
+#				if O[hor][ver] == M[hor][ver] == 1:
+#					pos_mdl.append(pts)	
+#				elif O[hor][ver] == M[hor][ver] == 0:
+#					pos_osi.append(pts)
+#	for num,pol in enumerate(neg):
+#		for num2,pts in enumerate(pol):
+#			neg_mdl	= []
+#			neg_osi	= []
+#			around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
+#			for hor,ver in around:
+#				if O[hor][ver] == M[hor][ver] == 1:
+#					neg_mdl.append(pts)	
+#				elif O[hor][ver] == M[hor][ver] == 0:
+#					neg_osi.append(pts)
+#	return(mdl_cont,osi_cont)
 #############################################################################
 ###########################################################################
-#class area_of_disagreement:
-#	def __init__(self,area,perimeter,clon,clat,widths):
-#		self.area				=	(self == -1 and self == 1).sum()
-#		self.perimeter	=	perimeter
-#		self.clon				=	clon
-#		self.clat				= clat
-#		self.widths			= widths
-#	def contours2widths(self,[other arguments]):
-#		
-#	def dist_edges(D):
-#	dist	= []
-#	mdl		=	np.copy(D)
-#	
-#	for n,en in enumerate(D):
-#		for m,em in enumerate(D[n]):
-#			if
-#			dist2 = np.zeros(shape=0)
-#			dist4 = []
-#			for m, em in enumerate(xf):
-#				dist1 = np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
-#				distt = [dist1,xf[m],yf[m]]
-#				dist2 = np.append(dist2,distt)
-#			dist3 = np.amin(dist2)
-#			lon,lat = bm(xm[n],ym[n],inverse=True)
-#			dist4 = [dist3,lon,lat]
-#			dist.append(dist4)
-#	return dist
+class area_of_disagreement:
+	def __init__(self,area,perimeter,clon,clat,widths):
+		self.area				=	self.area
+		self.perimeter	=	len(self)
+		self.clon				=	np.mean(self[:,0])
+		self.clat				= np.mean(self[:,1])
+		self.pcont			= 
+		self.ncont			=
+		self.ucont			= 
+	def area(self):
+		a = 0
+		x0,y0 = vs[0]
+		for [x1,y1] in vs[1:]:
+			dx = x1-x0
+			dy = y1-y0
+			a += 0.5*(y0*dx - x0*dy)
+			x0 = x1
+			y0 = y1
+  return a
+
+	def split_cont(self,O,N):
+		mdl_cont = []
+		osi_cont = []
+		ukn_cont = []
+		if self[-1]:
+			for n,el in enumerate(self):
+				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				for h,v in around:
+					if O[h][v] == M[h][v] == 1
+						mdl_cont.append(el)
+					elif O[h][v] == M[h][v] == 0
+						osi_cont.append(el)
+					else
+						ukn_cont.append(el)
+		elif
+			for n,el in enumerate(self):
+				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				for h,v in around:
+					if O[h][v] == M[h][v] == 0
+						mdl_cont.append(el)
+					elif O[h][v] == M[h][v] == 1
+						osi_cont.append(el)	
+					else
+						ukn_cont.append(el)
+	return(mdl_cont,osi_cont,ukn_cont)
+
+	def dist_edges(D):
+	dist	= []
+	mdl		=	np.copy(D)
+	
+	for n,en in enumerate(D):
+		for m,em in enumerate(D[n]):
+			if
+			dist2 = np.zeros(shape=0)
+			dist4 = []
+			for m, em in enumerate(xf):
+				dist1 = np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
+				distt = [dist1,xf[m],yf[m]]
+				dist2 = np.append(dist2,distt)
+			dist3 = np.amin(dist2)
+			lon,lat = bm(xm[n],ym[n],inverse=True)
+			dist4 = [dist3,lon,lat]
+			dist.append(dist4)
+	return dist
 ############################################################################
 ###########################################################################
 
@@ -252,6 +285,14 @@ print "DL stats"
 get_stats(DL,'DLstats'+dadate)
 
 NDN = binary_cont(XO,YO,DN,BO,BN)
+
+# GETTING THE POLYGONS
+pos = msr.find_contours(DN,.9)
+neg = msr.find_contours(DN,-.9)
+for n,el in enumerate(neg):
+	el.append([])
+	pos.append(el)
+poly = pos
 
 if FIGURE:
 	figure_save(X2,Y2,DN,'DN'+dadate,hqm)
