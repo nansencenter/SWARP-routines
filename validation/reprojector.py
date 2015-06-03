@@ -7,8 +7,10 @@ import numpy as np
 import subprocess
 from matplotlib import pyplot as plt 
 from mpl_toolkits.basemap import Basemap, cm
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 from skimage import measure as msr
 from scipy.interpolate import griddata as grd
+from operator import itemgetter as itg
 
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
@@ -109,6 +111,78 @@ def binary_cont(X,Y,D,O,M):
 	return(ND)
 ############################################################################
 ############################################################################
+class area_of_disagreement:
+	def __init__(self,area,perimeter,clon,clat,widths):
+		self.area				=	self.area
+		self.perimeter	=	len(self)
+		self.clon				=	np.mean(self[:,0])
+		self.clat				= np.mean(self[:,1])
+		self.width			= 
+
+	def area(self):
+		a = 0
+		x0,y0 = vs[0]
+		for [x1,y1] in vs[1:]:
+			dx = x1-x0
+			dy = y1-y0
+			a += 0.5*(y0*dx - x0*dy)
+			x0 = x1
+			y0 = y1
+  return a
+
+	def split_cont(self,O,N):
+		mdl_cont = []
+		osi_cont = []
+		ukn_cont = []
+		if self[-1]:
+			for n,el in enumerate(self):
+				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				for h,v in around:
+					if O[h][v] == M[h][v] == 1
+						mdl_cont.append(el)
+					elif O[h][v] == M[h][v] == 0
+						osi_cont.append(el)
+					else
+						ukn_cont.append(el)
+		elif
+			for n,el in enumerate(self):
+				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				for h,v in around:
+					if O[h][v] == M[h][v] == 0
+						mdl_cont.append(el)
+					elif O[h][v] == M[h][v] == 1
+						osi_cont.append(el)	
+					else
+						ukn_cont.append(el)
+	return(mdl_cont,osi_cont,ukn_cont)
+
+	def dist_edges(self,mcont,ocont,ucont):
+	width = []
+	ukn		= 100*(len(ucont)/float(len(self)))
+	dmo		= 100*(abs(len(mcont-ocont))/float(len(self)))
+	if ukn >= 20:
+		print "WARNING - unknown contours over 20%"
+		UKW	= 1
+	if dmo >= 20:
+		print "WARNING - difference between Model Cont. and Osi Cont. over 20%"
+		DMW	= 1
+	for n,en in enumerate(mcont):
+		dist_pt = []
+		for m,em in enumerate(ocont):
+			dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
+			dist_pt.append(dist1,en[0],en[1],em[0],em[1])
+		idx,value = min(enumerate(dist_pt,key=itg(1))
+		width.append(value)
+
+	def poly_fig(self,D):
+		fig,ax = plt.subplot()
+
+		
+
+
+
+############################################################################
+###########################################################################
 #def find_poly(D,O,M):
 #	ND		= np.copy(D)
 #	pos		= msr.find_contours(D,.9)
@@ -148,72 +222,7 @@ def binary_cont(X,Y,D,O,M):
 #	return(mdl_cont,osi_cont)
 #############################################################################
 ###########################################################################
-class area_of_disagreement:
-	def __init__(self,area,perimeter,clon,clat,widths):
-		self.area				=	self.area
-		self.perimeter	=	len(self)
-		self.clon				=	np.mean(self[:,0])
-		self.clat				= np.mean(self[:,1])
-		self.pcont			= 
-		self.ncont			=
-		self.ucont			= 
-	def area(self):
-		a = 0
-		x0,y0 = vs[0]
-		for [x1,y1] in vs[1:]:
-			dx = x1-x0
-			dy = y1-y0
-			a += 0.5*(y0*dx - x0*dy)
-			x0 = x1
-			y0 = y1
-  return a
 
-	def split_cont(self,O,N):
-		mdl_cont = []
-		osi_cont = []
-		ukn_cont = []
-		if self[-1]:
-			for n,el in enumerate(self):
-				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
-				for h,v in around:
-					if O[h][v] == M[h][v] == 1
-						mdl_cont.append(el)
-					elif O[h][v] == M[h][v] == 0
-						osi_cont.append(el)
-					else
-						ukn_cont.append(el)
-		elif
-			for n,el in enumerate(self):
-				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
-				for h,v in around:
-					if O[h][v] == M[h][v] == 0
-						mdl_cont.append(el)
-					elif O[h][v] == M[h][v] == 1
-						osi_cont.append(el)	
-					else
-						ukn_cont.append(el)
-	return(mdl_cont,osi_cont,ukn_cont)
-
-	def dist_edges(D):
-	dist	= []
-	mdl		=	np.copy(D)
-	
-	for n,en in enumerate(D):
-		for m,em in enumerate(D[n]):
-			if
-			dist2 = np.zeros(shape=0)
-			dist4 = []
-			for m, em in enumerate(xf):
-				dist1 = np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
-				distt = [dist1,xf[m],yf[m]]
-				dist2 = np.append(dist2,distt)
-			dist3 = np.amin(dist2)
-			lon,lat = bm(xm[n],ym[n],inverse=True)
-			dist4 = [dist3,lon,lat]
-			dist.append(dist4)
-	return dist
-############################################################################
-###########################################################################
 
 # DEFINING THE BASEMAP
 m = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
