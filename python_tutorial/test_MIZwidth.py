@@ -1,8 +1,9 @@
 import os,sys
-import numpy            as np
-import shapely.geometry as shgeom
-import shapely.ops      as shops
+import numpy                  as np
+import shapely.geometry       as shgeom
+import shapely.ops            as shops
 from matplotlib import pyplot as plt
+from skimage import measure   as msr
 
 if '../py_funs' not in sys.path:
    sys.path.append('../py_funs')
@@ -94,7 +95,7 @@ if 0:
    plt.close()
    fig.clf()
 
-if 1:
+if 0:
    # plot boundary values
    fig   = plt.figure()
    fun_sol.plot_solution(plot_boundary=True,pobj=plt,show=False)
@@ -112,7 +113,7 @@ if 1:
    plt.close()
    fig.clf()
 
-if 1:
+if 0:
    # plot "fun_sol" solution:
    fig   = plt.figure()
    circ  = shgeom.Point(mpol_centre).buffer(6)
@@ -199,6 +200,132 @@ if 0:
       plt.savefig(figname)
       plt.close()
       fig.clf()
+
+if 1:
+   #test isoline extraction
+   if 1:
+      merged_levels = fun_sol.get_isolines()
+
+      fig   = plt.figure()
+      print('\nplotting isolines...\n')
+      poly  = fun_sol.shapely_polygon
+      bbox  = poly.bounds
+      eps   = fun_sol.resolution/2.
+      #
+      x0    = bbox[0]
+      y0    = bbox[1]
+      x1    = bbox[2]
+      y1    = bbox[3]
+      xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
+      yp = np.arange(y0-eps/2.,y1+1.5*eps,eps)
+      SFU.plot_poly(poly,pobj=plt,color='k',linewidth=2)
+
+      for cont in merged_levels:
+         xx,yy = np.array(cont).transpose()
+         plt.plot(xx,yy)
+
+      plt.show()
+      fig.clf()
+      # sys.exit()
+
+   elif 1:
+      # evaluate solution on the grid
+      print('extracting isolines...\n')
+      poly  = fun_sol.shapely_polygon
+      bbox  = poly.bounds
+      eps   = fun_sol.resolution/2.
+      #
+      x0    = bbox[0]
+      y0    = bbox[1]
+      x1    = bbox[2]
+      y1    = bbox[3]
+      #
+      xv    = np.arange(x0,x1+eps,eps)
+      yv    = np.arange(y0,y1+eps,eps)
+      Nx    = len(xv)
+      Ny    = len(yv)
+      X,Y   = np.meshgrid(xv,yv)
+      F     = fun_sol.eval_solution(X,Y)
+
+      # get contours
+      nlevels        = fun_sol.number_of_points/3
+      vmin           = fun_sol.func_vals.min()
+      vmax           = fun_sol.func_vals.max()
+      dv             = (vmax-vmin)/float(nlevels)
+      vlev           = np.arange(vmin+dv/2.,vmax+dv/2.,dv)
+      print(str(nlevels)+'contours, for isolines between '+\
+            str(vmin)+' and '+str(vmax))
+      #
+      contours  = []
+      for m,V in enumerate(vlev):
+         print('level '+str(m)+' ('+str(V)+'), out of '+str(nlevels))
+         #
+         B              = np.zeros(F.shape)
+         B[F>=V]        = 1.
+         B[np.isnan(F)] = np.nan
+         conts0         = msr.find_contours(B,.5)  # list of [ivec,jvec] arrays
+         conts          = []                       # list of (xvec,yvec) arrays
+
+         ##################################################
+         #convert conts0->conts, or (i,j)->(x,y)
+         for m2,cont in enumerate(conts0):
+            ivec  = cont[:,0]
+            jvec  = cont[:,1]
+            #
+            xvec  = xv[0]+jvec*eps# j=0->x[0],j=1->x[1]??
+            yvec  = yv[0]+ivec*eps
+            keep  = np.logical_and([not bol for bol in np.isnan(xvec)],\
+                                    [not bol for bol in np.isnan(yvec)])
+
+            xk    = xvec[keep]
+            yk    = yvec[keep]
+            Nok   = len(xk)
+
+            if Nok>1:
+               # convert to list
+               xy = list(np.array([xk,yk]).transpose())
+               xy = [(xx,yy) for xx,yy in xy]
+
+               # end points of contour
+               c0 = xy[0]
+               cl = xy[-1]
+
+               # find nearest points on boundary to end points of contour
+               i0 = list(fun_sol.coord_index.nearest(c0,1))[0]
+               il = list(fun_sol.coord_index.nearest(cl,1))[0]
+               #
+               xy.insert(0,fun_sol.coords[i0])
+               xy.append(fun_sol.coords[il])
+               conts.append(xy)
+
+               if 0:#m==1:
+                  xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
+                  yp = np.arange(y0-eps/2.,y1+1.5*eps,eps)
+                  plt.pcolor(xp,yp,B,vmin=-.5,vmax=1.5)
+                  plt.plot(xk,yk)
+                  plt.show()
+                  sys.exit()
+
+         contours.append(conts)
+         ##################################################
+
+      ##################################################
+      fig   = plt.figure()
+      print('\nplotting isolines...\n')
+      xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
+      yp = np.arange(y0-eps/2.,y1+1.5*eps,eps)
+      SFU.plot_poly(poly,pobj=plt,color='k',linewidth=2)
+      plt.pcolor(xp,yp,F,vmin=vmin,vmax=vmax)
+      plt.colorbar()
+
+      for conts in contours:
+         for cont in conts:
+            xx,yy = np.array(cont).transpose()
+            plt.plot(xx,yy)
+
+      plt.show()
+      fig.clf()
+      ##################################################
 
 if 0:
    # test stream function

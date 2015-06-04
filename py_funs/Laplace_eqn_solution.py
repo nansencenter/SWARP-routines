@@ -16,26 +16,28 @@ class dirichlet_fund_soln:
       import numpy as np
       import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
       import geometry_planar  as GP     # also in py_funs
+      import rtree.index      as Rindex
 
       #######################################################
       if (coords[0][0]!=coords[-1][0]) and (coords[0][1]!=coords[-1][1]):
          # can't repeat points during Laplace's eqn solution
          self.func_vals = np.array(func_vals)
+         self.coords    = 1*coords # no longer pointer to list from outside the function
+         coords         = 1*coords # no longer pointer to list from outside the function
 
          # BUT need last and first coordinate the same for shapely polygon
          coords.append(coords[0])
-         self.coords = coords[:-1]
-         print(len(self.coords))
-         print(len(self.func_vals))
       else:
          self.coords    = coords[:-1]
          self.func_vals = np.array(func_vals[:-1])
       #######################################################
 
+      #######################################################
       # make shapely polygon
       # (coords now has end-point repeated,
       #  self.coords doesn't)
       self.shapely_polygon  = shgeom.Polygon(coords)
+      #######################################################
       
       #######################################################
       # want to go round curve anti-clockwise
@@ -52,6 +54,12 @@ class dirichlet_fund_soln:
          self.coords    = list(self.coords)
          self.coords.reverse()
          self.coords    = self.coords
+
+      # make rtree index
+      idx   = Rindex.Index()
+      for i,(xp,yp) in enumerate(self.coords):
+         idx.insert(i,(xp,yp,xp,yp)) # a point is a rectangle of zero side-length
+      self.coord_index  = idx
       #######################################################
 
       self.number_of_points   = len(self.coords)
@@ -549,6 +557,120 @@ class dirichlet_fund_soln:
          pobj.show()
 
       return out
+   #######################################################
+
+   #######################################################
+   def get_isolines(self,pobj=None,show=True):
+      from skimage import measure as msr
+      import numpy as np
+      
+
+      print('extracting isolines...\n')
+
+      poly  = self.shapely_polygon
+      bbox  = poly.bounds
+      eps   = self.resolution/3.
+
+      # get a grid to plot F on:
+      x0 = bbox[0]
+      y0 = bbox[1]
+      x1 = bbox[2]
+      y1 = bbox[3]
+      #
+      xv = np.arange(x0,x1+eps,eps)
+      yv = np.arange(y0,y1+eps,eps)
+      Nx = len(xv)
+      Ny = len(yv)
+
+      # evaluate solution on the grid
+      X,Y      = np.meshgrid(xv,yv)
+      F        = self.eval_solution(X,Y)
+
+      # get contours
+      nlevels   = self.number_of_points/4
+      vmin      = self.func_vals.min()
+      vmax      = self.func_vals.max()
+      dv        = (vmax-vmin)/float(nlevels)
+      vlev      = np.arange(vmin,vmax+dv,dv)
+      print(str(nlevels)+'contours, for isolines between '+\
+            str(vmin)+' and '+str(vmax))
+      #
+      contours  = []
+      for V in vlev:
+         B              = np.zeros(F.shape)
+         B[F>=V]        = 1.
+         B[np.isnan(F)] = np.nan
+         conts0         = msr.find_contours(B,.5)  # list of [ivec,jvec] arrays
+         conts          = []                       # list of (xvec,yvec)
+
+         ##################################################
+         #convert conts0->conts, or (i,j)->(x,y)
+         for m2,cont in enumerate(conts0):
+            ivec  = cont[:,0] # NB these indices correspond to center of pixels
+            jvec  = cont[:,1]
+            #
+            xvec  = xv[0]+jvec*eps
+            yvec  = yv[0]+ivec*eps
+            keep  = np.logical_and([not bol for bol in np.isnan(xvec)],\
+                                   [not bol for bol in np.isnan(yvec)])
+            xk    = xvec[keep]
+            yk    = yvec[keep]
+            Nok   = len(xk)
+
+            ##################################################
+            # if contour is bigger than 1 pixel,
+            # add it to list, and also include the nearest points
+            # on the polygon boundary at the end
+            if Nok>1:
+               # convert to list
+               xy = list(np.array([xk,yk]).transpose())
+               xy = [(xx,yy) for xx,yy in xy]
+
+               # end points of contour
+               c0 = xy[0]
+               cl = xy[-1]
+
+               # find nearest points on boundary to end points of contour
+               i0 = list(self.coord_index.nearest(c0,1))[0]
+               il = list(self.coord_index.nearest(cl,1))[0]
+               #
+               xy.insert(0,self.coords[i0])
+               xy.append(self.coords[il])
+               conts.append(xy)
+            ##################################################
+
+         contours.append(conts)
+         ##################################################
+
+      ##################################################
+      # merge contours from different vlevels
+      merged_levels  = []
+      for conts in contours:
+         merged_levels.extend(conts)
+      ##################################################
+
+      ##################################################
+      # if plot object passed in, make a plot
+      if pobj is not None:
+         print('plotting isolines...\n')
+         xb,yb = np.array(poly.boundary.coords).transpose()
+         pobj.plot(xb,yb,color='k',linewidth=2)
+         #
+         xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
+         yp = np.arange(y0-eps/2.,y1+1.5*eps,eps)
+         pobj.pcolor(xp,yp,F,vmin=vmin,vmax=vmax)
+         pobj.colorbar()
+
+         for conts in contours:
+            for cont in conts:
+               xx,yy = np.array(cont).transpose()
+               pobj.plot(xx,yy)
+
+         if show:
+            pobj.show()
+      ##################################################
+
+      return merged_levels
    #######################################################
 ##########################################################
 
