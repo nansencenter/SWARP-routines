@@ -110,16 +110,138 @@ def binary_cont(X,Y,D,O,M):
 						ND[hor][ver] = -1
 	return(ND)
 ############################################################################
-############################################################################
-class area_of_disagreement:
-	def __init__(self,area,perimeter,clon,clat,widths):
-		self.area				=	self.area
-		self.perimeter	=	len(self)
-		self.clon				=	np.mean(self[:,0])
-		self.clat				= np.mean(self[:,1])
-		self.width			= 
+# GETTING THE POLYGONS
+class aod_poly:
+	# gets single contour and sorts it
+	def __init__(self,cont,OSI,MOD,X,Y,polygon_status=1):
+		self.polygon_status		= polygon_status
+		self.ij_list					= cont
+		self._ij2xy_(cont,X,Y)
+		self._split_cont(OSI,MOD)
+		return
+	
+	def _ij2xy_(self,cont,X,Y):
+		x			= []
+		y			= []
+		xvec	=	range(len(cont[:,0]))
+		for n,en in enumerate(xvec):
+			en	=	X[cont[n,0]][cont[n,1]]
+			y.append(en)
+		yvec	=	range(len(cont[:,1]))
+		for n,en in enumerate(yvec):
+			en	=	Y[cont[n,0]][cont[n,1]]
+			x.append(en)
+		xy_list = zip(x,y)
+		xy_list = np.array(xy_list)
+		self.xy_list = xy_list
+		return
 
-	def area(self):
+	def _split_cont(self,OSI,MOD):
+		vs=self.ij_list # list of (i,j) pixel indices
+		mdl_cont = []
+		osi_cont = []
+		ukn_cont = []
+		func_vals= []
+		func_mod = 0	# value of func_vals at model ice edge
+		func_osi = 1	# value of func_vals at OSISAF ice edge
+		func_unk = 2	# value of func_vals at other parts of contour
+	
+		if self.polygon_status==0:
+			# if polygon is negative - overestimation of ice
+			self.model_status="Model OVERestimate"
+
+			for n,el in enumerate(vs):
+				#getting all the neighbours
+				around = ((el[0],el[1]+1),(el[0],el[1]-1),\
+									(el[0]+1,el[1]),(el[0]-1,el[1]),\
+									(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),\
+									(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				check_cont = 0
+				for h,v in around:
+					if OSI[h][v] == MOD[h][v] == 1:
+						mdl_cont.append(el)
+						func_vals.append(func_mod)
+						check_cont = 1
+					elif OSI[h][v] == MOD[h][v] == 0:
+						osi_cont.append(el)
+						func_vals.append(func_osi)
+						check_cont = 1
+				if check_cont == 0:
+					ukn_cont.append(el)
+				  func_vals.append(func_unk)
+		else:
+			# if polygon is positive - underestimation of ice
+			self.model_status="Model UNDERestimate"
+			for n,el in enumerate(vs):
+				around = ((el[0],el[1]+1),(el[0],el[1]-1),\
+									(el[0]+1,el[1]),(el[0]-1,el[1]),\
+									(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),\
+									(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				check_cont = 0
+				for h,v in around:
+					if OSI[h][v] == MOD[h][v] == 0:
+						mdl_cont.append(el)
+						func_vals.append(func_mod)
+						check_cont = 1
+					elif OSI[h][v] == MOD[h][v] == 1:
+						osi_cont.append(el)	
+						func_vals.append(func_osi)
+						check_cont = 1
+				if check_cont == 0:
+					ukn_cont.append(el)
+					func_vals.append(func_unk)
+		mdl_cont = np.array(mdl_cont)
+		osi_cont = np.array(osi_cont)
+		ukn_cont = np.array(ukn_cont)
+		func_vals = np.array(func_vals)
+		# include sorted contours as port of object
+		self.model_ice_edge		=mdl_cont
+		self.osisaf_ice_edge	=osi_cont
+		self.unknown_edge=ukn_cont
+		self.func_vals=func_vals
+		return
+
+############################################################################
+class aod_stats:
+	def __init__(self,aod,basemap=None):
+		self.ij_list					= aod.ij_list
+		self.xy_list					= aod.xy_list
+		self.number_of_points	=	len(aod.ij_list)
+		self.polygon_status		= aod.polygon_status
+		self.mcont						= aod.model_ice_edge
+		self.ocont						= aod.osisaf_ice_edge
+		self.ucont						= aod.unknown_edge
+
+		#get euclidean area
+		#TODO get area on sphere?
+		self.poly_area()
+
+		#get euclidean perimeter
+		#(geometry_planar.curve_info could be used)
+		#TODO self.poly_perimeter() sets self.perimeter
+
+		if basemap is not None:
+			xy_list = self.xy_list
+			self.list_lon,self.list_lat=basemap(xy_list[:,0],xy_list[:,1],inverse=True)
+			xmean	=	np.mean(xy_list[:,0])
+			ymean	=	np.mean(xy_list[:,1])
+			self.mlon,self.mlat	=	basemap(xmean,ymean,inverse=True)
+			
+			DX = 0
+			DY = 0
+			for n in range(len(xy_list)-1):
+				DX += ((xy_list[n][0]+xy_list[n+1][0])-((xy_list[n][0]*xy_list[n+1])-(xy_list[n+1][0]*xy_list[n][1])))  
+				DY += ((xy_list[n][1]+xy_list[n+1][1])-((xy_list[n][0]*xy_list[n+1])-(xy_list[n+1][0]*xy_list[n][1])))  
+			CX = (1/float(6*self.area))*DX
+			CY = (1/float(6*self.area))*DY
+			self.mclon,self.mclat = basemap(CX,CY,inverse=True)
+
+		# distances between contours set self.widths
+		self.dist_edges()
+		return
+
+	def poly_area(self):
+		vs=self.ij_list
 		a = 0
 		x0,y0 = vs[0]
 		for [x1,y1] in vs[1:]:
@@ -128,58 +250,40 @@ class area_of_disagreement:
 			a += 0.5*(y0*dx - x0*dy)
 			x0 = x1
 			y0 = y1
-  return a
-
-	def split_cont(self,O,N):
-		mdl_cont = []
-		osi_cont = []
-		ukn_cont = []
-		if self[-1]:
-			for n,el in enumerate(self):
-				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
-				for h,v in around:
-					if O[h][v] == M[h][v] == 1
-						mdl_cont.append(el)
-					elif O[h][v] == M[h][v] == 0
-						osi_cont.append(el)
-					else
-						ukn_cont.append(el)
-		elif
-			for n,el in enumerate(self):
-				around = ((el[0],el[1]+1),(el[0],el[1]-1),(el[0]+1,el[1]),(el[0]-1,el[1]),(el[0]+1,el[1]+1),(el[0]-1,el[1]+1),(el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
-				for h,v in around:
-					if O[h][v] == M[h][v] == 0
-						mdl_cont.append(el)
-					elif O[h][v] == M[h][v] == 1
-						osi_cont.append(el)	
-					else
-						ukn_cont.append(el)
-	return(mdl_cont,osi_cont,ukn_cont)
-
-	def dist_edges(self,mcont,ocont,ucont):
-	width = []
-	ukn		= 100*(len(ucont)/float(len(self)))
-	dmo		= 100*(abs(len(mcont-ocont))/float(len(self)))
-	if ukn >= 20:
-		print "WARNING - unknown contours over 20%"
-		UKW	= 1
-	if dmo >= 20:
-		print "WARNING - difference between Model Cont. and Osi Cont. over 20%"
-		DMW	= 1
-	for n,en in enumerate(mcont):
-		dist_pt = []
-		for m,em in enumerate(ocont):
-			dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
-			dist_pt.append(dist1,en[0],en[1],em[0],em[1])
-		idx,value = min(enumerate(dist_pt,key=itg(1))
-		width.append(value)
-
-	def poly_fig(self,D):
-		fig,ax = plt.subplot()
-
 		
+		self.area	=	a
+		return
 
+	def dist_edges(self):
+		mcont = self.mcont
+		ocont = self.ocont
+		ucont = self.ucont
+		tcont = self.ij_list
+		width = []
+		ukn		= 100*(len(ucont)/float(len(tcont)))
+		dmo		= 100*(abs(len(mcont)-len(ocont))/float(len(tcont)))
+		if ukn >= 20:
+			print "WARNING - unknown contours over 20%"
+			UKW	= 1
+		if dmo >= 20:
+			print "WARNING - difference between Model Cont. and Osi Cont. over 20%"
+			DMW	= 1
+		for n,en in enumerate(mcont):
+			dist_pt = []
+			for m,em in enumerate(ocont):
+				dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
+				dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
+			idx,value = min(enumerate(dist_pt),key=itg(1))
+			width.append(value)
 
+		self.widths = width
+		return
+
+#	def poly_fig(self):
+#		fig,ax = plt.subplots()
+#		ax.imshow(DN)
+#		axins.imshow(
+			
 
 ############################################################################
 ###########################################################################
@@ -275,33 +379,35 @@ C = [X3,Y3]
 C = np.array(C)
 C = C.T
 
+# INTERPOLATION CAN BE DONE WITH ANOTHER METHOD ('linear')
 ZN = grd(C,Z3,(X2,Y2),method='nearest')
-ZL = grd(C,Z3,(X2,Y2),method='linear')
-ZC = grd(C,Z3,(X2,Y2),method='cubic')
 
 # BINARY
 BO	= binary_mod(ZO,.15)
 BN	= binary_mod(ZN,.15)
-BL	= binary_mod(ZL,.15)
 
 # DIFFERENCES
 DN = binary_diff(ZN,ZO,.15)
-DL = binary_diff(ZL,ZO,.15)
 
-print "DN stats"
-get_stats(DN,'DNstats'+dadate)
-print "DL stats"
-get_stats(DL,'DLstats'+dadate)
+# CALL GENERAL STATS
+#print "DN stats"
+#get_stats(DN,'DNstats'+dadate)
+#print "DL stats"
+#get_stats(DL,'DLstats'+dadate)
 
 NDN = binary_cont(XO,YO,DN,BO,BN)
 
-# GETTING THE POLYGONS
+
+		
 pos = msr.find_contours(DN,.9)
 neg = msr.find_contours(DN,-.9)
+aod_polys=[]
+for n,el in enumerate(pos):
+	aod=aod_poly(el,BO,BN,XO,YO,polygon_status=1)
+	aod_polys.append(aod)
 for n,el in enumerate(neg):
-	el.append([])
-	pos.append(el)
-poly = pos
+	aod=aod_poly(el,BO,BN,XO,YO,polygon_status=0)
+	aod_polys.append(aod)
 
 if FIGURE:
 	figure_save(X2,Y2,DN,'DN'+dadate,hqm)
