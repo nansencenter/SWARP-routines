@@ -1,7 +1,7 @@
 format long
 
 if 0
-   a              = 6378273;  % semi-major axis
+   a              = 6378273;  % semi-major axis (m)
    ecc            = .1;       % eccentricity of ellipse
    ellipsoid_mat  = [a,ecc];  % ellipsoid formatted ala matlab
 

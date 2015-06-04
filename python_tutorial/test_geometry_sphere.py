@@ -8,8 +8,8 @@ if '../py_funs' not in sys.path:
 import geometry_sphere as GS
 
 if 0:
-   #test area on an ellipsoid calc (areaint.m)
-   a              = 6378273   # semi-major axis
+   #test area on an ellipsoid calc (compare to areaint.m)
+   a              = 6378273   # semi-major axis (m)
    ecc            = .1        # eccentricity of ellipse
    ellipsoid_mat  = [a,ecc]   # ellipsoid formatted ala matlab
 
@@ -31,7 +31,8 @@ if 0:
 
 if 1:
    # test conformal lat calc + its inverse
-   a              = 6378273   # semi-major axis
+   # (compare to convertlat.m)
+   a              = 6378273   # semi-major axis (m)
    ecc            = .2        # eccentricity of ellipse
    ellipsoid_mat  = [a,ecc]   # ellipsoid formatted ala matlab
 
@@ -39,4 +40,3 @@ if 1:
    chi   = GS.convertlat_geodetic2conformal(ecc,phi,inverse=False,radians=False)
    phi2  = GS.convertlat_geodetic2conformal(ecc,chi,inverse=True,radians=False)
    print(phi,chi,phi2)
-   

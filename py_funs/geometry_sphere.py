@@ -77,7 +77,7 @@ def convertlat_geodetic2conformal(e,phi,inverse=False,radians=True):
 #######################################################
 
 #######################################################
-def greatcircledist(lat1, lon1, lat2, lon2, R):
+def greatcircledist(lat1, lon1, lat2, lon2, R=None,radians=True):
 
    import numpy as np
 
@@ -86,17 +86,29 @@ def greatcircledist(lat1, lon1, lat2, lon2, R):
    # length and has the same units as the radius of the sphere, R.  (If R is
    # 1, then RNG is effectively arc length in radians.)
 
+   R0 = 6378273.# default is hyc2proj radius (m)
+   if R is None:
+      R  = R0
+
+   if not radians:
+      lat1  = lat1*np.pi/180.
+      lat2  = lat2*np.pi/180.
+      lon1  = lon1*np.pi/180.
+      lon2  = lon2*np.pi/180.
+
+   # Haversine formula
    a     = pow( np.sin((lat2-lat1)/2.),2) + np.cos(lat1)*np.cos(lat2)*pow(np.sin((lon2-lon1)/2.),2)
    rng   = R*2.*np.arctan2(np.sqrt(a),np.sqrt(1 - a))
 
    # more accurate formula for close points
    nvec  = range(len(rng))
-   for n in nvec[rng<5.e3]:
+   for n in nvec[(rng/R)<(5.e3/R0)]:
       dphi     = lat2[n]-lat1[n]
       dlam     = lon2[n]-lon1[n]
       rng[n]  = R*2*np.arcsin(np.sqrt(\
-         pow(np.sin(dphi/2),2)+np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
-         ))
+         pow(np.sin(dphi/2),2)+\
+         np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
+            ))
    
    return rng
 #######################################################
