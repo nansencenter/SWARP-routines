@@ -114,6 +114,34 @@ def greatcircledist(lat1, lon1, lat2, lon2, R=None,radians=True):
 #######################################################
 
 #######################################################
+def arc_length(lons,lats,R=None,radians=False,closed=False):
+   # given vectors or lists lons,lats
+   # returns a numpy array of the same size,
+   # ranging from 0 to P,
+   # where P is the perimeter
+
+   import numpy as np
+   Nl       = len(lons)
+   arc_len  = np.zeros(Nl)
+
+   if closed and (lons[0]!=lons[-1] or lats[0]!=lats[-1]):
+      # repeat last point
+      lons  = list(lons)
+      lats  = list(lats)
+      lons.append(lons[0])
+      lats.append(lats[0])
+
+   for n in range(1,Nl):
+      lon0        = lons[n-1]
+      lat0        = lats[n-1]
+      lon1        = lons[n]
+      lat1        = lats[n]
+      arc_len[n]  = greatcircledist(lat1, lon1, lat0, lon0, R=R,radians=radians)
+   
+   return arc_len
+#######################################################
+
+#######################################################
 def area_polygon_ellipsoid(lon,lat,ellipsoid_mat=None,ellipsoid=None,radians=False):
    # translation of areaint.m
    import numpy as np
@@ -123,7 +151,7 @@ def area_polygon_ellipsoid(lon,lat,ellipsoid_mat=None,ellipsoid=None,radians=Fal
       if ellipsoid is None:
          # ellipsoid=[a,b,flattening], a>b, flattening=(b-a)/a
          # same as hyc2proj (spherical earth)
-         ellipsoid   = [6378273,6378.273,0]
+         ellipsoid   = [6378273,6378273,0]
 
       a              = ellipsoid[0] # semi-major axis
       b              = ellipsoid[1]
