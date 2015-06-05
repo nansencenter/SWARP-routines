@@ -143,6 +143,7 @@ def arc_length(lons,lats,R=None,radians=False,closed=False):
 
 #######################################################
 def area_polygon_ellipsoid(lon,lat,ellipsoid_mat=None,ellipsoid=None,radians=False):
+   # area of polygon on ellipsoid
    # translation of areaint.m
    import numpy as np
 
