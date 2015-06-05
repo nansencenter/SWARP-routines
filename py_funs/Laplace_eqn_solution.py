@@ -672,6 +672,76 @@ class dirichlet_fund_soln:
 
       return merged_levels
    #######################################################
+
+   #######################################################
+   def get_contour_lengths(self,bmap=None):
+      import geometry_sphere as GS
+
+      ###########################################################################################
+      class area_info:
+
+         def __init__(self,ll_bdy_coords,xy_bdy_coords,func_vals\
+               xy_conts,ll_conts,lengths):
+
+            self.ll_bdy_coords   = 1*ll_bdy_coords # (lon,lat) coordinates of boundary
+            self.xy_bdy_coords   = 1*xy_bdy_coords # (x,y) coordinates of boundary (ie in projected space)
+            self.func_vals       = 1*func_vals     # value of function used by Laplace's equation
+            #
+            self.lengths         = 1*lengths    # lengths of each contour
+            self.xy_contours     = 1*xy_conts   # (x,y) coordinates of each contour
+            self.lonlat_contours = 1*ll_conts   # (lon,lat) coordinates of each contour
+            # 
+            lons,lats      = np.array(ll_bdy_coords).transpose()
+            arclen         = GS.get_arc_length(lons,lats,radians=False,closed=True)
+            perimeter      = arclen[-1]
+            area           = GS.area_polygon_ellipsoid(lons,lats,radians=False)
+            self.area      = area      # area of polygon
+            self.perimeter = perimeter # perimeter of polygon
+            #
+            lens                       = np.array(lengths)
+            self.length_median         = np.median(lens)
+            self.length_percentile05   = np.percentile(lens,5)
+            self.length_percentile95   = np.percentile(lens,95)
+
+            return
+      ###########################################################################################
+
+      if bmap is None:
+         print('Nothing to do')
+         print('pass in a basemap object to convert (x,y) to (lon,lat)')
+         import sys
+         sys.exit()
+
+      # boundary/area information
+      x,y            = np.array(self.coords).transpose()
+      lons,lats      = bmap(x,y,inverse=True)
+      lst            = list(np.array([lons,lats]).transpose())
+      ll_bdy_coords  = [(lo,la) for lo,la in lst]
+
+      # get isolines of function
+      contours = self.get_isolines()
+      ll_conts = []
+      lengths  = []
+      
+      for cont in contours:
+         # list of coords (tuples)
+         x,y         = np.array(cont).transpose()
+         lons,lats   = bmap(x,y,inverse=True)
+         arclen      = GS.get_arc_length(lons,lats,radians=False,closed=False)
+         #
+         lengths.append(arclen[-1])  #perimeter
+         lst   = list(np.array([lons,lats]).transpose())
+         tups  = [(lo,la) for lo,la in lst]
+         ll_conts.append(tups)
+
+      # output object with all the info
+      AI = area_info(ll_bdy_coords,1*self.coords,1.self.func_vals\
+               xy_conts,ll_conts,lengths,\
+               area,perimeter)
+
+      return AI
+   #######################################################
+
 ##########################################################
 
 #######################################################
