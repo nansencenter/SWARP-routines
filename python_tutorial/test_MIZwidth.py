@@ -201,9 +201,9 @@ if 0:
       plt.close()
       fig.clf()
 
-if 1:
+if 0:
    #test isoline extraction
-   if 1:
+   if 0:
       merged_levels = fun_sol.get_isolines()
 
       fig   = plt.figure()
@@ -228,7 +228,7 @@ if 1:
       fig.clf()
       # sys.exit()
 
-   elif 1:
+   elif 0:
       # evaluate solution on the grid
       print('extracting isolines...\n')
       poly  = fun_sol.shapely_polygon
@@ -327,8 +327,7 @@ if 1:
       fig.clf()
       ##################################################
 
-if 0:
+if 1:
    # test stream function
-   stream   = Lap.dirichlet_fund_soln(coords,fun_sol.stream_func)
-   stream.plot_solution()
-   plt.show()
+   stream   = Lap.dirichlet_fund_soln(1*fun_sol.coords,1*fun_sol.stream_func_bdy)
+   AI       = stream.get_contour_lengths(pobj=plt)

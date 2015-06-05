@@ -463,6 +463,7 @@ class dirichlet_fund_soln:
       import numpy            as np
       import shapefile_utils  as SFU
       import geometry_planar  as GP
+      from matplotlib import cm
 
       if pobj is None:
          # set a plot object if none exists
@@ -494,6 +495,8 @@ class dirichlet_fund_soln:
          y1 = bbox[3]
          x  = np.arange(x0,x1+eps,eps)
          y  = np.arange(y0,y1+eps,eps)
+         xp = np.arange(x0-.5*eps,x1+1.5*eps,eps)
+         yp = np.arange(y0-.5*eps,y1+1.5*eps,eps)
 
          # make pcolor/contour plot
          nlevels  = 10
@@ -504,7 +507,11 @@ class dirichlet_fund_soln:
          #
          X,Y      = np.meshgrid(x,y)
          F        = self.eval_solution(X,Y)
-         pobj.pcolor(X,Y,F,vmin=vmin,vmax=vmax)
+         #
+         cmap  = cm.jet
+         cmap.set_bad(color='w')
+         Fm = np.ma.array(F,mask=np.isnan(F))
+         pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
          pobj.colorbar()
          pobj.contour(X,Y,F,vlev,colors='k')
          #
@@ -563,6 +570,7 @@ class dirichlet_fund_soln:
    def get_isolines(self,pobj=None,show=True):
       from skimage import measure as msr
       import numpy as np
+      from matplotlib import cm
       
 
       print('extracting isolines...\n')
@@ -655,16 +663,20 @@ class dirichlet_fund_soln:
          print('plotting isolines...\n')
          xb,yb = np.array(poly.boundary.coords).transpose()
          pobj.plot(xb,yb,color='k',linewidth=2)
+         pobj.plot(xb,yb,linestyle='None',marker='o',color='g')
          #
          xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
          yp = np.arange(y0-eps/2.,y1+1.5*eps,eps)
-         pobj.pcolor(xp,yp,F,vmin=vmin,vmax=vmax)
+         #
+         cmap  = cm.jet
+         cmap.set_bad(color='w')
+         Fm = np.ma.array(F,mask=np.isnan(F))
+         pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
          pobj.colorbar()
 
-         for conts in contours:
-            for cont in conts:
-               xx,yy = np.array(cont).transpose()
-               pobj.plot(xx,yy)
+         for cont in merged_levels:
+            xx,yy = np.array(cont).transpose()
+            pobj.plot(xx,yy)
 
          if show:
             pobj.show()
@@ -674,30 +686,37 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def get_contour_lengths(self,bmap=None):
-      import geometry_sphere as GS
+   def get_contour_lengths(self,bmap=None,pobj=None):
+
+      import numpy as np
 
       ###########################################################################################
       class area_info:
 
-         def __init__(self,ll_bdy_coords,xy_bdy_coords,func_vals\
-               xy_conts,ll_conts,lengths):
+         def __init__(self,xy_bdy_coords,xy_conts,\
+               area,perimeter,lengths,\
+               ll_bdy_coords=None,ll_contours=None,\
+               func_vals=None,stream_func=None,):
 
-            self.ll_bdy_coords   = 1*ll_bdy_coords # (lon,lat) coordinates of boundary
+            # NB use "1*" to remove pointers to the arrays outside the function
+            # - like copy, but works for lists also
             self.xy_bdy_coords   = 1*xy_bdy_coords # (x,y) coordinates of boundary (ie in projected space)
-            self.func_vals       = 1*func_vals     # value of function used by Laplace's equation
-            #
-            self.lengths         = 1*lengths    # lengths of each contour
-            self.xy_contours     = 1*xy_conts   # (x,y) coordinates of each contour
-            self.lonlat_contours = 1*ll_conts   # (lon,lat) coordinates of each contour
-            # 
-            lons,lats      = np.array(ll_bdy_coords).transpose()
-            arclen         = GS.get_arc_length(lons,lats,radians=False,closed=True)
-            perimeter      = arclen[-1]
-            area           = GS.area_polygon_ellipsoid(lons,lats,radians=False)
-            self.area      = area      # area of polygon
-            self.perimeter = perimeter # perimeter of polygon
-            #
+            self.xy_contours     = 1*xy_conts      # (x,y) coordinates of each contour
+            self.lengths         = 1*lengths       # lengths of each contour
+            self.area            = area            # area of polygon
+            self.perimeter       = perimeter       # perimeter of polygon
+
+            # lon-lat info if present
+            if ll_contours is not None:
+               self.lonlat_contours = 1*ll_contours   # (lon,lat) coordinates of each contour
+            if ll_bdy_coords is not None:
+               self.ll_bdy_coords   = 1*ll_bdy_coords # (lon,lat) coordinates of boundary
+            if func_vals is not None:
+               self.func_vals       = 1*func_vals     # value of function used by Laplace's equation
+            if stream_func is not None:
+               self.stream_func     = 1*stream_func   # value of stream function produced by Laplace's equation
+
+            # some summarising info about "lengths"
             lens                       = np.array(lengths)
             self.length_median         = np.median(lens)
             self.length_percentile05   = np.percentile(lens,5)
@@ -706,38 +725,74 @@ class dirichlet_fund_soln:
             return
       ###########################################################################################
 
-      if bmap is None:
-         print('Nothing to do')
-         print('pass in a basemap object to convert (x,y) to (lon,lat)')
-         import sys
-         sys.exit()
+      if bmap is not None:
+         # boundary/area information
+         # - use routines for sphere
+         import geometry_sphere as GS
 
-      # boundary/area information
-      x,y            = np.array(self.coords).transpose()
-      lons,lats      = bmap(x,y,inverse=True)
-      lst            = list(np.array([lons,lats]).transpose())
-      ll_bdy_coords  = [(lo,la) for lo,la in lst]
+         print('getting contour lengths on sphere...\n')
 
-      # get isolines of function
-      contours = self.get_isolines()
-      ll_conts = []
-      lengths  = []
-      
-      for cont in contours:
-         # list of coords (tuples)
-         x,y         = np.array(cont).transpose()
-         lons,lats   = bmap(x,y,inverse=True)
-         arclen      = GS.get_arc_length(lons,lats,radians=False,closed=False)
-         #
-         lengths.append(arclen[-1])  #perimeter
-         lst   = list(np.array([lons,lats]).transpose())
-         tups  = [(lo,la) for lo,la in lst]
-         ll_conts.append(tups)
+         x,y            = np.array(self.coords).transpose()
+         lons,lats      = bmap(x,y,inverse=True)
+         lst            = list(np.array([lons,lats]).transpose())
+         ll_bdy_coords  = [(lo,la) for lo,la in lst]
+         area           = GS.area_polygon_ellipsoid(lons,lats,radians=False)
+         arclen         = GS.get_arc_length(lons,lats,radians=False,closed=True)
+         perimeter      = arclen[-1]
 
-      # output object with all the info
-      AI = area_info(ll_bdy_coords,1*self.coords,1.self.func_vals\
-               xy_conts,ll_conts,lengths,\
-               area,perimeter)
+         # get isolines of function
+         contours = self.get_isolines(pobj=pobj)
+         ll_conts = []
+         lengths  = []
+         
+         for cont in contours:
+            # list of coords (tuples)
+            x,y         = np.array(cont).transpose()
+            lons,lats   = bmap(x,y,inverse=True)
+            arclen      = GS.get_arc_length(lons,lats,radians=False,closed=False)
+            #
+            lengths.append(arclen[-1])  #perimeter
+            lst   = list(np.array([lons,lats]).transpose())
+            tups  = [(lo,la) for lo,la in lst]
+            ll_conts.append(tups)
+
+         # output object with all the info
+         # area_info(xy_bdy_coords,xy_conts,\
+         #       area,perimeter,lengths,\
+         #       ll_bdy_coords=None,ll_conts=None,\
+         #       func_vals=None,stream_func=None,):
+         AI = area_info(self.coords,xy_conts,\
+                  area,perimeter,lengths,\
+                  func_vals=self.func_vals,stream_func=self.stream_func_bdy,\
+                  ll_bdy_coords=ll_bdy_coords,ll_contours=ll_conts)
+      else:
+         # boundary/area information
+         # - just Euclidean routines
+         import geometry_planar as GP
+
+         print('getting contour lengths in the plane...\n')
+
+         x,y         = np.array(self.coords).transpose()
+         area        = self.shapely_polygon.area
+         perimeter   = self.shapely_polygon.length
+
+         # get isolines of function
+         contours = self.get_isolines(pobj=pobj)
+         lengths  = []
+         
+         for cont in contours:
+            # list of coords (tuples)
+            P  = GP.curve_info(cont,closed=False)[0]  # perimeter
+            lengths.append(P)
+
+         # output object with all the info
+         # area_info(xy_bdy_coords,xy_conts,\
+         #       area,perimeter,lengths,\
+         #       ll_bdy_coords=None,ll_conts=None,\
+         #       func_vals=None,stream_func=None,):
+         AI = area_info(self.coords,contours,\
+                  area,perimeter,lengths,
+                  func_vals=self.func_vals,stream_func=self.stream_func_bdy)
 
       return AI
    #######################################################
