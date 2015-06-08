@@ -111,3 +111,46 @@ Z2[mask2]	= np.NaN
 # PRINT OUT NAME OF VARIABLES - TO BE USED ONLY UNTIL WE WORK IN IPYTHON
 info	=	'For model: binary(plon,plat,V), nc (tlon,tlat,Z) - For OSI: olon,olat,Z2'
 print(info)
+
+
+##################################################################
+# OLD FUNCTIONS/STUFF
+##################################################################
+#def find_poly(D,O,M):
+# ND    = np.copy(D)
+# pos   = msr.find_contours(D,.9)
+# neg   = msr.find_contours(D,-.9)
+# poly  =[]
+##  for n,el in enumerate(neg):
+##    if len(neg[n]) > 5:
+##      poly.append(neg[n])
+##  for n,el in enumerate(pos):
+##    if len(pos[n]) > 5:
+##      poly.append(pos[n]) 
+# pos       = np.array(pos)
+# neg       = np.array(neg)
+# mdl_cont  = []
+# osi_cont  = []
+## now we need to distinguish the 2 borders
+# for num,pol in enumerate(pos):
+#   for num2,pts in enumerate(pol):
+#     pos_mdl = []
+#     pos_osi = []
+#     around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
+#     for hor,ver in around:
+#       if O[hor][ver] == M[hor][ver] == 1:
+#         pos_mdl.append(pts) 
+#       elif O[hor][ver] == M[hor][ver] == 0:
+#         pos_osi.append(pts)
+# for num,pol in enumerate(neg):
+#   for num2,pts in enumerate(pol):
+#     neg_mdl = []
+#     neg_osi = []
+#     around = ((pts[0],pts[1]+1),(pts[0],pts[1]-1),(pts[0]+1,pts[1]),(pts[0]-1,pts[1]),(pts[0]+1,pts[1]+1),(pts[0]-1,pts[1]+1),(pts[0]+1,pts[1]-1),(pts[0]-1,pts[1]-1))
+#     for hor,ver in around:
+#       if O[hor][ver] == M[hor][ver] == 1:
+#         neg_mdl.append(pts) 
+#       elif O[hor][ver] == M[hor][ver] == 0:
+#         neg_osi.append(pts)
+# return(mdl_cont,osi_cont)
+

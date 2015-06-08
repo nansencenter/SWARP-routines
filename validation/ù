@@ -6,7 +6,6 @@ import glob
 import numpy as np
 import subprocess
 import matplotlib.lines as mlines
-import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 from matplotlib import pyplot as plt 
 from mpl_toolkits.basemap import Basemap, cm
@@ -20,7 +19,7 @@ import mod_reading as Mrdg
 
 
 ############################################################################
-# Muting error coming from invalid values of binary_mod and binary_diff
+# Muting error coming from invalid values of Binary 
 np.seterr(invalid='ignore')
 ############################################################################
 
@@ -230,7 +229,6 @@ class aod_stats:
 		self.xy_list					= aod.xy_list
 		self.number_of_points	=	len(aod.ij_list)
 		self.polygon_status		= aod.polygon_status
-		self.patch_sign				= aod.model_status
 		self.mcont						= aod.model_ice_edge
 		self.ocont						= aod.osisaf_ice_edge
 		self.ucont						= aod.unknown_edge
@@ -244,50 +242,27 @@ class aod_stats:
 		#(geometry_planar.curve_info could be used)
 		self.poly_perimeter()
 
-		# distances between contours set self.widths
-		self.dist_edges()
-
 		if basemap is not None:
 			xy_list = self.xy_list
 			self.list_lon,self.list_lat=basemap(xy_list[:,0],xy_list[:,1],inverse=True)
-			
-			# Perimeter mean - used to check diff with centroid 
 			xmean	=	np.mean(xy_list[:,0])
 			ymean	=	np.mean(xy_list[:,1])
 			self.mlon,self.mlat	=	basemap(xmean,ymean,inverse=True)
 			
-			# Centroid - Location in lon/lat of the centroid of the polygon
-			DX	= 0
-			DY	= 0
-			B		= 0
+			DX = 0
+			DY = 0
 			for n in range(len(xy_list)-1):
-				DX	+= ((xy_list[n][0]+xy_list[n+1][0])*((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-				DY	+= ((xy_list[n][1]+xy_list[n+1][1])*((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-				B		+= ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
-			A		= (0.5)*B 
-			CX	= (1/float(6*A))*DX
-			CY	= (1/float(6*A))*DY
+				DX += ((xy_list[n][0]+xy_list[n+1][0])-((xy_list[n][0]*xy_list[n+1])-(xy_list[n+1][0]*xy_list[n][1])))  
+				DY += ((xy_list[n][1]+xy_list[n+1][1])-((xy_list[n][0]*xy_list[n+1])-(xy_list[n+1][0]*xy_list[n][1])))  
+			CX = (1/float(6*self.area))*DX
+			CY = (1/float(6*self.area))*DY
 			self.mclon,self.mclat = basemap(CX,CY,inverse=True)
-		
-			# Calculating lon/lat for model,osisaf,unknown contours and distances
-			mcont		= self.mcont
-			ocont		= self.ocont
-			ucont		= self.ucont
-			dist		= self.widths
-			self.mcontlon,self.mcontlat = basemap(mcont[:,0],mcont[:,1],inverse=True)
-			self.ocontlon,self.ocontlat = basemap(ocont[:,0],ocont[:,1],inverse=True)
-			self.ucontlon,self.ucontlat = basemap(ucont[:,0],ucont[:,1],inverse=True)
-			distlonlat	= []
-			for n,en in enumerate(dist):
-				x1,y1 = basemap(en[1],en[2],inverse=True)
-				x2,y2 = basemap(en[3],en[4],inverse=True)
-				distlonlat.append([en[0],x1,y1,x2,y2])
-			self.widthlonlat = distlonlat
 
+		# distances between contours set self.widths
+		self.dist_edges()
 		return
 
 	def poly_area(self):
-		# Calculating the area of irregular polygon (from perimeter)
 		vs		= self.xy_list
 		a			= 0
 		x0,y0 = vs[0]
@@ -302,7 +277,6 @@ class aod_stats:
 		return
 
 	def poly_perimeter(self):
-		# Calculating perimeter in xy coordinates (unit = 10km)
 		xy		= self.xy_list
 		perim	= 0
 		for n in range(len(xy)-1):
@@ -311,7 +285,6 @@ class aod_stats:
 		return
 
 	def dist_edges(self):
-		# Calculating the min distance from a model point to any osisaf point
 		mcont = self.mcont
 		ocont = self.ocont
 		ucont = self.ucont
@@ -337,7 +310,6 @@ class aod_stats:
 		return
 
 	def poly_fig(self):
-		# Plotting the polygon
 		fig		= plt.figure()
 		ax		= fig.add_subplot(1,1,1)
 		mcont = self.mcont
@@ -356,71 +328,46 @@ class aod_stats:
 		oc = mlines.Line2D([],[],color='yellow',marker='o')
 		uc = mlines.Line2D([],[],color='green',marker='o')
 		ed = mlines.Line2D([],[],color='black')
-		plt.legend([tc,mc,oc,uc,ed],("Total Cont.","Model Cont.","Osisaf Cont.","Unknown Cont.","Dist. Mdl to Osi"))
+		plt.legend([tc,mc,oc,uc,ed],("Total Cont.","Model Cont.","Osisaf Cont.","Unknown Cont.","Min. distance Model to Osisaf"))
 		plt.show()		
 	
 	def stat_chart(self):
 		
-		DN			=	self.diff
-		ij			= self.ij_list
-		mcont		= self.mcont
-		ocont		= self.ocont
-		ucont		= self.ucont
-		dist		= self.widths
-		clon		= '%1.2f' %self.mclon
-		clat		= '%1.2f' %self.mclat
-		clonlat = "{0}/{1}".format(clon,clat)
-		area		= self.area
-		perim		= self.perimeter
-		mdist		= np.array(self.widths)
-		mdist		= mdist[:,0]*10
-		mdist		= '%1.4f' %np.mean(mdist)
-		pstat		= self.polygon_status
-		if pstat == 1:
-			status = "Overestimation"
-		else:
-			status = "Underestimation"
-		
+		DN		=	self.diff
+		ij		= self.ij_list
+		mcont = self.mcont
+		ocont = self.ocont
+		ucont = self.ucont
+		dist  = self.widths
+		dist = np.array(dist)
+
 		fig		= plt.figure()
-		gs		= gridspec.GridSpec(2,2,width_ratios=[2,1],height_ratios=[4,1])
-		main	= plt.subplot(gs[0,0])
+		gs		= gridspec.GridSpec(2,2)
+		main	= plt.subplot(gs[:,0])
 		polyf	= plt.subplot(gs[0,1])
-		tab		= plt.subplot(gs[1,0])
-		leg		= plt.subplot(gs[1,1])
+		tab		= plt.subplot(gs[1,1])
 		tab.set_xticks([])
-		leg.set_xticks([])
 		tab.set_yticks([])
-		leg.set_yticks([])
 		tab.set_frame_on(False)
-		leg.set_frame_on(False)
 		main.imshow(DN[::-1],cmap='winter')
 		x1,x2,y1,y2 = np.min(ij[:,1])-15,np.max(ij[:,1])+15,np.min(ij[:,0])-15,np.max(ij[:,0])+15
-		main.axvspan(x1,x2,ymin=1-((y1-320)/float(len(DN)-320)),ymax=1-((y2-320)/float(len(DN)-320)),color='red',alpha=0.3)
+		main.axvspan(x1,x2,ymin=1-((y1-350)/float(len(DN)-350)),ymax=1-((y2-350)/float(len(DN)-350)),color='red',alpha=0.3)
 		main.axis([0,760,0,800])
 		polyf.imshow(DN,cmap='winter')
 		polyf.axis([x1,x2,y2,y1])
-		polyf.plot(mcont[:,1],mcont[:,0],'ro',markersize=4)
-		polyf.plot(ocont[:,1],ocont[:,0],'yo',markersize=4)
-		polyf.plot(ucont[:,1],ucont[:,0],'go',markersize=4)
+		polyf.plot(mcont[:,1],mcont[:,0],'ro',markersize=5)
+		polyf.plot(ocont[:,1],ocont[:,0],'yo',markersize=5)
+		polyf.plot(ucont[:,1],ucont[:,0],'go',markersize=5)
 		for n,en in enumerate(dist):
-			polyf.plot([en[2],en[4]],[en[1],en[3]],color='grey',alpha=0.3)
+			polyf.plot([en[2],en[4]],[en[1],en[3]],'k-')
 		mc = mlines.Line2D([],[],color='red',marker='o')
 		oc = mlines.Line2D([],[],color='yellow',marker='o')
 		uc = mlines.Line2D([],[],color='green',marker='o')
-		ed = mlines.Line2D([],[],color='black',alpha=0.5)
-		pos_p = mpatches.Patch(color='lightgreen')
-		neg_p = mpatches.Patch(color='royalblue')
-		leg.legend([mc,oc,uc,ed,pos_p,neg_p],("Model Cont.","Osisaf Cont.","Unknown Cont.","Dist. Mdl to Osi", \
-			'Model Overestimate','Model Underestimate'),loc='center')
-		stats = [['%s degrees' %clonlat,'%1.4E km^2' %area,'%1.4E km' %perim,'%f km' %mdist,'%s' %status]]
-		columns = ('Center Lon/Lat','Area','Perimeter','Mean Width','Status')
-		rows = ['TODOpolyname']
-		cwid = [0.1,0.1,0.1,0.1,0.1]
-		the_table = tab.table(cellText=stats,colWidths=cwid,rowLabels=rows,colLabels=columns,loc='center')
-		table_props = the_table.properties()
-		table_cells = table_props['child_artists']
-		for cell in table_cells: cell.set_height(0.5)
+		ed = mlines.Line2D([],[],color='black')
+		polyf.legend([mc,oc,uc,ed],("Model Cont.","Osisaf Cont.","Unknown Cont.","Dist. Mdl to Osi"),bbox_to_anchor=(x1,x2),loc='lower center',mode="extend")
 		plt.show()
+		
+#TODO		ax3.table(cellText=text,rowLabels=rowl,colLabels=coll,colWidths=[0.5]*2,rowWidths=[0.5]*4,loc='center')
 		
 		return
 
@@ -517,7 +464,7 @@ for key,value in sorted(d.items()):
 	globals()[key] = value
 print 'Number of Polygons	=',len(poly_list)
 
-poly55stats = aod_stats(poly55,m)
+poly55stats = aod_stats(poly55)
 
 if FIGURE:
 	figure_save(X2,Y2,DN,'DN'+dadate,hqm)
