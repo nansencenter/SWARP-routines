@@ -5,9 +5,11 @@ import sys,os
 import glob
 import numpy as np
 import subprocess
+import shutil
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
+from matplotlib.font_manager import FontProperties
 from matplotlib import pyplot as plt 
 from mpl_toolkits.basemap import Basemap, cm
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
@@ -17,7 +19,7 @@ from operator import itemgetter as itg
 
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
-
+import Laplace_eqn_solution as Leqs
 
 ############################################################################
 # Muting error coming from invalid values of binary_mod and binary_diff
@@ -122,8 +124,9 @@ def binary_cont(X,Y,D,O,M):
 # GETTING THE POLYGONS
 class aod_poly:
 	# gets single contour and sorts it
-	def __init__(self,cont,OSI,MOD,DIFF,X,Y,polygon_status=1):
+	def __init__(self,cont,OSI,MOD,DIFF,X,Y,number,polygon_status=1):
 		self.polygon_status		= polygon_status
+		self.polygon_name			= 'polygon'+str(number)
 		self.ij_list					= cont
 		self._diff_with_terrain_(DIFF,OSI,MOD) 
 		self._ij2xy_(cont,X,Y)
@@ -230,6 +233,7 @@ class aod_stats:
 		self.xy_list					= aod.xy_list
 		self.number_of_points	=	len(aod.ij_list)
 		self.polygon_status		= aod.polygon_status
+		self.name							= aod.polygon_name
 		self.patch_sign				= aod.model_status
 		self.mcont						= aod.model_ice_edge
 		self.ocont						= aod.osisaf_ice_edge
@@ -274,15 +278,19 @@ class aod_stats:
 			ocont		= self.ocont
 			ucont		= self.ucont
 			dist		= self.widths
-			self.mcontlon,self.mcontlat = basemap(mcont[:,0],mcont[:,1],inverse=True)
-			self.ocontlon,self.ocontlat = basemap(ocont[:,0],ocont[:,1],inverse=True)
-			self.ucontlon,self.ucontlat = basemap(ucont[:,0],ucont[:,1],inverse=True)
+			if len(mcont) != 0:
+				self.mcontlon,self.mcontlat = basemap(mcont[:,0],mcont[:,1],inverse=True)
+			if len(ocont) != 0:
+				self.ocontlon,self.ocontlat = basemap(ocont[:,0],ocont[:,1],inverse=True)
+			if len(ucont) != 0:
+				self.ucontlon,self.ucontlat = basemap(ucont[:,0],ucont[:,1],inverse=True)
 			distlonlat	= []
-			for n,en in enumerate(dist):
-				x1,y1 = basemap(en[1],en[2],inverse=True)
-				x2,y2 = basemap(en[3],en[4],inverse=True)
-				distlonlat.append([en[0],x1,y1,x2,y2])
-			self.widthlonlat = distlonlat
+			if dist != [0,0,0,0,0]:
+				for n,en in enumerate(dist):
+					x1,y1 = basemap(en[1],en[2],inverse=True)
+					x2,y2 = basemap(en[3],en[4],inverse=True)
+					distlonlat.append([en[0],x1,y1,x2,y2])
+				self.widthlonlat = distlonlat
 
 		return
 
@@ -316,52 +324,42 @@ class aod_stats:
 		ocont = self.ocont
 		ucont = self.ucont
 		tcont = self.ij_list
+		UKW		= 'Unknow borders below 20%'
+		DMW		= 'Difference between known borders < 20%'
 		width = []
-		ukn		= 100*(len(ucont)/float(len(tcont)))
-		dmo		= 100*(abs(len(mcont)-len(ocont))/float(len(tcont)))
-		if ukn >= 20:
-			print "WARNING - unknown contours over 20%"
-			UKW	= 1
-		if dmo >= 20:
-			print "WARNING - difference between Model Cont. and Osi Cont. over 20%"
-			DMW	= 1
-		for n,en in enumerate(mcont):
-			dist_pt = []
-			for m,em in enumerate(ocont):
-				dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
-				dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
-			idx,value = min(enumerate(dist_pt),key=itg(1))
-			width.append(value)
-
-		self.widths = width
+		if len(mcont) == 0:
+			DMW		=	'Only OSISAF data, MODEL not present'
+			self.widths	= [0,0,0,0,0]
+		elif len(ocont) == 0:
+			DMW		= 'Only MODEL data, OSISAF not present'
+			self.widths	= [0,0,0,0,0]
+		else:
+			ukn		= 100*(len(ucont)/float(len(tcont)))
+			dmo		= 100*(abs(len(mcont)-len(ocont))/float(len(tcont)))
+			if ukn >= 20:
+				UKW	= 'WARNING - unknown contours over 20%'
+			if dmo >= 20:
+				DMW = 'WARNING - difference between Model Cont. and Osi Cont. over 20%'
+			for n,en in enumerate(mcont):
+				dist_pt = []
+				for m,em in enumerate(ocont):
+					dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
+					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
+				idx,value = min(enumerate(dist_pt),key=itg(1))
+				width.append(value)
+				self.widths = width
+		self.UKW		= UKW
+		self.DMW		= DMW
 		return
 
-	def poly_fig(self):
-		# Plotting the polygon
-		fig		= plt.figure()
-		ax		= fig.add_subplot(1,1,1)
-		mcont = self.mcont
-		ocont = self.ocont
-		ucont = self.ucont
-		tcont = self.ij_list
-		dist	= self.widths
-		ax.plot(tcont[:,1],tcont[:,0],'b-',linewidth=2)
-		ax.plot(mcont[:,1],mcont[:,0],'ro')
-		ax.plot(ocont[:,1],ocont[:,0],'yo')
-		ax.plot(ucont[:,1],ucont[:,0],'go')
-		for n,en in enumerate(dist):
-			ax.plot([en[2],en[4]],[en[1],en[3]],'k-')	
-		tc = mlines.Line2D([],[],color='blue')
-		mc = mlines.Line2D([],[],color='red',marker='o')
-		oc = mlines.Line2D([],[],color='yellow',marker='o')
-		uc = mlines.Line2D([],[],color='green',marker='o')
-		ed = mlines.Line2D([],[],color='black')
-		plt.legend([tc,mc,oc,uc,ed],("Total Cont.","Model Cont.","Osisaf Cont.","Unknown Cont.","Dist. Mdl to Osi"))
-		plt.show()		
-	
 	def stat_chart(self):
-		
+		pname		= self.name	
+		print ''
+		print 'Statistic Chart for '+str(pname)
+		print ''
 		DN			=	self.diff
+		DMW			= self.DMW
+		UKW			= self.UKW
 		ij			= self.ij_list
 		mcont		= self.mcont
 		ocont		= self.ocont
@@ -371,18 +369,24 @@ class aod_stats:
 		clat		= '%1.2f' %self.mclat
 		clonlat = "{0}/{1}".format(clon,clat)
 		area		= self.area
+		area		= '%1.4e' %area 
 		perim		= self.perimeter
-		mdist		= np.array(self.widths)
-		mdist		= mdist[:,0]*10
-		mdist		= '%1.4f' %np.mean(mdist)
+		perim		= '%1.4e' %perim
+		if dist != [0,0,0,0,0]:
+			mdist		= np.array(self.widths)
+			mdist		= mdist[:,0]*10
+			mdist		= np.mean(mdist)
+		else:
+			mdist		= 'NaN'
 		pstat		= self.polygon_status
 		if pstat == 1:
 			status = "Overestimation"
 		else:
 			status = "Underestimation"
 		
+		# Setting up the plot (2x2) and subplots
 		fig		= plt.figure()
-		gs		= gridspec.GridSpec(2,2,width_ratios=[2,1],height_ratios=[4,1])
+		gs		= gridspec.GridSpec(2,2,width_ratios=[2,1],height_ratios=[4,2])
 		main	= plt.subplot(gs[0,0])
 		polyf	= plt.subplot(gs[0,1])
 		tab		= plt.subplot(gs[1,0])
@@ -393,17 +397,27 @@ class aod_stats:
 		leg.set_yticks([])
 		tab.set_frame_on(False)
 		leg.set_frame_on(False)
+
+		# Main image on the top left
 		main.imshow(DN[::-1],cmap='winter')
 		x1,x2,y1,y2 = np.min(ij[:,1])-15,np.max(ij[:,1])+15,np.min(ij[:,0])-15,np.max(ij[:,0])+15
 		main.axvspan(x1,x2,ymin=1-((y1-320)/float(len(DN)-320)),ymax=1-((y2-320)/float(len(DN)-320)),color='red',alpha=0.3)
 		main.axis([0,760,0,800])
+		
+		# Polygon image on the top right
 		polyf.imshow(DN,cmap='winter')
 		polyf.axis([x1,x2,y2,y1])
-		polyf.plot(mcont[:,1],mcont[:,0],'ro',markersize=4)
-		polyf.plot(ocont[:,1],ocont[:,0],'yo',markersize=4)
-		polyf.plot(ucont[:,1],ucont[:,0],'go',markersize=4)
-		for n,en in enumerate(dist):
-			polyf.plot([en[2],en[4]],[en[1],en[3]],color='grey',alpha=0.3)
+		if len(mcont) != 0:
+			polyf.plot(mcont[:,1],mcont[:,0],'ro',markersize=4)
+		if len(ocont) != 0:
+			polyf.plot(ocont[:,1],ocont[:,0],'yo',markersize=4)
+		if len(ucont) != 0:
+			polyf.plot(ucont[:,1],ucont[:,0],'go',markersize=4)
+		if dist != [0,0,0,0,0]:
+			for n,en in enumerate(dist):
+				polyf.plot([en[2],en[4]],[en[1],en[3]],color='grey',alpha=0.3)
+		
+		# Legend on the bottom right
 		mc = mlines.Line2D([],[],color='red',marker='o')
 		oc = mlines.Line2D([],[],color='yellow',marker='o')
 		uc = mlines.Line2D([],[],color='green',marker='o')
@@ -412,15 +426,32 @@ class aod_stats:
 		neg_p = mpatches.Patch(color='royalblue')
 		leg.legend([mc,oc,uc,ed,pos_p,neg_p],("Model Cont.","Osisaf Cont.","Unknown Cont.","Dist. Mdl to Osi", \
 			'Model Overestimate','Model Underestimate'),loc='center')
-		stats = [['%s degrees' %clonlat,'%1.4E km^2' %area,'%1.4E km' %perim,'%f km' %mdist,'%s' %status]]
-		columns = ('Center Lon/Lat','Area','Perimeter','Mean Width','Status')
-		rows = ['TODOpolyname']
-		cwid = [0.1,0.1,0.1,0.1,0.1]
-		the_table = tab.table(cellText=stats,colWidths=cwid,rowLabels=rows,colLabels=columns,loc='center')
-		table_props = the_table.properties()
-		table_cells = table_props['child_artists']
-		for cell in table_cells: cell.set_height(0.5)
-		plt.show()
+		
+		# Statistics table on the bottom left
+		#stats = [['Center Lon/Lat','Area','Perimeter'],\
+		#	[clonlat+' degrees' ,'%1.4E km^2' %area,'%1.4E km' %perim],\
+		#	['Mean Width','Status','Warnings'],\
+		#	['%1.4f km' %mdist,status,'NOWARNING']]
+		#columns = ('Center Lon/Lat','Area','Perimeter','Mean Width','Status')
+		#columns = ('Center Lon/Lat','Area','Perimeter')
+		#rows = [['TODOpolyname'],['TODOpolyname']]
+		#cwid = [.2,.2,.2]
+		#the_table = tab.table(cellText=stats,colWidths=cwid,rowLabels=rows,colLabels=columns,loc='center')
+		#the_table = tab.table(cellText=stats,colWidths=cwid,loc='center')
+		#table_props = the_table.properties()
+		#table_cells = table_props['child_artists']
+		#for cell in table_cells: cell.set_height(.5)
+		#for cell in table_cells: cell.set_fontsize(10)
+		txt = 'Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
+					'Area = '+str(area)+' km^2\n'+ \
+					'Perimeter = '+str(perim)+' km\n'+ \
+					'Mean Width = '+str(mdist)+' km\n'+ \
+					'Status = '+str(status)+'\n'+ \
+					str(DMW)+'\n'+str(UKW)
+		tab.text(0,0,txt,fontsize=15,bbox=dict(facecolor='white',alpha=1))
+		fig.savefig(pname+'.png',bbox_inches='tight')
+		print 'Statistic chart done for '+str(pname)
+		plt.show(False)
 		
 		return
 
@@ -433,7 +464,7 @@ m = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,635688
 hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 
 # CHOOSE
-FIGURE = raw_input('1 for figure, [Enter] for not:	')
+#FIGURE = raw_input('1 for figure, [Enter] for not:	')
 print ''
 
 # READ TP4 DAILY
@@ -504,10 +535,11 @@ pos = msr.find_contours(DN,.9)
 neg = msr.find_contours(DN,-.9)
 poly_list=[]
 for n,el in enumerate(pos):
-	aod=aod_poly(el,BO,BN,DN,XO,YO,polygon_status=1)
+	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
 	poly_list.append(aod)
-for n,el in enumerate(neg):
-	aod=aod_poly(el,BO,BN,DN,XO,YO,polygon_status=0)
+for n2,el in enumerate(neg):
+	n += 1
+	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=0)
 	poly_list.append(aod)
 
 d = {}
@@ -517,28 +549,15 @@ for key,value in sorted(d.items()):
 	globals()[key] = value
 print 'Number of Polygons	=',len(poly_list)
 
-poly55stats = aod_stats(poly55,m)
+for el in poly_list:
+	poly = aod_stats(el,m)
+	poly.stat_chart()
 
-if FIGURE:
-	figure_save(X2,Y2,DN,'DN'+dadate,hqm)
+#figure_save(X2,Y2,DN,'DN'+dadate,hqm)
 
-# PLOT RESULTS
-#plt.figure(0) 
-#plt.imshow(ZO)
-#plt.title('OSI')
-#
-#plt.figure(1)
-#plt.imshow(ZN)
-#plt.title('NRS')
-#
-#plt.figure(2)
-#plt.imshow(ZL)
-#plt.title('LIN')
-#
-#plt.figure(3)
-#plt.imshow(ZC)
-#plt.title('CUB')
-#
-#plt.show()
-
+fin_dir = './outputs/aod/'+str(dadate)+'/'
+if not os.path.exists(fin_dir):
+    os.makedirs(fin_dir)
+for filname in glob.glob(os.path.join('*.png')):
+	shutil.move(filname,fin_dir)
 
