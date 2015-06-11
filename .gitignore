@@ -27,3 +27,4 @@ validation/ice_charts/test_inputs/*
 !validation/ice_charts/test_inputs/*.imz
 !validation/ice_charts/test_inputs/*.txt
 validation/ice_charts/test_inputs2/*
+validation/data/*

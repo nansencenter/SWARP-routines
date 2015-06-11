@@ -8,10 +8,11 @@ echo "Type the date of the run (YYYYMMDD), followed by [ENTER]:  "
 read fdate
 jdayp1=$(date -d "$fdate" +%j)
 jdayp=$(expr $jdayp1 - 1)
-jday=`printf '%3.3d' $steve`
-steve=$(($jday))
+jday=`printf '%3.3d' $jdayp`
 echo "Correspond to the following hycom julian day:   $jday"
 echo ""
+
+mkdir -p tmp
 
 if [ $typo == "ice" ]
 then
@@ -28,8 +29,9 @@ then
    echo "[ENTER] to confirm"
    read ok
    echo "please wait..."
-   rm *.nc
-   cp $wdir/${daily}*${steve}* ./
+   old=*.nc
+   rm $old
+   cp $wdir/${daily}*${steve}* ./tmp/
 elif [ $typo == "waves" ]
 then
    daily=TP4DAILY*
@@ -45,8 +47,9 @@ then
    echo "[ENTER] to confirm"
    read ok
    echo "please wait..."
-   rm *.nc
-   cp $wdir/${daily}_*_*_*${steve}* ./
+   old=*.nc
+   rm $old   
+   cp $wdir/${daily}_*_*_*${steve}* ./tmp/
 else
    echo "Please enter either ""ice"" or "" waves"" "
    exit
@@ -57,7 +60,6 @@ fi
 h2p_in="$GIT_REPOS/SWARP-routines/netcdf_production/Input"
 ddir=`pwd`
 
-mkdir -p tmp 
 cd tmp 
 
 # Info for hyc2proj
@@ -93,7 +95,7 @@ cd $ddir
 rm -r tmp
 
 # REMOVE BINARY FILES (TOO BIG FOR THIS DISK)
-rm *.a *.b
+#rm *.a *.b
 
 # FETCH OSI-SAF
 year=${fdate:0:4}

@@ -32,7 +32,7 @@ f=${flist[0]}
 start_date=${f:9:8} # check date
 start_time=${f:18:2}0000 # HHMMSS
 
-for f in *.nc
+for f in TP4archv_*.nc
 do
    cf=${f:9:8}
    if [ "$cf" -ge "$tday" ]
@@ -51,7 +51,7 @@ echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPiceonly_forecast_start${tday}T.nc
+ofil=SWARPiceonly_forecast_start${tday}_UTC000000.nc
 
 # make final file by repacking tmp.nc
 echo " "                                              >> $log
@@ -69,6 +69,9 @@ rm -r tmp tmp.nc
 # change variable names to standard abbreviations in GRIB2 tables
 ncrename -v fice,icec   $ofil #ice cover
 ncrename -v hice,icetk  $ofil #ice thickness
+
+# change time:units
+ncatted -O -h -a units,time,m,c,"seconds since 1970-01-01 UTC 00:00:00" $ofil
 
 # ###########################################################################################
 # # now add variable attributes:
@@ -122,7 +125,7 @@ ncatted -O -h -a references,global,c,c,"www.nersc.no"                         $o
 ncatted -O -h -a comment,global,c,c," "                                       $ofil
 ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
 ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
-ncatted -O -h -a forecast_startdate,global,c,c,"$firstday - time=00.00.00Z"   $ofil
+ncatted -O -h -a forecast_start_date,global,c,c,"$firstday UTC 00:00:00"      $ofil
 ncatted -O -h -a forecast_range,global,c,c,"5 day forecast"                   $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
 ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
@@ -138,7 +141,16 @@ ncatted -O -h -a operational_status,global,c,c,"test"                         $o
 ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-#ncrename -a bulletin_date,restart_date $ofil #clearer
+# Changing bulletin_date into forecast_restart_date (with new format)
+bdate_info=$(ncinfo $ofil | grep "bulletin_date")
+split=(${bdate_info//\ / }) # make array with delimiter space "\ "
+bdate_time=${split[1]}       # eg 2015-05-09T00:00:00Z
+split=(${bdate_time//T/ }) # make array with delimiter "T"
+bdate=${split[0]}               # eg 2015-05-09
+btime=${split[1]}               # eg 00:00:00Z
+btime=${btime:0:8} # remove "Z"
+ncatted -O -h -a bulletin_date,global,o,c,"$bdate UTC $btime" $ofil   # add new attribute "restart_file_date"
+ncrename -a bulletin_date,restart_file_date $ofil #clearer
 
 # delete old attribute(s)
 ncatted -a field_date,global,d,,                                              $ofil
