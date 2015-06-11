@@ -185,7 +185,7 @@ class dirichlet_fund_soln:
 
       # set limits for N1
       Nthresh  = 100
-      frac     = 1.2
+      frac     = 1.3
       # frac     = .2
 
       # if self.solve_exactly:
@@ -197,7 +197,7 @@ class dirichlet_fund_soln:
          Ntarget  = N0+30
       else:
          # try to get N1~frac*N0, if frac*N0<Nthresh
-         Ntarget  = int(np.max(np.round(frac*N0),Nthresh))
+         Ntarget  = int(np.max([np.round(frac*N0),Nthresh]))
 
       print('\nChecking singularities...\n')
       print('Number of boundary points       : '+str(N0))
@@ -471,6 +471,7 @@ class dirichlet_fund_soln:
       
       if plot_boundary:
          # just plot values of F at boundary
+				 #TODO doesn't work on poly55
          ss = self.get_arc_length()[:-1]
          pobj.plot(ss,self.func_vals_approx,'b')
          pobj.plot(ss,self.func_vals,'.k')
