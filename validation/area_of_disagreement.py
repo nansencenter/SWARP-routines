@@ -618,9 +618,14 @@ for filname in glob.glob(os.path.join('*.png')):
 	shutil.move(filname,fin_dir)
 
 if 1:
-   n_test   = [55]
-   for nt in n_test:
-      poly_test   = poly_list[nt]
-      xy_coords2  = [tuple(xyc) for xyc in poly_test.xy_list]
-      fvals2      = 1*poly_test.function_vals
-      fun_sol     = Leqs.dirichlet_fund_soln(xy_coords2,fvals2)#,bmap=hqm)
+   # save a poly for testing
+   nt    = 55
+   npfil = '../python_tutorial/npz/poly'+str(nt)+'.npz'
+   #
+   poly_test   = poly_list[nt]
+   xy_coords   = poly_test.xy_list
+   xy_coords2  = [tuple(xyc) for xyc in xy_coords]
+   fvals2      = 1*poly_test.function_vals
+
+   # save file
+   np.savez(npfil,xy=xy_coords,func_vals=fvals2)
