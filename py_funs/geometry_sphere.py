@@ -89,6 +89,8 @@ def greatcircledist(lat1, lon1, lat2, lon2, R=None,radians=True):
    R0 = 6378273.# default is hyc2proj radius (m)
    if R is None:
       R  = R0
+   else:
+      R  = float(R)
 
    if not radians:
       lat1  = lat1*np.pi/180.
@@ -101,14 +103,25 @@ def greatcircledist(lat1, lon1, lat2, lon2, R=None,radians=True):
    rng   = R*2.*np.arctan2(np.sqrt(a),np.sqrt(1 - a))
 
    # more accurate formula for close points
-   nvec  = range(len(rng))
-   for n in nvec[(rng/R)<(5.e3/R0)]:
-      dphi     = lat2[n]-lat1[n]
-      dlam     = lon2[n]-lon1[n]
-      rng[n]  = R*2*np.arcsin(np.sqrt(\
-         pow(np.sin(dphi/2),2)+\
-         np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
-            ))
+   if type(rng)==type(np.zeros(1)):
+      # arrays
+      nvec  = np.arange(len(rng))
+      for n in nvec[(rng/R)<(5.e3/R0)]:
+         dphi     = lat2[n]-lat1[n]
+         dlam     = lon2[n]-lon1[n]
+         rng[n]  = R*2*np.arcsin(np.sqrt(\
+            pow(np.sin(dphi/2),2)+\
+            np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
+               ))
+   else:
+      # numbers
+      if (rng/R)<(5.e3/R0):
+         dphi  = lat2-lat1
+         dlam  = lon2-lon1
+         rng   = R*2*np.arcsin(np.sqrt(\
+            pow(np.sin(dphi/2),2)+\
+            np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
+               ))
    
    return rng
 #######################################################

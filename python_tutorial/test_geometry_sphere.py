@@ -9,7 +9,7 @@ import geometry_sphere as GS
 
 if 0:
    #test area on an ellipsoid calc (compare to areaint.m)
-   a              = 6378273   # semi-major axis (m)
+   a              = 6378273.  # semi-major axis (m)
    ecc            = .1        # eccentricity of ellipse
    ellipsoid_mat  = [a,ecc]   # ellipsoid formatted ala matlab
 
@@ -30,6 +30,26 @@ if 0:
    print('Area: '+str(area)+' m^2')
 
 if 1:
+   # test great circle dist
+   a  = 6378273.  # semi-major axis (m)
+   if 1:
+      lat1,lon1   = 0.,0.
+      # lat2,lon2   = 0.,1.
+      lat2,lon2   = 0.,1.e-6
+      dist2       = a*lon2*np.pi/180.
+
+   if 1:
+      lat1  = np.array([lat1])
+      lon1  = np.array([lon1])
+      lat2  = np.array([lat2])
+      lon2  = np.array([lon2])
+
+   dist  = GS.greatcircledist(lat1, lon1, lat2, lon2, R=a,radians=False)
+   print(dist,dist2)
+
+
+
+if 0:
    # test conformal lat calc + its inverse
    # (compare to convertlat.m)
    a              = 6378273   # semi-major axis (m)
