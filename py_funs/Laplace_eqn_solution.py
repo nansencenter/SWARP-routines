@@ -471,15 +471,16 @@ class dirichlet_fund_soln:
       
       if plot_boundary:
          # just plot values of F at boundary
-				 #TODO doesn't work on poly55
-         ss = self.get_arc_length()[:-1]
+         ss = self.get_arc_length()/1.e3 # km
          pobj.plot(ss,self.func_vals_approx,'b')
          pobj.plot(ss,self.func_vals,'.k')
 
          x2,y2 = np.array(self.coords).transpose() # coords can be reversed
          f2    = self.eval_solution(x2,y2)
          pobj.plot(ss,f2,'--r')
-         pobj.xlabel('arc length from '+str(self.coords[0]))
+         xc    = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
+         yc    = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
+         pobj.xlabel('arc length (km) from '+str((xc,yc))+' (km)')
          pobj.ylabel('values of target function')
 
       else:
@@ -526,7 +527,7 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def plot_stream_func_bdy(self,pobj=None,show=True,i=None):
+   def plot_stream_func_bdy(self,pobj=None,show=True,i_test=None):
       import numpy            as np
       import shapefile_utils  as SFU
       import geometry_planar  as GP
@@ -535,14 +536,16 @@ class dirichlet_fund_soln:
          # set a plot object if none exists
          from matplotlib import pyplot as pobj
       
-      ss = list(np.cumsum(self.spacings[:-1]))
-      ss.insert(0,0)
-      ss = np.array(ss)
+      ss = self.get_arc_length()/1.e3 # km
 
-      if i is None:
+      if i_test is None:
          # just plot values of stresm function at boundary
          pobj.plot(ss,self.stream_func_bdy,'b')
          out   = None
+         xc    = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
+         yc    = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
+         pobj.xlabel('arc length (km) from '+str((xc,yc))+' (km)')
+         pobj.ylabel('values of stream function')
 
       else:
 
@@ -552,8 +555,8 @@ class dirichlet_fund_soln:
          nvec  = np.arange(Nx)
 
          # for each singularity (just outside polygon)
-         sing        = self.singularities[i]
-         branch_dir  = np.pi/2.+self.tangent_dirn[i]
+         sing        = self.singularities[i_test]
+         branch_dir  = np.pi/2.+self.tangent_dirn[i_test]
          atan2       = GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
          pobj.plot(ss,atan2/np.pi,'r')
          out   = [atan2]
