@@ -42,18 +42,31 @@ def finish_map(m):
 ############################################################################
 ############################################################################
 def binary_mod(data1,data2,thresh):
-	mdata									= np.copy(data1)
-	mdata[mdata<thresh]		= 0
-	mdata[mdata>=thresh]	= 1
-	odata									= np.copy(data2)
-	odata[odata<thresh]		= 0
-	odata[odata>=thresh]	= 1	
-	ddata									= odata - mdata
-	thenans								= np.isnan(ddata)
-	ddata[thenans]				= 0
+	mdata = np.copy(data1)
+	mdata[mdata<thresh] = 0
+	mdata[mdata>=thresh] = 1
+	odata = np.copy(data2)
+	odata[odata<thresh] = 0
+	odata[odata>=thresh] = 1	
+	ddata = odata - mdata
+	thenans = np.isnan(ddata)
+	ddata[thenans] = 0
 	return(mdata,odata,ddata)
 ############################################################################
-###########################################################################
+############################################################################
+def binary_mod_2(data1,data2,thresh1,thresh2):
+	mdata = np.copy(data1)
+	mdata[mdata<thresh1] = 0
+	mdata[mdata>=thresh1] = 1
+	odata = np.copy(data2)
+	odata[odata<thresh2] = 0
+	odata[odata>=thresh2] = 1	
+	ddata = odata - mdata
+	thenans = np.isnan(ddata)
+	ddata[thenans] = 0
+	return(mdata,odata,ddata)
+############################################################################
+############################################################################
 def figure_save(X,Y,Z,name,m):
 	f = plt.figure()
 	m.pcolor(X,Y,Z,cmap='winter',vmin=-1,vmax=1)
@@ -211,7 +224,8 @@ class aod_poly:
 					ukn_cont.append(el)
 					func_val=func_unk
 				func_vals.append(func_val)
-		func_vals = valsm.smoother(func_vals)
+		if not MODEL2MODEL:
+			func_vals = valsm.smoother(func_vals)
 		mdl_cont	= np.array(mdl_cont)
 		osi_cont	= np.array(osi_cont)
 		ukn_cont	= np.array(ukn_cont)
@@ -324,12 +338,15 @@ class aod_stats:
 		UKW		= 'Unknown contours < 20%'
 		DMW		= 'Contour difference < 40%'
 		width = []
+		osi_width = []
 		if len(mcont) == 0:
 			DMW		=	'Only OSISAF data, MODEL not present'
 			self.widths	= [0,0,0,0,0]
+			self.osi_widths	= [0,0,0,0,0]
 		elif len(ocont) == 0:
 			DMW		= 'Only MODEL data, OSISAF not present'
 			self.widths	= [0,0,0,0,0]
+			self.osi_widths	= [0,0,0,0,0]
 		else:
 			ukn		= 100*(len(ucont)/float(len(tcont)))
 			dmo		= 100*(abs(len(mcont)-len(ocont))/float(len(tcont)))
@@ -344,7 +361,15 @@ class aod_stats:
 					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
 				idx,value = min(enumerate(dist_pt),key=itg(1))
 				width.append(value)
-				self.widths = width
+			self.widths = width
+			for n,en in enumerate(ocont):
+				dist_pt = []
+				for m,em in enumerate(mcont):
+					dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
+					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
+				idx,value = min(enumerate(dist_pt),key=itg(1))
+				osi_width.append(value)
+			self.osi_widths = osi_width
 		self.UKW		= UKW
 		self.DMW		= DMW
 		return
@@ -362,6 +387,7 @@ class aod_stats:
 		ocont = self.ocont
 		ucont = self.ucont
 		dist = self.widths
+		osi_dist = self.osi_widths
 		clon = '%1.2f' %self.mclon
 		clat = '%1.2f' %self.mclat
 		clonlat = "{0}/{1}".format(clon,clat)
@@ -377,6 +403,14 @@ class aod_stats:
 			mdist = '%1.2f' %mdist
 		else:
 			mdist		= 'NaN'
+		if osi_dist != [0,0,0,0,0]:
+			odist = np.array(self.osi_widths)
+			# changing units from decakilometer to kilometer
+			odist = odist[:,0]*10
+			odist = np.median(odist)
+			odist = '%1.2f' %odist
+		else:
+			odist		= 'NaN'
 		pstat		= self.polygon_status
 		if pstat == 1:
 			status = "Overestimation"
@@ -415,26 +449,31 @@ class aod_stats:
 			polyf.plot(ucont[:,1],ucont[:,0],'go',markersize=4)
 		if dist != [0,0,0,0,0]:
 			for n,en in enumerate(dist):
-				polyf.plot([en[2],en[4]],[en[1],en[3]],color='grey',alpha=0.1)
+				polyf.plot([en[2],en[4]],[en[1],en[3]],color='black',alpha=0.1)
+		if osi_dist != [0,0,0,0,0]:
+			for n,en in enumerate(osi_dist):
+				polyf.plot([en[2],en[4]],[en[1],en[3]],color='magenta',alpha=0.1)
 		
 		# Legend on the bottom right
 		mc = mlines.Line2D([],[],color='red',marker='o')
 		oc = mlines.Line2D([],[],color='yellow',marker='o')
 		uc = mlines.Line2D([],[],color='green',marker='o')
-		ed = mlines.Line2D([],[],color='black',alpha=0.5)
+		md = mlines.Line2D([],[],color='grey')
+		od = mlines.Line2D([],[],color='magenta')
 		pos_p = mpatches.Patch(color='lightgreen')
 		neg_p = mpatches.Patch(color='royalblue')
-		leg.legend([mc,oc,uc,ed,pos_p,neg_p],("Model Cont.","Osisaf Cont.","Unknown Cont.","Dist. Mdl to Osi", \
-			'Model Underestimate','Model Overestimate'),loc='center')
+		leg.legend([mc,oc,uc,md,od,pos_p,neg_p],('Model Cont.','Osisaf Cont.','Unknown Cont.','Dist. Mdl to Osi', \
+			'Dist. Osi to Mdl','Model Underestimate','Model Overestimate'),loc='center')
 		
 		# Statistics table on the bottom left
 		txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
 					'2) Area = '+str(area)+' km^2\n'+ \
 					'3) Perimeter = '+str(perim)+' km\n'+ \
-					'4) Mean Width = '+str(mdist)+' km\n'+ \
-					'5) Status = '+str(status)+'\n'+ \
-					'6) '+str(DMW)+'\n'+ \
-					'7) '+str(UKW)
+					'4) Mean M-O Width = '+str(mdist)+' km\n'+ \
+					'5) Mean O-M Width = '+str(odist)+' km\n'+ \
+					'6) Status = '+str(status)+'\n'+ \
+					'7) '+str(DMW)+'\n'+ \
+					'8) '+str(UKW)
 		tab.text(0,0,txt,fontsize=15,bbox=dict(facecolor='white',alpha=1))
 		if save:
 			fig.savefig(pname+'.png',bbox_inches='tight')
@@ -455,7 +494,9 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
 
 # Getting a nice blank space before info's printing
 print ''
-FIGURE = raw_input('[1] to save all figures, [ENTER] to skip') 
+FIGURE = raw_input('[1] to save all figures, [ENTER] to skip	') 
+print ''
+MODEL2MODEL = raw_input('[1] for model2model, [ENTER] to model2osisaf	') 
 print ''
 
 # READ TP4 DAILY
@@ -505,10 +546,20 @@ C = C.T
 # INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
 ZN = grd(C,Z3,(X2,Y2),method='nearest')
 
-# BINARY
-BN,BO,DN = binary_mod(ZN,ZO,.15)
-# binary contour <-not used in this analysis
-#NDN = binary_cont(XO,YO,DN,BO,BN)
+# NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
+if MODEL2MODEL:
+	print ''
+	print('NOTE - Osisaf file has been used just for the reprojection - Osisaf references are now linked to 80% ice concentration contours of the Model')
+	print ''
+	# Changing Osisaf dataset into Model dataset
+	ZO = np.copy(ZN)
+	# Binary between model
+	BN,BO,DN = binary_mod_2(ZN,ZO,.15,.80)
+else:
+	# BINARY
+	BN,BO,DN = binary_mod(ZN,ZO,.15)
+	# binary contour <-not used in this analysis
+	#NDN = binary_cont(XO,YO,DN,BO,BN)
 		
 # finding contours from the difference data map
 pos = msr.find_contours(DN,.9)
@@ -518,6 +569,10 @@ for n,el in enumerate(pos):
 	# classification of positive polygons
 	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
 	poly_list.append(aod)
+try:
+	n
+except NameError:
+	n = -1
 for n2,el in enumerate(neg):
 	# classification of negative (n+1 for good enumeration)
 	n += 1
