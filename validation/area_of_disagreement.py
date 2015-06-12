@@ -617,15 +617,30 @@ if not os.path.exists(fin_dir):
 for filname in glob.glob(os.path.join('*.png')):
 	shutil.move(filname,fin_dir)
 
-if 1:
-   # save a poly for testing
-   nt    = 55
-   npfil = '../python_tutorial/npz/poly'+str(nt)+'.npz'
-   #
-   poly_test   = poly_list[nt]
-   xy_coords   = poly_test.xy_list
-   xy_coords2  = [tuple(xyc) for xyc in xy_coords]
-   fvals2      = 1*poly_test.function_vals
+if 0:
+   if MODEL2MODEL:
+      # save a poly for testing
+      nt    = 70
+      npfil = '../python_tutorial/npz/poly'+str(nt)+'.npz'
+      print('saving to '+npfil)
+      #
+      poly_test   = poly_list[nt]
+      xy_coords   = poly_test.xy_list
+      xy_coords2  = [tuple(xyc) for xyc in xy_coords]
+      fvals2      = 1*poly_test.function_vals
 
-   # save file
-   np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+      # save file
+      np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+   else:
+      # save a poly for testing
+      nt    = 55
+      npfil = '../python_tutorial/npz/poly'+str(nt)+'.npz'
+      print('saving to '+npfil)
+      #
+      poly_test   = poly_list[nt]
+      xy_coords   = poly_test.xy_list
+      xy_coords2  = [tuple(xyc) for xyc in xy_coords]
+      fvals2      = 1*poly_test.function_vals
+
+      # save file
+      np.savez(npfil,xy=xy_coords,func_vals=fvals2)
