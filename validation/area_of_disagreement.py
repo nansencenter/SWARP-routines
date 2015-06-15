@@ -86,18 +86,19 @@ def get_stats(data,name):
 	stat	= data.size
 	pone	= (stat1 / float(stat)) * 100
 	pmone	= (stat2 / float(stat)) * 100
+	print " " 
 	print "Number of elements:	",stat
 	print "Hit:			",stat0
 	print "Underprediction(+1):	",stat1,pone
 	print "Overprediction(-1):	",stat2,pmone
 	print " " 
-	f = open('./outputs/aod/'+name+'.txt','w')
-	f.write("Number of elements:	%s \n" % stat)
-	f.write("Hit:			%s \n" % stat0)
-	f.write("Underprediction(+1):	%s - %s \n" % (stat1,pone))
-	f.write("Overprediction(-1):	%s - %s \n" % (stat2,pmone))
-	f.write(" ")
-	f.close
+	#f = open('./outputs/aod/'+name+'.txt','w')
+	#f.write("Number of elements:	%s \n" % stat)
+	#f.write("Hit:			%s \n" % stat0)
+	#f.write("Underprediction(+1):	%s - %s \n" % (stat1,pone))
+	#f.write("Overprediction(-1):	%s - %s \n" % (stat2,pmone))
+	#f.write(" ")
+	#f.close
 	return()
 ###########################################################################
 ###########################################################################
@@ -307,7 +308,7 @@ class aod_stats:
 
 	def poly_area(self):
 		# Calculating the area of irregular polygon (from perimeter)
-		vs		= self.xy_list
+		vs		= self.ij_list
 		a			= 0
 		x0,y0 = vs[0]
 		for [x1,y1] in vs[1:]:
@@ -316,7 +317,9 @@ class aod_stats:
 			a += 0.5*(y0*dx - x0*dy)
 			x0 = x1
 			y0 = y1
-		
+		if a < 0:
+			a = a*(-1)
+		a = a*10
 		self.area	=	a
 		return
 
@@ -419,12 +422,12 @@ class aod_stats:
 		
 		# Setting up the plot (2x2) and subplots
 		fig		= plt.figure()
-		plt.title(pname)
-		gs		= gridspec.GridSpec(2,2,width_ratios=[2,1],height_ratios=[4,2])
-		main	= plt.subplot(gs[0,0])
-		polyf	= plt.subplot(gs[0,1])
-		tab		= plt.subplot(gs[1,0])
-		leg		= plt.subplot(gs[1,1])
+		fig.suptitle(pname,fontsize=18)
+		gs		= gridspec.GridSpec(2,2,width_ratios=[1,2],height_ratios=[4,2])
+		main	= plt.subplot(gs[0,1])
+		polyf	= plt.subplot(gs[0,0])
+		tab		= plt.subplot(gs[1,1])
+		leg		= plt.subplot(gs[1,0])
 		tab.set_xticks([])
 		leg.set_xticks([])
 		tab.set_yticks([])
@@ -474,7 +477,7 @@ class aod_stats:
 					'6) Status = '+str(status)+'\n'+ \
 					'7) '+str(DMW)+'\n'+ \
 					'8) '+str(UKW)
-		tab.text(0,0,txt,fontsize=15,bbox=dict(facecolor='white',alpha=1))
+		tab.text(0,0,txt,fontsize=14,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 		if save:
 			fig.savefig(pname+'.png',bbox_inches='tight')
 		print 'Statistic chart done for '+str(pname)
@@ -560,6 +563,8 @@ else:
 	BN,BO,DN = binary_mod(ZN,ZO,.15)
 	# binary contour <-not used in this analysis
 	#NDN = binary_cont(XO,YO,DN,BO,BN)
+
+get_stats(DN,dadate)
 		
 # finding contours from the difference data map
 pos = msr.find_contours(DN,.9)
