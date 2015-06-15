@@ -225,8 +225,7 @@ class aod_poly:
                                      ukn_cont.append(el)
                                      func_val=func_unk
                              func_vals.append(func_val)
-             if not MODEL2MODEL:
-                     func_vals = valsm.smoother(func_vals)
+             func_vals = valsm.smoother(func_vals)
              mdl_cont	= np.array(mdl_cont)
              osi_cont	= np.array(osi_cont)
              ukn_cont	= np.array(ukn_cont)
@@ -541,7 +540,7 @@ mask2    = conc[:,:].mask
 Z2[mask2] = np.NaN
 ZO				= Z2/100
 
-# REPROJECTION
+# getting ready for reprojection
 X3 = X.reshape(X.size)
 Y3 = Y.reshape(Y.size)
 Z3 = Z.reshape(Z.size)
@@ -549,8 +548,6 @@ C = [X3,Y3]
 C = np.array(C)
 C = C.T
 
-# INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
-ZN = grd(C,Z3,(X2,Y2),method='nearest')
 
 # NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
 if MODEL2MODEL:
@@ -562,6 +559,8 @@ if MODEL2MODEL:
 	# Binary between model
 	BN,BO,DN = binary_mod_2(ZN,ZO,.15,.80)
 else:
+	# INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
+	ZN = grd(C,Z3,(X2,Y2),method='nearest')
 	# BINARY
 	BN,BO,DN = binary_mod(ZN,ZO,.15)
 	# binary contour <-not used in this analysis
