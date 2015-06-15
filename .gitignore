@@ -4,6 +4,8 @@ latex/*.log
 latex/*.toc
 latex/*.synctex.gz
 *.swp
+*.DS_Store
+*.npz
 *.pyc
 *.gbx9
 *.ncx

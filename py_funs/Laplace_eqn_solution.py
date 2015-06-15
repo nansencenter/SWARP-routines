@@ -471,15 +471,16 @@ class dirichlet_fund_soln:
       
       if plot_boundary:
          # just plot values of F at boundary
-				 #TODO doesn't work on poly55
-         ss = self.get_arc_length()[:-1]
+         ss = self.get_arc_length()/1.e3 # km
          pobj.plot(ss,self.func_vals_approx,'b')
          pobj.plot(ss,self.func_vals,'.k')
 
          x2,y2 = np.array(self.coords).transpose() # coords can be reversed
          f2    = self.eval_solution(x2,y2)
          pobj.plot(ss,f2,'--r')
-         pobj.xlabel('arc length from '+str(self.coords[0]))
+         xc    = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
+         yc    = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
+         pobj.xlabel('arc length (km) from '+str((xc,yc))+' (km)')
          pobj.ylabel('values of target function')
 
       else:
@@ -496,8 +497,8 @@ class dirichlet_fund_soln:
          y1 = bbox[3]
          x  = np.arange(x0,x1+eps,eps)
          y  = np.arange(y0,y1+eps,eps)
-         xp = np.arange(x0-.5*eps,x1+1.5*eps,eps)
-         yp = np.arange(y0-.5*eps,y1+1.5*eps,eps)
+         xp = np.arange(x0-.5*eps,x1+1.5*eps,eps)/1.e3 #km
+         yp = np.arange(y0-.5*eps,y1+1.5*eps,eps)/1.e3
 
          # make pcolor/contour plot
          nlevels  = 10
@@ -514,10 +515,12 @@ class dirichlet_fund_soln:
          Fm = np.ma.array(F,mask=np.isnan(F))
          pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
          pobj.colorbar()
-         pobj.contour(X,Y,F,vlev,colors='k')
+         pobj.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
          #
          x,y   = GP.coords2xy(self.singularities)
-         pobj.plot(x,y,'.k',markersize=1.5)
+         pobj.plot(x/1.e3,y/1.e3,'.k',markersize=1.5)
+         pobj.xlabel('x, km')
+         pobj.ylabel('y, km')
 
       if show:
          pobj.show()
@@ -526,7 +529,7 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def plot_stream_func_bdy(self,pobj=None,show=True,i=None):
+   def plot_stream_func_bdy(self,pobj=None,show=True,i_test=None):
       import numpy            as np
       import shapefile_utils  as SFU
       import geometry_planar  as GP
@@ -535,14 +538,16 @@ class dirichlet_fund_soln:
          # set a plot object if none exists
          from matplotlib import pyplot as pobj
       
-      ss = list(np.cumsum(self.spacings[:-1]))
-      ss.insert(0,0)
-      ss = np.array(ss)
+      ss = self.get_arc_length()/1.e3 # km
 
-      if i is None:
+      if i_test is None:
          # just plot values of stresm function at boundary
          pobj.plot(ss,self.stream_func_bdy,'b')
          out   = None
+         xc    = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
+         yc    = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
+         pobj.xlabel('arc length (km) from '+str((xc,yc))+' (km)')
+         pobj.ylabel('values of stream function')
 
       else:
 
@@ -552,8 +557,8 @@ class dirichlet_fund_soln:
          nvec  = np.arange(Nx)
 
          # for each singularity (just outside polygon)
-         sing        = self.singularities[i]
-         branch_dir  = np.pi/2.+self.tangent_dirn[i]
+         sing        = self.singularities[i_test]
+         branch_dir  = np.pi/2.+self.tangent_dirn[i_test]
          atan2       = GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
          pobj.plot(ss,atan2/np.pi,'r')
          out   = [atan2]
@@ -574,8 +579,6 @@ class dirichlet_fund_soln:
       from matplotlib import cm
       
 
-      print('extracting isolines...\n')
-
       poly  = self.shapely_polygon
       bbox  = poly.bounds
       eps   = self.resolution/3.
@@ -592,10 +595,12 @@ class dirichlet_fund_soln:
       Ny = len(yv)
 
       # evaluate solution on the grid
+      print('evaluating solution on the grid...\n')
       X,Y      = np.meshgrid(xv,yv)
       F        = self.eval_solution(X,Y)
 
       # get contours
+      print('extracting isolines...\n')
       nlevels   = self.number_of_points/4
       vmin      = self.func_vals.min()
       vmax      = self.func_vals.max()
@@ -687,7 +692,7 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def get_contour_lengths(self,bmap=None,pobj=None):
+   def get_contour_lengths(self,bmap=None,pobj=None,show=True):
 
       import numpy as np
 
@@ -696,8 +701,9 @@ class dirichlet_fund_soln:
 
          def __init__(self,xy_bdy_coords,xy_conts,\
                area,perimeter,lengths,\
+               spherical_geometry=False,\
                ll_bdy_coords=None,ll_contours=None,\
-               func_vals=None,stream_func=None,):
+               func_vals=None,stream_func=None):
 
             # NB use "1*" to remove pointers to the arrays outside the function
             # - like copy, but works for lists also
@@ -708,10 +714,15 @@ class dirichlet_fund_soln:
             self.perimeter       = perimeter       # perimeter of polygon
 
             # lon-lat info if present
-            if ll_contours is not None:
+            self.spherical_geometry = spherical_geometry
+            if spherical_geometry:
+               if ll_contours is None:
+                  raise ValueError('"ll_contours" not given')
+               if ll_bdy_coords is None:
+                  raise ValueError('"ll_bdy_coords" not given')
                self.lonlat_contours = 1*ll_contours   # (lon,lat) coordinates of each contour
-            if ll_bdy_coords is not None:
                self.ll_bdy_coords   = 1*ll_bdy_coords # (lon,lat) coordinates of boundary
+
             if func_vals is not None:
                self.func_vals       = 1*func_vals     # value of function used by Laplace's equation
             if stream_func is not None:
@@ -738,11 +749,11 @@ class dirichlet_fund_soln:
          lst            = list(np.array([lons,lats]).transpose())
          ll_bdy_coords  = [(lo,la) for lo,la in lst]
          area           = GS.area_polygon_ellipsoid(lons,lats,radians=False)
-         arclen         = GS.get_arc_length(lons,lats,radians=False,closed=True)
+         arclen         = GS.arc_length(lons,lats,radians=False,closed=True)
          perimeter      = arclen[-1]
 
-         # get isolines of function
-         contours = self.get_isolines(pobj=pobj)
+         # get isolines of function (plot if pobj is not None)
+         contours = self.get_isolines(pobj=pobj,show=show)
          ll_conts = []
          lengths  = []
          
@@ -750,7 +761,7 @@ class dirichlet_fund_soln:
             # list of coords (tuples)
             x,y         = np.array(cont).transpose()
             lons,lats   = bmap(x,y,inverse=True)
-            arclen      = GS.get_arc_length(lons,lats,radians=False,closed=False)
+            arclen      = GS.arc_length(lons,lats,radians=False,closed=False)
             #
             lengths.append(arclen[-1])  #perimeter
             lst   = list(np.array([lons,lats]).transpose())
@@ -765,7 +776,8 @@ class dirichlet_fund_soln:
          AI = area_info(self.coords,xy_conts,\
                   area,perimeter,lengths,\
                   func_vals=self.func_vals,stream_func=self.stream_func_bdy,\
-                  ll_bdy_coords=ll_bdy_coords,ll_contours=ll_conts)
+                  ll_bdy_coords=ll_bdy_coords,ll_contours=ll_conts,\
+                  spherical_geometry=True)
       else:
          # boundary/area information
          # - just Euclidean routines
@@ -777,8 +789,8 @@ class dirichlet_fund_soln:
          area        = self.shapely_polygon.area
          perimeter   = self.shapely_polygon.length
 
-         # get isolines of function
-         contours = self.get_isolines(pobj=pobj)
+         # get isolines of function (plot if pobj is not None)
+         contours = self.get_isolines(pobj=pobj,show=show)
          lengths  = []
          
          for cont in contours:
@@ -792,8 +804,9 @@ class dirichlet_fund_soln:
          #       ll_bdy_coords=None,ll_conts=None,\
          #       func_vals=None,stream_func=None,):
          AI = area_info(self.coords,contours,\
-                  area,perimeter,lengths,
-                  func_vals=self.func_vals,stream_func=self.stream_func_bdy)
+                  area,perimeter,lengths,\
+                  func_vals=self.func_vals,stream_func=self.stream_func_bdy,\
+                  spherical_geometry=False)
 
       return AI
    #######################################################
