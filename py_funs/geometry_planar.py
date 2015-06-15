@@ -1,3 +1,34 @@
+#######################################################
+def maskgrid_outside_polygon(x,y,coords):
+   # use matplotlib.path to test if multiple points are contained
+   # inside a polygon
+   # INPUTS:
+   # x,y: numpy arrays with x and y coordinates to test respectively
+   # coords: list of coordinates of polygon's boundary (as tuples or lists)
+   # [(x0,y0),(x1,y1),...] or [[x0,y0],[x1,y1],...]
+   # RETURNS:
+   # mask of same shape as x and y
+   # > mask element is True if corresponding point
+
+   import numpy as np
+   from matplotlib import path
+   
+   Nx    = x.size
+   F     = np.zeros(Nx)
+   shp   = x.shape
+   x     = x.reshape(Nx)
+   y     = y.reshape(Nx)
+
+   bbPath   = path.Path(np.array(coords))
+
+   # points to test [(xi,yi)]
+   # coords2  = [(x[i],y[i]) for i in range(Nx*Ny)]
+   coords2  = np.array([x,y]).transpose()
+   mask     = np.array(bbPath.contains_points(coords2),dtype=bool)
+
+   return mask.reshape(shp)
+#######################################################
+
 #########################################################
 def area_polygon_euclidean(x,y):
    # area of a polygon in Euclidean space
