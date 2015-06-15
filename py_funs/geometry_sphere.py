@@ -149,7 +149,7 @@ def arc_length(lons,lats,R=None,radians=False,closed=False):
       lat0        = lats[n-1]
       lon1        = lons[n]
       lat1        = lats[n]
-      arc_len[n]  = greatcircledist(lat1, lon1, lat0, lon0, R=R,radians=radians)
+      arc_len[n]  = arc_len[n-1]+greatcircledist(lat1, lon1, lat0, lon0, R=R,radians=radians)
    
    return arc_len
 #######################################################
