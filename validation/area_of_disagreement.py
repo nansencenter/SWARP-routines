@@ -22,7 +22,6 @@ from operator import itemgetter as itg
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
 import Laplace_eqn_solution as Leqs
-import f_vals_smoother as valsm
 
 ############################################################################
 # Muting error coming from invalid values of binary_mod and binary_diff
@@ -137,6 +136,15 @@ class aod_poly:
 	def __init__(self,cont,OSI,MOD,DIFF,X,Y,number,polygon_status=1):
 		self.polygon_status		= polygon_status
 		self.polygon_name			= 'polygon'+str(number)
+		# class definition
+		if len(cont) <= 30:
+			self.polygon_class = 'S'
+		elif len(cont) > 30 and len(cont) <= 100:
+			self.polygon_class = 'M'
+		elif len(cont) > 100 and len(cont) <= 200:
+			self.polygon_class = 'B'
+		elif len(cont) > 200:
+			self.polygon_class = 'H'
 		self.ij_list					= cont
 		self._diff_with_terrain_(DIFF,OSI,MOD) 
 		self._ij2xy_(cont,X,Y)
@@ -228,31 +236,31 @@ class aod_poly:
 					ukn_cont.append(el)
 					func_val=func_unk
 				func_vals.append(func_val)
-		func_vals = valsm.smoother(func_vals)
-		mdl_cont	= np.array(mdl_cont)
-		osi_cont	= np.array(osi_cont)
-		ukn_cont	= np.array(ukn_cont)
+		mdl_cont = np.array(mdl_cont)
+		osi_cont = np.array(osi_cont)
+		ukn_cont = np.array(ukn_cont)
 		func_vals	= np.array(func_vals)
 		# include sorted contours as port of object
-		self.model_ice_edge		= mdl_cont
-		self.osisaf_ice_edge	= osi_cont
-		self.unknown_edge			= ukn_cont
-		self.function_vals		= func_vals
+		self.model_ice_edge 	= mdl_cont
+		self.osisaf_ice_edge = osi_cont
+		self.unknown_edge = ukn_cont
+		self.function_vals = func_vals
 		return
 
 ############################################################################
 class aod_stats:
 	def __init__(self,aod,basemap=None):
-		self.ij_list	    = aod.ij_list
-		self.xy_list	    = aod.xy_list
-		self.number_of_points  = len(aod.ij_list)
-		self.polygon_status    = aod.polygon_status
-		self.name		    = aod.polygon_name
-		self.patch_sign	    = aod.model_status
-		self.mcont		    = aod.model_ice_edge
-		self.ocont		    = aod.osisaf_ice_edge
-		self.ucont		    = aod.unknown_edge
-		self.diff		    = aod.difference
+		self.ij_list = aod.ij_list
+		self.xy_list = aod.xy_list
+		self.number_of_points = len(aod.ij_list)
+		self.polygon_status = aod.polygon_status
+		self.name = aod.polygon_name
+		self.pclass = aod.polygon_class
+		self.patch_sign = aod.model_status
+		self.mcont = aod.model_ice_edge
+		self.ocont = aod.osisaf_ice_edge
+		self.ucont = aod.unknown_edge
+		self.diff = aod.difference
 		
 		#get euclidean area
 		#TODO get area on sphere?
@@ -288,7 +296,17 @@ class aod_stats:
 			CX	= (1/float(6*A))*DX
 			CY	= (1/float(6*A))*DY
 			self.mclon,self.mclat = basemap(CX,CY,inverse=True)
-			
+			# defining the region
+			mclon = self.mclon
+			if mclon < 80 and mclon > 8:
+				self.polygon_region = 'Barents_Kara_sea'
+			elif mclon < 8 and mclon > -44:
+				self.polygon_region = 'Greenland_sea'
+			elif mclon < -44 and mclon > -70:
+				self.polygon_region = 'Labrador_sea'
+			else:
+				self.polygon_region = 'Misc.'
+
 			# Calculating lon/lat for model,osisaf,unknown contours and distances
 			mcont		= self.mcont
 			ocont		= self.ocont
@@ -343,11 +361,15 @@ class aod_stats:
 		width = []
 		osi_width = []
 		if len(mcont) == 0:
-			DMW		=	'Only OSISAF data, MODEL not present'
+			DMW = 'Only OSISAF data, MODEL not present'
+			if MODEL2MODEL:
+				DMW = 'Only 80% edge, 15% not present'
 			self.widths	= [0,0,0,0,0]
 			self.osi_widths	= [0,0,0,0,0]
 		elif len(ocont) == 0:
-			DMW		= 'Only MODEL data, OSISAF not present'
+			DMW = 'Only MODEL data, OSISAF not present'
+			if MODEL2MODEL:
+				DMW = 'Only 15% edge, 80% not present'
 			self.widths	= [0,0,0,0,0]
 			self.osi_widths	= [0,0,0,0,0]
 		else:
@@ -377,8 +399,10 @@ class aod_stats:
  		self.DMW		= DMW
  		return
 
-	def stat_chart(self,pclass,save=False):
-		pname = self.name	
+	def stat_chart(self,save=False):
+		pname = self.name
+		pclass = self.pclass
+		region = self.polygon_region
 		print ''
 		print 'Statistic Chart for '+str(pname)
 		print ''
@@ -421,9 +445,9 @@ class aod_stats:
 			status = 'Overestimation'
 
 		# Setting up the plot (2x2) and subplots
-		fig = plt.figure()
+		fig = plt.figure(figsize=(15,10))
 		gs = gridspec.GridSpec(2,2,width_ratios=[2,1],height_ratios=[4,2])
-		plt.suptitle(pname+', class '+pclass,fontsize=20)
+		plt.suptitle(pname+', class '+pclass+', '+region,fontsize=18)
 		main = plt.subplot(gs[0,0])
 		polyf = plt.subplot(gs[0,1])
 		tab = plt.subplot(gs[1,0])
@@ -466,7 +490,7 @@ class aod_stats:
 			md = mlines.Line2D([],[],color='grey')
 			od = mlines.Line2D([],[],color='magenta')
 			leg.legend([mc,oc,uc,md,od],(\
-			      '15 %% Cont.','80 %% Cont.','Unknown Cont.','Dist. 15 to 80', \
+			      '15 % Cont.','80 % Cont.','Unknown Cont.','Dist. 15 to 80', \
 			      'Dist. 80 to 15'),loc='center')
   		           
 			# Statistics text on the bottom left
@@ -475,10 +499,16 @@ class aod_stats:
 			      '3) Perimeter = '+str(perim)+' km\n'+ \
 			      '4) Mean 15-80 Width = '+str(mdist)+' km\n'+ \
 			      '5) Mean 80-15 Width = '+str(odist)+' km\n'+ \
-			      '6) '+str(UKW)
-			tab.text(0,0,txt,fontsize=15,bbox=dict(facecolor='white',alpha=1))
+			      '6) '+str(DMW)+'\n'+ \
+			      '7) '+str(UKW)
+			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
-			        fig.savefig(pclass+pname+'.png',bbox_inches='tight')
+				valid_class = 'Model2Model'
+				if not os.path.exists(valid_class)
+					os.mkdir(valid_class)
+					if not os.path.exists(valid_class+'/'+region):
+						os.mkdir(valid_class+'/'+region)
+				fig.savefig(valid_class+'/'+region+'/'+pclass+'_'+pname+'.png',bbox_inches='tight')
 			print 'Statistic chart done for '+str(pname)
 		else:
 			# Legend on the bottom right
@@ -502,9 +532,14 @@ class aod_stats:
 			       '6) Status = '+str(status)+'\n'+ \
 			       '7) '+str(DMW)+'\n'+ \
 			       '8) '+str(UKW)
-			tab.text(0,0,txt,fontsize=15,bbox=dict(facecolor='white',alpha=1))
+			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
-			        fig.savefig(pname+'.png',bbox_inches='tight')
+				valid_class = 'Model_Osisaf'
+				if not os.path.exists(valid_class)
+					os.mkdir(valid_class)
+					if not os.path.exists(valid_class+'/'+region):
+						os.mkdir(valid_class+'/'+region)
+				fig.savefig(valid_class+'/'+region+'/'+pclass+'_'+pname+'.png',bbox_inches='tight')
 			print 'Statistic chart done for '+str(pname)
 
 		plt.show(False)
@@ -524,7 +559,7 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
 
 # Getting a nice blank space before info's printing
 print ''
-FIGURE = raw_input('[1] to save all figures, [ENTER] to skip	') 
+FIGURE = raw_input('[1] to plot&save all figures, [Enter] to plot without save	') 
 print ''
 MODEL2MODEL = raw_input('[1] for model2model, [ENTER] to model2osisaf	') 
 print ''
@@ -578,13 +613,9 @@ C = C.T
 
 # NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
 if MODEL2MODEL:
-	print ''
-	print('NOTE - Osisaf file has been used just for the reprojection - Osisaf references are now linked to 80% ice concentration contours of the Model')
-	print ''
-	# Changing Osisaf dataset into Model dataset
-	ZO = np.copy(ZN)
+	ZN = grd(C,Z3,(X2,Y2),method='nearest')
 	# Binary between model
-	BN,BO,DN = binary_mod_2(ZN,ZO,.15,.80)
+	BN,BO,DN = binary_mod_2(ZN,ZN,.15,.80)
 else:
 	# INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
 	ZN = grd(C,Z3,(X2,Y2),method='nearest')
@@ -628,34 +659,78 @@ print ''
 
 print 'Calculating statistics for every polygon...'
 print ''
-Spoly_stat_list = []
-Mpoly_stat_list = []
-Bpoly_stat_list = []
+scount = 0
+mcount = 0
+bcount = 0
+hcount = 0
+sbk_sea = 0
+sgr_sea = 0
+slb_sea = 0
+smiscel = 0
+mbk_sea = 0
+mgr_sea = 0
+mlb_sea = 0
+mmiscel = 0
+bbk_sea = 0
+bgr_sea = 0
+blb_sea = 0
+bmiscel = 0
+hbk_sea = 0
+hgr_sea = 0
+hlb_sea = 0
+hmiscel = 0
+poly_stat_list = []
 for el in poly_list:
-	if len(el.ij_list) <= 40:
+	if el.polygon_class == 'S':
+		scount += 1
 		poly = aod_stats(el,m)
-		Spoly_stat_list.append(poly)
-	if len(el.ij_list) > 40 and len(el.ij_list) <= 150:
+		if poly.polygon_region == 'Barents_Kara_sea':
+			sbk_sea += 1
+		elif poly.polygon_region == 'Greenland_sea':
+			sgr_sea += 1
+		elif poly.polygon_region == 'Labrador_sea':
+			slb_sea += 1
+		elif poly.polygon_region == 'Misc.':
+			smiscel += 1
+	elif el.polygon_class == 'M':
+		mcount += 1
 		poly = aod_stats(el,m)
-		Mpoly_stat_list.append(poly)
-	if len(el.ij_list) > 150:
+		if poly.polygon_region == 'Barents_Kara_sea':
+			mbk_sea += 1
+		elif poly.polygon_region == 'Greenland_sea':
+			mgr_sea += 1
+		elif poly.polygon_region == 'Labrador_sea':
+			mlb_sea += 1
+		elif poly.polygon_region == 'Misc.':
+			mmiscel += 1
+	elif el.polygon_class == 'B':
+		bcount += 1
 		poly = aod_stats(el,m)
-		Bpoly_stat_list.append(poly)
+		if poly.polygon_region == 'Barents_Kara_sea':
+			bbk_sea += 1
+		elif poly.polygon_region == 'Greenland_sea':
+			bgr_sea += 1
+		elif poly.polygon_region == 'Labrador_sea':
+			blb_sea += 1
+		elif poly.polygon_region == 'Misc.':
+			bmiscel += 1
+	elif el.polygon_class == 'H':
+		hcount += 1
+		poly = aod_stats(el,m)
+		if poly.polygon_region == 'Barents_Kara_sea':
+			hbk_sea += 1
+		elif poly.polygon_region == 'Greenland_sea':
+			hgr_sea += 1
+		elif poly.polygon_region == 'Labrador_sea':
+			hlb_sea += 1
+		elif poly.polygon_region == 'Misc.':
+			hmiscel += 1
+	poly_stat_list.append(poly)
 
 # changing name to every polygon_stat, easier to work with
 d = {}
-for x in range(len(Spoly_stat_list)):
-	d['Spoly{0}stats'.format(x)]=Spoly_stat_list[x]
-for key,value in sorted(d.items()):
-	globals()[key] = value
-d = {}
-for x in range(len(Mpoly_stat_list)):
-	d['Mpoly{0}stats'.format(x)]=Mpoly_stat_list[x]
-for key,value in sorted(d.items()):
-	globals()[key] = value
-d = {}
-for x in range(len(Bpoly_stat_list)):
-	d['Bpoly{0}stats'.format(x)]=Bpoly_stat_list[x]
+for x in range(len(poly_stat_list)):
+	d['poly{0}stats'.format(x)]=poly_stat_list[x]
 for key,value in sorted(d.items()):
 	globals()[key] = value
 
@@ -663,9 +738,33 @@ print '..statistics done.'
 print ''
 print 'Total number of Polygons	=',len(poly_list)
 print ''
-print 'Small Polygons (40 points or less) = ',len(Spoly_stat_list)
-print 'Medium Polygons (150 points or less) = ',len(Mpoly_stat_list)
-print 'Big Polygons (more than 150 points) = ',len(Bpoly_stat_list)
+print 'Small Polygons (30 points or less) = ',scount
+print 'Of which:	'
+print sbk_sea,' in the Barents_Kara sea'
+print sgr_sea,' in the Greenland sea'
+print slb_sea,' in the Labrador sea'
+print smiscel,' in the other seas'
+print ''
+print 'Medium Polygons (100 points or less) = ',mcount
+print 'Of which:	'
+print mbk_sea,' in the Barents_Kara sea'
+print mgr_sea,' in the Greenland sea'
+print mlb_sea,' in the Labrador sea'
+print mmiscel,' in the other seas'
+print ''
+print 'Big Polygons (200 points or less) = ',bcount
+print 'Of which:	'
+print bbk_sea,' in the Barents_Kara sea'
+print bgr_sea,' in the Greenland sea'
+print blb_sea,' in the Labrador sea'
+print bmiscel,' in the other seas'
+print ''
+print 'Huge Polygons (more than 200 points) = ',hcount
+print 'Of which:	'
+print hbk_sea,' in the Barents_Kara sea'
+print hgr_sea,' in the Greenland sea'
+print hlb_sea,' in the Labrador sea'
+print hmiscel,' in the other seas'
 print ''
 
 elapsedtime = time.time() - time0
@@ -675,26 +774,26 @@ if FIGURE:
 	print 'Saving figures...'
 	print ''
 	time1 = time.time()
-	figure_save(X2,Y2,DN,'DN'+dadate,hqm)
-	for poly in Spoly_stat_list:
-		poly.stat_chart('S',save=True)
-	for poly in Mpoly_stat_list:
-		poly.stat_chart('M',save=True)
-	for poly in Bpoly_stat_list:
-		poly.stat_chart('B',save=True)
+	#figure_save(X2,Y2,DN,'DN'+dadate,hqm)
+	for poly in poly_stat_list:
+		poly.stat_chart(save=True)
 	# moving all the charts in the proper dir
 	fin_dir = './outputs/aod/'+str(dadate)+'/'
 	if not os.path.exists(fin_dir):
 		os.makedirs(fin_dir)
 	for filname in glob.glob(os.path.join('*.png')):
 		shutil.move(filname,fin_dir)
+	if os.path.exists('Model_Osisaf'):
+		shutil.move('Model_Osisaf',fin_dir)
+	if os.path.exists('Model2Model'):
+		shutil.move('Model2Model',fin_dir)
 	elapsedtime1 = time.time() - time1
 	elapsedtime = time.time() - time0
 	print 'Figures saved and moved in ',elapsedtime1
 	print ''
 	print 'Time needed for the job ',elapsedtime
 
-if 1:
+if 0:
 	outdir='../python_tutorial/npz'
 	if not os.path.exists(outdir):
 		os.mkdir(outdir)
@@ -726,4 +825,3 @@ if 1:
 		# save file
 		np.savez(npfil,xy=xy_coords,func_vals=fvals2)
 			
-

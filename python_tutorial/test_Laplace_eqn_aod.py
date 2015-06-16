@@ -5,14 +5,16 @@ from mpl_toolkits.basemap import Basemap, cm
 import time
 
 rootdir  = os.getenv('SWARP_ROUTINES')
+rootdir  = '/Users/gianot/SWARP-routines'
 sys.path.append(rootdir+'/py_funs')
 import mod_reading as Mrdg
 import Laplace_eqn_solution as Leqs
+import f_vals_smoother as valsm
 # basemap (OSISAF grid projection)
 hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 
-if 0:
+if 1:
    # diff between OSISAF and model
    nt = 55
 else:
@@ -89,7 +91,7 @@ class contour_selection:
 
 
 CS = contour_selection(fun_sol.func_vals)
-if 0:
+if 1:
    selector_function = CS.selector_binary
    fstr              = '_v1'
 elif 0:
