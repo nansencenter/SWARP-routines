@@ -19,24 +19,22 @@ class dirichlet_fund_soln:
       import rtree.index      as Rindex
 
       #######################################################
-      if (coords[0][0]!=coords[-1][0]) and (coords[0][1]!=coords[-1][1]):
-         # can't repeat points during Laplace's eqn solution
-         self.func_vals = np.array(func_vals)
-         self.coords    = 1*coords # no longer pointer to list from outside the function
-         coords         = 1*coords # no longer pointer to list from outside the function
+      self.func_vals = np.array(func_vals)
+      self.coords    = 1*coords # no longer pointer to list from outside the function
+      pcoords        = 1*coords
 
-         # BUT need last and first coordinate the same for shapely polygon
-         coords.append(coords[0])
-      else:
-         self.coords    = coords[:-1]
-         self.func_vals = np.array(func_vals[:-1])
+      if (pcoords[0][0]!=pcoords[-1][0]) and (pcoords[0][1]!=pcoords[-1][1]):
+         # not periodic
+         # - BUT need last and first coordinate the same for shapely polygon
+         print('not periodic')
+         pcoords.append(pcoords[0])
       #######################################################
 
       #######################################################
       # make shapely polygon
       # (coords now has end-point repeated,
       #  self.coords doesn't)
-      self.shapely_polygon  = shgeom.Polygon(coords)
+      self.shapely_polygon  = shgeom.Polygon(pcoords)
       #######################################################
       
       #######################################################
@@ -336,10 +334,11 @@ class dirichlet_fund_soln:
       x,y   = GP.coords2xy(self.coords)
 
       # evaluate func on boundary
-      self.func_vals_approx   = self.eval_solution(x,y)
+      self.func_vals_approx   = self.eval_solution_fast(x,y)
 
       # calculate error
-      self.boundary_error  = GP.vector_norm(self.func_vals-self.func_vals_approx)/GP.vector_norm(self.func_vals)
+      self.boundary_error  = GP.vector_norm(self.func_vals-self.func_vals_approx)\
+                             /GP.vector_norm(self.func_vals)
 
       return
    #######################################################
@@ -381,11 +380,65 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def eval_solution(self,x,y):
+   def _maskgrid_outside_polygon(self,x,y):
+      # use shapely
 
       import numpy as np
-      from shapely.prepared import prep   # want "contains" function
       import shapely.geometry as shgeom
+      
+      Nx    = x.size
+      shp   = x.shape
+      x     = x.reshape(Nx)
+      y     = y.reshape(Nx)
+      mask  = np.zeros(Nx)
+
+      poly2 = self.shapely_polygon
+      for m in range(Nx):
+         # loop over points to evaluate F at
+         p0 = shgeom.Point((x[m],y[m]))
+
+         # check if p0 is inside the domain
+         mask[m]  = (poly2.intersects(p0))
+
+      return np.array(mask.reshape(shp),dtype=bool)
+   #######################################################
+
+   #######################################################
+   def eval_solution(self,x,y):
+      # check if inside the polygon before evaluating solution
+
+      import numpy as np
+      import geometry_planar as GP
+
+      Nx    = x.size
+      F     = np.zeros(Nx)+np.nan
+      shp   = x.shape
+      x     = x.reshape(Nx)
+      y     = y.reshape(Nx)
+
+      if 0:
+         # use shapely to get points in polygon
+         mask  = self._maskgrid_outside_polygon(x,y)
+      else:
+         # use matplotlib to get points in polygon
+         mask  = GP.maskgrid_outside_polygon(x,y,1*self.coords)
+
+      if 0:
+         nvec  = np.arange(Nx)
+         nc    = nvec[mask]
+         print(mask)
+         print(nc)
+         print(Nx,len(nc))
+
+      F[mask]  = self.eval_solution_fast(x[mask],y[mask])
+      return F.reshape(shp)
+   #######################################################
+
+   #######################################################
+   def eval_solution_fast(self,x,y):
+      # eval solution without checking if inside the polygon
+
+      import numpy as np
 
       Nx    = x.size
       F     = np.zeros(Nx)
@@ -393,20 +446,13 @@ class dirichlet_fund_soln:
       x     = x.reshape(Nx)
       y     = y.reshape(Nx)
 
-      poly2 = prep(self.shapely_polygon)
       for m in range(Nx):
          # loop over points to evaluate F at
-         p0 = shgeom.Point((x[m],y[m]))
-
-         # check if p0 is inside the domain
-         if poly2.intersects(p0):
-            # add contribution from each singularity
-            for n,c1 in enumerate(self.singularities): # singularities
-               p1    = shgeom.Point(c1)
-               R     = p0.distance(p1)
-               F[m]  = F[m]+self.sing_coeffs[n]*np.log(R)
-         else:
-            F[m]  = np.nan
+         # - add contribution from the singularities in 1 step
+         x0,y0 = x[m],y[m]
+         xs,ys = np.array(self.singularities).transpose()
+         Rsq   = pow(xs-x0,2)+pow(ys-y0,2)
+         F[m]  = F[m]+(.5*np.log(Rsq)).dot(self.sing_coeffs)
 
       return F.reshape(shp)
    #######################################################
@@ -476,7 +522,7 @@ class dirichlet_fund_soln:
          pobj.plot(ss,self.func_vals,'.k')
 
          x2,y2 = np.array(self.coords).transpose() # coords can be reversed
-         f2    = self.eval_solution(x2,y2)
+         f2    = self.eval_solution_fast(x2,y2)
          pobj.plot(ss,f2,'--r')
          xc    = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
          yc    = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
@@ -573,10 +619,11 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def get_isolines(self,pobj=None,show=True):
+   def get_isolines(self,test_function=None,pobj=None,show=True,func_vals_orig=None):
       from skimage import measure as msr
       import numpy as np
       from matplotlib import cm
+      import time
       
 
       poly  = self.shapely_polygon
@@ -594,10 +641,13 @@ class dirichlet_fund_soln:
       Nx = len(xv)
       Ny = len(yv)
 
+      t0 = time.clock()
       # evaluate solution on the grid
-      print('evaluating solution on the grid...\n')
+      print('evaluating solution on the grid...')
       X,Y      = np.meshgrid(xv,yv)
       F        = self.eval_solution(X,Y)
+      t1 = time.clock()
+      print('time taken (mins): '+str((t1-t0)/60.)+'\n')
 
       # get contours
       print('extracting isolines...\n')
@@ -606,7 +656,7 @@ class dirichlet_fund_soln:
       vmax      = self.func_vals.max()
       dv        = (vmax-vmin)/float(nlevels)
       vlev      = np.arange(vmin,vmax+dv,dv)
-      print(str(nlevels)+'contours, for isolines between '+\
+      print(str(nlevels)+' contours, for isolines between '+\
             str(vmin)+' and '+str(vmax))
       #
       contours  = []
@@ -647,14 +697,25 @@ class dirichlet_fund_soln:
                # find nearest points on boundary to end points of contour
                i0 = list(self.coord_index.nearest(c0,1))[0]
                il = list(self.coord_index.nearest(cl,1))[0]
+
+               if test_function is not None:
+                  # check if contours cross from "0" to "1"
+                  keep  = test_function(i0,il)
+               else:
+                  keep  = True
+
                #
-               xy.insert(0,self.coords[i0])
-               xy.append(self.coords[il])
-               conts.append(xy)
+               if keep:
+                  xy.insert(0,self.coords[i0])
+                  xy.append(self.coords[il])
+                  conts.append(xy)
             ##################################################
 
          contours.append(conts)
          ##################################################
+
+      t2 = time.clock()
+      print('time taken (s): '+str(t2-t1)+'\n')
 
       ##################################################
       # merge contours from different vlevels
@@ -666,15 +727,31 @@ class dirichlet_fund_soln:
       ##################################################
       # if plot object passed in, make a plot
       if pobj is not None:
+         from matplotlib import cm
+         cmap  = cm.jet
+         # cmap2 = cm.coolwarm
+         cmap2 = cm.PRGn
+
          print('plotting isolines...\n')
          xb,yb = np.array(poly.boundary.coords).transpose()
          pobj.plot(xb,yb,color='k',linewidth=2)
-         pobj.plot(xb,yb,linestyle='None',marker='o',color='g')
+
+         if func_vals_orig is not None:
+            c  = func_vals_orig
+         else:
+            c  = self.stream_func_bdy
+
+         if (len(c)==len(xb)+1):
+            c  = c[:len(xb)]
+         elif (len(c)==len(xb)-1):
+            c  = np.concatenate([c,np.array([c[0]])])
+
+         pobj.scatter(xb, yb, marker='o', s=150, linewidths=0.5,\
+                      c=c, cmap=cmap2)
          #
          xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
          yp = np.arange(y0-eps/2.,y1+1.5*eps,eps)
          #
-         cmap  = cm.jet
          cmap.set_bad(color='w')
          Fm = np.ma.array(F,mask=np.isnan(F))
          pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
@@ -692,7 +769,8 @@ class dirichlet_fund_soln:
    #######################################################
 
    #######################################################
-   def get_contour_lengths(self,bmap=None,pobj=None,show=True):
+   def get_contour_lengths(self,bmap=None,pobj=None,show=True,test_function=None,\
+                           func_vals_orig=None):
 
       import numpy as np
 
@@ -753,7 +831,9 @@ class dirichlet_fund_soln:
          perimeter      = arclen[-1]
 
          # get isolines of function (plot if pobj is not None)
-         contours = self.get_isolines(pobj=pobj,show=show)
+         contours = self.get_isolines(pobj=pobj,show=show,test_function=test_function,\
+                                      func_vals_orig=func_vals_orig)
+
          ll_conts = []
          lengths  = []
          
@@ -769,11 +849,7 @@ class dirichlet_fund_soln:
             ll_conts.append(tups)
 
          # output object with all the info
-         # area_info(xy_bdy_coords,xy_conts,\
-         #       area,perimeter,lengths,\
-         #       ll_bdy_coords=None,ll_conts=None,\
-         #       func_vals=None,stream_func=None,):
-         AI = area_info(self.coords,xy_conts,\
+         AI = area_info(self.coords,contours,\
                   area,perimeter,lengths,\
                   func_vals=self.func_vals,stream_func=self.stream_func_bdy,\
                   ll_bdy_coords=ll_bdy_coords,ll_contours=ll_conts,\
@@ -790,7 +866,9 @@ class dirichlet_fund_soln:
          perimeter   = self.shapely_polygon.length
 
          # get isolines of function (plot if pobj is not None)
-         contours = self.get_isolines(pobj=pobj,show=show)
+         contours = self.get_isolines(pobj=pobj,show=show,\
+                                      test_function=test_function,\
+                                      func_vals_orig=func_vals_orig)
          lengths  = []
          
          for cont in contours:
@@ -837,7 +915,7 @@ def dirichlet_stream_func(coords=None,potential=None,func_vals=None):
       if (func_vals is None) or (coords is None):
          raise ValueError('Please pass in either potential or func_vals and coords')
       else:
-         potential   = dirichlet_fund_soln(coords,func_vals)
+         potential   = dirichlet_fund_soln(1*coords,1*func_vals)
 
    stream   = dirichlet_fund_soln(1*potential.coords,\
       1*potential.stream_func_bdy,singularities=1*potential.singularities)
