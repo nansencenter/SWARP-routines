@@ -8,13 +8,12 @@ def maskgrid_outside_polygon(x,y,coords):
    # [(x0,y0),(x1,y1),...] or [[x0,y0],[x1,y1],...]
    # RETURNS:
    # mask of same shape as x and y
-   # > mask element is True if corresponding point
+   # > mask element is True/False if corresponding point is inside/outside the polygon
 
    import numpy as np
    from matplotlib import path
    
    Nx    = x.size
-   F     = np.zeros(Nx)
    shp   = x.shape
    x     = x.reshape(Nx)
    y     = y.reshape(Nx)
