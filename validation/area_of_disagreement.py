@@ -504,7 +504,7 @@ class aod_stats:
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
 				valid_class = 'Model2Model'
-				if not os.path.exists(valid_class)
+				if not os.path.exists(valid_class):
 					os.mkdir(valid_class)
 					if not os.path.exists(valid_class+'/'+region):
 						os.mkdir(valid_class+'/'+region)
@@ -535,7 +535,7 @@ class aod_stats:
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
 				valid_class = 'Model_Osisaf'
-				if not os.path.exists(valid_class)
+				if not os.path.exists(valid_class):
 					os.mkdir(valid_class)
 					if not os.path.exists(valid_class+'/'+region):
 						os.mkdir(valid_class+'/'+region)
