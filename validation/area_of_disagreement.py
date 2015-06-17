@@ -68,6 +68,23 @@ def binary_mod_2(data1,data2,thresh1,thresh2):
 	return(mdata,odata,ddata)
 ############################################################################
 ############################################################################
+def binary_mod_3(data1,thresh):
+	mdata = np.copy(data1)
+	mdata[mdata>.01] = 1
+	mdata[mdata<=.01] = 0
+	odata = np.copy(data1)
+	odata[odata<thresh] = 0
+	odata[odata>=thresh] = 1
+	ddata = odata - mdata
+	#ddata = np.copy(data1)
+	#ddata[ddata==0] = thresh
+	#ddata[ddata<thresh] = 1
+	#ddata[ddata==thresh] = 0
+	thenans = np.isnan(ddata)
+	ddata[thenans] = 0
+	return(mdata,odata,ddata)
+############################################################################
+############################################################################
 def figure_save(X,Y,Z,name,m):
 	f = plt.figure()
 	m.pcolor(X,Y,Z,cmap='winter',vmin=-1,vmax=1)
@@ -363,13 +380,19 @@ class aod_stats:
 		if len(mcont) == 0:
 			DMW = 'Only OSISAF data, MODEL not present'
 			if MODEL2MODEL:
-				DMW = 'Only 80% edge, 15% not present'
+				if FLOES:
+					DMW = 'Only Ice Pack, Open Water not present'
+				else:
+					DMW = 'Only 80% edge, 15% not present'
 			self.widths	= [0,0,0,0,0]
 			self.osi_widths	= [0,0,0,0,0]
 		elif len(ocont) == 0:
 			DMW = 'Only MODEL data, OSISAF not present'
 			if MODEL2MODEL:
-				DMW = 'Only 15% edge, 80% not present'
+				if FLOES:
+					DMW = 'Only Open Water, Ice Pack not present'
+				else:
+					DMW = 'Only 15% edge, 80% not present'
 			self.widths	= [0,0,0,0,0]
 			self.osi_widths	= [0,0,0,0,0]
 		else:
@@ -483,33 +506,62 @@ class aod_stats:
 				polyf.plot([en[2],en[4]],[en[1],en[3]],color='magenta',alpha=0.1)
 
 		if MODEL2MODEL:
-			# Legend on the bottom right
-			mc = mlines.Line2D([],[],color='red',marker='o')
-			oc = mlines.Line2D([],[],color='yellow',marker='o')
-			uc = mlines.Line2D([],[],color='green',marker='o')
-			md = mlines.Line2D([],[],color='grey')
-			od = mlines.Line2D([],[],color='magenta')
-			leg.legend([mc,oc,uc,md,od],(\
-			      '15 % Cont.','80 % Cont.','Unknown Cont.','Dist. 15 to 80', \
-			      'Dist. 80 to 15'),loc='center')
-  		           
-			# Statistics text on the bottom left
-			txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
-			      '2) Area = '+str(area)+' km^2\n'+ \
-			      '3) Perimeter = '+str(perim)+' km\n'+ \
-			      '4) Mean 15-80 Width = '+str(mdist)+' km\n'+ \
-			      '5) Mean 80-15 Width = '+str(odist)+' km\n'+ \
-			      '6) '+str(DMW)+'\n'+ \
-			      '7) '+str(UKW)
-			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
-			if save:
-				valid_class = 'Model2Model'
-				if not os.path.exists(valid_class):
-					os.mkdir(valid_class)
+			if FLOES:
+				# Legend on the bottom right
+				mc = mlines.Line2D([],[],color='red',marker='o')
+				oc = mlines.Line2D([],[],color='yellow',marker='o')
+				uc = mlines.Line2D([],[],color='green',marker='o')
+				md = mlines.Line2D([],[],color='grey')
+				od = mlines.Line2D([],[],color='magenta')
+				leg.legend([mc,oc,uc,md,od],(\
+				      'Open Water Cont.','Ice Pack Cont.','Unknown Cont.','Dist. Water to Pack', \
+				      'Dist. Pack to Water'),loc='center')
+  			           
+				# Statistics text on the bottom left
+				txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
+				      '2) Area = '+str(area)+' km^2\n'+ \
+				      '3) Perimeter = '+str(perim)+' km\n'+ \
+				      '4) Mean W-P Width = '+str(mdist)+' km\n'+ \
+				      '5) Mean P-W Width = '+str(odist)+' km\n'+ \
+				      '6) '+str(DMW)+'\n'+ \
+				      '7) '+str(UKW)
+				tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
+				if save:
+					valid_class = 'Model2Model_Floe_Size'
+					if not os.path.exists(valid_class):
+						os.mkdir(valid_class)
 					if not os.path.exists(valid_class+'/'+region):
 						os.mkdir(valid_class+'/'+region)
-				fig.savefig(valid_class+'/'+region+'/'+pclass+'_'+pname+'.png',bbox_inches='tight')
-			print 'Statistic chart done for '+str(pname)
+					fig.savefig(valid_class+'/'+region+'/'+pclass+'_'+pname+'.png',bbox_inches='tight')
+				print 'Statistic chart done for '+str(pname)
+			else:
+				# Legend on the bottom right
+				mc = mlines.Line2D([],[],color='red',marker='o')
+				oc = mlines.Line2D([],[],color='yellow',marker='o')
+				uc = mlines.Line2D([],[],color='green',marker='o')
+				md = mlines.Line2D([],[],color='grey')
+				od = mlines.Line2D([],[],color='magenta')
+				leg.legend([mc,oc,uc,md,od],(\
+				      '15 % Cont.','80 % Cont.','Unknown Cont.','Dist. 15 to 80', \
+				      'Dist. 80 to 15'),loc='center')
+  			           
+				# Statistics text on the bottom left
+				txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
+				      '2) Area = '+str(area)+' km^2\n'+ \
+				      '3) Perimeter = '+str(perim)+' km\n'+ \
+				      '4) Mean 15-80 Width = '+str(mdist)+' km\n'+ \
+				      '5) Mean 80-15 Width = '+str(odist)+' km\n'+ \
+				      '6) '+str(DMW)+'\n'+ \
+				      '7) '+str(UKW)
+				tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
+				if save:
+					valid_class = 'Model2Model_Ice_Conc'
+					if not os.path.exists(valid_class):
+						os.mkdir(valid_class)
+					if not os.path.exists(valid_class+'/'+region):
+						os.mkdir(valid_class+'/'+region)
+					fig.savefig(valid_class+'/'+region+'/'+pclass+'_'+pname+'.png',bbox_inches='tight')
+				print 'Statistic chart done for '+str(pname)
 		else:
 			# Legend on the bottom right
 			mc = mlines.Line2D([],[],color='red',marker='o')
@@ -537,8 +589,8 @@ class aod_stats:
 				valid_class = 'Model_Osisaf'
 				if not os.path.exists(valid_class):
 					os.mkdir(valid_class)
-					if not os.path.exists(valid_class+'/'+region):
-						os.mkdir(valid_class+'/'+region)
+				if not os.path.exists(valid_class+'/'+region):
+					os.mkdir(valid_class+'/'+region)
 				fig.savefig(valid_class+'/'+region+'/'+pclass+'_'+pname+'.png',bbox_inches='tight')
 			print 'Statistic chart done for '+str(pname)
 
@@ -563,25 +615,53 @@ FIGURE = raw_input('[1] to plot&save all figures, [Enter] to plot without save	'
 print ''
 MODEL2MODEL = raw_input('[1] for model2model, [ENTER] to model2osisaf	') 
 print ''
+if MODEL2MODEL:
+	FLOES = raw_input('[1] for Floe Size Distribution, [ENTER] for Ice concentration	') 
+	print ''
+else:
+	FLOES = []
 
 time0 = time.time()
+if 0:
+	# READ TP4 DAILY
+	ncfil = ''.join( glob.glob('./data/TP4DAILY*.nc'))
+	print('TP4DAILY ice_only file = ' +ncfil+'\n')
+	slon		= 'longitude'
+	slat		= 'latitude'
+	sconc		= 'fice'
+	lon		= Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+	lat		= Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+	conc		= Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+	X,Y      = m(lon[:,:],lat[:,:],inverse=False)
+	Z        = conc[:,:].data
+	mask     = conc[:,:].mask
+	Z[mask]  = np.NaN
+	
+	# DATE
+	dadate		= ncfil[-11:-3]
 
-# READ TP4 DAILY
-ncfil = ''.join( glob.glob('./data/TP4DAILY*.nc'))
-print('TP4DAILY ice_only file = ' +ncfil+'\n')
-slon		= 'longitude'
-slat		= 'latitude'
-sconc		= 'fice'
-lon		= Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-lat		= Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-conc		= Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-X,Y      = m(lon[:,:],lat[:,:],inverse=False)
-Z        = conc[:,:].data
-mask     = conc[:,:].mask
-Z[mask]  = np.NaN
+# READ TP4arch_wav
+ncfil = ''.join( glob.glob('./data/TP4archv*.nc'))
+print('TP4archv_wav file = ' +ncfil+'\n')
+slon = 'longitude'
+slat = 'latitude'
+sconc = 'fice'
+sdmax = 'dmax'
+lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+X,Y = m(lon[:,:],lat[:,:],inverse=False)
+if FLOES:
+	Z = dmax[:,:].data
+	mask = dmax[:,:].mask
+else:
+	Z = conc[:,:].data
+	mask = conc[:,:].mask
+Z[mask] = np.NaN
 
 # DATE
-dadate		= ncfil[-11:-3]
+dadate		= ncfil[-19:-11]
 
 # READ IN OSI-SAF FILE
 ncfil2 = ''.join( glob.glob('./data/ice_conc_nh_polstere-100_multi_*.nc'))
@@ -614,8 +694,14 @@ C = C.T
 # NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
 if MODEL2MODEL:
 	ZN = grd(C,Z3,(X2,Y2),method='nearest')
-	# Binary between model
-	BN,BO,DN = binary_mod_2(ZN,ZN,.15,.80)
+	if FLOES:
+		print 'Floe Size Distribution'
+		print ''
+		# Binary between model
+		BN,BO,DN = binary_mod_3(ZN,300)
+	else:
+		# Binary between model
+		BN,BO,DN = binary_mod_2(ZN,ZN,.15,.80)
 else:
 	# INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
 	ZN = grd(C,Z3,(X2,Y2),method='nearest')
@@ -785,8 +871,10 @@ if FIGURE:
 		shutil.move(filname,fin_dir)
 	if os.path.exists('Model_Osisaf'):
 		shutil.move('Model_Osisaf',fin_dir)
-	if os.path.exists('Model2Model'):
-		shutil.move('Model2Model',fin_dir)
+	if os.path.exists('Model2Model_Floe_Size'):
+		shutil.move('Model2Model_Floe_Size',fin_dir)
+	if os.path.exists('Model2Model_Ice_Conc'):
+		shutil.move('Model2Model_Ice_Conc',fin_dir)
 	elapsedtime1 = time.time() - time1
 	elapsedtime = time.time() - time0
 	print 'Figures saved and moved in ',elapsedtime1
