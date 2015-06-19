@@ -210,49 +210,77 @@ class aod_poly:
 		
 		if self.polygon_status==1:
 			# if polygon is negative - overestimation of ice
-			self.model_status='Model OVERestimate'
+			self.model_status='Model Underestimate'
 			for n,el in enumerate(vs):
 				#getting all the neighbours
-				around = ((el[0],el[1]+1),(el[0],el[1]-1),\
-				          (el[0]+1,el[1]),(el[0]-1,el[1]),\
-				          (el[0]+1,el[1]+1),(el[0]-1,el[1]+1),\
-				          (el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1]))
+				around1 = ((el[0],el[1]+.5),(el[0],el[1]-.5))
 				check_cont = 0
-				for h,v in around:
-					if OSI[h][v] == MOD[h][v] == 1:
-						mdl_cont.append(el)
-						func_val=func_mod
-						check_cont = 1
-					elif OSI[h][v] == MOD[h][v] == 0:
-						osi_cont.append(el)
-						func_val=func_osi
-						check_cont = 1
-				if check_cont == 0:
-					ukn_cont.append(el)
-					func_val=func_unk
-				func_vals.append(func_val)
+				if el[0]/int(el[0]) == 1:
+					for h,v in around1:
+						if OSI[h][v] == MOD[h][v] == 0:
+							mdl_cont.append(el)
+							func_val=func_mod
+							check_cont = 1
+						elif OSI[h][v] == MOD[h][v] == 1:
+							osi_cont.append(el)
+							func_val=func_osi
+							check_cont = 1
+					if check_cont == 0:
+						ukn_cont.append(el)
+						func_val=func_unk
+					func_vals.append(func_val)
+				else:
+					for h,v in around2:
+						if OSI[h][v] == MOD[h][v] == 0:
+							mdl_cont.append(el)
+							func_val=func_mod
+							check_cont = 1
+						elif OSI[h][v] == MOD[h][v] == 1:
+							osi_cont.append(el)
+							func_val=func_osi
+							check_cont = 1
+					if check_cont == 0:
+						ukn_cont.append(el)
+						func_val=func_unk
+					func_vals.append(func_val)
 		else:
 			# if polygon is positive - underestimation of ice
-			self.model_status='Model UNDERestimate'
+			self.model_status='Model Overestimate'
 			for n,el in enumerate(vs):
-				around = ((el[0],el[1]+1),(el[0],el[1]-1),\
-				          (el[0]+1,el[1]),(el[0]-1,el[1]),\
-				          (el[0]+1,el[1]+1),(el[0]-1,el[1]+1),\
-				          (el[0]+1,el[1]-1),(el[0]-1,el[1]-1))
+				#getting all the neighbours
+				around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1])) # vertical boundaries - OK!
+				around1 = ((el[0],el[1]+.5),(el[0],el[1]-.5)) # horizontal boundaries
 				check_cont = 0
-				for h,v in around:
-					if OSI[h][v] == MOD[h][v] == 0:
-						mdl_cont.append(el)
-						func_val=func_mod
-						check_cont = 1
-					elif OSI[h][v] == MOD[h][v] == 1:
-						osi_cont.append(el)	
-						func_val=func_osi
-						check_cont = 1
-				if check_cont == 0:
-					ukn_cont.append(el)
-					func_val=func_unk
-				func_vals.append(func_val)
+				if el[0]/int(el[0]) == 1:
+					for h,v in around1:
+						if OSI[h][v] == MOD[h][v] == 1:
+							mdl_cont.append(el)
+							func_val=func_mod
+							check_cont = 1
+						elif OSI[h][v] == MOD[h][v] == 0:
+							osi_cont.append(el)
+							func_val=func_osi
+							check_cont = 1
+					if check_cont == 0:
+						ukn_cont.append(el)
+						func_val=func_unk
+					func_vals.append(func_val)
+				else:
+					for h,v in around2:
+						if OSI[h][v] == MOD[h][v] == 1:
+							mdl_cont.append(el)
+							func_val=func_mod
+							check_cont = 1
+						elif OSI[h][v] == MOD[h][v] == 0:
+							osi_cont.append(el)
+							func_val=func_osi
+							check_cont = 1
+					if check_cont == 0:
+						ukn_cont.append(el)
+						func_val=func_unk
+					func_vals.append(func_val)
+
 		mdl_cont = np.array(mdl_cont)
 		osi_cont = np.array(osi_cont)
 		ukn_cont = np.array(ukn_cont)
@@ -483,14 +511,14 @@ class aod_stats:
 		leg.set_frame_on(False)
 
 		# Main image on the top left
-		main.imshow(DN[::-1],cmap='winter')
+		main.imshow(DN[::-1],interpolation='nearest',cmap='winter')
 		x1,x2,y1,y2 = np.min(ij[:,1])-10,np.max(ij[:,1])+10,np.min(ij[:,0])-10,np.max(ij[:,0])+10
 		main.axvspan(x1,x2,ymin=1-((y1-320)/float(len(DN)-320)),\
 		      ymax=1-((y2-320)/float(len(DN)-320)),color='red',alpha=0.3)
 		main.axis([0,760,0,800])
 
 		# Polygon image on the top right
-		polyf.imshow(DN,cmap='winter')
+		polyf.imshow(DN,interpolation='nearest',cmap='winter')
 		polyf.axis([x1,x2,y2,y1])
 		if len(mcont) != 0:
 			polyf.plot(mcont[:,1],mcont[:,0],'ro',markersize=4)
@@ -713,14 +741,46 @@ else:
 	print 'Reprojection done in ',elapsedtime
 	print ''
 get_stats(DN,dadate)
+
+# Cutting out closed bays/seas
+if 1:
+	# NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
+	a = DN.shape
+	
+	# North Canada
+	for i in range(a[1]):
+		for j in range(a[0]):
+			if i < 250 and 617 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
+				DN[j][i] = 0
+			elif i < 300 and 650 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
+				DN[j][i] = 0	
+
+	# Hudson Bay & Northwestern Passages
+	for i in range(a[1]):
+		for j in range(a[0]):
+			if i < 270 and j > 760 and (DN[j][i] == 1 or DN[j][i] == -1):
+				DN[j][i] = 0
+			elif i < 276 and j > 875 and (DN[j][i] == 1 or DN[j][i] == -1):
+				DN[j][i] = 0
+
 		
 # finding contours from the difference data map
-pos = msr.find_contours(DN,.9)
-neg = msr.find_contours(DN,-.9)
+if 0:
+	DN2=DN.copy()
+	DN2[DN<0.]=0.
+	pos = msr.find_contours(DN2,.5)
+	DN2=DN.copy()
+	DN2[DN>0.]=0.
+	DN2=-DN2
+	neg = msr.find_contours(DN2,.5)
+else:
+	pos = msr.find_contours(DN,.5)
+	neg = msr.find_contours(DN,-.5)
+
 poly_list=[]
 for n,el in enumerate(pos):
 	# classification of positive polygons
-	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
+	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=0)
 	poly_list.append(aod)
 try:
 	n
@@ -729,7 +789,7 @@ except NameError:
 for n2,el in enumerate(neg):
 	# classification of negative (n+1 for good enumeration)
 	n += 1
-	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=0)
+	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
 	poly_list.append(aod)
 
 # changing name for every polygon, easier to work with
