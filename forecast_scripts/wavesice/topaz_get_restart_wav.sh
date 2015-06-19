@@ -59,7 +59,6 @@ else
    echo "Daily restarts NOT found, check ice_only run"      >> $log
    echo "BACKUP FORECAST SCRIPT EXCECUTED"                  >> $log
    mail -s "WARNING - daily ice_only restarts NOT found" $email < $log
-   $fcdir/backup_forecast.sh
 fi
 
 
