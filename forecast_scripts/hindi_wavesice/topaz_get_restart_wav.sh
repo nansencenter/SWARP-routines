@@ -9,7 +9,7 @@ email=$(cat $address)
 
 # DIRECTORIES AND DATELIST
 fcdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
-datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist.txt
+hindi_datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/hindi_datelist.txt
 rdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts      # directory with restarts
 ddir=/work/timill/RealTime_Models/TP4a0.12/expt_01.1/data # where ice_only forecast will be done
 wdir=/work/timill/RealTime_Models/TP4a0.12/expt_01.2/data # where waves_in_ice forecast will be done
@@ -29,9 +29,9 @@ touch $log
 echo $date  >> $log
 echo ""     >> $log
 
-cyear=$(cat $datelist | sed '3!d')			# current year
-cmon=$(cat $datelist | sed '4!d')			# current month
-cday=$(cat $datelist | sed '6!d')                       # current day julian (1 Jan = 1)
+cyear=$(cat $hindi_datelist | sed '3!d')			# current year
+cmon=$(cat $hindi_datelist | sed '4!d')			# current month
+cday=$(cat $hindi_datelist | sed '6!d')                       # current day julian (1 Jan = 1)
 pyear=$(expr $cyear - 1)		              	# previous year
 pday=$(expr $cday - 1)
 pday=`printf '%3.3d' $pday`
@@ -68,7 +68,7 @@ echo ""                                                     >> $log
 echo $base_restart > $out_restart
 
 # CREATING DAILY INFO DIR
-idir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$(cat $datelist | sed '1!d')/info
+idir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$(cat $hindi_datelist | sed '1!d')/info
 mkdir -p $idir
 mv $out_restart $idir/
 
