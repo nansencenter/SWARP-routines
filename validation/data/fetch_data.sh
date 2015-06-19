@@ -16,12 +16,16 @@ mkdir -p tmp
 
 if [ $typo == "ice" ]
 then
-   daily=TP4DAILY*
-   wdir=$ICE_RESULTS/$fdate/bin
-   for file in $wdir/$daily
-   do
-     echo ${file##*/}
-   done
+	daily=TP4DAILY*
+	wdir=$ICE_RESULTS/$fdate/bin
+	for file in $wdir/$daily
+	do
+		if [ -z $file ]
+		then
+			echo "empty"
+		fi
+		echo ${file##*/}
+	done
    echo "Enter last 3 numbers (hycom julian day):  "
    read steve
    thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
