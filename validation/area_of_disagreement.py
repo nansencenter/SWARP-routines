@@ -1,4 +1,30 @@
-# Python script for reprojecting model product into OSI-SAF grid
+############################################################################
+############################################################################
+# AREA OF DISAGREEMENT - for any info/questions - gcmdnt90@gmail.com
+############################################################################
+############################################################################
+# The following script will:
+# 1) Reproject any dataset (as long as Stereographical) into the OSISAF
+#			arctic sea ice dataset grid (http://www.osi-saf.org/)
+# 2) Depending on the user's choice will study areas of disagreement between:
+#		a) Ice concentrations of Model and Observational data - Ice cover except 
+#				sparse ice (default 15% threshold) 
+#		b) Ice concentration contours between the model - concentration dependent 
+#				MIZ (default 15% to 80%) 
+#		c) Floe size distribution contours between - Floe size dependent MIZ 
+#				(default Dmax < 300 m)
+# 3) Identify polygons with relative contours, localize and classify them
+# 4) Running stats for every polygon - producing stat charts
+# 5) TODO run Laplace script for every class H polygon
+############################################################################
+############################################################################
+# INPUTS
+# The script will automatically find any .nc file in the data directory and 
+# distinguish between Model and Observational data
+# NOTE the NetCDF files will have to be located into /data directory,
+# to download the files from Hexagon repositories check ./data/fetch_data.sh
+############################################################################
+############################################################################
 
 from netCDF4 import Dataset
 import sys,os
@@ -28,7 +54,10 @@ import Laplace_eqn_solution as Leqs
 np.seterr(invalid='ignore')
 ############################################################################
 
+# Functions and classes
 ############################################################################
+############################################################################
+# function used to make pcolor plots fancier
 def finish_map(m):
 	# *m is a basemap
 	m.drawcoastlines()
@@ -42,6 +71,7 @@ def finish_map(m):
 	return
 ############################################################################
 ############################################################################
+# function used to create binary datasets - used in Model2Osisaf
 def binary_mod(data1,data2,thresh):
 	mdata = np.copy(data1)
 	mdata[mdata<thresh] = 0
@@ -55,6 +85,7 @@ def binary_mod(data1,data2,thresh):
 	return(mdata,odata,ddata)
 ############################################################################
 ############################################################################
+# function used to create binary datasets - used in Model2Model_ice_conc
 def binary_mod_2(data1,data2,thresh1,thresh2):
 	mdata = np.copy(data1)
 	mdata[mdata<thresh1] = 0
@@ -68,6 +99,7 @@ def binary_mod_2(data1,data2,thresh1,thresh2):
 	return(mdata,odata,ddata)
 ############################################################################
 ############################################################################
+# function used to create binary datasets - used in Model2Model_floe_size
 def binary_mod_3(data1,thresh):
 	mdata = np.copy(data1)
 	mdata[mdata>.01] = 1
@@ -85,6 +117,7 @@ def binary_mod_3(data1,thresh):
 	return(mdata,odata,ddata)
 ############################################################################
 ############################################################################
+# function used to save a fancy version of the Difference Dataset
 def figure_save(X,Y,Z,name,m):
 	f = plt.figure()
 	m.pcolor(X,Y,Z,cmap='winter',vmin=-1,vmax=1)
@@ -98,6 +131,8 @@ def figure_save(X,Y,Z,name,m):
 	return
 ###########################################################################
 ###########################################################################
+# function to print initial informations about the script outputs, pretty
+# much useless if not for major data errors. Why? Because Science.
 def get_stats(data,name):
 	stat0	= (data == 0).sum()
 	stat1	= (data == 1).sum()
@@ -112,17 +147,11 @@ def get_stats(data,name):
 	print 'Underprediction(+1):	%d - %1.2f %%' %(stat1,pone)
 	print 'Overprediction(-1):	%d - %1.2f %%' %(stat2,pmone)
 	print ' ' 
-	#f = open('./outputs/aod/'+name+'.txt','w')
-	#f.write('Number of elements:	%s \n' % stat)
-	#f.write('Hit:			%s \n' % stat0)
-	#f.write('Underprediction(+1):	%s - %s \n' % (stat1,pone))
-	#f.write('Overprediction(-1):	%s - %s \n' % (stat2,pmone))
-	#f.write(' ')
-	#f.close
 	return()
 ###########################################################################
 ###########################################################################
 # FINDS THE CONT OF THE MDL(2) AND THE CONT OF OSI(-2)
+# NOTE this function is not used anymore (or if so has no purpose)
 def binary_cont(X,Y,D,O,M):
 	ND = np.copy(D)
 	for m,el in enumerate(X2):
@@ -148,6 +177,15 @@ def binary_cont(X,Y,D,O,M):
 	return(ND)
 ############################################################################
 # GETTING THE POLYGONS
+# In this class we define polygons from the contour findings
+# What does it do?
+# 1) Classification of the Polygon
+# 2) Storage of all the points in:
+#			a) indexes
+#			b) x&y coords 
+#			c) Lon/Lat
+# 3) Definition of different contours
+
 class aod_poly:
 	# gets single contour and sorts it
 	def __init__(self,cont,OSI,MOD,DIFF,X,Y,number,polygon_status=1):
@@ -198,6 +236,11 @@ class aod_poly:
 		return
 	
 	def _split_cont(self,OSI,MOD):
+		# this function find the different contours
+		# NOTE if a point has non integer i coordinate is going to be a vertical edge,
+		# if has non integer j coordinate is going to be a horizontal edge hence the use
+		# of different arounds depending on the indexes of the point
+		# NOTE if the polygon is an OVERESTIMATION the contour finding is inverted
 		vs = self.ij_list # list of (i,j) pixel indices
 		npoly = self.polygon_name
 		mdl_cont = []
@@ -293,6 +336,8 @@ class aod_poly:
 		return
 
 ############################################################################
+# In this class every polygon already classified will be analyzed and stats
+# will be saved and printed with the stat_chart() function
 class aod_stats:
 	def __init__(self,aod,basemap=None):
 		self.ij_list = aod.ij_list
@@ -397,6 +442,8 @@ class aod_stats:
 
 	def dist_edges(self):
 		# Calculating the min distance from a model point to any osisaf point
+		# and vice-versa (osisaf to model)
+		# same script applied for the Model2Model products - see legends
 		mcont = self.mcont
 		ocont = self.ocont
 		ucont = self.ucont
@@ -625,9 +672,9 @@ class aod_stats:
 		plt.show(False)
 		
 		return
-
 ############################################################################
 ###########################################################################
+# Beginning of the script
 
 # DEFINING THE BASEMAP
 # low quality map
@@ -637,9 +684,10 @@ m = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,635688
 hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 
-# Getting a nice blank space before info's printing
+# Getting a nice blank space before user's input 
 print ''
-FIGURE = raw_input('[1] to plot&save all figures, [Enter] to plot without save	') 
+# User's inputs
+FIGURE = raw_input('[1] to plot&save all figures, [Enter] to run without plot&save	') 
 print ''
 MODEL2MODEL = raw_input('[1] for model2model, [ENTER] to model2osisaf	') 
 print ''
@@ -650,6 +698,9 @@ else:
 	FLOES = []
 
 time0 = time.time()
+
+# NOTE apparently daily files for the wavesice forecast lose information about maximum floe size.
+# TP4archv file from 1200h will be used instead, the following "if" allow the user to analyze a TP4DAILY from the ice_only
 if 0:
 	# READ TP4 DAILY
 	ncfil = ''.join( glob.glob('./data/TP4DAILY*.nc'))
@@ -668,28 +719,29 @@ if 0:
 	# DATE
 	dadate		= ncfil[-11:-3]
 
-# READ TP4arch_wav
-ncfil = ''.join( glob.glob('./data/TP4archv*.nc'))
-print('TP4archv_wav file = ' +ncfil+'\n')
-slon = 'longitude'
-slat = 'latitude'
-sconc = 'fice'
-sdmax = 'dmax'
-lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
-X,Y = m(lon[:,:],lat[:,:],inverse=False)
-if FLOES:
-	Z = dmax[:,:].data
-	mask = dmax[:,:].mask
 else:
-	Z = conc[:,:].data
-	mask = conc[:,:].mask
-Z[mask] = np.NaN
+	# READ TP4arch_wav
+	ncfil = ''.join( glob.glob('./data/TP4archv*.nc'))
+	print('TP4archv_wav file = ' +ncfil+'\n')
+	slon = 'longitude'
+	slat = 'latitude'
+	sconc = 'fice'
+	sdmax = 'dmax'
+	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+	X,Y = m(lon[:,:],lat[:,:],inverse=False)
+	if FLOES:
+		Z = dmax[:,:].data
+		mask = dmax[:,:].mask
+	else:
+		Z = conc[:,:].data
+		mask = conc[:,:].mask
+	Z[mask] = np.NaN
 
-# DATE
-dadate		= ncfil[-19:-11]
+	# DATE
+	dadate		= ncfil[-19:-11]
 
 # READ IN OSI-SAF FILE
 ncfil2 = ''.join( glob.glob('./data/ice_conc_nh_polstere-100_multi_*.nc'))
@@ -721,16 +773,20 @@ C = C.T
 
 # NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
 if MODEL2MODEL:
+	# this is a model2model analysis
 	ZN = grd(C,Z3,(X2,Y2),method='nearest')
 	if FLOES:
+		# model2model_floe_size
 		print 'Floe Size Distribution'
 		print ''
 		# Binary between model
 		BN,BO,DN = binary_mod_3(ZN,300)
 	else:
+		# model2model_ice_conc
 		# Binary between model
 		BN,BO,DN = binary_mod_2(ZN,ZN,.15,.80)
 else:
+  # This is a model2osisaf analysis
 	# INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
 	ZN = grd(C,Z3,(X2,Y2),method='nearest')
 	# BINARY
@@ -747,7 +803,7 @@ if 1:
 	# NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
 	a = DN.shape
 	
-	# North Canada
+	# North Canada mess of islands
 	for i in range(a[1]):
 		for j in range(a[0]):
 			if i < 250 and 617 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
@@ -765,18 +821,10 @@ if 1:
 
 		
 # finding contours from the difference data map
-if 0:
-	DN2=DN.copy()
-	DN2[DN<0.]=0.
-	pos = msr.find_contours(DN2,.5)
-	DN2=DN.copy()
-	DN2[DN>0.]=0.
-	DN2=-DN2
-	neg = msr.find_contours(DN2,.5)
-else:
-	pos = msr.find_contours(DN,.5)
-	neg = msr.find_contours(DN,-.5)
+pos = msr.find_contours(DN,.5)
+neg = msr.find_contours(DN,-.5)
 
+# NOTE here happens the classification of the polygons - see aod_poly class
 poly_list=[]
 for n,el in enumerate(pos):
 	# classification of positive polygons
@@ -803,6 +851,9 @@ elapsedtime = time.time() - time0
 print 'Polygon identification done in ',elapsedtime
 print ''
 
+# NOTE the following stats are just an overview of the number of polygons per region
+# it has no effect whatsoever on the final result of the script but it's nice to see
+# what is happening and how are the polygons distributed on the regions
 print 'Calculating statistics for every polygon...'
 print ''
 scount = 0
@@ -829,6 +880,7 @@ poly_stat_list = []
 for el in poly_list:
 	if el.polygon_class == 'S':
 		scount += 1
+# NOTE inside the fancy stats there is the stats production - see class aod_stats
 		poly = aod_stats(el,m)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			sbk_sea += 1
@@ -880,6 +932,7 @@ for x in range(len(poly_stat_list)):
 for key,value in sorted(d.items()):
 	globals()[key] = value
 
+# printing out the localization stats produced above
 print '..statistics done.'
 print ''
 print 'Total number of Polygons	=',len(poly_list)
@@ -916,6 +969,10 @@ print ''
 elapsedtime = time.time() - time0
 print 'Job done in ',elapsedtime
 
+# NOTE the user get to choose if the stat_charts are saved
+# the script will automatically save the charts in regional directories
+# all of which will be moved in the directory with the date of the products
+# ./outputs/aod/YYYYMMDD/Barents&Kara,Greenland,Labrador,Miscellaneous
 if FIGURE:
 	print 'Saving figures...'
 	print ''
@@ -940,6 +997,50 @@ if FIGURE:
 	print 'Figures saved and moved in ',elapsedtime1
 	print ''
 	print 'Time needed for the job ',elapsedtime
+
+	if MODEL2MODEL:
+		if FLOES:
+			outdir='/./outputs/aod/'+str(dadate)+'/Model2Model_Floe_Size/npz/'		
+			if not os.path.exists(outdir):             		# save a poly for testing
+				os.mkdir(outdir)
+			for poly in poly_stat_list:
+				if poly.pclass == 'H' or poly.pclass == 'B':
+					npfil = outdir+poly.pname+'.npz'
+					print('saving to '+npfil)
+					#
+					xy_coords = poly.xy_list
+					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+					fvals2 = 1*poly.function_vals
+					# save file
+					np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+		else:
+			outdir='/./outputs/aod/'+str(dadate)+'/Model2Model_Ice_Conc/npz/'		
+			if not os.path.exists(outdir):             		# save a poly for testing
+				os.mkdir(outdir)
+			for poly in poly_stat_list:
+				if poly.pclass == 'H' or poly.pclass == 'B':
+					npfil = outdir+poly.pname+'.npz'
+					print('saving to '+npfil)
+					#
+					xy_coords = poly.xy_list
+					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+					fvals2 = 1*poly.function_vals
+					# save file
+					np.savez(npfil,xy=xy_coords,func_vals=fvals2)	
+	else:
+			outdir='/./outputs/aod/'+str(dadate)+'/Model_Osisaf/npz/'		
+			if not os.path.exists(outdir):             		# save a poly for testing
+				os.mkdir(outdir)
+			for poly in poly_stat_list:
+				if poly.pclass == 'H' or poly.pclass == 'B':
+					npfil = outdir+poly.pname+'.npz'
+					print('saving to '+npfil)
+					#
+					xy_coords = poly.xy_list
+					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+					fvals2 = 1*poly.function_vals
+					# save file
+					np.savez(npfil,xy=xy_coords,func_vals=fvals2)	
 
 if 0:
 	outdir='../python_tutorial/npz'
