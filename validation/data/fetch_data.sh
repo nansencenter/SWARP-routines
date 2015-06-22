@@ -6,27 +6,53 @@ echo "Type the ""ice"" for ICE_ONLY or ""waves"" for WAVESICE followed by [ENTER
 read typo
 echo "Type the date of the run (YYYYMMDD), followed by [ENTER]:  "
 read fdate
+ryear=${fdate:0:4}
+rmonth=${fdate:4:2}
+rday=${fdate:6:2}
 jdayp1=$(date -d "$fdate" +%j)
 jdayp=$(expr $jdayp1 - 1)
 jday=`printf '%3.3d' $jdayp`
 echo "Correspond to the following hycom julian day:   $jday"
 echo ""
 
+bdir=`pwd`
+
 mkdir -p tmp
+
+REPOCHECK=0
 
 if [ $typo == "ice" ]
 then
-	daily=TP4DAILY*
-	wdir=$ICE_RESULTS/$fdate/bin
-	for file in $wdir/$daily
-	do
-		if [ -z $file ]
-		then
-			echo "empty"
-		fi
-		echo ${file##*/}
-	done
-   echo "Enter last 3 numbers (hycom julian day):  "
+   bak=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/ice_only/${ryear}/*${fdate}.tar.gz
+   edir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work
+   daily=TP4DAILY*
+   wdir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$fdate/bin
+   for file in $wdir/$daily
+   do
+      if [ -z "`find $wdir -type f`" ] 
+      then
+         echo 'WARNING - No files detected, [1] to check the repositories, [Enter] to exit'
+         echo ''
+         read REPOCHECK
+      fi
+      echo ${file##*/}
+   done
+   if [ -z $REPOCHECK ]
+   then
+      exit
+   elif [ $REPOCHECK == 1 ]
+   then
+      cp -v $bak $edir/
+      cd $edir
+      tar -zxvf *${fdate}.tar.gz
+      rm *.tar.gz
+      cd $bdir 
+      for file in $wdir/$daily
+      do
+         echo ${file##*/}
+      done
+   fi
+   echo "Enter hycom julian day:  "
    read steve
    thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
    echo "You chose to copy products from: $thedate"
@@ -38,13 +64,36 @@ then
    cp $wdir/${daily}*${steve}* ./tmp/
 elif [ $typo == "waves" ]
 then
-   daily=TP4DAILY*
-   wdir=$WAVES_RESULTS/$fdate/bin
+   bak=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/wavesice/${ryear}/*${fdate}.tar.gz
+   edir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work
+   daily=TP4archv*
+   wdir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$fdate/bin
    for file in $wdir/$daily
    do
+      if [ -z "`find $wdir -type f`" ] 
+      then
+         echo 'WARNING - No files detected, [1] to check the repositories, [Enter] to exit'
+         echo ''
+         read REPOCHECK
+      fi
       echo ${file##*/}
    done
-   echo "Enter last 3 numbers (hycom julian day):  "
+   if [ -z $REPOCHECK ]
+   then
+      exit
+   elif [ $REPOCHECK == 1 ]
+   then
+      cp -v $bak $edir/
+      cd $edir
+      tar -zxvf *${fdate}.tar.gz
+      rm *.tar.gz
+      cd $bdir 
+      for file in $wdir/$daily
+      do
+         echo ${file##*/}
+      done
+   fi
+   echo "Enter hycom julian day:  "
    read steve
    thedate=$(date -d "`date +%Y`-01-01 +$(( ${steve} ))days" +%Y%m%d)
    echo "You chose to copy products from: $thedate"

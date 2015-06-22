@@ -20,6 +20,7 @@ tfil=SWARP_ice_only_forecast_$tday.tar.gz
 echo " $tfil "
 touch $tfil
 tar -zcvf $tfil -C $WDIR $tday
+chmod 777 $tfil
 mkdir -p $SDIR/$cyear
 mv $tfil $SDIR/$cyear
 echo "SWARP products of $tday"
