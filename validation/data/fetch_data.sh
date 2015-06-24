@@ -66,7 +66,9 @@ elif [ $typo == "waves" ]
 then
    bak=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/wavesice/${ryear}/*${fdate}.tar.gz
    edir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work
-   daily=TP4archv*
+   # apparently the DAILY file doesn't preserve the dmax
+   # TODO check why the DAILY file doesn't preserve dmax, for now use 120000 of the day
+   daily=TP4archv_wav*
    wdir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$fdate/bin
    for file in $wdir/$daily
    do
@@ -102,7 +104,7 @@ then
    echo "please wait..."
    old=*.nc
    rm $old   
-   cp $wdir/${daily}_*_*_*${steve}* ./tmp/
+   cp $wdir/${daily}_${steve}_120000* ./tmp/
 else
    echo "Please enter either ""ice"" or "" waves"" "
    exit
@@ -117,7 +119,12 @@ cd tmp
 
 # Info for hyc2proj
 ln -s $h2p_in/proj.in .
-ln -s $h2p_in/extract.archv . 
+if [ $typo == 'ice' ]
+then
+   ln -s $h2p_in/extract.archv . 
+else
+   ln -s $h2p_in/extract.archv_wav .
+fi
 ln -s $h2p_in/extract.daily . 
 ln -s $h2p_in/depthlevels.in .
 

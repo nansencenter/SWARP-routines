@@ -11,8 +11,8 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DDIURNAL \
                   -DEVP \
                   -DDAILY_AVERAGE \
-                  -DARCHIVE_ICE_ONLY \
-                  -DARCHIVE_RESTART \
+#                 -DARCHIVE_ICE_ONLY \
+#                 -DARCHIVE_RESTART \
 
 # TP4 specific flags:
 # - SEASONAL_PORT has the same relaxation conditions at the
@@ -21,8 +21,8 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #   relaxation conditions at the ports
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DSEASONAL_PORT \
-# #                -DINTERANNUAL_PORT \
-# #                -DNEST_OUTER \
+#                -DINTERANNUAL_PORT \
+#                -DNEST_OUTER \
 
 # # flags specific to inner models :
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
@@ -35,18 +35,18 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #                 -DMIZ \
 # #               -DMIZ2 \
 
-# # flags for waves run 
-# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-#                  -DWAVES \
-#                  -DWAVES_TEST_READWAVES \
-#                  -DWAVES_TESTADV \
-#                  -DWAVES_WW3 \
-# #                -DWAVES_WAMNSEA \
-# #                -DWAVES_NOSAVE \
-# #                -DWAVES_TIME_INTERP \
-# #                -DWAVES_RESET_ICE \
-# #                -DWAVES_SAMESPEED \
-# #                -DWAVES_LAXADV \
+# flags for waves run 
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DWAVES \
+                 -DWAVES_WAMNSEA \
+#                -DWAVES_TEST_READWAVES \
+#                -DWAVES_TESTADV \
+#                -DWAVES_WW3 \
+#                -DWAVES_NOSAVE \
+#                -DWAVES_TIME_INTERP \
+#                -DWAVES_RESET_ICE \
+#                -DWAVES_SAMESPEED \
+#                -DWAVES_LAXADV \
 
 # # flags for standalone waves run
 # #  - fice,hice read in from daily average files

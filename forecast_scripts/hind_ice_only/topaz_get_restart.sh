@@ -16,8 +16,13 @@ logdir=$fcdir/logs
 mkdir -p $logdir
 
 # TEXTFILE AND LOG
-out_restart=$fcdir/last_restart.txt
-log=$logdir/tp_get_log.txt
+out_restart=$fcdir/hind_last_restart.txt
+if [ ! -f $out_restart ]
+then
+   touch $out_restart
+fi
+
+log=$logdir/hdtp_get_log.txt
 
 touch $log
 echo $date  >> $log
@@ -28,53 +33,39 @@ cmon=$(cat $hindi_datelist | sed '4!d')			# current month
 cday=$(cat $hindi_datelist | sed '6!d')                       # current day julian (1 Jan = 0)
 pyear=$(expr $cyear - 1)		              	# previous year
 
-f="unassigned"
-if [ -d $rdir/$cyear ]
-then
-   lfil=$rdir/$cyear/log/tp_archive_list.txt                       #list of restart files
-   if [ -f $lfil ]
-   then
-      f=`cat $lfil | grep "." | tail -1`
-      echo "latest restart: $f"                    >> $log
-      ryear=$cyear
-   else
-      echo "Restart file's list NOT FOUND in $rdir/$cyear"         >> $log
-      echo "Either check topaz_archive_restart or topaz_get_restart" >> $log
-      mail -s "WARNING - Restart list NOT FOUND" $email < $log
-   fi
-else
-   echo "No restarts in current year ($cyear)"     >> $log
-   #search previous year
-   if [ -d $rdir/$pyear ]
-   then
-      lfil=$rdir/$pyear/log/tp_archive_list.txt                    #list of restart files
-      if [ -f $lfil ]
-      then
-         sort $lfil -o $lfil
-         f=$(cat $lfil | tail -1)
-         echo "latest restart: $f"                 >> $log
-         ryear=$pyear
-      else
-         echo "Restart file's list NOT FOUND in $rdir/$pyear"         >> $log
-         echo "Either check topaz_archive_restart or topaz_get_restart" >> $log
-         mail -s "WARNING - Restart list NOT FOUND" $email < $log
-      fi
-   fi
-fi
+# move to the working directory
+cd $ddir
 
-if [ $f == 'unassigned' ]
+# look in the repository for a restart
+for f in {0..8}
+do
+   hdate=`date --date="$f days ago" '+%Y%m%d'`
+   tprest=$rdir/$cyear/TP4restart*_${hdate}_*
+   if [ -f $tprest ]
+   then
+      echo "Found repo for $hdate"
+      echo "Decompression..."
+      echo ""
+      bob=1
+      daname=$(basename $tprest)
+      echo $daname > $out_restart
+      cp -v $tprest $ddir
+      tar -zxvf *${hdate}*.tar.gz
+      rm *.tar.gz
+   else:
+      echo "Repo NOT found for $hdate"
+      echo "Moving on..."
+      bob=0
+   fi
+done
+if [ $bob == "0" ]
 then
-   echo "No recent restarts"                                      >> $log
-   echo "Couldn't find any restart's lists"                       >> $log
-   echo "Check ASAP topaz_archive_restart and topaz_get_restart"  >> $log
-   mail -s "WARNING 2 - Restart list NOT FOUND" $email < $log
+   echo "Couldn't find any weekly restart, manual recovery needed"
+   echo ""
+   echo "ABORTING"
    exit
 fi
 
-echo "Most recent restart: $f"                                    >> $log
-echo "Unpacking..."                                               >> $log
-echo " "                                                          >> $log
-echo $f > $out_restart
 
 # CREATING DAILY INFO DIR
 idir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $hindi_datelist | sed '1!d')/info

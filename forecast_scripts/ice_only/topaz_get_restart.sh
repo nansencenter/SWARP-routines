@@ -110,6 +110,7 @@ then
    cd $ddir
    cp $rdir/${ryear}/$f0.tar.gz .
    tar -zxvf $f0.tar.gz
+   rm $f0.tar.gz
    mv $afil0 $ddir/$afil
    mv $bfil0 $ddir/$bfil
    mv $ufil0 $ddir/$ufil
