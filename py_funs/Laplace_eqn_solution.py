@@ -531,9 +531,7 @@ class dirichlet_fund_soln:
 
       else:
          # plot F everywhere
-         poly  = self.shapely_polygon
-         SFU.plot_poly(poly,color='k',linewidth=2)
-         bbox  = poly.bounds
+         bbox  = self.shapely_polygon.bounds
          eps   = self.resolution/2.
 
          # get a grid to plot F on:
@@ -562,9 +560,14 @@ class dirichlet_fund_soln:
          pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
          pobj.colorbar()
          pobj.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
-         #
+
+         # plot polygon boundary
+         x,y   = GP.coords2xy(self.coords)
+         pobj.plot(x/1.e3,y/1.e3,'k',linewidth=2)
+
+         # plot singularities
          x,y   = GP.coords2xy(self.singularities)
-         pobj.plot(x/1.e3,y/1.e3,'.k',markersize=1.5)
+         pobj.plot(x/1.e3,y/1.e3,'.k',markersize=5)
          pobj.xlabel('x, km')
          pobj.ylabel('y, km')
 
