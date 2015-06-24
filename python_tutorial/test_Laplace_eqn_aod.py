@@ -5,7 +5,11 @@ from mpl_toolkits.basemap import Basemap, cm
 import time
 
 rootdir  = os.getenv('SWARP_ROUTINES')
-rootdir  = '/Users/gianot/SWARP-routines'
+# rootdir  = '/Users/gianot/SWARP-routines'
+if rootdir is None:
+   print("Set rootdir manually since getenv isn't working")
+   rootdir  = raw_input('(give path to SWARP-routines folder) ')
+
 sys.path.append(rootdir+'/py_funs')
 import mod_reading as Mrdg
 import Laplace_eqn_solution as Leqs
