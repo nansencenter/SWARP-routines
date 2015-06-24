@@ -1,6 +1,7 @@
 ############################################################################
 ############################################################################
-# AREA OF DISAGREEMENT - for any info/questions - gcmdnt90@gmail.com
+# AREA OF DISAGREEMENT - for any info/questions - timothy.williams@nersc.no
+#																									gcmdnt90@gmail.com
 ############################################################################
 ############################################################################
 # The following script will:
@@ -54,8 +55,8 @@ import Laplace_eqn_solution as Leqs
 np.seterr(invalid='ignore')
 ############################################################################
 
-# Functions and classes
 ############################################################################
+# Functions and classes
 ############################################################################
 # function used to make pcolor plots fancier
 def finish_map(m):
@@ -70,7 +71,6 @@ def finish_map(m):
 	m.drawmapboundary() # fill_color='aqua')
 	return
 ############################################################################
-############################################################################
 # function used to create binary datasets - used in Model2Osisaf
 def binary_mod(data1,data2,thresh):
 	mdata = np.copy(data1)
@@ -84,7 +84,6 @@ def binary_mod(data1,data2,thresh):
 	ddata[thenans] = 0
 	return(mdata,odata,ddata)
 ############################################################################
-############################################################################
 # function used to create binary datasets - used in Model2Model_ice_conc
 def binary_mod_2(data1,data2,thresh1,thresh2):
 	mdata = np.copy(data1)
@@ -97,7 +96,6 @@ def binary_mod_2(data1,data2,thresh1,thresh2):
 	thenans = np.isnan(ddata)
 	ddata[thenans] = 0
 	return(mdata,odata,ddata)
-############################################################################
 ############################################################################
 # function used to create binary datasets - used in Model2Model_floe_size
 def binary_mod_3(data1,thresh):
@@ -116,11 +114,10 @@ def binary_mod_3(data1,thresh):
 	ddata[thenans] = 0
 	return(mdata,odata,ddata)
 ############################################################################
-############################################################################
 # function used to save a fancy version of the Difference Dataset
 def figure_save(X,Y,Z,name,m):
 	f = plt.figure()
-	m.pcolor(X,Y,Z,cmap='winter',vmin=-1,vmax=1)
+	m.pcolor(X,Y,Z,cmap='winter')
 	finish_map(m)
 	fname = name+'.png'
 	plt.colorbar()
@@ -129,7 +126,6 @@ def figure_save(X,Y,Z,name,m):
 	plt.close()
 	f.clf()
 	return
-###########################################################################
 ###########################################################################
 # function to print initial informations about the script outputs, pretty
 # much useless if not for major data errors. Why? Because Science.
@@ -148,7 +144,6 @@ def get_stats(data,name):
 	print 'Overprediction(-1):	%d - %1.2f %%' %(stat2,pmone)
 	print ' ' 
 	return()
-###########################################################################
 ###########################################################################
 # FINDS THE CONT OF THE MDL(2) AND THE CONT OF OSI(-2)
 # NOTE this function is not used anymore (or if so has no purpose)
@@ -176,6 +171,95 @@ def binary_cont(X,Y,D,O,M):
 						ND[hor][ver] = -1
 	return(ND)
 ############################################################################
+# GETTING THE POLYGONS from AARI-Icecharts text files
+	
+class aari_poly:
+	# gets single contour and sorts it
+	def __init__(self,name,region,fvals,lon,lat,X,Y,basemap=None):
+		self.lon = np.array(lon)
+		self.lat = np.array(lat)
+		self.polygon_name = name
+		self.polygon_region = region
+		# setting up lonlat_list as array
+		lonlat = zip(self.lon,lat)
+		lonlat_list = np.array(lonlat)
+		self.lonlat_list = lonlat_list
+		self.fvals = fvals
+		# class definition
+		if len(lonlat_list) <= 30:
+			self.polygon_class = 'S'
+		elif len(lonlat_list) > 30 and len(lonlat_list) <= 100:
+			self.polygon_class = 'M'
+		elif len(lonlat_list) > 100 and len(lonlat_list) <= 200:
+			self.polygon_class = 'B'
+		elif len(lonlat_list) > 200:
+			self.polygon_class = 'H'
+		if basemap is not None:
+			x_list,y_list = basemap(lonlat_list[:,0],lonlat_list[:,1])
+			xy_list = zip(x_list,y_list)
+			self.xy_list = np.array(xy_list)
+			#self._xy2ij_(X,Y)
+			self._split_cont_()
+		return
+
+  # This can't be done because of different grid!
+	def _xy2ij_(self,X,Y):
+		xy_list = self.xy_list
+		i = []
+		j = []
+		xh,xv = X.shape
+		for n,en in enumerate(xy_list[:,0]):
+			for m in range(xh):
+				for l in range(xv):
+					if en == X[m,l]:
+						i.append(m)
+		yh,yv = Y.shape
+		for n,en in enumerate(xy_list[:,1]):
+			for m in range(yh):
+				for l in range(yv):
+					if en == X[m,l]:
+						j.append(l)
+		ij_list = zip(i,j)
+		self.ij_list = np.array(ij_list)
+		return
+	
+	def _split_cont_(self):
+		# this function find the different contours
+		#ij = self.ij_list # list of (i,j) pixel indices
+		xy = self.xy_list
+		lonlat = self.lonlat_list
+		fvals = self.fvals
+		npoly = self.polygon_name
+		#ij_in = []
+		#ij_out = []
+		xy_in = []
+		xy_out = []
+		lonlat_in = []
+		lonlat_out = []
+
+		for n,en in enumerate(fvals):
+			if en == 1:
+				#ij_in.append(ij_list[n,:])
+				xy_in.append(xy[n,:])
+				lonlat_in.append(lonlat[n,:])
+			else:
+				#ij_out.append(ij_list[n,:])
+				xy_out.append(xy[n,:])
+				lonlat_out.append(lonlat[n,:])
+		#self.ij_in_cont = ij_in
+		#self.ij_out_cont = ij_out
+		self.xy_in_cont = np.array(xy_in)
+		self.xy_out_cont = np.array(xy_out)
+		self.lonlat_in_cont = np.array(lonlat_in)
+		self.lonlat_out_cont = np.array(lonlat_out)
+		return
+
+# TODO
+# TAKE median for big set
+# make charts with Median of width (both model and ice charts)
+# distance m2o chart
+
+############################################################################
 # GETTING THE POLYGONS
 # In this class we define polygons from the contour findings
 # What does it do?
@@ -189,8 +273,8 @@ def binary_cont(X,Y,D,O,M):
 class aod_poly:
 	# gets single contour and sorts it
 	def __init__(self,cont,OSI,MOD,DIFF,X,Y,number,polygon_status=1):
-		self.polygon_status		= polygon_status
-		self.polygon_name			= 'polygon'+str(number)
+		self.polygon_status = polygon_status
+		self.polygon_name = 'polygon'+str(number)
 		# class definition
 		if len(cont) <= 30:
 			self.polygon_class = 'S'
@@ -200,7 +284,7 @@ class aod_poly:
 			self.polygon_class = 'B'
 		elif len(cont) > 200:
 			self.polygon_class = 'H'
-		self.ij_list					= cont
+		self.ij_list = cont
 		self._diff_with_terrain_(DIFF,OSI,MOD) 
 		self._ij2xy_(cont,X,Y)
 		self._split_cont(OSI,MOD)
@@ -208,13 +292,13 @@ class aod_poly:
 	
 	def _ij2xy_(self,cont,X,Y):
 		# changes indexes to x and y (NOTE i and j are inverted -> i = [:,1], j = [:,0])
-		x			= []
-		y			= []
-		xvec	=	range(len(cont[:,0]))
+		x = []
+		y = []
+		xvec =	range(len(cont[:,0]))
 		for n,en in enumerate(xvec):
 		        en	=	X[cont[n,0]][cont[n,1]]
 		        x.append(en)
-		yvec	=	range(len(cont[:,1]))
+		yvec =	range(len(cont[:,1]))
 		for n,en in enumerate(yvec):
 		        en	=	Y[cont[n,0]][cont[n,1]]
 		        y.append(en)
@@ -225,13 +309,13 @@ class aod_poly:
 	
 	def _diff_with_terrain_(self,DIFF,OSI,MOD):
 		# getting back the terrain lost during binary_mod (for contour finding reasons)
-		DN			= DIFF
-		ZO			= OSI
-		ZM			= MOD
-		thenan	= np.isnan(ZO)
-		thenan2	= np.isnan(ZM)
-		DN[thenan]	= None
-		DN[thenan2]	= None
+		DN = DIFF
+		ZO = OSI
+		ZM = MOD
+		thenan = np.isnan(ZO)
+		thenan2 = np.isnan(ZM)
+		DN[thenan] = None
+		DN[thenan2] = None
 		self.difference = DN
 		return
 	
@@ -672,18 +756,24 @@ class aod_stats:
 		plt.show(False)
 		
 		return
-############################################################################
+###########################################################################
+###########################################################################
+
 ###########################################################################
 # Beginning of the script
+###########################################################################
 
-# DEFINING THE BASEMAP
+###########################################################################
+# Defining the basemap
 # low quality map
-m = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),\
+lqm = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),\
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 # better quality map
 hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
+###########################################################################
 
+###########################################################################
 # Getting a nice blank space before user's input 
 print ''
 # User's inputs
@@ -698,11 +788,13 @@ else:
 	FLOES = []
 
 time0 = time.time()
+###########################################################################
 
+###########################################################################
 # NOTE apparently daily files for the wavesice forecast lose information about maximum floe size.
 # TP4archv file from 1200h will be used instead, the following "if" allow the user to analyze a TP4DAILY from the ice_only
 if 0:
-	# READ TP4 DAILY
+	# Read TP4 Daily
 	ncfil = ''.join( glob.glob('./data/TP4DAILY*.nc'))
 	print('TP4DAILY ice_only file = ' +ncfil+'\n')
 	slon		= 'longitude'
@@ -711,16 +803,16 @@ if 0:
 	lon		= Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
 	lat		= Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
 	conc		= Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-	X,Y      = m(lon[:,:],lat[:,:],inverse=False)
+	X,Y      = lqm(lon[:,:],lat[:,:],inverse=False)
 	Z        = conc[:,:].data
 	mask     = conc[:,:].mask
 	Z[mask]  = np.NaN
 	
-	# DATE
+	# Date
 	dadate		= ncfil[-11:-3]
 
 else:
-	# READ TP4arch_wav
+	# Read TP4arch_wav
 	ncfil = ''.join( glob.glob('./data/TP4archv*.nc'))
 	print('TP4archv_wav file = ' +ncfil+'\n')
 	slon = 'longitude'
@@ -731,7 +823,7 @@ else:
 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
-	X,Y = m(lon[:,:],lat[:,:],inverse=False)
+	X,Y = lqm(lon[:,:],lat[:,:],inverse=False)
 	if FLOES:
 		Z = dmax[:,:].data
 		mask = dmax[:,:].mask
@@ -740,10 +832,12 @@ else:
 		mask = conc[:,:].mask
 	Z[mask] = np.NaN
 
-	# DATE
+	# Date
 	dadate		= ncfil[-19:-11]
+###########################################################################
 
-# READ IN OSI-SAF FILE
+###########################################################################
+# Read in OSI_SAF file
 ncfil2 = ''.join( glob.glob('./data/ice_conc_nh_polstere-100_multi_*.nc'))
 print('OSISAF file = '+ncfil2+'\n')
 clon     = 'lon'
@@ -754,7 +848,7 @@ lat2     = Mrdg.nc_get_var(ncfil2,clat) # lat[:,:] is a numpy array
 conc		 = Mrdg.nc_get_var(ncfil2,cconc,time_index=0)
 xc			 = Mrdg.nc_get_var(ncfil2,'xc')
 yc			 = Mrdg.nc_get_var(ncfil2,'yc')
-X2,Y2		 = m(lon2[:,:],lat2[:,:],inverse=False)
+X2,Y2		 = lqm(lon2[:,:],lat2[:,:],inverse=False)
 XO			 = np.copy(X2)
 YO			 = np.copy(Y2)
 Z2       = conc[:,:].data
@@ -770,7 +864,8 @@ C = [X3,Y3]
 C = np.array(C)
 C = C.T
 
-
+# Reprojection
+###########################################################################
 # NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
 if MODEL2MODEL:
 	# this is a model2model analysis
@@ -787,7 +882,7 @@ if MODEL2MODEL:
 		BN,BO,DN = binary_mod_2(ZN,ZN,.15,.80)
 else:
   # This is a model2osisaf analysis
-	# INTERPOLATION CAN BE DONE WITH OTHER METHODS ('linear','cubic'<--doesn't work for our data)
+	# Interpolation can be done with other methods ('linear','cubic'<--doesn't work for our data)
 	ZN = grd(C,Z3,(X2,Y2),method='nearest')
 	# BINARY
 	BN,BO,DN = binary_mod(ZN,ZO,.15)
@@ -796,6 +891,141 @@ else:
 	elapsedtime = time.time() - time0
 	print 'Reprojection done in ',elapsedtime
 	print ''
+###########################################################################
+
+###########################################################################
+# AARI charts section
+apoly_list = []
+
+# Read in AARI charts for Barents Sea
+ncfil3 = ''.join( glob.glob('./ice_charts/AARI/*_bar_'+dadate+'.txt'))
+if ncfil3 == '':
+	print('No Ice Chart for Barents sea in '+dadate+'\n')
+else:
+	print('AARI Barents ice chart = '+ncfil3+'\n')
+	region = 'Barents'
+	icb = open(ncfil3)
+	icblist = []
+	for n,en in enumerate(icb):
+		nen = en.split(';')
+		icblist.append(nen)
+	icb_cont = np.array(icblist)
+	# we want to cut first row (general info) and first column (number of points)
+	icb_cont = icb_cont[1:,1:]
+	# change 'in' as '1.' and 'out' as '0.'
+	for el in icb_cont:
+		if el[1] == 'in':
+			el[1] = 1
+		else:
+			el[1] = 0
+	# reads as string, we want floats
+	icb_cont = icb_cont.astype(np.float)
+	# find out number of polygons
+	bpolyn = np.int(icb_cont[:,0].max())
+	# split the array into polygons - creation of dict
+	ad = {}
+	for n in range(bpolyn):
+		poly = []
+		for m,em in enumerate(icb_cont):
+			if em[0] == n+1:
+				poly.append(em)
+		ad["apoly"+str(n+1)] = np.array(poly)
+	for i in ad:
+		apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
+		apoly_list.append(apoly)
+
+# Read in AARI charts for Greenland Sea
+ncfil4 = ''.join( glob.glob('./ice_charts/AARI/*_gre_'+dadate+'.txt'))
+if ncfil4 == '':
+	print('No Ice Chart for Greenland sea in '+dadate+'\n')
+else:
+	print('AARI Greenland ice chart = '+ncfil4+'\n')
+	region = 'Greenland'
+	icg = open(ncfil4)
+	icglist = []
+	for n,en in enumerate(icg):
+		nen = en.split(';')
+		icglist.append(nen)
+	icg_cont = np.array(icglist)
+	# we want to cut first row (general info) and first column (number of points)
+	icg_cont = icg_cont[1:,1:]
+	# change 'in' as '1.' and 'out' as '0.'
+	for el in icg_cont:
+		if el[1] == 'in':
+			el[1] = 1
+		else:
+			el[1] = 0
+	# reads as string, we want floats
+	icg_cont = icg_cont.astype(np.float)
+	# find out number of polygons
+	gpolyn = np.int(icg_cont[:,0].max())
+	# split the array into polygons - creation of dict
+	if ncfil3 == '':
+		ad = {}
+	for n in range(gpolyn):
+		poly = []
+		for m,em in enumerate(icg_cont):
+			if em[0] == n+1:
+				poly.append(em)
+		if ncfil3 == '':
+			ad["apoly"+str(n+1)] = np.array(poly)
+		else:
+			ad["apoly"+str(n+bpolyn+1)] = np.array(poly)
+	for i in ad:
+		apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
+		apoly_list.append(apoly)
+
+# Read in AARI charts for both Barents and Greenland
+# sometimes the charts are united in case the some polygons belong to both regions
+if ncfil3 == '' and ncfil4 == '':
+	ncfil5 = ''.join( glob.glob('./ice_charts/AARI/*'+dadate+'.txt'))
+	if ncfil5 == '':
+		print('No Common (Barents+Greenland) Ice Chart in '+dadate+'\n')
+	else:
+		print('AARI Common Barents and Greenland sea ice chart = '+ncfil5+'\n')
+		region = 'Barents/Greenland'
+		icbg = open(ncfil5)
+		icbglist = []
+		for n,en in enumerate(icbg):
+			nen = en.split(';')
+			icbglist.append(nen)
+		icbg_cont = np.array(icbglist)
+		# we want to cut first row (general info) and first column (number of points)
+		icbg_cont = icbg_cont[1:,1:]
+		# change 'in' as '1.' and 'out' as '0.'
+		for el in icbg_cont:
+			if el[1] == 'in':
+				el[1] = 1
+			else:
+				el[1] = 0
+		# reads as string, we want floats
+		icbg_cont = icbg_cont.astype(np.float)
+		# find out number of polygons
+		bgpolyn = np.int(icbg_cont[:,0].max())
+		ad = {}
+		for n in range(bgpolyn):
+			poly = []
+			for m,em in enumerate(icbg_cont):
+				if em[0] == n+1:
+					poly.append(em)
+			ad["apoly"+str(n+1)] = np.array(poly)
+		for i in ad:
+			apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
+			apoly_list.append(apoly)
+
+if apoly_list != []:
+	ad = {}
+	for x in range(len(apoly_list)):
+		ad[apoly_list[x].polygon_name]=apoly_list[x]
+	for key,value in sorted(ad.items()):
+		globals()[key] = value
+
+	elapsedtime = time.time() - time0
+	print 'AARI Polygon identification done in ',elapsedtime
+###########################################################################
+###########################################################################
+
+# print some stats for the "Difference" Dataset
 get_stats(DN,dadate)
 
 # Cutting out closed bays/seas
@@ -843,7 +1073,7 @@ for n2,el in enumerate(neg):
 # changing name for every polygon, easier to work with
 d = {}
 for x in range(len(poly_list)):
-	d['poly{0}'.format(x)]=poly_list[x]
+	d[poly_list[x].polygon_name]=poly_list[x]
 for key,value in sorted(d.items()):
 	globals()[key] = value
 
@@ -877,11 +1107,12 @@ hgr_sea = 0
 hlb_sea = 0
 hmiscel = 0
 poly_stat_list = []
+# NOTE inside the fancy stats there is the stats production - see class aod_stats
 for el in poly_list:
 	if el.polygon_class == 'S':
 		scount += 1
-# NOTE inside the fancy stats there is the stats production - see class aod_stats
-		poly = aod_stats(el,m)
+		print('Analizing '+str(el.polygon_name))
+		poly = aod_stats(el,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			sbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -892,7 +1123,8 @@ for el in poly_list:
 			smiscel += 1
 	elif el.polygon_class == 'M':
 		mcount += 1
-		poly = aod_stats(el,m)
+		print('Analizing '+str(el.polygon_name))
+		poly = aod_stats(el,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			mbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -902,8 +1134,9 @@ for el in poly_list:
 		elif poly.polygon_region == 'Misc.':
 			mmiscel += 1
 	elif el.polygon_class == 'B':
+		print('Analizing '+str(el.polygon_name))
 		bcount += 1
-		poly = aod_stats(el,m)
+		poly = aod_stats(el,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			bbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -913,8 +1146,9 @@ for el in poly_list:
 		elif poly.polygon_region == 'Misc.':
 			bmiscel += 1
 	elif el.polygon_class == 'H':
+		print('Analizing '+str(el.polygon_name))
 		hcount += 1
-		poly = aod_stats(el,m)
+		poly = aod_stats(el,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			hbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -928,7 +1162,7 @@ for el in poly_list:
 # changing name to every polygon_stat, easier to work with
 d = {}
 for x in range(len(poly_stat_list)):
-	d['poly{0}stats'.format(x)]=poly_stat_list[x]
+	d[poly_stat_list[x].name+'stat']=poly_stat_list[x]
 for key,value in sorted(d.items()):
 	globals()[key] = value
 
