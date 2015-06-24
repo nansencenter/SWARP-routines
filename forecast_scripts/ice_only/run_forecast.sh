@@ -126,7 +126,8 @@ fi
 rm log/*
 
 # launch job
-qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
+# qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
+echo $qsub
 $qsub pbsjob.sh
 #################################################################
    
