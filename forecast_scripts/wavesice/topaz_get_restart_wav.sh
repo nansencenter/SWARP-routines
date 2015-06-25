@@ -61,8 +61,6 @@ else
    mail -s "WARNING - daily ice_only restarts NOT found" $email < $log
 fi
 
-
-
 echo ""                                                     >> $log
 
 echo $base_restart > $out_restart

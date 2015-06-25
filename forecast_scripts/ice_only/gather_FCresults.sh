@@ -68,3 +68,4 @@ else
    mail -s "gather_FCresults FAILED" $email  < $log
 fi
 echo "Transfer complete"                               >> $log
+

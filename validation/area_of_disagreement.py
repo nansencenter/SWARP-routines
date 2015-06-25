@@ -775,17 +775,22 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
 
 ###########################################################################
 # Getting a nice blank space before user's input 
-print ''
-# User's inputs
-FIGURE = raw_input('[1] to plot&save all figures, [Enter] to run without plot&save	') 
-print ''
-MODEL2MODEL = raw_input('[1] for model2model, [ENTER] to model2osisaf	') 
-print ''
-if MODEL2MODEL:
-	FLOES = raw_input('[1] for Floe Size Distribution, [ENTER] for Ice concentration	') 
-	print ''
+if 0:
+   print ''
+   # User's inputs
+   FIGURE = raw_input('[1] to plot&save all figures, [Enter] to run without plot&save	') 
+   print ''
+   MODEL2MODEL = raw_input('[1] for model2model, [ENTER] to model2osisaf	') 
+   print ''
+   if MODEL2MODEL:
+           FLOES = raw_input('[1] for Floe Size Distribution, [ENTER] for Ice concentration	') 
+           print ''
+   else:
+           FLOES = []
 else:
-	FLOES = []
+   FIGURE   = ''
+   MODEL2MODEL = 1
+   FLOES = 1
 
 time0 = time.time()
 ###########################################################################
@@ -1051,8 +1056,10 @@ if 1:
 
 		
 # finding contours from the difference data map
+print("here")
 pos = msr.find_contours(DN,.5)
 neg = msr.find_contours(DN,-.5)
+print("here2")
 
 # NOTE here happens the classification of the polygons - see aod_poly class
 poly_list=[]
@@ -1070,12 +1077,12 @@ for n2,el in enumerate(neg):
 	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
 	poly_list.append(aod)
 
-# changing name for every polygon, easier to work with
-d = {}
-for x in range(len(poly_list)):
-	d[poly_list[x].polygon_name]=poly_list[x]
-for key,value in sorted(d.items()):
-	globals()[key] = value
+# # changing name for every polygon, easier to work with
+# d = {}
+# for x in range(len(poly_list)):
+# 	d[poly_list[x].polygon_name]=poly_list[x]
+# for key,value in sorted(d.items()):
+# 	globals()[key] = value
 
 elapsedtime = time.time() - time0
 print 'Polygon identification done in ',elapsedtime
