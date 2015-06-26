@@ -15,129 +15,99 @@ import mod_reading as Mrdg
 
 ############################################################################
 def finish_map(m):
-	# *m is a basemap
-	m.drawcoastlines()
-	m.fillcontinents(color='gray')
-	# draw parallels and meridians.
-	m.drawparallels(np.arange(60.,91.,10.),\
-		labels=[True,False,True,True]) # labels = [left,right,top,bottom]
-	m.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
-		labels=[True,False,False,True])
-	m.drawmapboundary() # fill_color='aqua')
-	return
+   # *m is a basemap
+   m.drawcoastlines()
+   m.fillcontinents(color='gray')
+   # draw parallels and meridians.
+   m.drawparallels(np.arange(60.,91.,10.),\
+   	labels=[True,False,True,True]) # labels = [left,right,top,bottom]
+   m.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
+   	labels=[True,False,False,True])
+   m.drawmapboundary() # fill_color='aqua')
+   return
 ############################################################################
 ############################################################################
 def binary_mod(data,thresh):
-	ndata									= np.copy(data)
-	ndata[ndata<thresh]		= 0
-	ndata[ndata>=thresh]	= 1
-	#thenans								= np.isnan(ndata)
-	#ndata[thenans]				= 0
-	return(ndata)
+   ndata                = np.copy(data)
+   ndata[ndata<thresh]	= 0
+   ndata[ndata>=thresh]	= 1
+   #thenans		= np.isnan(ndata)
+   #ndata[thenans]      = 0
+   return(ndata)
 ############################################################################
 ############################################################################
 def binary_diff(data1,data2,thresh):
-	mdata									= np.copy(data1)
-	mdata[mdata<thresh]		= 0
-	mdata[mdata>=thresh]	= 1
-	odata									= np.copy(data2)
-	odata[odata<thresh]		= 0
-	odata[odata>=thresh]	= 1	
-	ddata									= odata - mdata
-	#thenans								= np.isnan(ddata)
-	#ddata[thenans]				= 0
-	return(ddata)
+   mdata                   = np.copy(data1)
+   mdata[mdata<thresh]	= 0
+   mdata[mdata>=thresh]	= 1
+   odata			= np.copy(data2)
+   odata[odata<thresh]	= 0
+   odata[odata>=thresh]	= 1	
+   ddata			= odata - mdata
+   #thenans		= np.isnan(ddata)
+   #ddata[thenans]		= 0
+   return(ddata)
 ###########################################################################
 ###########################################################################
 def figure_save(X,Y,Z,name,m):
-	f = plt.figure()
-	m.pcolor(X,Y,Z,cmap='YlGnBu',vmin=-1,vmax=1)
-	finish_map(m)
-	fname = './outputs/aod/'+name+'.png'
-	plt.colorbar()
-	plt.title(name)
-	plt.savefig(fname,format='png',dpi=1000)
-	plt.close()
-	f.clf()
+   f = plt.figure()
+   m.pcolor(X,Y,Z,cmap='YlGnBu',vmin=-1,vmax=1)
+   finish_map(m)
+   fname = './outputs/aod/'+name+'.png'
+   plt.colorbar()
+   plt.title(name)
+   plt.savefig(fname,format='png',dpi=1000)
+   plt.close()
+   f.clf()
 ###########################################################################
 ###########################################################################
 def get_stats(data,name):
-	stat0	= (data == 0).sum()
-	stat1	= (data == 1).sum()
-	stat2	= (data == -1).sum()
-	stat	= data.size
-	pone	= (stat1 / float(stat)) * 100
-	pmone	= (stat2 / float(stat)) * 100
-	print "Number of elements:	",stat
-	print "Hit:			",stat0
-	print "Underprediction(+1):	",stat1,pone
-	print "Overprediction(-1):	",stat2,pmone
-	print " " 
-	f = open('./outputs/aod/'+name+'.txt','w')
-	f.write("Number of elements:	%s \n" % stat)
-	f.write("Hit:			%s \n" % stat0)
-	f.write("Underprediction(+1):	%s - %s \n" % (stat1,pone))
-	f.write("Overprediction(-1):	%s - %s \n" % (stat2,pmone))
-	f.write(" ")
-	f.close
-	return()
+   stat0	= (data == 0).sum()
+   stat1	= (data == 1).sum()
+   stat2	= (data == -1).sum()
+   stat	= data.size
+   pone	= (stat1 / float(stat)) * 100
+   pmone	= (stat2 / float(stat)) * 100
+   print "Number of elements:	",stat
+   print "Hit:			",stat0
+   print "Underprediction(+1):	",stat1,pone
+   print "Overprediction(-1):	",stat2,pmone
+   print " " 
+   f = open('./outputs/aod/'+name+'.txt','w')
+   f.write("Number of elements:	%s \n" % stat)
+   f.write("Hit:			%s \n" % stat0)
+   f.write("Underprediction(+1):	%s - %s \n" % (stat1,pone))
+   f.write("Overprediction(-1):	%s - %s \n" % (stat2,pmone))
+   f.write(" ")
+   f.close
+   return()
 ###########################################################################
 ###########################################################################
 def binary_cont(X,Y,D,O,M):
-	ND = np.copy(D)
-	for m,el in enumerate(X2):
-		for n,el in enumerate(X2[m]):
-			if D[m][n] == 1:
-				around = ((m,n+1),(m,n-1),(m+1,n),(m-1,n),(m+1,n+1),(m-1,n+1),(m+1,n-1),(m-1,n-1))
-				for hor,ver in around:
-					if O[hor][ver] == M[hor][ver] == 1:
-						ND[hor][ver] = 2
-					elif O[hor][ver] == M[hor][ver] == 0:
-						ND[hor][ver] = -2
-					elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
-						ND[hor][ver] = 1
-			elif D[m][n] == -1:
-				around = ((m,n+1),(m,n-1),(m+1,n),(m-1,n),(m+1,n+1),(m-1,n+1),(m+1,n-1),(m-1,n-1))
-				for hor,ver in around:
-					if O[hor][ver] == M[hor][ver] == 1:
-						ND[hor][ver] = -2
-					elif O[hor][ver] == M[hor][ver] == 0:
-						ND[hor][ver] = 2
-					elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
-						ND[hor][ver] = -1
-	return(ND)
+   ND = np.copy(D)
+   for m,el in enumerate(X2):
+      for n,el in enumerate(X2[m]):
+         if D[m][n] == 1:
+            around = ((m,n+1),(m,n-1),(m+1,n),(m-1,n),(m+1,n+1),(m-1,n+1),(m+1,n-1),(m-1,n-1))
+            for hor,ver in around:
+               if O[hor][ver] == M[hor][ver] == 1:
+                  ND[hor][ver] = 2
+               elif O[hor][ver] == M[hor][ver] == 0:
+                  ND[hor][ver] = -2
+               elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
+                  ND[hor][ver] = 3
+         elif D[m][n] == -1:
+            around = ((m,n+1),(m,n-1),(m+1,n),(m-1,n),(m+1,n+1),(m-1,n+1),(m+1,n-1),(m-1,n-1))
+            for hor,ver in around:
+               if O[hor][ver] == M[hor][ver] == 1:
+                  ND[hor][ver] = -2
+               elif O[hor][ver] == M[hor][ver] == 0:
+                  ND[hor][ver] = 2
+               elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
+                  ND[hor][ver] = 3
+   return(ND)
 ###########################################################################
-
-############################################################################
-class area_of_disagreement:
-	def __init__(self,area,perimeter,clon,clat,widths):
-		self.area				=	(self == -1 and self == 1).sum()
-		self.perimeter	=	perimeter
-		self.clon				=	clon
-		self.clat				= clat
-		self.widths			= widths
-	def contours2widths(self,[other arguments]):
-		
-	def dist_edges(D):
-	dist	= []
-	mdl		=	np.copy(D)
-	
-	for n,en in enumerate(D):
-		for m,em in enumerate(D[n]):
-			if
-			dist2 = np.zeros(shape=0)
-			dist4 = []
-			for m, em in enumerate(xf):
-				dist1 = np.sqrt(pow(xm[n]-xf[m],2)+pow(ym[n]-yf[m],2))
-				distt = [dist1,xf[m],yf[m]]
-				dist2 = np.append(dist2,distt)
-			dist3 = np.amin(dist2)
-			lon,lat = bm(xm[n],ym[n],inverse=True)
-			dist4 = [dist3,lon,lat]
-			dist.append(dist4)
-	return dist
-############################################################################
-###########################################################################
+##########################################################################
 
 # DEFINING THE BASEMAP
 m = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
