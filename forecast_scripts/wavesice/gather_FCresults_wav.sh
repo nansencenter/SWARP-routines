@@ -52,14 +52,15 @@ else
    echo "Archv* files NOT present"                       >> $log
    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
-mv $DFDIR/data/TP4DAILY* $TDIR/bin
-if [ $? -eq 0 ]
-then
-   echo "DAILY* files present"                           >> $log
-else
-   echo "DAILY* files NOT present"                       >> $log
-   mail -s "gather_FCresults_wav FAILED" $email  < $log
-fi
+
+#mv $DFDIR/data/TP4DAILY* $TDIR/bin
+#if [ $? -eq 0 ]
+#then
+#   echo "DAILY* files present"                           >> $log
+#else
+#   echo "DAILY* files NOT present"                       >> $log
+#   mail -s "gather_FCresults_wav FAILED" $email  < $log
+#fi
 
 #moving the info files
 echo "Moving the info files"                             >> $log

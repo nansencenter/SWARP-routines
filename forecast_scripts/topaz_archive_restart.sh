@@ -94,21 +94,21 @@ echo ""                    >> $TP4rlog
 
 cp $TP4rlog $fcldir/
 
-if [ "$(date +%A)" == "Monday" ]
-then
-   nol=$(cat $TP4rlist | wc -l)
-   if [ "$nol" -gt 4 ]
-   then
-      tbr=$(cat tp_archive_list.txt | sed '1!d')
-      touch $tmplist
-      echo "The following file will be removed from the list:  "  >> $TP4rlog
-      echo $tbr                                                   >> $TP4rlog
-      rm /work/timill/RealTime_Models/TP4a0.12/expt_01.1/data/${tbr}*
-      sed '1d' $TP4rlist >> $tmplist
-      mv $tmplist $TP4rlist
-   fi
-   weekn=$(expr $(date +%d) / 7)
-   mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
-   rm $TP4rlog 
-fi
+#if [ "$(date +%A)" == "Monday" ]
+#then
+#   nol=$(cat $TP4rlist | wc -l)
+#   if [ "$nol" -gt 4 ]
+#   then
+#      tbr=$(cat tp_archive_list.txt | sed '1!d')
+#      touch $tmplist
+#      echo "The following file will be removed from the list:  "  >> $TP4rlog
+#      echo $tbr                                                   >> $TP4rlog
+#      rm /work/timill/RealTime_Models/TP4a0.12/expt_01.1/data/${tbr}*
+#      sed '1d' $TP4rlist >> $tmplist
+#      mv $tmplist $TP4rlist
+#   fi
+#   weekn=$(expr $(date +%d) / 7)
+#   mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
+#   rm $TP4rlog 
+#fi
 

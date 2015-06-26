@@ -14,13 +14,13 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DARCHIVE_ICE_ONLY \
                   -DARCHIVE_RESTART \
 
-# # TP4 specific flags:
-# # - SEASONAL_PORT has the same relaxation conditions at the
-# #   ports (Bering Strait,...) every year
-# # - INTERANNUAL_PORT has interannual variability in the
-# #   relaxation conditions at the ports
-# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-#                  -DSEASONAL_PORT \
+# TP4 specific flags:
+# - SEASONAL_PORT has the same relaxation conditions at the
+#   ports (Bering Strait,...) every year
+# - INTERANNUAL_PORT has interannual variability in the
+#   relaxation conditions at the ports
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DSEASONAL_PORT \
 # #                -DINTERANNUAL_PORT \
 # #                -DNEST_OUTER \
 

@@ -64,7 +64,7 @@ fi
 
 if [ $f == 'unassigned' ]
 then
-   echo "No recent restarts"i                                     >> $log
+   echo "No recent restarts"                                      >> $log
    echo "Couldn't find any restart's lists"                       >> $log
    echo "Check ASAP topaz_archive_restart and topaz_get_restart"  >> $log
    mail -s "WARNING 2 - Restart list NOT FOUND" $email < $log
@@ -110,6 +110,7 @@ then
    cd $ddir
    cp $rdir/${ryear}/$f0.tar.gz .
    tar -zxvf $f0.tar.gz
+   rm $f0.tar.gz
    mv $afil0 $ddir/$afil
    mv $bfil0 $ddir/$bfil
    mv $ufil0 $ddir/$ufil

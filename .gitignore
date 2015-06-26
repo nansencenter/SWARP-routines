@@ -4,6 +4,8 @@ latex/*.log
 latex/*.toc
 latex/*.synctex.gz
 *.swp
+*.DS_Store
+*.npz
 *.pyc
 *.gbx9
 *.ncx
@@ -29,4 +31,5 @@ validation/ice_charts/test_inputs/*
 !validation/ice_charts/test_inputs/*.txt
 validation/ice_charts/test_inputs2/*
 #
-crontabs/*.txt
+validation/data/*
+validation/outputs/aod/*

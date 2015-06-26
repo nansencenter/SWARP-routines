@@ -1,5 +1,0 @@
-Number of elements:	851200 
-Hit:			242261 
-Underprediction(+1):	2743 - 0.32225093985 
-Overprediction(-1):	1805 - 0.212053571429 
- 
