@@ -1,8 +1,8 @@
 ############################################################################
-############################################################################
 # AREA OF DISAGREEMENT - for any info/questions - timothy.williams@nersc.no
-#																									gcmdnt90@gmail.com
+#                                               - gcmdnt90@gmail.com
 ############################################################################
+
 ############################################################################
 # The following script will:
 # 1) Reproject any dataset (as long as Stereographical) into the OSISAF
@@ -18,6 +18,7 @@
 # 4) Running stats for every polygon - producing stat charts
 # 5) TODO run Laplace script for every class H polygon
 ############################################################################
+
 ############################################################################
 # INPUTS
 # The script will automatically find any .nc file in the data directory and 
@@ -25,8 +26,9 @@
 # NOTE the NetCDF files will have to be located into /data directory,
 # to download the files from Hexagon repositories check ./data/fetch_data.sh
 ############################################################################
-############################################################################
 
+############################################################################
+# Calling in all the needed packages
 from netCDF4 import Dataset
 import sys,os
 import time
@@ -34,6 +36,7 @@ import glob
 import numpy as np
 import subprocess
 import shutil
+import cv2
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -49,6 +52,7 @@ from operator import itemgetter as itg
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
 import Laplace_eqn_solution as Leqs
+############################################################################
 
 ############################################################################
 # Muting error coming from invalid values of binary_mod and binary_diff
@@ -171,8 +175,9 @@ def binary_cont(X,Y,D,O,M):
 						ND[hor][ver] = -1
 	return(ND)
 ############################################################################
+
+############################################################################
 # GETTING THE POLYGONS from AARI-Icecharts text files
-	
 class aari_poly:
 	# gets single contour and sorts it
 	def __init__(self,name,region,fvals,lon,lat,X,Y,basemap=None):
@@ -254,8 +259,96 @@ class aari_poly:
 		self.lonlat_out_cont = np.array(lonlat_out)
 		return
 
+	def function_dist_edges(self):
+		# Calculating the min distance from in point to any out point
+		# and vice-versa (out to in)
+		inside_contour = self.xy_in_cont
+		outside_contour = self.xy_out_cont
+		tcont = self.xy_list
+		UKW   = 'Unknown contours < 20%'
+		DMW   = 'Contour difference < 40%'
+		width_in2out = []
+		width_out2in = []
+		if len(inside_contour) == 0:
+			DMW = 'Only outside contour, inside condtour not present'
+			self.widths_in2out	= [0,0,0,0,0]
+			self.widths_out2in	= [0,0,0,0,0]
+		elif len(outside_contour) == 0:
+			DMW = 'Only inside contour, outside not present'
+			self.widths_in2out	= [0,0,0,0,0]
+			self.widths_out2in	= [0,0,0,0,0]
+		else:
+			dmo = 100*(abs(len(inside_contour)-len(outside_contour))/float(len(tcont)))
+			if dmo >= 40:
+				DMW = 'WARNING - contours difference > 40%'
+			for n,en in enumerate(inside_contour):
+				dist_pt = []
+				for m,em in enumerate(outside_contour):
+					dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
+					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
+				idx,value = min(enumerate(dist_pt),key=itg(1))
+				width_in2out.append(value)
+			for n,en in enumerate(outside_contour):
+				dist_pt = []
+				for m,em in enumerate(inside_contour):
+					dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
+					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
+				idx,value = min(enumerate(dist_pt),key=itg(1))
+				width_out2in.append(value)
+			self.widths_in2out = width_in2out
+			self.widths_out2in = width_out2in
+		self.UKW = UKW
+ 		self.DMW = DMW
+ 		return
+
+	def function_laplacian_solution(self):
+		print('This function will find the Laplacian and Stream solutions of the polygon...\n')
+		name = self.name
+		bmp = basemap
+		ddt = dadate
+		lon = self.lon
+		lat = self.lat
+		xy = self.xy_list
+		fval = self.fvals
+		results = Leqs.get_MIZ_widths(lon,fval,name=name,fig_outdir=ddt,basemap=bmp,xy_coords2=xy)
+		self.AI = results[0]
+		self.fun_sol = results[1]
+		self.stream = results[2]
+		return
+
+	def get_stats(self):
+		xy_list = self.xy_list
+		iowidths = self.widths_in2out
+		oiwidths = self.widths_out2in
+		iomedian = np.median(iowidths)
+		oimedian = np.median(oiwidths)
+		# Centroid - Location in lon/lat of the centroid of the polygon
+		DX = 0
+		DY = 0
+		B = 0
+		for n in range(len(xy_list)-1):
+			DX += ((xy_list[n][0]+xy_list[n+1][0])*\
+				((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+			DY += ((xy_list[n][1]+xy_list[n+1][1])*\
+				((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+			B	+= ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
+			A	= (0.5)*B 
+			CX	= (1/float(6*A))*DX
+			CY	= (1/float(6*A))*DY
+		self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
+		# defining the region
+		centroid_longitude = self.centroid_longitude
+		if centroid_longitude < 80 and centroid_longitude > 8:
+			self.polygon_region = 'Barents_Kara_sea'
+		elif centroid_longitude < 8 and centroid_longitude > -44:
+			self.polygon_region = 'Greenland_sea'
+		elif centroid_longitude < -44 and centroid_longitude > -70:
+			self.polygon_region = 'Labrador_sea'
+		else:
+			self.polygon_region = 'Misc.'
+			return
+	
 # TODO
-# TAKE median for big set
 # make charts with Median of width (both model and ice charts)
 # distance m2o chart
 
@@ -269,10 +362,9 @@ class aari_poly:
 #			b) x&y coords 
 #			c) Lon/Lat
 # 3) Definition of different contours
-
 class aod_poly:
 	# gets single contour and sorts it
-	def __init__(self,cont,OSI,MOD,DIFF,X,Y,number,polygon_status=1):
+	def __init__(self,cont,OUT,INS,DIFF,X,Y,number,polygon_status=1):
 		self.polygon_status = polygon_status
 		self.polygon_name = 'polygon'+str(number)
 		# class definition
@@ -285,9 +377,9 @@ class aod_poly:
 		elif len(cont) > 200:
 			self.polygon_class = 'H'
 		self.ij_list = cont
-		self._diff_with_terrain_(DIFF,OSI,MOD) 
+		self._diff_with_terrain_(DIFF,OUT,INS) 
 		self._ij2xy_(cont,X,Y)
-		self._split_cont(OSI,MOD)
+		self._split_cont(OUT,INS)
 		return
 	
 	def _ij2xy_(self,cont,X,Y):
@@ -307,11 +399,11 @@ class aod_poly:
 		self.xy_list = xy_list
 		return
 	
-	def _diff_with_terrain_(self,DIFF,OSI,MOD):
+	def _diff_with_terrain_(self,DIFF,OUT,INS):
 		# getting back the terrain lost during binary_mod (for contour finding reasons)
 		DN = DIFF
-		ZO = OSI
-		ZM = MOD
+		ZO = OUT
+		ZM = INS
 		thenan = np.isnan(ZO)
 		thenan2 = np.isnan(ZM)
 		DN[thenan] = None
@@ -319,7 +411,7 @@ class aod_poly:
 		self.difference = DN
 		return
 	
-	def _split_cont(self,OSI,MOD):
+	def _split_cont(self,OUT,INS):
 		# this function find the different contours
 		# NOTE if a point has non integer i coordinate is going to be a vertical edge,
 		# if has non integer j coordinate is going to be a horizontal edge hence the use
@@ -327,8 +419,8 @@ class aod_poly:
 		# NOTE if the polygon is an OVERESTIMATION the contour finding is inverted
 		vs = self.ij_list # list of (i,j) pixel indices
 		npoly = self.polygon_name
-		mdl_cont = []
-		osi_cont = []
+		in_cont = []
+		out_cont = []
 		ukn_cont = []
 		func_vals= []
 		func_mod = 0	# value of func_vals at model ice edge
@@ -337,7 +429,7 @@ class aod_poly:
 		
 		if self.polygon_status==1:
 			# if polygon is negative - overestimation of ice
-			self.model_status='Model Underestimate'
+			self.status='Underestimate'
 			for n,el in enumerate(vs):
 				#getting all the neighbours
 				around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1]))
@@ -345,12 +437,12 @@ class aod_poly:
 				check_cont = 0
 				if el[0]/int(el[0]) == 1:
 					for h,v in around1:
-						if OSI[h][v] == MOD[h][v] == 0:
-							mdl_cont.append(el)
+						if OUT[h][v] == INS[h][v] == 0:
+							in_cont.append(el)
 							func_val=func_mod
 							check_cont = 1
-						elif OSI[h][v] == MOD[h][v] == 1:
-							osi_cont.append(el)
+						elif OUT[h][v] == INS[h][v] == 1:
+							out_cont.append(el)
 							func_val=func_osi
 							check_cont = 1
 					if check_cont == 0:
@@ -359,12 +451,12 @@ class aod_poly:
 					func_vals.append(func_val)
 				else:
 					for h,v in around2:
-						if OSI[h][v] == MOD[h][v] == 0:
-							mdl_cont.append(el)
+						if OUT[h][v] == INS[h][v] == 0:
+							in_cont.append(el)
 							func_val=func_mod
 							check_cont = 1
-						elif OSI[h][v] == MOD[h][v] == 1:
-							osi_cont.append(el)
+						elif OUT[h][v] == INS[h][v] == 1:
+							out_cont.append(el)
 							func_val=func_osi
 							check_cont = 1
 					if check_cont == 0:
@@ -373,7 +465,7 @@ class aod_poly:
 					func_vals.append(func_val)
 		else:
 			# if polygon is positive - underestimation of ice
-			self.model_status='Model Overestimate'
+			self.status='Overestimate'
 			for n,el in enumerate(vs):
 				#getting all the neighbours
 				around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1])) # vertical boundaries - OK!
@@ -381,12 +473,12 @@ class aod_poly:
 				check_cont = 0
 				if el[0]/int(el[0]) == 1:
 					for h,v in around1:
-						if OSI[h][v] == MOD[h][v] == 1:
-							mdl_cont.append(el)
+						if OUT[h][v] == INS[h][v] == 1:
+							in_cont.append(el)
 							func_val=func_mod
 							check_cont = 1
-						elif OSI[h][v] == MOD[h][v] == 0:
-							osi_cont.append(el)
+						elif OUT[h][v] == INS[h][v] == 0:
+							out_cont.append(el)
 							func_val=func_osi
 							check_cont = 1
 					if check_cont == 0:
@@ -395,12 +487,12 @@ class aod_poly:
 					func_vals.append(func_val)
 				else:
 					for h,v in around2:
-						if OSI[h][v] == MOD[h][v] == 1:
-							mdl_cont.append(el)
+						if OUT[h][v] == INS[h][v] == 1:
+							in_cont.append(el)
 							func_val=func_mod
 							check_cont = 1
-						elif OSI[h][v] == MOD[h][v] == 0:
-							osi_cont.append(el)
+						elif OUT[h][v] == INS[h][v] == 0:
+							out_cont.append(el)
 							func_val=func_osi
 							check_cont = 1
 					if check_cont == 0:
@@ -408,13 +500,17 @@ class aod_poly:
 						func_val=func_unk
 					func_vals.append(func_val)
 
-		mdl_cont = np.array(mdl_cont)
-		osi_cont = np.array(osi_cont)
+		in_cont = np.array(in_cont)
+		out_cont = np.array(out_cont)
 		ukn_cont = np.array(ukn_cont)
 		func_vals	= np.array(func_vals)
 		# include sorted contours as port of object
-		self.model_ice_edge 	= mdl_cont
-		self.osisaf_ice_edge = osi_cont
+		if MODEL2MODEL:
+			self.inside_ice_edge = in_cont
+			self.outside_ice_edge = out_cont
+		else:
+			self.model_ice_edge 	= in_cont
+			self.osisaf_ice_edge = out_cont
 		self.unknown_edge = ukn_cont
 		self.function_vals = func_vals
 		return
@@ -423,38 +519,41 @@ class aod_poly:
 # In this class every polygon already classified will be analyzed and stats
 # will be saved and printed with the stat_chart() function
 class aod_stats:
-	def __init__(self,aod,basemap=None):
+	def __init__(self,aod,dadate,basemap=None):
 		self.ij_list = aod.ij_list
 		self.xy_list = aod.xy_list
 		self.number_of_points = len(aod.ij_list)
-		self.polygon_status = aod.polygon_status
+		self.polygon_status = aod.status
 		self.name = aod.polygon_name
 		self.pclass = aod.polygon_class
-		self.patch_sign = aod.model_status
-		self.mcont = aod.model_ice_edge
-		self.ocont = aod.osisaf_ice_edge
-		self.ucont = aod.unknown_edge
-		self.diff = aod.difference
-		
+		if MODEL2MODEL:
+			self.inside_contour = aod.inside_ice_edge
+			self.outside_contour = aod.outside_ice_edge
+		else:
+			self.model_contour = aod.model_ice_edge
+			self.osisaf_contour = aod.osisaf_ice_edge
+		self.unknown_contour = aod.unknown_edge
+		self.f_vals = aod.function_vals
+
 		#get euclidean area
 		#TODO get area on sphere?
-		self.poly_area()
+		self.funtion_poly_area()
 		
 		#get euclidean perimeter
 		#(geometry_planar.curve_info could be used)
-		self.poly_perimeter()
+		self.function_poly_perimeter()
 		
 		# distances between contours set self.widths
-		self.dist_edges()
+		self.function_dist_edges()
 
 		if basemap is not None:
 			xy_list = self.xy_list
-			self.list_lon,self.list_lat=basemap(xy_list[:,0],xy_list[:,1],inverse=True)
+			self.lon_list,self.lat_list=basemap(xy_list[:,0],xy_list[:,1],inverse=True)
 			
 			# Perimeter mean - used to check diff with centroid 
 			xmean	=	np.mean(xy_list[:,0])
 			ymean	=	np.mean(xy_list[:,1])
-			self.mlon,self.mlat	=	basemap(xmean,ymean,inverse=True)
+			self.mean_perimeter_lon,self.mean_perimeter_lat	=	basemap(xmean,ymean,inverse=True)
 			
 			# Centroid - Location in lon/lat of the centroid of the polygon
 			DX	= 0
@@ -469,39 +568,72 @@ class aod_stats:
 			A	= (0.5)*B 
 			CX	= (1/float(6*A))*DX
 			CY	= (1/float(6*A))*DY
-			self.mclon,self.mclat = basemap(CX,CY,inverse=True)
+			self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
 			# defining the region
-			mclon = self.mclon
-			if mclon < 80 and mclon > 8:
+			centroid_longitude = self.centroid_longitude
+			if centroid_longitude < 80 and centroid_longitude > 8:
 				self.polygon_region = 'Barents_Kara_sea'
-			elif mclon < 8 and mclon > -44:
+			elif centroid_longitude < 8 and centroid_longitude > -44:
 				self.polygon_region = 'Greenland_sea'
-			elif mclon < -44 and mclon > -70:
+			elif centroid_longitude < -44 and centroid_longitude > -70:
 				self.polygon_region = 'Labrador_sea'
 			else:
 				self.polygon_region = 'Misc.'
 
 			# Calculating lon/lat for model,osisaf,unknown contours and distances
-			mcont		= self.mcont
-			ocont		= self.ocont
-			ucont		= self.ucont
-			dist		= self.widths
-			if len(mcont) != 0:
-				self.mcontlon,self.mcontlat = basemap(mcont[:,0],mcont[:,1],inverse=True)
-			if len(ocont) != 0:
-				self.ocontlon,self.ocontlat = basemap(ocont[:,0],ocont[:,1],inverse=True)
-			if len(ucont) != 0:
-				self.ucontlon,self.ucontlat = basemap(ucont[:,0],ucont[:,1],inverse=True)
-			distlonlat	= []
-			if dist != [0,0,0,0,0]:
-				for n,en in enumerate(dist):
-					x1,y1 = basemap(en[1],en[2],inverse=True)
-					x2,y2 = basemap(en[3],en[4],inverse=True)
-					distlonlat.append([en[0],x1,y1,x2,y2])
-				self.widthlonlat = distlonlat
+			if MODEL2MODEL:
+				inside_contour = self.inside_contour
+				outside_contour	= self.outside_contour
+				unknown_contour	= self.unknown_contour
+				dist_in2out = self.widths_in2out
+				dist_out2in = self.widths_out2in
+				if len(inside_contour) != 0:
+					self.inside_contour_lon,self.inside_contour_lat = basemap(inside_contour[:,0],inside_contour[:,1],inverse=True)
+				if len(outside_contour) != 0:
+					self.outside_contour_lon,self.outside_contour_lat = basemap(outside_contour[:,0],outside_contour[:,1],inverse=True)
+				if len(unknown_contour) != 0:
+					self.unknown_contour_lon,self.unknown_contour_lat = basemap(unknown_contour[:,0],unknown_contour[:,1],inverse=True)
+				distlonlat	= []
+				if dist_in2out != [0,0,0,0,0]:
+					for n,en in enumerate(dist_in2out):
+						x1,y1 = basemap(en[1],en[2],inverse=True)
+						x2,y2 = basemap(en[3],en[4],inverse=True)
+						distlonlat.append([en[0],x1,y1,x2,y2])
+					self.width_in2out_lonlat = distlonlat
+				if dist_out2in != [0,0,0,0,0]:
+					for n,en in enumerate(dist_out2in):
+						x1,y1 = basemap(en[1],en[2],inverse=True)
+						x2,y2 = basemap(en[3],en[4],inverse=True)
+						distlonlat.append([en[0],x1,y1,x2,y2])
+					self.width_out2in_lonlat = distlonlat
+			else:
+				inside_contour	= self.model_contour
+				outside_contour = self.osisaf_contour
+				unknown_contour	= self.unknown_contour
+				dist_mdl2osi = self.widths_mdl2osi
+				dist_osi2mdl = self.widths_osi2mdl
+				if len(inside_contour) != 0:
+					self.model_contour_lon,self.model_contour_lat = basemap(inside_contour[:,0],inside_contour[:,1],inverse=True)
+				if len(outside_contour) != 0:
+					self.osisaf_contour_lon,self.osisaf_contour_lat = basemap(outside_contour[:,0],outside_contour[:,1],inverse=True)
+				if len(unknown_contour) != 0:
+					self.unknown_contour_lon,self.unknown_contour_lat = basemap(unknown_contour[:,0],unknown_contour[:,1],inverse=True)
+				distlonlat	= []
+				if dist_mdl2osi != [0,0,0,0,0]:
+					for n,en in enumerate(dist_mdl2osi):
+						x1,y1 = basemap(en[1],en[2],inverse=True)
+						x2,y2 = basemap(en[3],en[4],inverse=True)
+						distlonlat.append([en[0],x1,y1,x2,y2])
+					self.width_mdl2osi_lonlat = distlonlat
+				if dist_osi2mdl != [0,0,0,0,0]:
+					for n,en in enumerate(dist_osi2mdl):
+						x1,y1 = basemap(en[1],en[2],inverse=True)
+						x2,y2 = basemap(en[3],en[4],inverse=True)
+						distlonlat.append([en[0],x1,y1,x2,y2])
+					self.width_osi2mdl_lonlat = distlonlat
 		return
 
-	def poly_area(self):
+	def funtion_poly_area(self):
 	  # Calculating the area of irregular polygon (from perimeter)
 		vs = self.ij_list
 		a	= 0
@@ -512,10 +644,10 @@ class aod_stats:
 			a += 0.5*(y0*dx - x0*dy)
 			x0 = x1
 			y0 = y1
-		self.area	=	a*100
+		self.area_euclidean	=	a*100
 		return
 
-	def poly_perimeter(self):
+	def function_poly_perimeter(self):
 		# Calculating perimeter in xy coordinates (unit = 10km)
 		xy		= self.ij_list
 		perim	= 0
@@ -524,62 +656,119 @@ class aod_stats:
 		self.perimeter	= perim*10
 		return
 
-	def dist_edges(self):
+	def function_dist_edges(self):
 		# Calculating the min distance from a model point to any osisaf point
 		# and vice-versa (osisaf to model)
-		# same script applied for the Model2Model products - see legends
-		mcont = self.mcont
-		ocont = self.ocont
-		ucont = self.ucont
+		# same script applied for the Model2Model(in&out) products - see legends
+		if MODEL2MODEL:
+			inside_contour = self.inside_contour
+			outside_contour	= self.outside_contour
+		else:
+			inside_contour	= self.model_contour
+			outside_contour = self.osisaf_contour
+		unknown_contour = self.unknown_contour
 		tcont = self.ij_list
 		UKW   = 'Unknown contours < 20%'
 		DMW   = 'Contour difference < 40%'
-		width = []
-		osi_width = []
-		if len(mcont) == 0:
+		width_in2out = []
+		width_out2in = []
+		if len(inside_contour) == 0:
 			DMW = 'Only OSISAF data, MODEL not present'
 			if MODEL2MODEL:
 				if FLOES:
 					DMW = 'Only Ice Pack, Open Water not present'
 				else:
 					DMW = 'Only 80% edge, 15% not present'
-			self.widths	= [0,0,0,0,0]
-			self.osi_widths	= [0,0,0,0,0]
-		elif len(ocont) == 0:
+			self.widths_in2out	= [0,0,0,0,0]
+			self.widths_out2in	= [0,0,0,0,0]
+		elif len(outside_contour) == 0:
 			DMW = 'Only MODEL data, OSISAF not present'
 			if MODEL2MODEL:
 				if FLOES:
 					DMW = 'Only Open Water, Ice Pack not present'
 				else:
 					DMW = 'Only 15% edge, 80% not present'
-			self.widths	= [0,0,0,0,0]
-			self.osi_widths	= [0,0,0,0,0]
+			self.widths_in2out	= [0,0,0,0,0]
+			self.widths_out2in	= [0,0,0,0,0]
 		else:
-			ukn = 100*(len(ucont)/float(len(tcont)))
-			dmo = 100*(abs(len(mcont)-len(ocont))/float(len(tcont)))
+			ukn = 100*(len(unknown_contour)/float(len(tcont)))
+			dmo = 100*(abs(len(inside_contour)-len(outside_contour))/float(len(tcont)))
 			if ukn >= 20:
 				UKW	= 'WARNING - unknown contours > 20%'
 			if dmo >= 40:
 				DMW = 'WARNING - contours difference > 40%'
-			for n,en in enumerate(mcont):
+			for n,en in enumerate(inside_contour):
 				dist_pt = []
-				for m,em in enumerate(ocont):
+				for m,em in enumerate(outside_contour):
 					dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
 					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
 				idx,value = min(enumerate(dist_pt),key=itg(1))
-				width.append(value)
-			for n,en in enumerate(ocont):
+				width_in2out.append(value)
+			for n,en in enumerate(outside_contour):
 				dist_pt = []
-				for m,em in enumerate(mcont):
+				for m,em in enumerate(inside_contour):
 					dist1	= np.sqrt(pow(en[0]-em[0],2)+pow(en[1]-em[1],2))
 					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
 				idx,value = min(enumerate(dist_pt),key=itg(1))
-				osi_width.append(value)
-			self.widths = width
-			self.osi_widths = osi_width
+				width_out2in.append(value)
+			if MODEL2MODEL:
+				self.widths_in2out = width_in2out
+				self.widths_out2in = width_out2in
+			else:
+				self.widths_mdl2osi = width_in2out
+				self.widths_osi2mdl = width_out2in
 		self.UKW		= UKW
  		self.DMW		= DMW
  		return
+
+	def function_laplacian_solution(self,dadate,basemap):
+		print('This function will find the Laplacian and Stream solutions of the polygon...\n')
+		name = self.name
+		lon = self.lon_list
+		lat = self.lat_list
+		xy = self.xy_list
+		fval = self.f_vals
+		results = Leqs.get_MIZ_widths(lon,fval,name=name,fig_outdir=dadate,basemap=basemap,xy_coords2=xy)
+		self.AI = results[0]
+		self.fun_sol = results[1]
+		self.stream = results[2]
+		return
+
+	def quick_figure(self):
+		DN = aod.difference
+		DMW = self.DMW
+		UKW = self.UKW
+		ij = self.ij_list
+		if MODEL2MODEL:
+			inside_contour = self.inside_contour
+			outside_contour	= self.outside_contour
+		else:
+			inside_contour	= self.model_contour
+			outside_contour = self.osisaf_contour
+		unknown_contour = self.unknown_contour
+		if MODEL2MODEL:
+			dist_in2out = self.widths_in2out
+			dist_out2in = self.widths_out2in
+		else:
+			dist_in2out = self.widths_mdl2osi
+			dist_out2in = self.widths_osi2mdl
+		x1,x2,y1,y2 = np.min(ij[:,1])-10,np.max(ij[:,1])+10,np.min(ij[:,0])-10,np.max(ij[:,0])+10
+		plt.imshow(DN,interpolation='nearest',cmap='winter')
+		plt.axis([x1,x2,y2,y1])
+		if len(inside_contour) != 0:
+			plt.plot(inside_contour[:,1],inside_contour[:,0],'ro',markersize=5)
+		if len(outside_contour) != 0:
+			plt.plot(outside_contour[:,1],outside_contour[:,0],'yo',markersize=5)
+		if len(unknown_contour) != 0:
+			plt.plot(unknown_contour[:,1],unknown_contour[:,0],'go',markersize=5)
+		if dist_in2out != [0,0,0,0,0]:
+			for n,en in enumerate(dist_in2out):
+				plt.plot([en[2],en[4]],[en[1],en[3]],color='black',alpha=0.1)
+		if dist_out2in != [0,0,0,0,0]:
+			for n,en in enumerate(dist_out2in):
+				plt.plot([en[2],en[4]],[en[1],en[3]],color='magenta',alpha=0.1)
+		plt.show(False)
+		return
 
 	def stat_chart(self,save=False):
 		pname = self.name
@@ -588,43 +777,47 @@ class aod_stats:
 		print ''
 		print 'Statistic Chart for '+str(pname)
 		print ''
-		DN = self.diff
+		DN = aod.difference
 		DMW = self.DMW
 		UKW = self.UKW
 		ij = self.ij_list
-		mcont = self.mcont
-		ocont = self.ocont
-		ucont = self.ucont
-		dist = self.widths
-		osi_dist = self.osi_widths
-		clon = '%1.2f' %self.mclon
-		clat = '%1.2f' %self.mclat
+		if MODEL2MODEL:
+			inside_contour = self.inside_contour
+			outside_contour	= self.outside_contour
+		else:
+			inside_contour	= self.model_contour
+			outside_contour = self.osisaf_contour
+		unknown_contour = self.unknown_contour
+		if MODEL2MODEL:
+			dist_in2out = self.widths_in2out
+			dist_out2in = self.widths_out2in
+		else:
+			dist_in2out = self.widths_mdl2osi
+			dist_out2in = self.widths_osi2mdl
+		clon = '%1.2f' %self.centroid_longitude
+		clat = '%1.2f' %self.centroid_latitude
 		clonlat = '{0}/{1}'.format(clon,clat)
-		area = self.area
+		area = self.area_euclidean
 		area = '%1.4e' %area 
 		perim = self.perimeter
 		perim = '%1.4e' %perim
-		if dist != [0,0,0,0,0]:
-			mdist = np.array(self.widths)
+		if dist_in2out != [0,0,0,0,0]:
+			dist_in = np.array(self.widths)
 			# changing units from decakilometer to kilometer
-			mdist = mdist[:,0]*10
-			mdist = np.median(mdist)
-			mdist = '%1.2f' %mdist
+			dist_in = dist_in[:,0]*10
+			dist_in = np.median(dist_in)
+			dist_in = '%1.2f' %dist_in
 		else:
-			mdist = 'NaN'
-		if osi_dist != [0,0,0,0,0]:
-			odist = np.array(self.osi_widths)
+			dist_in = 'NaN'
+		if dist_out2in != [0,0,0,0,0]:
+			dist_out = np.array(self.osi_widths)
 			# changing units from decakilometer to kilometer
-			odist = odist[:,0]*10
-			odist = np.median(odist)
-			odist = '%1.2f' %odist
+			dist_out = dist_out[:,0]*10
+			dist_out = np.median(dist_out)
+			dist_out = '%1.2f' %dist_out
 		else:
-			odist = 'NaN'
+			dist_out = 'NaN'
 		pstat = self.polygon_status
-		if pstat == 1:
-			status = 'Underestimation'
-		else:
-			status = 'Overestimation'
 
 		# Setting up the plot (2x2) and subplots
 		fig = plt.figure(figsize=(15,10))
@@ -651,17 +844,17 @@ class aod_stats:
 		# Polygon image on the top right
 		polyf.imshow(DN,interpolation='nearest',cmap='winter')
 		polyf.axis([x1,x2,y2,y1])
-		if len(mcont) != 0:
-			polyf.plot(mcont[:,1],mcont[:,0],'ro',markersize=4)
-		if len(ocont) != 0:
-			polyf.plot(ocont[:,1],ocont[:,0],'yo',markersize=4)
-		if len(ucont) != 0:
-			polyf.plot(ucont[:,1],ucont[:,0],'go',markersize=4)
-		if dist != [0,0,0,0,0]:
-			for n,en in enumerate(dist):
+		if len(inside_contour) != 0:
+			polyf.plot(inside_contour[:,1],inside_contour[:,0],'ro',markersize=4)
+		if len(outside_contour) != 0:
+			polyf.plot(outside_contour[:,1],outside_contour[:,0],'yo',markersize=4)
+		if len(unknown_contour) != 0:
+			polyf.plot(unknown_contour[:,1],unknown_contour[:,0],'go',markersize=4)
+		if dist_in2out != [0,0,0,0,0]:
+			for n,en in enumerate(dist_in2out):
 				polyf.plot([en[2],en[4]],[en[1],en[3]],color='black',alpha=0.1)
-		if osi_dist != [0,0,0,0,0]:
-			for n,en in enumerate(osi_dist):
+		if dist_out2in != [0,0,0,0,0]:
+			for n,en in enumerate(dist_out2in):
 				polyf.plot([en[2],en[4]],[en[1],en[3]],color='magenta',alpha=0.1)
 
 		if MODEL2MODEL:
@@ -680,8 +873,8 @@ class aod_stats:
 				txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
 				      '2) Area = '+str(area)+' km^2\n'+ \
 				      '3) Perimeter = '+str(perim)+' km\n'+ \
-				      '4) Mean W-P Width = '+str(mdist)+' km\n'+ \
-				      '5) Mean P-W Width = '+str(odist)+' km\n'+ \
+				      '4) Mean W-P Width = '+str(dist_in)+' km\n'+ \
+				      '5) Mean P-W Width = '+str(dist_out)+' km\n'+ \
 				      '6) '+str(DMW)+'\n'+ \
 				      '7) '+str(UKW)
 				tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
@@ -708,8 +901,8 @@ class aod_stats:
 				txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
 				      '2) Area = '+str(area)+' km^2\n'+ \
 				      '3) Perimeter = '+str(perim)+' km\n'+ \
-				      '4) Mean 15-80 Width = '+str(mdist)+' km\n'+ \
-				      '5) Mean 80-15 Width = '+str(odist)+' km\n'+ \
+				      '4) Mean 15-80 Width = '+str(dist_in)+' km\n'+ \
+				      '5) Mean 80-15 Width = '+str(dist_out)+' km\n'+ \
 				      '6) '+str(DMW)+'\n'+ \
 				      '7) '+str(UKW)
 				tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
@@ -738,8 +931,8 @@ class aod_stats:
 			txt = '1) Center Lon/Lat = '+str(clonlat)+' degrees\n'+ \
 			       '2) Area = '+str(area)+' km^2\n'+ \
 			       '3) Perimeter = '+str(perim)+' km\n'+ \
-			       '4) Mean M-O Width = '+str(mdist)+' km\n'+ \
-			       '5) Mean O-M Width = '+str(odist)+' km\n'+ \
+			       '4) Mean M-O Width = '+str(dist_in)+' km\n'+ \
+			       '5) Mean O-M Width = '+str(dist_out)+' km\n'+ \
 			       '6) Status = '+str(status)+'\n'+ \
 			       '7) '+str(DMW)+'\n'+ \
 			       '8) '+str(UKW)
@@ -756,7 +949,6 @@ class aod_stats:
 		plt.show(False)
 		
 		return
-###########################################################################
 ###########################################################################
 
 ###########################################################################
@@ -800,6 +992,7 @@ time0 = time.time()
 # TP4archv file from 1200h will be used instead, the following "if" allow the user to analyze a TP4DAILY from the ice_only
 if 0:
 	# Read TP4 Daily
+	print ''
 	ncfil = ''.join( glob.glob('./data/TP4DAILY*.nc'))
 	print('TP4DAILY ice_only file = ' +ncfil+'\n')
 	slon		= 'longitude'
@@ -818,6 +1011,7 @@ if 0:
 
 else:
 	# Read TP4arch_wav
+	print ''
 	ncfil = ''.join( glob.glob('./data/TP4archv*.nc'))
 	print('TP4archv_wav file = ' +ncfil+'\n')
 	slon = 'longitude'
@@ -839,6 +1033,8 @@ else:
 
 	# Date
 	dadate		= ncfil[-19:-11]
+# maybe we don't need this but i'm just going to leave it here...
+#	globals()[dadate] = dadate
 ###########################################################################
 
 ###########################################################################
@@ -869,6 +1065,7 @@ C = [X3,Y3]
 C = np.array(C)
 C = C.T
 
+###########################################################################
 # Reprojection
 ###########################################################################
 # NOTE it's possible to study the areas between different thresholds of the same dataset (i.e. model)
@@ -900,139 +1097,142 @@ else:
 
 ###########################################################################
 # AARI charts section
-apoly_list = []
-
-# Read in AARI charts for Barents Sea
-ncfil3 = ''.join( glob.glob('./ice_charts/AARI/*_bar_'+dadate+'.txt'))
-if ncfil3 == '':
-	print('No Ice Chart for Barents sea in '+dadate+'\n')
-else:
-	print('AARI Barents ice chart = '+ncfil3+'\n')
-	region = 'Barents'
-	icb = open(ncfil3)
-	icblist = []
-	for n,en in enumerate(icb):
-		nen = en.split(';')
-		icblist.append(nen)
-	icb_cont = np.array(icblist)
-	# we want to cut first row (general info) and first column (number of points)
-	icb_cont = icb_cont[1:,1:]
-	# change 'in' as '1.' and 'out' as '0.'
-	for el in icb_cont:
-		if el[1] == 'in':
-			el[1] = 1
-		else:
-			el[1] = 0
-	# reads as string, we want floats
-	icb_cont = icb_cont.astype(np.float)
-	# find out number of polygons
-	bpolyn = np.int(icb_cont[:,0].max())
-	# split the array into polygons - creation of dict
-	ad = {}
-	for n in range(bpolyn):
-		poly = []
-		for m,em in enumerate(icb_cont):
-			if em[0] == n+1:
-				poly.append(em)
-		ad["apoly"+str(n+1)] = np.array(poly)
-	for i in ad:
-		apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
-		apoly_list.append(apoly)
-
-# Read in AARI charts for Greenland Sea
-ncfil4 = ''.join( glob.glob('./ice_charts/AARI/*_gre_'+dadate+'.txt'))
-if ncfil4 == '':
-	print('No Ice Chart for Greenland sea in '+dadate+'\n')
-else:
-	print('AARI Greenland ice chart = '+ncfil4+'\n')
-	region = 'Greenland'
-	icg = open(ncfil4)
-	icglist = []
-	for n,en in enumerate(icg):
-		nen = en.split(';')
-		icglist.append(nen)
-	icg_cont = np.array(icglist)
-	# we want to cut first row (general info) and first column (number of points)
-	icg_cont = icg_cont[1:,1:]
-	# change 'in' as '1.' and 'out' as '0.'
-	for el in icg_cont:
-		if el[1] == 'in':
-			el[1] = 1
-		else:
-			el[1] = 0
-	# reads as string, we want floats
-	icg_cont = icg_cont.astype(np.float)
-	# find out number of polygons
-	gpolyn = np.int(icg_cont[:,0].max())
-	# split the array into polygons - creation of dict
+if MODEL2MODEL and FLOES:
+	apoly_list = []
+	
+	# Read in AARI charts for Barents Sea
+	ncfil3 = ''.join( glob.glob('./ice_charts/AARI/*_bar_'+dadate+'.txt'))
 	if ncfil3 == '':
-		ad = {}
-	for n in range(gpolyn):
-		poly = []
-		for m,em in enumerate(icg_cont):
-			if em[0] == n+1:
-				poly.append(em)
-		if ncfil3 == '':
-			ad["apoly"+str(n+1)] = np.array(poly)
-		else:
-			ad["apoly"+str(n+bpolyn+1)] = np.array(poly)
-	for i in ad:
-		apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
-		apoly_list.append(apoly)
-
-# Read in AARI charts for both Barents and Greenland
-# sometimes the charts are united in case the some polygons belong to both regions
-if ncfil3 == '' and ncfil4 == '':
-	ncfil5 = ''.join( glob.glob('./ice_charts/AARI/*'+dadate+'.txt'))
-	if ncfil5 == '':
-		print('No Common (Barents+Greenland) Ice Chart in '+dadate+'\n')
+		print('No Ice Chart for Barents sea in '+dadate+'\n')
 	else:
-		print('AARI Common Barents and Greenland sea ice chart = '+ncfil5+'\n')
-		region = 'Barents/Greenland'
-		icbg = open(ncfil5)
-		icbglist = []
-		for n,en in enumerate(icbg):
+		print('AARI Barents ice chart = '+ncfil3+'\n')
+		region = 'Barents'
+		icb = open(ncfil3)
+		icblist = []
+		for n,en in enumerate(icb):
 			nen = en.split(';')
-			icbglist.append(nen)
-		icbg_cont = np.array(icbglist)
+			icblist.append(nen)
+		icb_cont = np.array(icblist)
 		# we want to cut first row (general info) and first column (number of points)
-		icbg_cont = icbg_cont[1:,1:]
+		icb_cont = icb_cont[1:,1:]
 		# change 'in' as '1.' and 'out' as '0.'
-		for el in icbg_cont:
+		for el in icb_cont:
 			if el[1] == 'in':
 				el[1] = 1
 			else:
 				el[1] = 0
 		# reads as string, we want floats
-		icbg_cont = icbg_cont.astype(np.float)
+		icb_cont = icb_cont.astype(np.float)
 		# find out number of polygons
-		bgpolyn = np.int(icbg_cont[:,0].max())
+		bpolyn = np.int(icb_cont[:,0].max())
+		# split the array into polygons - creation of dict
 		ad = {}
-		for n in range(bgpolyn):
+		for n in range(bpolyn):
 			poly = []
-			for m,em in enumerate(icbg_cont):
+			for m,em in enumerate(icb_cont):
 				if em[0] == n+1:
 					poly.append(em)
 			ad["apoly"+str(n+1)] = np.array(poly)
 		for i in ad:
 			apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
 			apoly_list.append(apoly)
-
-if apoly_list != []:
-	ad = {}
-	for x in range(len(apoly_list)):
-		ad[apoly_list[x].polygon_name]=apoly_list[x]
-	for key,value in sorted(ad.items()):
-		globals()[key] = value
-
-	elapsedtime = time.time() - time0
-	print 'AARI Polygon identification done in ',elapsedtime
+	
+	# Read in AARI charts for Greenland Sea
+	ncfil4 = ''.join( glob.glob('./ice_charts/AARI/*_gre_'+dadate+'.txt'))
+	if ncfil4 == '':
+		print('No Ice Chart for Greenland sea in '+dadate+'\n')
+	else:
+		print('AARI Greenland ice chart = '+ncfil4+'\n')
+		region = 'Greenland'
+		icg = open(ncfil4)
+		icglist = []
+		for n,en in enumerate(icg):
+			nen = en.split(';')
+			icglist.append(nen)
+		icg_cont = np.array(icglist)
+		# we want to cut first row (general info) and first column (number of points)
+		icg_cont = icg_cont[1:,1:]
+		# change 'in' as '1.' and 'out' as '0.'
+		for el in icg_cont:
+			if el[1] == 'in':
+				el[1] = 1
+			else:
+				el[1] = 0
+		# reads as string, we want floats
+		icg_cont = icg_cont.astype(np.float)
+		# find out number of polygons
+		gpolyn = np.int(icg_cont[:,0].max())
+		# split the array into polygons - creation of dict
+		if ncfil3 == '':
+			ad = {}
+		for n in range(gpolyn):
+			poly = []
+			for m,em in enumerate(icg_cont):
+				if em[0] == n+1:
+					poly.append(em)
+			if ncfil3 == '':
+				ad["apoly"+str(n+1)] = np.array(poly)
+			else:
+				ad["apoly"+str(n+bpolyn+1)] = np.array(poly)
+		for i in ad:
+			apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
+			apoly_list.append(apoly)
+	
+	# Read in AARI charts for both Barents and Greenland
+	# sometimes the charts are united in case the some polygons belong to both regions
+	if ncfil3 == '' and ncfil4 == '':
+		ncfil5 = ''.join( glob.glob('./ice_charts/AARI/*'+dadate+'.txt'))
+		if ncfil5 == '':
+			print('No Common (Barents+Greenland) Ice Chart in '+dadate+'\n')
+		else:
+			print('AARI Common Barents and Greenland sea ice chart = '+ncfil5+'\n')
+			region = 'Barents/Greenland'
+			icbg = open(ncfil5)
+			icbglist = []
+			for n,en in enumerate(icbg):
+				nen = en.split(';')
+				icbglist.append(nen)
+			icbg_cont = np.array(icbglist)
+			# we want to cut first row (general info) and first column (number of points)
+			icbg_cont = icbg_cont[1:,1:]
+			# change 'in' as '1.' and 'out' as '0.'
+			for el in icbg_cont:
+				if el[1] == 'in':
+					el[1] = 1
+				else:
+					el[1] = 0
+			# reads as string, we want floats
+			icbg_cont = icbg_cont.astype(np.float)
+			# find out number of polygons
+			bgpolyn = np.int(icbg_cont[:,0].max())
+			ad = {}
+			for n in range(bgpolyn):
+				poly = []
+				for m,em in enumerate(icbg_cont):
+					if em[0] == n+1:
+						poly.append(em)
+				ad["apoly"+str(n+1)] = np.array(poly)
+			for i in ad:
+				apoly = aari_poly(i,region,ad[i][:,1],ad[i][:,2],ad[i][:,3],X2,Y2,lqm)
+				apoly_list.append(apoly)
+	
+	if apoly_list != []:
+		ad = {}
+		for x in range(len(apoly_list)):
+			ad[apoly_list[x].polygon_name]=apoly_list[x]
+		for key,value in sorted(ad.items()):
+			globals()[key] = value
+	
+		elapsedtime = time.time() - time0
+		print 'AARI Polygon identification done in ',elapsedtime
 ###########################################################################
-###########################################################################
 
+###########################################################################
 # print some stats for the "Difference" Dataset
 get_stats(DN,dadate)
+###########################################################################
 
+###########################################################################
 # Cutting out closed bays/seas
 if 1:
 	# NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
@@ -1055,12 +1255,13 @@ if 1:
 				DN[j][i] = 0
 
 		
+###########################################################################
 # finding contours from the difference data map
-print("here")
 pos = msr.find_contours(DN,.5)
 neg = msr.find_contours(DN,-.5)
-print("here2")
+###########################################################################
 
+###########################################################################
 # NOTE here happens the classification of the polygons - see aod_poly class
 poly_list=[]
 for n,el in enumerate(pos):
@@ -1077,20 +1278,25 @@ for n2,el in enumerate(neg):
 	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
 	poly_list.append(aod)
 
-# # changing name for every polygon, easier to work with
-# d = {}
-# for x in range(len(poly_list)):
-# 	d[poly_list[x].polygon_name]=poly_list[x]
-# for key,value in sorted(d.items()):
-# 	globals()[key] = value
+## changing name for every polygon, easier to work with
+# NOTE decided to move all the info to the stat class, keep this silent
+#d = {}
+#for x in range(len(poly_list)):
+#	d[poly_list[x].polygon_name+'ID']=poly_list[x]
+#for key,value in sorted(d.items()):
+#	globals()[key] = value
 
 elapsedtime = time.time() - time0
 print 'Polygon identification done in ',elapsedtime
 print ''
+###########################################################################
 
+###########################################################################
+# Fancy stats & aod_stats_production
 # NOTE the following stats are just an overview of the number of polygons per region
 # it has no effect whatsoever on the final result of the script but it's nice to see
 # what is happening and how are the polygons distributed on the regions
+# NOTE inside the fancy stats there is the stats production - see class aod_stats
 print 'Calculating statistics for every polygon...'
 print ''
 scount = 0
@@ -1114,12 +1320,12 @@ hgr_sea = 0
 hlb_sea = 0
 hmiscel = 0
 poly_stat_list = []
-# NOTE inside the fancy stats there is the stats production - see class aod_stats
 for el in poly_list:
 	if el.polygon_class == 'S':
 		scount += 1
-		print('Analizing '+str(el.polygon_name))
-		poly = aod_stats(el,lqm)
+		print('Name - '+str(el.polygon_name))
+		print('Class - '+str(el.polygon_class))
+		poly = aod_stats(el,dadate,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			sbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -1128,10 +1334,13 @@ for el in poly_list:
 			slb_sea += 1
 		elif poly.polygon_region == 'Misc.':
 			smiscel += 1
+		print('Region - '+str(poly.polygon_region))
+		print ''
 	elif el.polygon_class == 'M':
 		mcount += 1
-		print('Analizing '+str(el.polygon_name))
-		poly = aod_stats(el,lqm)
+		print('Name - '+str(el.polygon_name))
+		print('Class - '+str(el.polygon_class))
+		poly = aod_stats(el,dadate,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			mbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -1140,10 +1349,13 @@ for el in poly_list:
 			mlb_sea += 1
 		elif poly.polygon_region == 'Misc.':
 			mmiscel += 1
+		print('Region - '+str(poly.polygon_region))
+		print ''
 	elif el.polygon_class == 'B':
-		print('Analizing '+str(el.polygon_name))
+		print('Name - '+str(el.polygon_name))
+		print('Class - '+str(el.polygon_class))
 		bcount += 1
-		poly = aod_stats(el,lqm)
+		poly = aod_stats(el,dadate,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			bbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -1152,10 +1364,13 @@ for el in poly_list:
 			blb_sea += 1
 		elif poly.polygon_region == 'Misc.':
 			bmiscel += 1
+		print('Region - '+str(poly.polygon_region))
+		print ''
 	elif el.polygon_class == 'H':
-		print('Analizing '+str(el.polygon_name))
+		print('Name - '+str(el.polygon_name))
+		print('Class - '+str(el.polygon_class))
 		hcount += 1
-		poly = aod_stats(el,lqm)
+		poly = aod_stats(el,dadate,lqm)
 		if poly.polygon_region == 'Barents_Kara_sea':
 			hbk_sea += 1
 		elif poly.polygon_region == 'Greenland_sea':
@@ -1164,12 +1379,14 @@ for el in poly_list:
 			hlb_sea += 1
 		elif poly.polygon_region == 'Misc.':
 			hmiscel += 1
+		print('Region - '+str(poly.polygon_region))
+		print ''
 	poly_stat_list.append(poly)
 
 # changing name to every polygon_stat, easier to work with
 d = {}
 for x in range(len(poly_stat_list)):
-	d[poly_stat_list[x].name+'stat']=poly_stat_list[x]
+	d[poly_stat_list[x].name]=poly_stat_list[x]
 for key,value in sorted(d.items()):
 	globals()[key] = value
 
@@ -1210,6 +1427,7 @@ print ''
 elapsedtime = time.time() - time0
 print 'Job done in ',elapsedtime
 
+###########################################################################
 # NOTE the user get to choose if the stat_charts are saved
 # the script will automatically save the charts in regional directories
 # all of which will be moved in the directory with the date of the products
@@ -1239,50 +1457,55 @@ if FIGURE:
 	print ''
 	print 'Time needed for the job ',elapsedtime
 
-	if MODEL2MODEL:
-		if FLOES:
-			outdir='/./outputs/aod/'+str(dadate)+'/Model2Model_Floe_Size/npz/'		
-			if not os.path.exists(outdir):             		# save a poly for testing
-				os.mkdir(outdir)
-			for poly in poly_stat_list:
-				if poly.pclass == 'H' or poly.pclass == 'B':
-					npfil = outdir+poly.pname+'.npz'
-					print('saving to '+npfil)
-					#
-					xy_coords = poly.xy_list
-					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
-					fvals2 = 1*poly.function_vals
-					# save file
-					np.savez(npfil,xy=xy_coords,func_vals=fvals2)
-		else:
-			outdir='/./outputs/aod/'+str(dadate)+'/Model2Model_Ice_Conc/npz/'		
-			if not os.path.exists(outdir):             		# save a poly for testing
-				os.mkdir(outdir)
-			for poly in poly_stat_list:
-				if poly.pclass == 'H' or poly.pclass == 'B':
-					npfil = outdir+poly.pname+'.npz'
-					print('saving to '+npfil)
-					#
-					xy_coords = poly.xy_list
-					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
-					fvals2 = 1*poly.function_vals
-					# save file
-					np.savez(npfil,xy=xy_coords,func_vals=fvals2)	
-	else:
-			outdir='/./outputs/aod/'+str(dadate)+'/Model_Osisaf/npz/'		
-			if not os.path.exists(outdir):             		# save a poly for testing
-				os.mkdir(outdir)
-			for poly in poly_stat_list:
-				if poly.pclass == 'H' or poly.pclass == 'B':
-					npfil = outdir+poly.pname+'.npz'
-					print('saving to '+npfil)
-					#
-					xy_coords = poly.xy_list
-					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
-					fvals2 = 1*poly.function_vals
-					# save file
-					np.savez(npfil,xy=xy_coords,func_vals=fvals2)	
+###########################################################################
+# TODO if the user choose to save, it can save the polygons H & B as npz 
+#	if MODEL2MODEL:
+#		if FLOES:
+#			outdir='/./outputs/aod/'+str(dadate)+'/Model2Model_Floe_Size/npz/'		
+#			if not os.path.exists(outdir):             		# save a poly for testing
+#				os.mkdir(outdir)
+#			for poly in poly_stat_list:
+#				if poly.pclass == 'H' or poly.pclass == 'B':
+#					npfil = outdir+poly.pname+'.npz'
+#					print('saving to '+npfil)
+#					#
+#					xy_coords = poly.xy_list
+#					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+#					fvals2 = 1*poly.function_vals
+#					# save file
+#					np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+#		else:
+#			outdir='/./outputs/aod/'+str(dadate)+'/Model2Model_Ice_Conc/npz/'		
+#			if not os.path.exists(outdir):             		# save a poly for testing
+#				os.mkdir(outdir)
+#			for poly in poly_stat_list:
+#				if poly.pclass == 'H' or poly.pclass == 'B':
+#					npfil = outdir+poly.pname+'.npz'
+#					print('saving to '+npfil)
+#					#
+#					xy_coords = poly.xy_list
+#					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+#					fvals2 = 1*poly.function_vals
+#					# save file
+#					np.savez(npfil,xy=xy_coords,func_vals=fvals2)	
+#	else:
+#			outdir='/./outputs/aod/'+str(dadate)+'/Model_Osisaf/npz/'		
+#			if not os.path.exists(outdir):             		# save a poly for testing
+#				os.mkdir(outdir)
+#			for poly in poly_stat_list:
+#				if poly.pclass == 'H' or poly.pclass == 'B':
+#					npfil = outdir+poly.pname+'.npz'
+#					print('saving to '+npfil)
+#					#
+#					xy_coords = poly.xy_list
+#					xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+#					fvals2 = 1*poly.function_vals
+#					# save file
+#					np.savez(npfil,xy=xy_coords,func_vals=fvals2)	
+###########################################################################
 
+###########################################################################
+# This part of the script has the purpose of saving npz polygons for testing
 if 0:
 	outdir='../python_tutorial/npz'
 	if not os.path.exists(outdir):
