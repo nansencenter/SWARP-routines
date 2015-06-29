@@ -1,5 +1,5 @@
 # Crontab for SWARP project on Johansen
 # 1) Getting the final product from Hexagon                             - Every day @20.00
 
-29 * * * * ./Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/hidden/copy2johansen_iceonly.sh
+06 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/hidden/copy2johansen_iceonly.sh
 

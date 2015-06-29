@@ -34,6 +34,3 @@ python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 # run check_wamsea.py
 10 12 * * * python $FORECAST/alert_waves/check_wamnsea.py
 
-# run the WAVE if it didn't run already
-00 06 * * * $FORECAST/wavesice/run_forecast_wav.sh
-
