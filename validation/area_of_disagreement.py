@@ -36,7 +36,6 @@ import glob
 import numpy as np
 import subprocess
 import shutil
-import cv2
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -110,10 +109,6 @@ def binary_mod_3(data1,thresh):
 	odata[odata<thresh] = 0
 	odata[odata>=thresh] = 1
 	ddata = odata - mdata
-	#ddata = np.copy(data1)
-	#ddata[ddata==0] = thresh
-	#ddata[ddata<thresh] = 1
-	#ddata[ddata==thresh] = 0
 	thenans = np.isnan(ddata)
 	ddata[thenans] = 0
 	return(mdata,odata,ddata)
@@ -174,8 +169,6 @@ def binary_cont(X,Y,D,O,M):
 	        elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
 						ND[hor][ver] = -1
 	return(ND)
-############################################################################
-
 ############################################################################
 # GETTING THE POLYGONS from AARI-Icecharts text files
 class aari_poly:
@@ -317,36 +310,36 @@ class aari_poly:
 		return
 
 	def get_stats(self):
-		xy_list = self.xy_list
-		iowidths = self.widths_in2out
-		oiwidths = self.widths_out2in
-		iomedian = np.median(iowidths)
-		oimedian = np.median(oiwidths)
-		# Centroid - Location in lon/lat of the centroid of the polygon
-		DX = 0
-		DY = 0
-		B = 0
-		for n in range(len(xy_list)-1):
-			DX += ((xy_list[n][0]+xy_list[n+1][0])*\
-				((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-			DY += ((xy_list[n][1]+xy_list[n+1][1])*\
-				((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-			B	+= ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
-			A	= (0.5)*B 
-			CX	= (1/float(6*A))*DX
-			CY	= (1/float(6*A))*DY
-		self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
-		# defining the region
-		centroid_longitude = self.centroid_longitude
-		if centroid_longitude < 80 and centroid_longitude > 8:
+	 xy_list = self.xy_list
+	 iowidths = self.widths_in2out
+	 oiwidths = self.widths_out2in
+	 iomedian = np.median(iowidths)
+	 oimedian = np.median(oiwidths)
+	 # Centroid - Location in lon/lat of the centroid of the polygon
+	 DX = 0
+	 DY = 0
+	 B = 0
+	 for n in range(len(xy_list)-1):
+	 	DX += ((xy_list[n][0]+xy_list[n+1][0])*\
+	 		((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+	 	DY += ((xy_list[n][1]+xy_list[n+1][1])*\
+	 		((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+	 	B	+= ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
+	 	A	= (0.5)*B 
+	 	CX	= (1/float(6*A))*DX
+	 	CY	= (1/float(6*A))*DY
+	 self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
+	 # defining the region
+	 centroid_longitude = self.centroid_longitude
+	 if centroid_longitude < 80 and centroid_longitude > 8:
 			self.polygon_region = 'Barents_Kara_sea'
-		elif centroid_longitude < 8 and centroid_longitude > -44:
+	 elif centroid_longitude < 8 and centroid_longitude > -44:
 			self.polygon_region = 'Greenland_sea'
-		elif centroid_longitude < -44 and centroid_longitude > -70:
+	 elif centroid_longitude < -44 and centroid_longitude > -65:
 			self.polygon_region = 'Labrador_sea'
-		else:
+	 else:
 			self.polygon_region = 'Misc.'
-			return
+	 return
 	
 # TODO
 # make charts with Median of width (both model and ice charts)
@@ -388,12 +381,12 @@ class aod_poly:
 		y = []
 		xvec =	range(len(cont[:,0]))
 		for n,en in enumerate(xvec):
-		        en	=	X[cont[n,0]][cont[n,1]]
-		        x.append(en)
+			en	=	X[cont[n,0]][cont[n,1]]
+			x.append(en)
 		yvec =	range(len(cont[:,1]))
 		for n,en in enumerate(yvec):
-		        en	=	Y[cont[n,0]][cont[n,1]]
-		        y.append(en)
+			en	=	Y[cont[n,0]][cont[n,1]]
+			y.append(en)
 		xy_list = zip(x,y)
 		xy_list = np.array(xy_list)
 		self.xy_list = xy_list
@@ -571,11 +564,12 @@ class aod_stats:
 			self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
 			# defining the region
 			centroid_longitude = self.centroid_longitude
+			centroid_latitude = self.centroid_latitude
 			if centroid_longitude < 80 and centroid_longitude > 8:
 				self.polygon_region = 'Barents_Kara_sea'
 			elif centroid_longitude < 8 and centroid_longitude > -44:
 				self.polygon_region = 'Greenland_sea'
-			elif centroid_longitude < -44 and centroid_longitude > -70:
+			elif centroid_longitude < -44 and (centroid_longitude > -65 and centroid_latitude < 68):
 				self.polygon_region = 'Labrador_sea'
 			else:
 				self.polygon_region = 'Misc.'
@@ -1234,27 +1228,29 @@ get_stats(DN,dadate)
 
 ###########################################################################
 # Cutting out closed bays/seas
-if 1:
-	# NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
-	a = DN.shape
+if 0:
+	 # NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
+	 a = DN.shape
 	
-	# North Canada mess of islands
-	for i in range(a[1]):
-		for j in range(a[0]):
-			if i < 250 and 617 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
-				DN[j][i] = 0
-			elif i < 300 and 650 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
-				DN[j][i] = 0	
+	 # North Canada mess of islands
+	 for i in range(a[1]):
+			for j in range(a[0]):
+				 if i < 250 and 617 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
+						DN[j][i] = 0
+				 elif i < 300 and 650 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
+						DN[j][i] = 0	 
+				 elif i < 350 and 350 < j < 750 and (DN[j][i] == 1 or DN[j][i] == -1):
+						DN[j][i] = 0	 
 
-	# Hudson Bay & Northwestern Passages
-	for i in range(a[1]):
-		for j in range(a[0]):
-			if i < 270 and j > 760 and (DN[j][i] == 1 or DN[j][i] == -1):
-				DN[j][i] = 0
-			elif i < 276 and j > 875 and (DN[j][i] == 1 or DN[j][i] == -1):
-				DN[j][i] = 0
+	 # Hudson Bay & Northwestern Passages
+	 for i in range(a[1]):
+			for j in range(a[0]):
+				 if i < 270 and j > 760 and (DN[j][i] == 1 or DN[j][i] == -1):
+						DN[j][i] = 0
+				 elif i < 276 and j > 875 and (DN[j][i] == 1 or DN[j][i] == -1):
+						DN[j][i] = 0
 
-		
+			
 ###########################################################################
 # finding contours from the difference data map
 pos = msr.find_contours(DN,.5)
@@ -1265,26 +1261,26 @@ neg = msr.find_contours(DN,-.5)
 # NOTE here happens the classification of the polygons - see aod_poly class
 poly_list=[]
 for n,el in enumerate(pos):
-	# classification of positive polygons
-	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=0)
-	poly_list.append(aod)
+	 # classification of positive polygons
+	 aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=0)
+	 poly_list.append(aod)
 try:
-	n
+	 n
 except NameError:
-	n = -1
+	 n = -1
 for n2,el in enumerate(neg):
-	# classification of negative (n+1 for good enumeration)
-	n += 1
-	aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
-	poly_list.append(aod)
+	 # classification of negative (n+1 for good enumeration)
+	 n += 1
+	 aod=aod_poly(el,BO,BN,DN,XO,YO,n,polygon_status=1)
+	 poly_list.append(aod)
 
 ## changing name for every polygon, easier to work with
 # NOTE decided to move all the info to the stat class, keep this silent
 #d = {}
 #for x in range(len(poly_list)):
-#	d[poly_list[x].polygon_name+'ID']=poly_list[x]
+#	 d[poly_list[x].polygon_name+'ID']=poly_list[x]
 #for key,value in sorted(d.items()):
-#	globals()[key] = value
+#	 globals()[key] = value
 
 elapsedtime = time.time() - time0
 print 'Polygon identification done in ',elapsedtime
@@ -1321,67 +1317,67 @@ hlb_sea = 0
 hmiscel = 0
 poly_stat_list = []
 for el in poly_list:
-	if el.polygon_class == 'S':
-		scount += 1
-		print('Name - '+str(el.polygon_name))
-		print('Class - '+str(el.polygon_class))
-		poly = aod_stats(el,dadate,lqm)
-		if poly.polygon_region == 'Barents_Kara_sea':
-			sbk_sea += 1
-		elif poly.polygon_region == 'Greenland_sea':
-			sgr_sea += 1
-		elif poly.polygon_region == 'Labrador_sea':
-			slb_sea += 1
-		elif poly.polygon_region == 'Misc.':
-			smiscel += 1
-		print('Region - '+str(poly.polygon_region))
-		print ''
-	elif el.polygon_class == 'M':
-		mcount += 1
-		print('Name - '+str(el.polygon_name))
-		print('Class - '+str(el.polygon_class))
-		poly = aod_stats(el,dadate,lqm)
-		if poly.polygon_region == 'Barents_Kara_sea':
-			mbk_sea += 1
-		elif poly.polygon_region == 'Greenland_sea':
-			mgr_sea += 1
-		elif poly.polygon_region == 'Labrador_sea':
-			mlb_sea += 1
-		elif poly.polygon_region == 'Misc.':
-			mmiscel += 1
-		print('Region - '+str(poly.polygon_region))
-		print ''
-	elif el.polygon_class == 'B':
-		print('Name - '+str(el.polygon_name))
-		print('Class - '+str(el.polygon_class))
-		bcount += 1
-		poly = aod_stats(el,dadate,lqm)
-		if poly.polygon_region == 'Barents_Kara_sea':
-			bbk_sea += 1
-		elif poly.polygon_region == 'Greenland_sea':
-			bgr_sea += 1
-		elif poly.polygon_region == 'Labrador_sea':
-			blb_sea += 1
-		elif poly.polygon_region == 'Misc.':
-			bmiscel += 1
-		print('Region - '+str(poly.polygon_region))
-		print ''
-	elif el.polygon_class == 'H':
-		print('Name - '+str(el.polygon_name))
-		print('Class - '+str(el.polygon_class))
-		hcount += 1
-		poly = aod_stats(el,dadate,lqm)
-		if poly.polygon_region == 'Barents_Kara_sea':
-			hbk_sea += 1
-		elif poly.polygon_region == 'Greenland_sea':
-			hgr_sea += 1
-		elif poly.polygon_region == 'Labrador_sea':
-			hlb_sea += 1
-		elif poly.polygon_region == 'Misc.':
-			hmiscel += 1
-		print('Region - '+str(poly.polygon_region))
-		print ''
-	poly_stat_list.append(poly)
+	 if el.polygon_class == 'S':
+			scount += 1
+			print('Name - '+str(el.polygon_name))
+			print('Class - '+str(el.polygon_class))
+			poly = aod_stats(el,dadate,lqm)
+			if poly.polygon_region == 'Barents_Kara_sea':
+				 sbk_sea += 1
+			elif poly.polygon_region == 'Greenland_sea':
+				 sgr_sea += 1
+			elif poly.polygon_region == 'Labrador_sea':
+				 slb_sea += 1
+			elif poly.polygon_region == 'Misc.':
+				 smiscel += 1
+			print('Region - '+str(poly.polygon_region))
+			print ''
+	 elif el.polygon_class == 'M':
+			mcount += 1
+			print('Name - '+str(el.polygon_name))
+			print('Class - '+str(el.polygon_class))
+			poly = aod_stats(el,dadate,lqm)
+			if poly.polygon_region == 'Barents_Kara_sea':
+				 mbk_sea += 1
+			elif poly.polygon_region == 'Greenland_sea':
+				 mgr_sea += 1
+			elif poly.polygon_region == 'Labrador_sea':
+				 mlb_sea += 1
+			elif poly.polygon_region == 'Misc.':
+				 mmiscel += 1
+			print('Region - '+str(poly.polygon_region))
+			print ''
+	 elif el.polygon_class == 'B':
+			print('Name - '+str(el.polygon_name))
+			print('Class - '+str(el.polygon_class))
+			bcount += 1
+			poly = aod_stats(el,dadate,lqm)
+			if poly.polygon_region == 'Barents_Kara_sea':
+	 			bbk_sea += 1
+	 		elif poly.polygon_region == 'Greenland_sea':
+	 			bgr_sea += 1
+	 		elif poly.polygon_region == 'Labrador_sea':
+	 			blb_sea += 1
+	 		elif poly.polygon_region == 'Misc.':
+	 			bmiscel += 1
+	 		print('Region - '+str(poly.polygon_region))
+	 		print ''
+	 elif el.polygon_class == 'H':
+	 		print('Name - '+str(el.polygon_name))
+	 		print('Class - '+str(el.polygon_class))
+	 		hcount += 1
+	 		poly = aod_stats(el,dadate,lqm)
+	 		if poly.polygon_region == 'Barents_Kara_sea':
+	 			hbk_sea += 1
+	 		elif poly.polygon_region == 'Greenland_sea':
+	 			hgr_sea += 1
+	 		elif poly.polygon_region == 'Labrador_sea':
+	 			hlb_sea += 1
+	 		elif poly.polygon_region == 'Misc.':
+	 			hmiscel += 1
+	 		print('Region - '+str(poly.polygon_region))
+	 		print ''
+	 poly_stat_list.append(poly)
 
 # changing name to every polygon_stat, easier to work with
 d = {}
