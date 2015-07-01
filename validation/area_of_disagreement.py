@@ -722,7 +722,7 @@ class aod_stats:
 		lat = self.lat_list
 		xy = self.xy_list
 		fval = self.f_vals
-		results = Leqs.get_MIZ_widths(lon,fval,name=name,fig_outdir=dadate,basemap=basemap,xy_coords2=xy)
+		results = Leqs.get_MIZ_widths(lon,lat,fval,name=name,fig_outdir=dadate,basemap=basemap,xy_coords2=xy)
 		self.AI = results[0]
 		self.fun_sol = results[1]
 		self.stream = results[2]
