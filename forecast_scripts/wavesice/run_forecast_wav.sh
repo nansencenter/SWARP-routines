@@ -61,7 +61,7 @@ mkdir -p ./info
 cp $datelist ./info
 
 cday=$(cat $datelist | sed '1!d')
-if [ -f $rundir/$cday/final_product/* ]
+if [ -d $rundir/$cday/final_output/ ]
 then
    exit
 else
