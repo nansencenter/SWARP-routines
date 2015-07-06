@@ -21,7 +21,7 @@ from operator import itemgetter as itg
 
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
-import Laplace_eqn_solution as Leqs
+import Laplace_eqn_solution_2 as Leqs
 ############################################################################
 
 ############################################################################
@@ -39,6 +39,30 @@ def binary_mod(data1,thresh1):
 	thenans = np.isnan(odata)
 	odata[thenans] = 0
 	return(odata)
+############################################################################
+def baffin_bay():
+	fil = ('./data/baffin_bay.txt')
+	bbay = open(fil)
+	bblon = []
+	bblat = []
+	bblone = []
+	bblate = []
+	bblonw = []
+	bblatw = []
+	for n,en in enumerate(bbay):
+		nen = en.split(';')
+		lon = float(nen[0])
+		lat = float(nen[1])
+		bblon.append(lon)
+		bblat.append(lat)
+	for n,en in enumerate(bblon):
+		if n < 1266:
+			bblone.append(bblon[n])
+			bblate.append(bblat[n])
+		else:
+			bblonw.append(bblon[n])
+			bblatw.append(bblat[n])
+	return(bblone,bblate,bblonw,bblatw)
 ############################################################################
 def open_close(self):
 	 kernel = np.ones((3,3),np.uint8)
@@ -179,7 +203,11 @@ class reader:
 
 			# finding contours from the difference data map
 			pos = msr.find_contours(DN,.5)
+			pos = sorted(pos, key=len)
+			pos = pos[::-1]
 			neg = msr.find_contours(DN,-.5)
+			neg = sorted(neg, key=len)
+			neg = neg[::-1]
 			# here happens the classification of the polygons - see aod_poly class
 			poly_list=[]
 			for n,el in enumerate(pos):
@@ -313,7 +341,7 @@ class reader:
 # 1) Width
 # 2) Area
 # NOTE if everything goes as planned we should hav only one class H per
-# region hence the actual MIZ
+# region hence the actual external MIZ
 
 class MIZ_poly:
 
@@ -326,6 +354,7 @@ class MIZ_poly:
 				 self.ij_list = cont
 				 self._ij2xy_(cont,X,Y)
 				 self._split_cont(OUT,INS)
+				 self._lon_lat()
 			elif len(cont) > 100 and len(cont) <= 200:
 				 self.polygon_class = 'B'
 				 self.ij_list = cont
@@ -442,12 +471,17 @@ class MIZ_poly:
 			# defining the region
 			centroid_longitude = self.centroid_longitude
 			centroid_latitude = self.centroid_latitude
+			bblone,bblate,bblonw,bblatw = baffin_bay()
 			if centroid_longitude < 80 and centroid_longitude > 8:
 				self.polygon_region = 'Barents_Kara_sea'
 			elif centroid_longitude < 8 and centroid_longitude > -44:
 				self.polygon_region = 'Greenland_sea'
-			elif centroid_longitude < -44 and centroid_longitude > -65:
-				self.polygon_region = 'Labrador_sea'
+			elif centroid_longitude < -44 and centroid_longitude > -90:
+				for n,en in bblatw:
+					if (centroid_latitude >= bblatw[n+1] and centroid_latitude <= bblatw[n]):
+						if centroid_longitude >= bblonw[n]: 
+							self.polygon_region = 'Labrador_sea'
+							break
 			else:
 				self.polygon_region = 'Misc.'
 			
@@ -469,11 +503,49 @@ class MIZ_poly:
 			lat = self.lat_list
 			xy = self.xy_list
 			fval = self.f_vals
-			results = Leqs.get_MIZ_widths(lon,fval,name=name,fig_outdir=dadate,basemap=basemap,xy_coords2=xy)
+			region = self.region
+			f_out = dadate
+			basemap = hqm
+			results = Leqs.get_MIZ_widths(lon,fval,name=name,region=region,fig_outdir=f_out,basemap=basemap,xy_coords2=xy)
 			self.AI = results[0]
 			self.fun_sol = results[1]
 			self.stream = results[2]
+			self.med_with = results[3]
+			self.p_area = results[4]
+			self.p_perim = results[5]
 			return
+
+	def poly_contour_plot(self):
+			inside_contour = self.inside_contour
+			outside_contour	= self.outside_contour
+		else:
+			inside_contour	= self.model_contour
+			outside_contour = self.osisaf_contour
+		unknown_contour = self.unknown_contour
+		if MODEL2MODEL:
+			dist_in2out = self.widths_in2out
+			dist_out2in = self.widths_out2in
+		else:
+			dist_in2out = self.widths_mdl2osi
+			dist_out2in = self.widths_osi2mdl
+		x1,x2,y1,y2 = np.min(ij[:,1])-10,np.max(ij[:,1])+10,np.min(ij[:,0])-10,np.max(ij[:,0])+10
+		plt.imshow(DN,interpolation='nearest',cmap='winter')
+		plt.axis([x1,x2,y2,y1])
+		if len(inside_contour) != 0:
+			plt.plot(inside_contour[:,1],inside_contour[:,0],'ro',markersize=5)
+		if len(outside_contour) != 0:
+			plt.plot(outside_contour[:,1],outside_contour[:,0],'yo',markersize=5)
+		if len(unknown_contour) != 0:
+			plt.plot(unknown_contour[:,1],unknown_contour[:,0],'go',markersize=5)
+		if dist_in2out != [0,0,0,0,0]:
+			for n,en in enumerate(dist_in2out):
+				plt.plot([en[2],en[4]],[en[1],en[3]],color='black',alpha=0.1)
+		if dist_out2in != [0,0,0,0,0]:
+			for n,en in enumerate(dist_out2in):
+				plt.plot([en[2],en[4]],[en[1],en[3]],color='magenta',alpha=0.1)
+		plt.show(False)
+		return
+
 ############################################################################
 # In this class every polygon already classified will be analyzed and stats
 # will be saved and printed with the stat_chart() function

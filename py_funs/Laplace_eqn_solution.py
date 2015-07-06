@@ -975,6 +975,9 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 	import sys,os
 	import numpy as np 
 	from matplotlib import pyplot as plt
+  
+	sys.path.append('../py_funs')
+	import f_vals_smoother as smt	
 	
 	if xy_coords2 is None:
 		if basemap is not None:
@@ -987,6 +990,8 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 		# with a conformal mapping (ie basemap with spherical earth)
 		# call basemap hqm
 	
+	fvals2 = smt.smoother(fvals2)
+
 	t0 = time.clock()
 	print('\n**********************************************************************')
 	print('Calculating potential...\n')
@@ -1054,7 +1059,7 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 	if fig_outdir is not None:
 		# make a figure
 		pobj=plt
-		outdir = '/outputs/aod/'+str(fig_outdir)
+		outdir = './outputs/aod/'+str(fig_outdir)
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
 		outdir = outdir+'/'+str(name)+'_laplacian'
@@ -1084,7 +1089,7 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 	if pobj is not None:
 		ttl	= 'Median length (km) '+str(np.round(10.*AI.length_median/1.e3)/10.)
 		plt.title(ttl)
-		if 1:
+		if 0:
 			# show for testing
 			plt.show()
 		else:
