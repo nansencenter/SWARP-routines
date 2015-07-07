@@ -20,8 +20,8 @@ class dirichlet_fund_soln:
 
 			#######################################################
 			self.func_vals = np.array(func_vals)
-			self.coords		= 1*coords # no longer pointer to list from outside the function
-			pcoords				= 1*coords
+			self.coords = 1*coords # no longer pointer to list from outside the function
+			pcoords = 1*coords
 
 			if (pcoords[0][0]!=pcoords[-1][0]) and (pcoords[0][1]!=pcoords[-1][1]):
 				# not periodic
@@ -34,14 +34,14 @@ class dirichlet_fund_soln:
 			# make shapely polygon
 			# (coords now has end-point repeated,
 			#	self.coords doesn't)
-			self.shapely_polygon	= shgeom.Polygon(pcoords)
+			self.shapely_polygon = shgeom.Polygon(pcoords)
 			#######################################################
 			
 			#######################################################
 			# want to go round curve anti-clockwise
-			x,y				= GP.coords2xy(self.coords)
-			area				= GP.area_polygon_euclidean(x,y)
-			self.area	= abs(area)
+			x,y = GP.coords2xy(self.coords)
+			area = GP.area_polygon_euclidean(x,y)
+			self.area = abs(area)
 
 			if area<0:
 				print("Curve traversed in clockwise direction - reversing arrays' order")
@@ -69,7 +69,7 @@ class dirichlet_fund_soln:
 
 			# get points around boundary of polygon, then
 			# expand points by an amount related to the spacings of the coords
-			self.buffer_resolution	= 16 # default buffer resolution
+			self.buffer_resolution = 16 # default buffer resolution
 																	# (number of segments used to approximate a quarter circle around a point.)
 
 			# self.solve_exactly	= solve_exactly
@@ -78,9 +78,9 @@ class dirichlet_fund_soln:
 			if singularities is None:
 				get_sings = True
 			else:
-				get_sings										= False
-				self.singularities						= singularities 
-				self.number_of_singularities	= len(self.singularities)
+				get_sings = False
+				self.singularities = singularities 
+				self.number_of_singularities = len(self.singularities)
 				print('Number of boundary points : '+str(self.number_of_points))
 				print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
 
@@ -132,11 +132,11 @@ class dirichlet_fund_soln:
 			perimeter,resolution,\
 						spacings,tangent_dirn	= GP.curve_info(self.singularities)
 			for i,sing in enumerate(self.singularities):
-				an					= self.sing_coeffs[i]
-				branch_dir	= np.pi/2.+tangent_dirn[i]
-				atan2			= GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
-				atan2			= GP.make_arctan2_cts(atan2)
-				sfun				= sfun+an*atan2
+				an = self.sing_coeffs[i]
+				branch_dir = np.pi/2.+tangent_dirn[i]
+				atan2 = GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
+				atan2 = GP.make_arctan2_cts(atan2)
+				sfun = sfun+an*atan2
 
 			self.stream_func_bdy = sfun
 			return
@@ -147,17 +147,17 @@ class dirichlet_fund_soln:
 
 			print('Getting singularities...\n')
 
-			bufres	= self.buffer_resolution
-			eps			= self.resolution/2.
-			poly		= self.shapely_polygon.buffer(eps,resolution=bufres)
+			bufres = self.buffer_resolution
+			eps = self.resolution/2.
+			poly = self.shapely_polygon.buffer(eps,resolution=bufres)
 
 			# put singularities (z_n) on the boundary of expanded polygon
-			self.singularities	= list(poly.exterior.coords)
+			self.singularities = list(poly.exterior.coords)
 
-			if self.singularities[0]==self.singularities[-1]:
-				self.singularities	= self.singularities[:-1]
+			if self.singularities[0] == self.singularities[-1]:
+				self.singularities = self.singularities[:-1]
 
-			self.number_of_singularities	= len(self.singularities)
+			self.number_of_singularities = len(self.singularities)
 
 			if 1:
 				# check the number of singularities:
@@ -182,15 +182,15 @@ class dirichlet_fund_soln:
 			N1 = self.number_of_singularities
 
 			# set limits for N1
-			Nthresh	= 100
-			frac		= 1.3
+			Nthresh = 100
+			frac = 1.3
 			# frac		= .2
 
 			# if self.solve_exactly:
 			#		# number of singularities and number of boundary points should be the same
 			#		# - this doesn't work too well - need more sing's
 			#		Ntarget	= N0
-			if N0<=Nthresh:
+			if N0 <= Nthresh:
 				# if N0<=Nthresh, try to get N1~N0
 				Ntarget	= N0+30
 			else:
@@ -206,23 +206,23 @@ class dirichlet_fund_soln:
 			# NB this applies to the case where N1==Ntarget
 			# NB also if N1>=Ntarget, we can reduce N1 to Ntarget exactly in 1 go
 
-			if N1>Ntarget:
+			if N1 > Ntarget:
 
 				##########################################################################
 				# reduce the number of sing's by increasing spacing between points
-				coords	= self.singularities
+				coords = self.singularities
 				perimeter,resolution,\
 						spacings,tangent_dirn	= GP.curve_info(coords)
 				#
-				s_target		= N1/float(Ntarget)*resolution # increase mean spacing between points
-				new_coords	= [coords[0]]
+				s_target = N1/float(Ntarget)*resolution # increase mean spacing between points
+				new_coords = [coords[0]]
 				#
 				ss = 0
 				s0 = 0
 				s1 = s0+s_target
 				for n,c0 in enumerate(coords[1:]):
-						ss = ss+spacings[n]
-						if ss>=s1:
+						ss = ss + spacings[n]
+						if ss >= s1:
 							new_coords.append(c0)
 							s0 = s1
 							s1 = s0+s_target
@@ -234,66 +234,66 @@ class dirichlet_fund_soln:
 				self.number_of_singularities	= N2
 				#######################################################################
 
-				if N2>Ntarget:
+				if N2 > Ntarget:
 
 						#######################################################################
 						# delete a few points randomly from new_coords to get right number
-						Ndel	= N2-Ntarget
+						Ndel = N2-Ntarget
 						while Ndel>0:
-							idel	= np.random.randint(N2)
+							idel = np.random.randint(N2)
 							new_coords.remove(new_coords[idel])
-							N2		= len(new_coords)
-							Ndel	= N2-Ntarget
+							N2 = len(new_coords)
+							Ndel = N2-Ntarget
 
 						# update list of singularities
-						self.singularities						= new_coords
-						self.number_of_singularities	= N2
+						self.singularities = new_coords
+						self.number_of_singularities = N2
 						#######################################################################
 
 				##########################################################################
-				elif N2<Ntarget:
+				elif N2 < Ntarget:
 
 						#######################################################################
 						# get some more points from self.singularities
 						# *this adds more at start preferentially
 						# but shouldn't matter since it won't be too many
-						Nadd	= Ntarget-N2
-						iadd	= 0
+						Nadd = Ntarget-N2
+						iadd = 0
 
 						for coord in self.singularities:
 							if coord in new_coords:
 									# in there so now need to insert before next element of new_coords
-									iadd	= iadd+1
+									iadd = iadd+1
 							else:
 									# adds coord before new_coords[iadd]
-									new_coords	= list(new_coords)
+									new_coords = list(new_coords)
 									new_coords.insert(iadd,coord)
-									N2					= len(new_coords)
-									Nadd				= Ntarget-N2
+									N2 = len(new_coords)
+									Nadd = Ntarget-N2
 
 									# new element so still need to increase point at which to place 
-									iadd	= iadd+1
+									iadd = iadd+1
 
-							if Nadd==0:
+							if Nadd == 0:
 									break
 
 						# update list of singularities
-						self.singularities						= new_coords
-						self.number_of_singularities	= N2
+						self.singularities = new_coords
+						self.number_of_singularities = N2
 						#######################################################################
 
 				##########################################################################
 				print('New number of singularities		: '+str(Ntarget)+'\n')
 				##########################################################################
 
-			elif N1<Ntarget:
+			elif N1 < Ntarget:
 
 				##########################################################################
 				# set up for another iteration
 				# TODO this may not be the best way
 				# - perhaps add more points on line segments of polygon
-				fac										= int(np.ceil(1.2*Nmax/float(N1)))
-				self.buffer_resolution	= fac*self.buffer_resolution
+				fac = int(np.ceil(1.2*Nmax/float(N1)))
+				self.buffer_resolution = fac*self.buffer_resolution
 
 				# need to call _get_singularities again,
 				# to reset the singularities and check them
@@ -316,13 +316,13 @@ class dirichlet_fund_soln:
 			for m,c0 in enumerate(self.coords): # rows of matrix (eqn's)
 				p0 = shgeom.Point(c0)
 				for n,c1 in enumerate(self.singularities): # cols of matrix (var's)
-						p1			= shgeom.Point(c1)
-						R				= p0.distance(p1)
-						M[m,n]	= np.log(R)
+						p1 = shgeom.Point(c1)
+						R = p0.distance(p1)
+						M[m,n] = np.log(R)
 
 			# solve in a least squares sense:
 			# M*a=self.func_vals
-			self.sing_coeffs	= np.linalg.lstsq(M,self.func_vals)[0]
+			self.sing_coeffs = np.linalg.lstsq(M,self.func_vals)[0]
 			return
 	#######################################################
 
@@ -968,7 +968,7 @@ class multipole:
 ##################################################
 
 ##################################################
-def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_coords2=None):
+def get_MIZ_widths(lons,lats,fvals2,name=None,region=None,fig_outdir=None,basemap=None,xy_coords2=None):
 
 	# Apparently the modules have to been called again 
 	import time
@@ -1059,10 +1059,10 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 	if fig_outdir is not None:
 		# make a figure
 		pobj=plt
-		outdir = './outputs/aod/'+str(fig_outdir)
+		outdir = './outputs/MIZ/'+str(fig_outdir)
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
-		outdir = outdir+'/'+str(name)+'_laplacian'
+		outdir = outdir+'/'+str(region)+'_'+str(name)+'_laplacian'
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
 	else:
@@ -1097,10 +1097,14 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 			print('Saving plot to figure '+figname)
 			plt.savefig(figname)
 			plt.close()
+
+	median_width = np.round(10.*AI.length_median/1.e3)/10.
+	p_area = np.round(10.*AI.area/1.e6)/10.
+	p_perim = np.round(10.*AI.perimeter/1.e3)/10.
 	
 	t3 = time.clock()
 	print('\nTime to get streamlines (mins): '+str((t3-t2)/60.))
 	print(ttl)
 	print('**********************************************************************\n')
 	
-	return AI,fun_sol,stream
+	return AI,fun_sol,stream,median_width,p_area,p_perim

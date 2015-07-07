@@ -25,6 +25,8 @@
 # distinguish between Model and Observational data
 # NOTE the NetCDF files will have to be located into /data directory,
 # to download the files from Hexagon repositories check ./data/fetch_data.sh
+# NOTE This script is strictly bounded to the presence of ../py_funs/  and
+# ./data/ directories, copy them properly in case of copying of the script
 ############################################################################
 
 ############################################################################
@@ -50,7 +52,7 @@ from operator import itemgetter as itg
 
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
-import Laplace_eqn_solution as Leqs
+import Laplace_eqn_solution_2 as Leqs
 ############################################################################
 
 ############################################################################
@@ -73,6 +75,30 @@ def finish_map(m):
 	        labels=[True,False,False,True])
 	m.drawmapboundary() # fill_color='aqua')
 	return
+############################################################################
+def baffin_bay():
+	fil = ('./data/baffin_bay.txt')
+	bbay = open(fil)
+	bblon = []
+	bblat = []
+	bblone = []
+	bblate = []
+	bblonw = []
+	bblatw = []
+	for n,en in enumerate(bbay):
+		nen = en.split(';')
+		lon = float(nen[0])
+		lat = float(nen[1])
+		bblon.append(lon)
+		bblat.append(lat)
+	for n,en in enumerate(bblon):
+		if n < 1266:
+			bblone.append(bblon[n])
+			bblate.append(bblat[n])
+		else:
+			bblonw.append(bblon[n])
+			bblatw.append(bblat[n])
+	return(bblone,bblate,bblonw,bblatw)
 ############################################################################
 # function used to create binary datasets - used in Model2Osisaf
 def binary_mod(data1,data2,thresh):
@@ -715,14 +741,16 @@ class aod_stats:
  		self.DMW		= DMW
  		return
 
-	def function_laplacian_solution(self,dadate,basemap):
+	def function_laplacian_solution(self):
 		print('This function will find the Laplacian and Stream solutions of the polygon...\n')
 		name = self.name
+		f_out = dadate
+		basemap = hqm
 		lon = self.lon_list
 		lat = self.lat_list
 		xy = self.xy_list
 		fval = self.f_vals
-		results = Leqs.get_MIZ_widths(lon,fval,name=name,fig_outdir=dadate,basemap=basemap,xy_coords2=xy)
+		results = Leqs.get_MIZ_widths(lon,lat,fval,name=name,fig_outdir=f_out,basemap=basemap,xy_coords2=xy)
 		self.AI = results[0]
 		self.fun_sol = results[1]
 		self.stream = results[2]
@@ -796,7 +824,7 @@ class aod_stats:
 		perim = self.perimeter
 		perim = '%1.4e' %perim
 		if dist_in2out != [0,0,0,0,0]:
-			dist_in = np.array(self.widths)
+			dist_in = np.array(self.widths_in2out)
 			# changing units from decakilometer to kilometer
 			dist_in = dist_in[:,0]*10
 			dist_in = np.median(dist_in)
@@ -804,7 +832,7 @@ class aod_stats:
 		else:
 			dist_in = 'NaN'
 		if dist_out2in != [0,0,0,0,0]:
-			dist_out = np.array(self.osi_widths)
+			dist_out = np.array(self.widths_out2in)
 			# changing units from decakilometer to kilometer
 			dist_out = dist_out[:,0]*10
 			dist_out = np.median(dist_out)
@@ -1229,32 +1257,35 @@ get_stats(DN,dadate)
 ###########################################################################
 # Cutting out closed bays/seas
 if 0:
-	 # NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
-	 a = DN.shape
+	# NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
+	a = DN.shape
 	
-	 # North Canada mess of islands
-	 for i in range(a[1]):
-			for j in range(a[0]):
-				 if i < 250 and 617 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
-						DN[j][i] = 0
-				 elif i < 300 and 650 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
-						DN[j][i] = 0	 
-				 elif i < 350 and 350 < j < 750 and (DN[j][i] == 1 or DN[j][i] == -1):
-						DN[j][i] = 0	 
+	# North Canada mess of islands
+	for i in range(a[1]):
+	 	for j in range(a[0]):
+	 		 if i < 250 and 617 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
+	 				DN[j][i] = 0
+	 		 elif i < 300 and 650 < j < 800 and (DN[j][i] == 1 or DN[j][i] == -1):
+	 				DN[j][i] = 0	 
+	 		 elif i < 350 and 350 < j < 750 and (DN[j][i] == 1 or DN[j][i] == -1):
+	 				DN[j][i] = 0	 
+	
+	# Hudson Bay & Northwestern Passages
+	for i in range(a[1]):
+	 	for j in range(a[0]):
+	 		 if i < 270 and j > 760 and (DN[j][i] == 1 or DN[j][i] == -1):
+	 				DN[j][i] = 0
+	 		 elif i < 276 and j > 875 and (DN[j][i] == 1 or DN[j][i] == -1):
+	 				DN[j][i] = 0
 
-	 # Hudson Bay & Northwestern Passages
-	 for i in range(a[1]):
-			for j in range(a[0]):
-				 if i < 270 and j > 760 and (DN[j][i] == 1 or DN[j][i] == -1):
-						DN[j][i] = 0
-				 elif i < 276 and j > 875 and (DN[j][i] == 1 or DN[j][i] == -1):
-						DN[j][i] = 0
-
-			
 ###########################################################################
 # finding contours from the difference data map
 pos = msr.find_contours(DN,.5)
+pos = sorted(pos, key=len)
+pos = pos[::-1]
 neg = msr.find_contours(DN,-.5)
+neg = sorted(neg, key=len)
+neg = neg[::-1]
 ###########################################################################
 
 ###########################################################################
@@ -1507,30 +1538,42 @@ if 0:
 	if not os.path.exists(outdir):
 		os.mkdir(outdir)
 
-	if MODEL2MODEL:
-		# save a poly for testing
-		nt = 70
-		npfil = outdir+'/poly'+str(nt)+'.npz'
-		print('saving to '+npfil)
-		#
-		poly_test = poly_list[nt]
-		xy_coords = poly_test.xy_list
-		xy_coords2 = [tuple(xyc) for xyc in xy_coords]
-		fvals2 = 1*poly_test.function_vals
-		
-		# save file
-		np.savez(npfil,xy=xy_coords,func_vals=fvals2)
-	else:
-		# save a poly for testing
-		nt = 55
-		npfil = outdir+'/poly'+str(nt)+'.npz'
-		print('saving to '+npfil)
-		#
-		poly_test = poly_list[nt]
-		xy_coords = poly_test.xy_list
-		xy_coords2 = [tuple(xyc) for xyc in xy_coords]
-		fvals2 = 1*poly_test.function_vals
-		
-		# save file
-		np.savez(npfil,xy=xy_coords,func_vals=fvals2)
-			
+	# save a poly for testing
+	nt = 1
+	npfil = outdir+'/poly'+str(nt)+'.npz'
+	print('saving to '+npfil)
+	#
+	poly_test = poly_list[nt]
+	xy_coords = poly_test.xy_list
+	xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+	fvals2 = 1*poly_test.function_vals
+	
+	# save file
+	np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+
+	# save a poly for testing
+	nt = 2
+	npfil = outdir+'/poly'+str(nt)+'.npz'
+	print('saving to '+npfil)
+	#
+	poly_test = poly_list[nt]
+	xy_coords = poly_test.xy_list
+	xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+	fvals2 = 1*poly_test.function_vals
+	
+	# save file
+	np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+
+	# save a poly for testing
+	nt = 3
+	npfil = outdir+'/poly'+str(nt)+'.npz'
+	print('saving to '+npfil)
+	#
+	poly_test = poly_list[nt]
+	xy_coords = poly_test.xy_list
+	xy_coords2 = [tuple(xyc) for xyc in xy_coords]
+	fvals2 = 1*poly_test.function_vals
+	
+	# save file
+	np.savez(npfil,xy=xy_coords,func_vals=fvals2)
+				

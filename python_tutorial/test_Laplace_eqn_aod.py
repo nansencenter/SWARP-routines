@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
 import time
 
-rootdir  = os.getenv('SWARP_ROUTINES')
-# rootdir  = '/Users/gianot/SWARP-routines'
+#rootdir  = os.getenv('SWARP_ROUTINES')
+rootdir  = '/Users/gianot/SWARP-routines'
 if rootdir is None:
    print("Set rootdir manually since getenv isn't working")
    rootdir  = raw_input('(give path to SWARP-routines folder) ')
@@ -20,7 +20,7 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
 
 if 1:
    # diff between OSISAF and model
-   nt = 55
+   nt = 2
 else:
    # MIZ from conc
    nt = 70
