@@ -108,6 +108,8 @@ ufil=${f0}ICE.uf
 if [ ! -f $ddir/$afil ]
 then
    cd $ddir
+   oldz=TP4restart*
+   rm $oldz
    cp $rdir/${ryear}/$f0.tar.gz .
    tar -zxvf $f0.tar.gz
    rm $f0.tar.gz
