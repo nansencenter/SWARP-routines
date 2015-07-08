@@ -57,8 +57,10 @@ then
    echo "Daily restarts already present"                    >> $log
 else
    echo "Daily restarts NOT found, check ice_only run"      >> $log
-   echo "BACKUP FORECAST SCRIPT EXCECUTED"                  >> $log
-   mail -s "WARNING - daily ice_only restarts NOT found" $email < $log
+   if [ ! -f /work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/${cday}/final_output/*.nc ]
+   then
+      mail -s "WARNING - daily ice_only restarts NOT found" $email < $log
+   fi
 fi
 
 echo ""                                                     >> $log
