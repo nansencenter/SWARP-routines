@@ -336,41 +336,45 @@ class aari_poly:
 		return
 
 	def get_stats(self):
-	 xy_list = self.xy_list
-	 iowidths = self.widths_in2out
-	 oiwidths = self.widths_out2in
-	 iomedian = np.median(iowidths)
-	 oimedian = np.median(oiwidths)
-	 # Centroid - Location in lon/lat of the centroid of the polygon
-	 DX = 0
-	 DY = 0
-	 B = 0
-	 for n in range(len(xy_list)-1):
-	 	DX += ((xy_list[n][0]+xy_list[n+1][0])*\
-	 		((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-	 	DY += ((xy_list[n][1]+xy_list[n+1][1])*\
-	 		((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-	 	B	+= ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
-	 	A	= (0.5)*B 
-	 	CX	= (1/float(6*A))*DX
-	 	CY	= (1/float(6*A))*DY
-	 self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
-	 # defining the region
-	 centroid_longitude = self.centroid_longitude
-	 if centroid_longitude < 80 and centroid_longitude > 8:
-			self.polygon_region = 'Barents_Kara_sea'
-	 elif centroid_longitude < 8 and centroid_longitude > -44:
-			self.polygon_region = 'Greenland_sea'
-	 elif centroid_longitude < -44 and centroid_longitude > -65:
-			self.polygon_region = 'Labrador_sea'
-	 else:
-			self.polygon_region = 'Misc.'
-	 return
+		xy_list = self.xy_list
+		iowidths = self.widths_in2out
+		oiwidths = self.widths_out2in
+		iomedian = np.median(iowidths)
+		oimedian = np.median(oiwidths)
+		# Centroid - Location in lon/lat of the centroid of the polygon
+		DX = 0
+		DY = 0
+		B = 0
+		for n in range(len(xy_list)-1):
+			DX += ((xy_list[n][0]+xy_list[n+1][0])*\
+				((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+			DY += ((xy_list[n][1]+xy_list[n+1][1])*\
+				((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+			B	+= ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
+			A	= (0.5)*B 
+			CX	= (1/float(6*A))*DX
+			CY	= (1/float(6*A))*DY
+		self.centroid_x,self.centroid_y = CX,CY
+		self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
+		# defining the region
+		centroid_longitude = self.centroid_longitude
+		bblone,bblate,bblonw,bblatw = baffin_bay()
+		if centroid_longitude < 80 and centroid_longitude > 8:
+		 	self.polygon_region = 'Barents_Kara_sea'
+		elif centroid_longitude < 8 and centroid_longitude > -44:
+		 	self.polygon_region = 'Greenland_sea'
+		elif centroid_longitude < -44 and centroid_longitude > -90:
+			for n,en in enumerate(bblatw[1:len(bblatw)]):
+				if (centroid_latitude >= bblatw[n+1] and centroid_latitude <= bblatw[n]):
+					if centroid_longitude >= bblonw[n]: 
+						self.polygon_region = 'Labrador_sea'
+						break
+				else:
+					self.polygon_region = 'Misc.'
+		else:
+		 	self.polygon_region = 'Misc.'
+		return
 	
-# TODO
-# make charts with Median of width (both model and ice charts)
-# distance m2o chart
-
 ############################################################################
 # GETTING THE POLYGONS
 # In this class we define polygons from the contour findings
@@ -587,19 +591,27 @@ class aod_stats:
 			A	= (0.5)*B 
 			CX	= (1/float(6*A))*DX
 			CY	= (1/float(6*A))*DY
+			self.centroid_x,self.centroid_y = CX,CY
 			self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
 			# defining the region
 			centroid_longitude = self.centroid_longitude
 			centroid_latitude = self.centroid_latitude
+			bblone,bblate,bblonw,bblatw = baffin_bay()
 			if centroid_longitude < 80 and centroid_longitude > 8:
 				self.polygon_region = 'Barents_Kara_sea'
 			elif centroid_longitude < 8 and centroid_longitude > -44:
 				self.polygon_region = 'Greenland_sea'
-			elif centroid_longitude < -44 and (centroid_longitude > -65 and centroid_latitude < 68):
-				self.polygon_region = 'Labrador_sea'
+			elif centroid_longitude < -44 and centroid_longitude > -90:
+				for n,en in enumerate(bblatw[1:len(bblatw)]):
+					if (centroid_latitude >= bblatw[n+1] and centroid_latitude <= bblatw[n]):
+						if centroid_longitude >= bblonw[n]: 
+							self.polygon_region = 'Labrador_sea'
+							break
+					else:
+						self.polygon_region = 'Misc.'
 			else:
 				self.polygon_region = 'Misc.'
-
+			
 			# Calculating lon/lat for model,osisaf,unknown contours and distances
 			if MODEL2MODEL:
 				inside_contour = self.inside_contour
@@ -731,12 +743,12 @@ class aod_stats:
 					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
 				idx,value = min(enumerate(dist_pt),key=itg(1))
 				width_out2in.append(value)
-			if MODEL2MODEL:
-				self.widths_in2out = width_in2out
-				self.widths_out2in = width_out2in
-			else:
-				self.widths_mdl2osi = width_in2out
-				self.widths_osi2mdl = width_out2in
+		if MODEL2MODEL:
+			self.widths_in2out = width_in2out
+			self.widths_out2in = width_out2in
+		else:
+			self.widths_mdl2osi = width_in2out
+			self.widths_osi2mdl = width_out2in
 		self.UKW		= UKW
  		self.DMW		= DMW
  		return
@@ -824,7 +836,7 @@ class aod_stats:
 		perim = self.perimeter
 		perim = '%1.4e' %perim
 		if dist_in2out != [0,0,0,0,0]:
-			dist_in = np.array(self.widths_in2out)
+			dist_in = np.array(dist_in2out)
 			# changing units from decakilometer to kilometer
 			dist_in = dist_in[:,0]*10
 			dist_in = np.median(dist_in)
@@ -832,7 +844,7 @@ class aod_stats:
 		else:
 			dist_in = 'NaN'
 		if dist_out2in != [0,0,0,0,0]:
-			dist_out = np.array(self.widths_out2in)
+			dist_out = np.array(dist_out2in)
 			# changing units from decakilometer to kilometer
 			dist_out = dist_out[:,0]*10
 			dist_out = np.median(dist_out)
@@ -955,7 +967,7 @@ class aod_stats:
 			       '3) Perimeter = '+str(perim)+' km\n'+ \
 			       '4) Mean M-O Width = '+str(dist_in)+' km\n'+ \
 			       '5) Mean O-M Width = '+str(dist_out)+' km\n'+ \
-			       '6) Status = '+str(status)+'\n'+ \
+			       '6) Status = '+str(pstas)+'\n'+ \
 			       '7) '+str(DMW)+'\n'+ \
 			       '8) '+str(UKW)
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
@@ -1003,8 +1015,8 @@ if 0:
            FLOES = []
 else:
    FIGURE   = ''
-   MODEL2MODEL = 1
-   FLOES = 1
+   MODEL2MODEL = 0
+   FLOES = 0
 
 time0 = time.time()
 ###########################################################################
@@ -1256,6 +1268,7 @@ get_stats(DN,dadate)
 
 ###########################################################################
 # Cutting out closed bays/seas
+# USING THE BORDERS FROM arcGIS -> see baffin_bay function
 if 0:
 	# NOTE i,j are inverted for full maps (i.e. ZO,ZN,BO,BN,DN etc...)
 	a = DN.shape
