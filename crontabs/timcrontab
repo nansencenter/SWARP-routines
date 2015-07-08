@@ -26,7 +26,10 @@ qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
 python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 
 # get wamnsea waves as early as possible
+# NOTE the wamnsea products are uploaded AFTER 4 am
+# added another download at 5 am
 00 * * * * $FORECAST/wamnsea_update.sh
+05 * * * * $FORECAST/wamnsea_update.sh
 
 # TP4 restarts less urgent
 00 18 * * * $FORECAST/topaz_archive_restart.sh
@@ -34,9 +37,13 @@ python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 # run ice_only forecast as early as possible
 00 02 * * * $FORECAST/ice_only/run_forecast.sh
 
+# run wavesice forecast IF it didn't run after ice_only
+# NOTE it runs after ice_only only if it finds the waves ice hence never because waves products are uploaded at 4 am
+06 * * * * $FORECAST/wavesice/run_forecast_wav.sh
+
 # get ice conc for validation and wave warning
 00 12 * * * $VALIDATION/get_osisaf_conc.sh
 
 # run check_wamsea.py
-10 12 * * * python $FORECAST/alert_waves/check_wamnsea.py
+10 12 * * * /usr/bin/python $FORECAST/alert_waves/check_wamnsea.py
 
