@@ -123,7 +123,7 @@ else
    fi
 
    # clean log file - else mpijob.out gets too big
-   rm log/*
+   rm -f log/*
 
    # launch job
    # qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
