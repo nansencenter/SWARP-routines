@@ -66,7 +66,7 @@ final_dir="$rundir/final_output/"
 
 if [ -d "$final_dir" ]
 then
-   echo "$final_dir exists already - not running"
+   # echo "$final_dir exists already - not running"
    exit
 else
    # RUNNING TOPAZ_GET_RESTART
