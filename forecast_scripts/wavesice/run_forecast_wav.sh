@@ -60,9 +60,13 @@ cd $rundir
 mkdir -p ./info
 cp $datelist ./info
 
-cday=$(cat $datelist | sed '1!d')
-if [ -d $rundir/$cday/final_output/ ]
+# cday=$(cat $datelist | sed '1!d')
+# final_dir="$rundir/$cday/final_output/"
+final_dir="$rundir/final_output/"
+
+if [ -d "$final_dir" ]
 then
+   echo "$final_dir exists already - not running"
    exit
 else
    # RUNNING TOPAZ_GET_RESTART
