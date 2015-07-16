@@ -8,7 +8,8 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
 from skimage import measure as msr
 
-sys.path.append('../../py_funs')
+SR = os.getenv('SWARP_ROUTINES')
+sys.path.append(SR+'/py_funs')
 import mod_reading as Mrdg
 
 ############################################################################
@@ -19,6 +20,11 @@ np.seterr(invalid='ignore')
 SEND_EMAIL  = 1
 CHECK_NC    = 1
 odir        = 'out' # where to put temporary outputs
+if not os.path.exists(odir):
+   # not in forecast_scripts directory, go to work_py
+   odir  = '/work/timill/work_py/out' # where to put temporary outputs
+   if not os.path.exists(odir):
+      os.mkdir(odir)
 
 #print 'Select the contour method:   '
 #print 'Type 0 for basemap contour package'
@@ -58,10 +64,10 @@ def dist_cont2cont(xice,yice,xwav,ywav,bm):
   return dist,lon,lat
 ############################################################################
 def binary_cont(data,thresh):
-	Z = np.copy(data)
-	Z[Z<thresh] = 0
-	Z[Z>=thresh] = 1
-	return Z
+   Z = np.copy(data)
+   Z[Z<thresh] = 0
+   Z[Z>=thresh] = 1
+   return Z
 ############################################################################
 def binary_diff(data,thresh1,thresh2):
 	Z1 = np.copy(data)
@@ -94,22 +100,22 @@ if CHECK_NC:
 	# define netcdf file  
 	import time
 	from datetime import date, timedelta
-#	tday = date.today()
-#	yday = date.today() - timedelta(1)
-#	yday2 = date.today() - timedelta(2)
-#	cday = tday.strftime('%Y%m%d')
-#	cyear = tday.strftime('%Y')
-#	pday = yday.strftime('%Y%m%d')
-#	pday2 = yday2.strftime('%Y%m%d')
-	cday  = '20150707'
-	cyear = '2015'
-	pday  = '20150706'
-	pday2 = '20150705'
-	tday  = '2015-07-07'
-	yday2 = '2015-07-05'
-#	wmsc = '/work/shared/nersc/msc/WAMNSEA/'+ cyear + '/forecasts/'
-#	ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
-	ncfil = 'wam_nsea.fc.'+cday+'.nc'
+	tday = date.today()
+	yday = date.today() - timedelta(1)
+	yday2 = date.today() - timedelta(2)
+	cday = tday.strftime('%Y%m%d')
+	cyear = tday.strftime('%Y')
+	pday = yday.strftime('%Y%m%d')
+	pday2 = yday2.strftime('%Y%m%d')
+#	cday  = '20150707'
+#	cyear = '2015'
+#	pday  = '20150706'
+#	pday2 = '20150705'
+#	tday  = '2015-07-07'
+#	yday2 = '2015-07-05'
+	wmsc = '/work/shared/nersc/msc/WAMNSEA/'+ cyear + '/forecasts/'
+	ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
+#	ncfil = 'wam_nsea.fc.'+cday+'.nc'
 	print('WAMNSEA file = ' + ncfil+'\n')
 	
 	# get info about nc file
@@ -133,11 +139,11 @@ if CHECK_NC:
 	# read in OSISAF conc file
 	# plot conc + ice edge (15% bm.pcontour? )
 	# get lon/lat and restrict to relevant area
-#	osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
-#	ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
-#	if not os.path.exists(ncfil2):
-#		ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday2 + '1200.nc'
-	ncfil2 = 'ice_conc_nh_polstere-100_multi_201507061200.nc'
+	osisaf = '/work/shared/nersc/msc/OSI-SAF/' + str(yday.year) + '_nh_polstere'
+	ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
+	if not os.path.exists(ncfil2):
+		ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday2 + '1200.nc'
+#	ncfil2 = 'ice_conc_nh_polstere-100_multi_201507061200.nc'
 	print('OSISAF file = '+ncfil2+'\n')
 	clon = 'lon'
 	clat = 'lat'
@@ -348,6 +354,8 @@ if CHECK_NC:
 			fnday = fnday.replace(":", "")
 			fnday = fnday.replace("-", "")
 			figname  = odir+'/img/'+fnday+'.png'
+                        if not os.path.exists(odir+'/img'):
+                           os.mkdir(odir+'/img')
 			plt.savefig(figname)
 			print('saving figure:')
 			print(figname+'\n')
@@ -360,10 +368,12 @@ if CHECK_NC:
 			# write and send an email to warn when this happens (so we can order some SAR images)
 			
 			# filename of text file to form contents of email message 
+                        if not os.path.exists(odir+'/lst'):
+                           os.mkdir(odir+'/lst')
 			textfile = odir+'/lst/'+fnday+'_list.txt'
 			nout=len(out_list)
-			if nout>0:
-			  SEND_EMAIL2=1
+                        SEND_EMAIL2=(nout>0)
+			if SEND_EMAIL2:
 			  tf=open(textfile,'w')
 			
 			  for mm in range(nout):
@@ -519,8 +529,8 @@ if CHECK_NC:
 			# filename of text file to form contents of email message 
 			textfile = odir+'/lst/'+fnday+'_threshold_list.txt'
 			nout=len(out_list)
-			if nout>0:
-			  SEND_EMAIL3=1
+                        SEND_EMAIL3 = (nout>0)
+			if SEND_EMAIL3:
 			  tf=open(textfile,'w')
 			
 			  for mm in range(nout):
