@@ -13,12 +13,13 @@ email=$(cat $address)
 
 # TIMEOUT OF THE SCRIPT
 # We want this script to run everyhour except from 00 to 04 in the morning since
-# wam_nsea files are uploaded around 3.04 am
+# wam_nsea files are uploaded around 4am
 
 # THE PREVIOUS ASSUMPTION IS BASED ON A VISUAL CHECK MADE ON DATE 22/04/2015
 # NB IF YOU SUSPECT THAT THE UPLOAD DATE HAS CHANGED PLEASE MODIFY THE FOLLOWING
 
 # ==============================================================================
+cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 timeout_start=00
 timeout_end=04
@@ -67,28 +68,71 @@ echo " Today +1 day year is:..$year1d"                      >> $log
 echo " Today +2 day year is:..$year2d"                      >> $log
 echo ""                                                     >> $log
 
-# Downloading EVERYTHING from myocean
-# Checking the presence of the latest forecast
-# if present continue with the script
+# Loop over previous 30 days
+# - check if (an) wave file is there already
+# - if not download it
+# If latest fc isn't present continue with the script
 # else send a warning_log
+AN_DOWNLOADS=0
+for n in `seq 0 30`
+do
+   ddate=$(date --date="-$n days" +%Y%m%d) # download date
+   dyear=${ddate:0:4}
+   ddir1=$LDIR/${dyear}/analysis
+   dfil1=wam_nsea.an.$ddate.nc
 
-
-  cat > ncftp.in<<EOF
+   # an file
+   if [ ! -f $ddir1/$dfil1 ]
+   then
+      echo getting $dfil1
+      cat > ncftp.in<<EOF
 open myocean
 cd $SHOST
-get wam_nsea.an.*.nc
-get wam_nsea.fc.*.nc
+get $dfil1
+set confirm-close no
+bye
+EOF
+      ncftp < ncftp.in
+      rm ncftp.in
+      mv $dfil1 analysis
+
+      AN_DOWNLOADS=$((AN_DOWNLOADS+1))
+   # else
+   #    echo $dfil1 exists already
+   fi
+done
+#################################################
+
+#################################################
+# old fc files are deleted every day
+# - just look for today's
+ddate=`date +%Y%m%d`
+dyear=${ddate:0:4}
+ddir2=$LDIR/${dyear}/forecasts
+dfil2=wam_nsea.fc.$ddate.nc
+
+FC_DOWNLOADS=0
+if [ ! -f $ddir2/$dfil2 ]
+then
+   echo getting $dfil2
+   cat > ncftp.in<<EOF
+open myocean
+cd $SHOST
+get $dfil2
 set confirm-close no
 bye
 EOF
    ncftp < ncftp.in
    rm ncftp.in
+   mv $dfil2 forecasts
+   FC_DOWNLOADS=$((FC_DOWNLOADS+1))
+# else
+#    echo $dfil2 exists already
+fi
+#################################################
 
-# Moving every download in the proper dir
-mv $LDIR/$year/wam_nsea.an.* $LDIR/$year/analysis/
-mv $LDIR/$year/wam_nsea.fc.* $LDIR/$year/forecasts/
-   
-if  ! [ -f "$LDIR/$year/forecasts/wam_nsea.fc.$tday.nc" ]
+
+if  [ ! -f "$LDIR/$year/forecasts/wam_nsea.fc.$tday.nc" ]
 then
     if [ $time_now -gt $timeout_warning ]                # We want to give the script time till 0900 before sending a warning mail
     then
@@ -99,63 +143,16 @@ then
         mail -s "WAMNSEA forecast not found for $tday" $email < $log
      else
         exit
+     fi
 else
-  echo "The file wam_nsea.an.$tday.nc exist - continue"                      >> $log
+  echo "The file wam_nsea.an.$tday.nc exists - continue"                      >> $log
 fi
 
-#######################################################################
-# OLD SCRIPT (NB USING SLEEP COMMAND WITH CRONTAB MAY CAUSE FAILURE)
-#######################################################################
-
-# Loop, try download WAMNSEA file, if not exist try again after 30 min
-## after 4.5h exit and write Error message
-#count=0
-#while  ! [ -f wam_nsea.an.${tday}.nc ]
-#do
-#
-#  cat > ncftp.in<<EOF
-#open myocean
-#cd $SHOST
-#get wam_nsea.an.*.nc
-#get wam_nsea.fc.*.nc
-#set confirm-close no
-#bye
-#EOF
-#   ncftp < ncftp.in
-#   rm ncftp.in
-#
-# if  ! [ -f wam_nsea.an.${tday}.nc ]
-#  then
-#   count=`expr $count + 1`
-#   echo " The file wam_nsea.an.${tday}.nc doesnt exist"
-#   echo ""
-#    if [  $count -ge 9 ]
-#     then 
-#      echo " *************************************************** "
-#      echo " ***** Download WAMNSEA 10km data fails - exit ***** "
-#      echo " *************************************************** "
-#      exit
-#    fi
-#   echo " $count :count - We wait 30 min, try to download agin"
-#   echo ""
-#   sleep 1800
-# else
-#   echo "The file wam_nsea.an.${tday}.nc exist - continue"
-#   echo ""
-# fi
-#
-#done
-
-######################################################################
-
-# load cdo on hexagon with direct path
-# module load cdo
-# /work/apps/cdo/1.5.4-cray/bin/cdo
 
 # check year, save in correct year file
 
 # Use cdo functions to add last +1 day (.an. file)
-#  to "keep" file (wam_nsea_2012.nc)
+#  to "keep" file (wam_nsea_${tyear}.nc)
 # Remove and recreate forecast file (wam_nsea_fc_${year}.nc)
 #  that also include the +1 and +2 forecast days
 
@@ -167,17 +164,20 @@ echo " cdo copy wam_nsea_${year}.nc wam_nsea.fc.${tday}.nc "      >> $log
 echo " into new version of wam_nsea_fc_${year}.nc"                >> $log
 echo ""                                                           >> $log
 
-# Check if .an. file exist, if not exit
-if [ -f "$LDIR/$year/analysis/wam_nsea.an.${tday}.nc" ]
- then
-  /work/apps/cdo/1.5.4-cray/bin/cdo cat analysis/wam_nsea.an.${tday}.nc $LDIR/${year}/wam_nsea_${year}.nc
-else
- echo " PROBLEM! wam_nsea.an.${tday}.nc doesn't exist"                              >> $log
- echo " check ~/SWARP-routines/forecast_scripts/wamnsea_update.sh"                  >> $log
- mail -s "WAMNSEA forecast not found for $tday" $email < $log
- exit
+if [ $AN_DOWNLOADS -gt 0 ]
+then
+   # TODO change this in case any other new an files appear
+   $cdo cat analysis/wam_nsea.an.${tday}.nc $LDIR/${year}/wam_nsea_${year}.nc
 fi
 
+if [ $FC_DOWNLOADS -eq 0 ]
+then
+   # no more to do
+   exit
+fi
+
+###############################################################################################
+# if there's a new fc file then continue to combine them
 echo "Remove forecast year file wam_nsea_fc_${year}.nc if exist"  >> $log
 echo ""                                                           >> $log
 if [ -f "$LDIR/$year/wam_nsea_fc_${year}.nc" ]
@@ -189,14 +189,14 @@ echo "Check for year today, today +1, today +2"                   >> $log
 if [ $year -eq $year1d -a $year -eq $year2d ]
  then
   echo "Same year all 3 days"                                     >> $log # merge fc in the file of the year
-  /work/apps/cdo/1.5.4-cray/bin/cdo copy wam_nsea_${year}.nc $LDIR/$year/forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_${year}.nc
+  $cdo copy wam_nsea_${year}.nc $LDIR/$year/forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_${year}.nc
 elif [ $year -eq $year1d -a $yearplus1 -eq $year2d ]
  then
   echo "Same year today and today +1 - new year today +2"         >> $log # split the fc file, day+1 in this year, day+2 in the next year
-  /work/apps/cdo/1.5.4-cray/bin/cdo copy wam_nsea_${year}.nc wam_nsea_fc_${year}.nc
-  /work/apps/cdo/1.5.4-cray/bin/cdo splityear forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_split_
-  /work/apps/cdo/1.5.4-cray/bin/cdo cat wam_nsea_fc_split_${year}.nc wam_nsea_fc_${year}.nc
-  /work/apps/cdo/1.5.4-cray/bin/cdo cat wam_nsea_fc_split_${yearplus1}.nc $LDIR/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
+  $cdo copy wam_nsea_${year}.nc wam_nsea_fc_${year}.nc
+  $cdo splityear forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_split_
+  $cdo cat wam_nsea_fc_split_${year}.nc wam_nsea_fc_${year}.nc
+  $cdo cat wam_nsea_fc_split_${yearplus1}.nc $LDIR/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
   rm wam_nsea_fc_split_*
   echo ""                                                         >> $log
   echo "NEW YEAR IS A MAGICAL TIME FOR BUGS! BE CAREFUL!"  >> $log
@@ -204,7 +204,7 @@ elif [ $year -eq $year1d -a $yearplus1 -eq $year2d ]
 elif [ $yearplus1 -eq $year1d -a  $yearplus1 -eq $year2d ]
  then
   echo "New year today +1 and today +2"                           >> $log # the whole fc file is in the next year
-  /work/apps/cdo/1.5.4-cray/bin/cdo copy forecasts/wam_nsea.fc.${tday}.nc $LDIR/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
+  $cdo copy forecasts/wam_nsea.fc.${tday}.nc $LDIR/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
   echo "Happy new year user - remember to check if the next upload is correct"   >> $log
   echo "NEW YEAR IS A SUPER MAGICAL TIME FOR BUGS! BE EXTRA CAREFUL!"            >> $log
   mail -s "WAMNSEA UPDATE - 1 day to new year" $email < $log
@@ -213,4 +213,4 @@ else
   echo " Check ~/SWARP-routines/forecast_scripts/wamnsea_update.sh"                 >> $log
   mail -s "WAMNSEA merging didn't work for $tday" $email < $log  
 fi
-
+###############################################################################################
