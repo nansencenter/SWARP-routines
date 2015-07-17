@@ -636,12 +636,12 @@ class poly_stat:
 			a += 0.5*(y0*dx - x0*dy)
 			x0 = x1 
 			y0 = y1 
-		self.area_euclidean = a*100
+		self.area_euclidean = abs(a*100)
 		# Calculating perimeter in xy coordinates (unit = 10km)
 		perim = 0
 		for n in range(len(vs)-1):
 			perim += np.sqrt(pow(vs[n+1][0]-vs[n][0],2)+pow(vs[n+1][1]-vs[n][1],2))
-		self.perimeter_euclidean = perim*10
+		self.perimeter_euclidean = abs(perim*10)
 		return
 
 	def dist_edges(self):
@@ -857,10 +857,10 @@ class poly_stat:
 			      '8) '+str(UKW)
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
-				outdir = './outputs/'+dadate
+				outdir = './outputs/'+str(typo)
 				if not os.path.exists(outdir):
 					os.mkdir(outdir)
-				valid_class = outdir+'/'+str(typo)
+				valid_class = outdir+'/'+dadate
 				if not os.path.exists(valid_class):
 					os.mkdir(valid_class)
 				if not os.path.exists(valid_class+'/'+region):
