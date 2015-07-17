@@ -88,7 +88,7 @@ def open_close(self):
 ############################################################################
 # read in and prepare every file for polygon detection
 class reader:
-	def __init__(self,name,dadate,basemap):
+	def __init__(self,name,dadate,year,month,day,basemap):
 		self.filname = name+'_'+dadate
 		if name == 'Osisaf':
 			self.X,self.Y,self.Z = self._read_osi_(dadate,basemap) 
@@ -101,7 +101,7 @@ class reader:
 	
 	def _read_osi_(self,dadate,basemap):
 		# Read in OSI_SAF file
-		outdir = './data/'
+		outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
 		ncfil = outdir+'ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
 		clon = 'lon'
 		clat = 'lat'
@@ -924,6 +924,9 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
 
 time0 = time.time()
 dadate = '20150512'
+year = '2015'
+month = '05'
+day = '12'
 osisaf = reader('Osisaf','20150512',hqm)
 model = reader('Model','20150512',hqm)
 XO,YO,ZO = osisaf.X,osisaf.Y,osisaf.Z
