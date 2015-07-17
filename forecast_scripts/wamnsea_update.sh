@@ -19,7 +19,6 @@ email=$(cat $address)
 # NB IF YOU SUSPECT THAT THE UPLOAD DATE HAS CHANGED PLEASE MODIFY THE FOLLOWING
 
 # ==============================================================================
-cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 timeout_start=00
 timeout_end=04
