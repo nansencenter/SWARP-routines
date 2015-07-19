@@ -162,23 +162,24 @@ $qsub pbsjob.sh
    
 echo "pbsjob done @ $(date)"                  >> $log
 
-# check final output has correct number of records (11)
-Nrecs="11" # eg "11" for 2.5 day fc
-
-cd $final_dir
-recs=`ncdump -h SWARP* | grep "time = UNLIMITED"`  # eg "time = UNLIMITED ; // (11 currently)"
-recs=($recs)                                       # convert to array
-nrecs=${recs[5]}
-nrecs=${nrecs:1:2}                                 # remove "("
-
-if [ $nrecs != $Nrecs ]
-then
-   ofil=`echo SWARP*`
-   echo "Wrong number of records in $ofil:"
-   echo " $nrecs (should be $Nrecs)"
-   echo " Wrong number of records in $ofil:"    >> $log
-   echo "  $nrecs (should be $Nrecs)"           >> $log
-else
-   echo " Correct number of records in $ofil:"  >> $log
-   echo "  $nrecs (should be $Nrecs)"           >> $log
-fi
+### TODO move below to merge script
+# # check final output has correct number of records (11)
+# Nrecs="11" # eg "11" for 2.5 day fc
+# 
+# cd $final_dir
+# recs=`ncdump -h SWARP* | grep "time = UNLIMITED"`  # eg "time = UNLIMITED ; // (11 currently)"
+# recs=($recs)                                       # convert to array
+# nrecs=${recs[5]}
+# nrecs=${nrecs:1:2}                                 # remove "("
+# 
+# if [ $nrecs != $Nrecs ]
+# then
+#    ofil=`echo SWARP*`
+#    echo "Wrong number of records in $ofil:"
+#    echo " $nrecs (should be $Nrecs)"
+#    echo " Wrong number of records in $ofil:"    >> $log
+#    echo "  $nrecs (should be $Nrecs)"           >> $log
+# else
+#    echo " Correct number of records in $ofil:"  >> $log
+#    echo "  $nrecs (should be $Nrecs)"           >> $log
+# fi
