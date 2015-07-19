@@ -1,6 +1,13 @@
 #!/bin/bash
 # copy forecast file from hexagon to johansen
 
+# don't bother doing anything before 2am
+thour=`date +%H`
+if [ $thour -lt 2 ]
+then
+   exit
+fi
+
 # final destination of forecast outputs
 THREDDS="/mnt/10.11.12.232/Projects/SWARP/Thredds_data_dir"
 # location of SWARP routines on johansen
@@ -52,24 +59,23 @@ then
    echo $tday >> $cplog
 fi
 
-wrn_count=0
-
-# finding the latest final product - WAVESICE
+# finding the latest final product - ICE_ONLY
 # - check last 4 days
+wrn_count=0
 for n in {0..4}
 do
-   echo "$(date +%H:%M) - looking for WAVESICE latest file" >> $cplog
+   echo "$(date +%H:%M) - looking for ICE_ONLY latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
    echo "Looking for product $hdate" >> $cplog
-   hex_fil=SWARPwavesice_forecast_start${hdate}*  # final file
+   hex_fil=SWARPiceonly_forecast_start${hdate}*  # final file
 
-   echo scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
-   scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
+   echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+   scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
 
-   if [ -f $tmp_dir_w/$hex_fil ]
+   if [ -f $tmp_dir/$hex_fil ]
    then
-      mv $tmp_dir_w/* $joh_dir_w/
-      chmod o+r $joh_dir_w/$hex_fil
+      mv $tmp_dir/* $joh_dir/
+      chmod o+r $joh_dir/$hex_fil
       echo "Product found on $hdate!" >> $cplog
       echo "Latest product uploaded" >> $cplog
       echo "" >> $cplog
@@ -87,24 +93,29 @@ do
    fi
 done
 
-wrn_count=0
-
-# finding the latest final product - ICE_ONLY
+thour=`date +%H`
+if [ $thour -lt 5 ]
+then
+   exit
+fi
+# finding the latest final product - WAVESICE
 # - check last 4 days
+# TODO add check to see if file exists already, before downloading
+wrn_count=0
 for n in {0..4}
 do
-   echo "$(date +%H:%M) - looking for ICE_ONLY latest file" >> $cplog
+   echo "$(date +%H:%M) - looking for WAVESICE latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
    echo "Looking for product $hdate" >> $cplog
-   hex_fil=SWARPiceonly_forecast_start${hdate}*  # final file
+   hex_fil=SWARPwavesice_forecast_start${hdate}*  # final file
 
-   echo scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
-   scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+   echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
+   scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
 
-   if [ -f $tmp_dir/$hex_fil ]
+   if [ -f $tmp_dir_w/$hex_fil ]
    then
-      mv $tmp_dir/* $joh_dir/
-      chmod o+r $joh_dir/$hex_fil
+      mv $tmp_dir_w/* $joh_dir_w/
+      chmod o+r $joh_dir_w/$hex_fil
       echo "Product found on $hdate!" >> $cplog
       echo "Latest product uploaded" >> $cplog
       echo "" >> $cplog
