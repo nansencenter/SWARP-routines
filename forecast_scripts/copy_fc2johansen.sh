@@ -22,9 +22,6 @@ wrk_dir=$SRjoh/forecast_scripts/hidden # location of logs, ssh_info.src
 mkdir -p $tmp_dir
 mkdir -p $tmp_dir_w
 
-# keyname=key_johansen2hexagon
-# user=timill
-
 # get $keyname, $user
 source $wrk_dir/ssh_info.src
 
