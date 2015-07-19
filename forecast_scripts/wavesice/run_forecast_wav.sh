@@ -72,7 +72,7 @@ final_dir="$rundir/final_output/"
 wavfil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
 if [ ! -f "$wavfil" ]
 then
-   echo "wave forecast file $wavfil not present - stopping"
+   # echo "wave forecast file $wavfil not present - stopping"
    exit
 fi
 
