@@ -77,3 +77,85 @@ def smoother(fvals_array):
 				fvals[n] = 1
 			fvals[fvals!=1] = 0	
 	return(fvals)
+
+################################################################################################
+class pca_mapper:
+
+   def __init__(self,xy_coords):
+      import numpy as np
+      #
+      x,y   = np.array(xy_coords).transpose()
+      #
+      self.x0 = np.mean(x)
+      self.y0 = np.mean(y)
+      self.x  = x
+      self.y  = y
+      #
+      xy_rel   = np.array([x-self.x0,y-self.y0]) # 2xN matrix
+      cov      = xy_rel.dot(xy_rel.transpose()) # covariance (2x2 matrix)
+      #
+      self.evals,self.evecs   = np.linalg.eig(cov)
+      self.X,self.Y           = self.map(x,y,inverse=False)
+
+      return
+      
+   def map(self,x,y,inverse=False):
+
+      import numpy as np
+
+      if not inverse:
+         # in:  basemap coordinates
+         # out: coordinates relative to principal components
+         xy_rel   = np.array([x-self.x0,y-self.y0]) # 2xN matrix
+         X,Y      = self.evecs.transpose().dot(xy_rel)
+      else:
+         # in:  coordinates relative to principal components
+         # out: basemap coordinates
+         xy    = np.array([x,y])
+         X,Y   = self.evecs.dot(xy)
+         X     = X+self.x0
+         Y     = Y+self.y0
+
+      return X,Y
+
+   def set_func_vals(self):
+
+      import geometry_planar as GP
+      import numpy as np
+
+      Nc       = len(self.X)
+      coords   = np.array([self.X,self.Y]).transpose()
+      ss       = GP.arc_length(coords,closed=True)
+      P        = ss[-1] # perimeter
+      ss       = ss[:-1] # drop last val
+      #
+      nvec     = range(Nc)
+      fvals    = 0*ss
+
+      # longest directions
+      # - these can be the 2 zeros of a sine function
+      Xsort = sorted([(x_,i) for i,x_ in enumerate(self.X)])
+      i0    = Xsort[0][1]
+      i1    = Xsort[-1][1]
+
+      # orientation doesn't matter
+      # - swap indices if inconvenient
+      if i1<i0:
+         i0,i1 = i1,i0
+
+      # 1st half of polygon
+      s_top       = ss[i0:i1]
+      ntop        = range(i0,i1)
+      L_top       = ss[i1]-ss[i0]
+      fvals[ntop] = np.sin((np.pi/L_top)*(s_top-s_top[0]))
+
+      # 2nd half of polygon
+      s_bot = list(ss[i1:])
+      nbot  = range(i1,Nc)
+      s_bot.extend(list(P+ss[:i0]))
+      nbot.extend(range(i0))
+      L_bot       = ss[i0]+P-ss[i1]
+      fvals[nbot] = np.sin(np.pi+(np.pi/L_bot)*(s_bot-s_bot[0]))
+
+      return fvals
+################################################################################################

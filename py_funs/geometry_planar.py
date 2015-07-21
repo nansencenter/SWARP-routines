@@ -486,25 +486,55 @@ def unit_vector(v):
 #########################################################
 
 #########################################################
-def calc_perimeter(coords):
+def calc_perimeter(coords,closed=False):
    import numpy as np
 
-   x0,y0 = coords[0]
-   Nc    = len(coords)
+   cc    = list(coords)
+   x0,y0 = cc[0]
+   if closed:
+      if cc[-1] is not cc[0]:
+         cc.append(cc[0])
+
+   Nc    = len(cc)
    P     = 0 # perimeter
 
    for n in range(1,Nc):
-       x1,y1   = coords[n]
+       x1,y1   = cc[n]
        dx      = x1-x0
        dy      = y1-y0
        #
        ds = np.sqrt(dx*dx+dy*dy)
-       th = np.atan2(dy,dx)
        P  = P+ds
        #
        x0,y0   = x1,y1
 
    return P
+#########################################################
+
+#########################################################
+def arc_length(coords,closed=False):
+   import numpy as np
+
+   cc    = list(coords)
+   x0,y0 = cc[0]
+   if closed:
+      if cc[-1] is not cc[0]:
+         cc.append(cc[0])
+
+   Nc    = len(cc)
+   S     = np.zeros(Nc) # arc length
+
+   for n in range(1,Nc):
+       x1,y1   = cc[n]
+       dx      = x1-x0
+       dy      = y1-y0
+       #
+       ds   = np.sqrt(dx*dx+dy*dy)
+       S[n] = S[n-1]+ds
+       #
+       x0,y0   = x1,y1
+
+   return S
 #########################################################
 
 #########################################################
