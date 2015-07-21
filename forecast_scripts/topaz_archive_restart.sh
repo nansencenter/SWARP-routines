@@ -5,9 +5,9 @@
 #I thought that reading through a text file would be faster than checking the whole work folder
 
 # EMAIL ADDRESS FOR THE WEEKLY UPDATE
-# email="user1@domain.com,user2@domain2.com,etc..."
+email_list=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_mail.txt
 # =========================================================================================================
-email="gcmdnt90@gmail.com"
+email=$(cat $email_list)
 # =========================================================================================================
 
 # DIRECTORIES AND TIME DEFINITION
@@ -36,6 +36,17 @@ touch $TP4rlog
 # FETCHING OPERATION
 echo $tday  >> $TP4rlog
 echo ''     >> $TP4rlog
+
+
+if [ "$(date +%A)" == "Monday" ]
+then
+   echo ""                    >> $TP4rlog
+   echo "List used this past week:   " >> $TP4rlog
+   echo ""                    >> $TP4rlog
+   cat $TP4rlist              >> $TP4rlog                               # printing the list
+   echo ""                    >> $TP4rlog
+   echo ""                    >> $TP4rlog
+fi
 
 pckg=TP4restart*_mem001.a                                            # looking for restarts (just check *.a files)
 eye=`find ${rdir} -name $pckg`                                       # gathering all the restarts
@@ -86,29 +97,24 @@ else
      done
      echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
-echo "Up-to-date List:   " >> $TP4rlog
-echo ""                    >> $TP4rlog
-cat $TP4rlist              >> $TP4rlog                               # printing the list
-echo ""                    >> $TP4rlog
-echo ""                    >> $TP4rlog
 
 cp $TP4rlog $fcldir/
 
-#if [ "$(date +%A)" == "Monday" ]
-#then
-#   nol=$(cat $TP4rlist | wc -l)
-#   if [ "$nol" -gt 4 ]
-#   then
-#      tbr=$(cat tp_archive_list.txt | sed '1!d')
-#      touch $tmplist
-#      echo "The following file will be removed from the list:  "  >> $TP4rlog
-#      echo $tbr                                                   >> $TP4rlog
-#      rm /work/timill/RealTime_Models/TP4a0.12/expt_01.1/data/${tbr}*
-#      sed '1d' $TP4rlist >> $tmplist
-#      mv $tmplist $TP4rlist
-#   fi
-#   weekn=$(expr $(date +%d) / 7)
-#   mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
-#   rm $TP4rlog 
-#fi
+if [ "$(date +%A)" == "Monday" ]
+then
+   nol=$(cat $TP4rlist | wc -l)
+   if [ $nol -gt 4 ]
+   then
+      tbr=$(cat $TP4rlist | sed '1!d')
+      touch $tmplist
+      echo "The following file will be removed from the list:  "  >> $TP4rlog
+      echo $tbr                                                   >> $TP4rlog
+      rm /work/timill/RealTime_Models/TP4a0.12/expt_01.1/data/${tbr}*
+      sed '1d' $TP4rlist >> $tmplist
+      mv $tmplist $TP4rlist
+   fi
+   weekn=$(expr $(date +%d) / 7)
+   mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
+   rm $TP4rlog 
+fi
 
