@@ -47,6 +47,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 from skimage import measure as msr
+from skimage.morphology import opening, closing
 from scipy.interpolate import griddata as grd
 from operator import itemgetter as itg
 
@@ -99,6 +100,44 @@ def baffin_bay():
 			bblonw.append(bblon[n])
 			bblatw.append(bblat[n])
 	return(bblone,bblate,bblonw,bblatw)
+############################################################################
+def open_close(DD):
+	kernel = np.ones((3,3),np.uint8)
+	DN_op = np.copy(DD)
+	DN_cl = np.copy(DD)
+	DN_op = opening(DN_op,kernel)
+	DN_cl = closing(DN_cl,kernel)
+	return(DN_op,DN_cl)
+############################################################################
+# function that calculates eigenvectors and uses them to find sensible
+# starting point for "extended" Laplacian width analisis
+def start_point(data):
+	i_vec = data[:,0]
+	j_vec = data[:,1]
+	i_vec = i_vec - np.mean(i_vec)
+	j_vec = j_vec - np.mean(j_vec)
+	ndata = [i_vec,j_vec]
+	ndata = np.matrix(ndata)
+	A = ndata * ndata.T
+	L,D,R = np.linalg.svd(A)
+	u = np.array(L[:,0]*1000)
+	v = np.array(L[:,1]*1000)
+	dist_pt = []
+# TODO I have to decide which point to use to calculate the min distance!
+# NOTE I could use the in_cont the out_cont or a new set o median pts!
+	if DMW == 'Contour difference < 40%':
+		for m,em in enumerate(			):
+			dist1	= np.sqrt(pow(u[0]-em[0],2)+pow(u[1]-em[1],2))
+			dist_pt.append([dist1,em[0],em[1]])
+		idx,value = min(enumerate(dist_pt),key=itg(1))
+		start_pt = [value[1],value[2]]
+	else:
+		for m,em in enumerate(			):
+			dist1	= np.sqrt(pow(v[0]-em[0],2)+pow(v[1]-em[1],2))
+			dist_pt.append([dist1,em[0],em[1]])
+		idx,value = min(enumerate(dist_pt),key=itg(1))
+		start_pt = [value[1],value[2]]
+	return(start_pt)
 ############################################################################
 # function used to create binary datasets - used in Model2Osisaf
 def binary_mod(data1,data2,thresh):
@@ -169,33 +208,8 @@ def get_stats(data,name):
 	print 'Overprediction(-1):	%d - %1.2f %%' %(stat2,pmone)
 	print ' ' 
 	return()
+
 ###########################################################################
-# FINDS THE CONT OF THE MDL(2) AND THE CONT OF OSI(-2)
-# NOTE this function is not used anymore (or if so has no purpose)
-def binary_cont(X,Y,D,O,M):
-	ND = np.copy(D)
-	for m,el in enumerate(X2):
-	  for n,el in enumerate(X2[m]):
-	    if D[m][n] == 1:
-	      around = ((m,n+1),(m,n-1),(m+1,n),(m-1,n),(m+1,n+1),(m-1,n+1),(m+1,n-1),(m-1,n-1))
-	      for hor,ver in around:
-	        if O[hor][ver] == M[hor][ver] == 1:
-						ND[hor][ver] = 2
-	        elif O[hor][ver] == M[hor][ver] == 0:
-						ND[hor][ver] = -2
-	        elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
-						ND[hor][ver] = 1
-	    elif D[m][n] == -1:
-	      around = ((m,n+1),(m,n-1),(m+1,n),(m-1,n),(m+1,n+1),(m-1,n+1),(m+1,n-1),(m-1,n-1))
-	      for hor,ver in around:
-	        if O[hor][ver] == M[hor][ver] == 1:
-						ND[hor][ver] = -2
-	        elif O[hor][ver] == M[hor][ver] == 0:
-						ND[hor][ver] = 2
-	        elif np.isnan(O[hor][ver]) or np.isnan(M[hor][ver]):
-						ND[hor][ver] = -1
-	return(ND)
-############################################################################
 # GETTING THE POLYGONS from AARI-Icecharts text files
 class aari_poly:
 	# gets single contour and sorts it
@@ -286,17 +300,15 @@ class aari_poly:
 		tcont = self.xy_list
 		UKW   = 'Unknown contours < 20%'
 		DMW   = 'Contour difference < 40%'
-		width_in2out = []
-		width_out2in = []
+		width_in2out	= [0,0,0,0,0]
+		width_out2in	= [0,0,0,0,0]
 		if len(inside_contour) == 0:
 			DMW = 'Only outside contour, inside condtour not present'
-			self.widths_in2out	= [0,0,0,0,0]
-			self.widths_out2in	= [0,0,0,0,0]
 		elif len(outside_contour) == 0:
 			DMW = 'Only inside contour, outside not present'
-			self.widths_in2out	= [0,0,0,0,0]
-			self.widths_out2in	= [0,0,0,0,0]
 		else:
+			width_in2out = []
+			width_out2in = []
 			dmo = 100*(abs(len(inside_contour)-len(outside_contour))/float(len(tcont)))
 			if dmo >= 40:
 				DMW = 'WARNING - contours difference > 40%'
@@ -314,8 +326,8 @@ class aari_poly:
 					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
 				idx,value = min(enumerate(dist_pt),key=itg(1))
 				width_out2in.append(value)
-			self.widths_in2out = width_in2out
-			self.widths_out2in = width_out2in
+		self.widths_in2out = width_in2out
+		self.widths_out2in = width_out2in
 		self.UKW = UKW
  		self.DMW = DMW
  		return
@@ -532,7 +544,7 @@ class aod_poly:
 			self.inside_ice_edge = in_cont
 			self.outside_ice_edge = out_cont
 		else:
-			self.model_ice_edge 	= in_cont
+			self.model_ice_edge	= in_cont
 			self.osisaf_ice_edge = out_cont
 		self.unknown_edge = ukn_cont
 		self.function_vals = func_vals
@@ -702,8 +714,6 @@ class aod_stats:
 		tcont = self.ij_list
 		UKW   = 'Unknown contours < 20%'
 		DMW   = 'Contour difference < 40%'
-		width_in2out = []
-		width_out2in = []
 		if len(inside_contour) == 0:
 			DMW = 'Only OSISAF data, MODEL not present'
 			if MODEL2MODEL:
@@ -711,8 +721,8 @@ class aod_stats:
 					DMW = 'Only Ice Pack, Open Water not present'
 				else:
 					DMW = 'Only 80% edge, 15% not present'
-			self.widths_in2out	= [0,0,0,0,0]
-			self.widths_out2in	= [0,0,0,0,0]
+			width_in2out = [0,0,0,0,0]
+			width_out2in = [0,0,0,0,0]
 		elif len(outside_contour) == 0:
 			DMW = 'Only MODEL data, OSISAF not present'
 			if MODEL2MODEL:
@@ -720,9 +730,11 @@ class aod_stats:
 					DMW = 'Only Open Water, Ice Pack not present'
 				else:
 					DMW = 'Only 15% edge, 80% not present'
-			self.widths_in2out	= [0,0,0,0,0]
-			self.widths_out2in	= [0,0,0,0,0]
+			width_in2out = [0,0,0,0,0]
+			width_out2in = [0,0,0,0,0]
 		else:
+			width_in2out = []
+			width_out2in = []
 			ukn = 100*(len(unknown_contour)/float(len(tcont)))
 			dmo = 100*(abs(len(inside_contour)-len(outside_contour))/float(len(tcont)))
 			if ukn >= 20:
@@ -807,6 +819,7 @@ class aod_stats:
 	def stat_chart(self,save=False):
 		pname = self.name
 		pclass = self.pclass
+		pstat = self.polygon_status
 		region = self.polygon_region
 		print ''
 		print 'Statistic Chart for '+str(pname)
@@ -967,7 +980,7 @@ class aod_stats:
 			       '3) Perimeter = '+str(perim)+' km\n'+ \
 			       '4) Mean M-O Width = '+str(dist_in)+' km\n'+ \
 			       '5) Mean O-M Width = '+str(dist_out)+' km\n'+ \
-			       '6) Status = '+str(pstas)+'\n'+ \
+			       '6) Status = '+str(pstat)+'\n'+ \
 			       '7) '+str(DMW)+'\n'+ \
 			       '8) '+str(UKW)
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
@@ -1015,7 +1028,7 @@ if 0:
            FLOES = []
 else:
    FIGURE   = ''
-   MODEL2MODEL = 0
+   MODEL2MODEL = 1
    FLOES = 0
 
 time0 = time.time()
