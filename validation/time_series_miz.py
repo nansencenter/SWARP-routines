@@ -252,6 +252,72 @@ class reader:
 # This class will find AOD polygons for 2 sets with different grid.
 # NOTE the basemap used in the reprojector is thought for OSISAF database but 
 # may fit any stereographical map, the reprojection should be fine as well.
+class SDA_poly:
+	def __init__(self,X1,Y1,Z1):
+		ZM = Z1
+		if len(ZM[ZM>1]) > 0:
+			self.DN,self.B1,self.B2,oDN,uDN = self.binary_diff(ZM,.01,299.99)
+		else:
+			self.DN,self.B1,self.B2,oDN,uDN = self.binary_diff(ZM,.15,.8)
+		self.over,self.under = self.poly_maker(self.DN)
+		self.DN = self.mapper(self.DN,ZM)
+		return
+
+	def binary_diff(self,data1,thresh1,thresh2):
+
+		def closing(DN):
+			# apply closing to avoid small polynias and clean up a little
+			kernel = np.ones((3,3),np.uint8)
+			DN_cl = morph.closing(DN,kernel)
+			return(DN_cl)
+
+
+		# NOTE outputs are difference, overpredicitions and underpredictions (CLOSED & MAPPED)
+
+	 	# generating the binary file, get the difference, divide into overprediction and
+		# underprediction, apply the closing on both and finally re-map the land
+	 	ndata1 = np.copy(data1)
+		ndata2 = np.copy(data1)
+	 	ndata1[ndata1<thresh1] = 0
+	 	ndata2[ndata2<thresh2] = 0
+	 	ndata1[ndata1>=thresh1] = 1	
+	 	ndata2[ndata2>=thresh2] = 1	
+		ddata = ndata2 - ndata1
+		thenans = np.isnan(ddata)
+		ddata[thenans] = 0
+		over_data = np.copy(ddata)
+		under_data = np.copy(ddata)
+		over_data[over_data==-1] = 0
+		under_data[under_data==1] = 0
+		under_data = abs(under_data)
+		o_data = closing(over_data)
+		u_data = closing(under_data)
+		o_data[u_data==1] = -1
+		ddata = np.copy(o_data)
+		return(ddata,ndata1,ndata2,o_data,u_data)
+
+	def poly_maker(self,ddata):
+		# finding contours from the difference data map
+		over = msr.find_contours(ddata,.5)
+		over = sorted(over, key=len)
+		over = over[::-1]
+		under = msr.find_contours(ddata,-.5)
+		under = sorted(under, key=len)
+		under = under[::-1]
+		return(over,under)
+ 	
+	def mapper(self,DIFF,BIN):
+	 	# getting back the terrain lost during binary_mod (for contour finding reasons)
+	 	DN = DIFF
+	 	ZO = BIN
+	 	thenan = np.isnan(ZO)
+	 	DN[thenan] = None
+	 	return(DN)
+
+############################################################################
+# This class will find AOD polygons for 2 sets with different grid.
+# NOTE the basemap used in the reprojector is thought for OSISAF database but 
+# may fit any stereographical map, the reprojection should be fine as well.
 class AOD_poly:
 	def __init__(self,X1,Y1,Z1,X2,Y2,Z2):
 		ZM = self._reprojector_(X1,Y1,Z1,X2,Y2,Z2)
@@ -568,8 +634,9 @@ class poly_stat:
 	 	xy = self.xy_list
 	 	fval = self.f_vals
 	 	region = self.region
+		typo = self.typo
 	 	daname = 'Polygon_'+str(self.number)
-	 	f_out = dadate
+	 	f_out = './outputs/'+str(typo)+'/'+str(dadate)
 	 	basemap = hqm
 	 	results = Leqs.get_MIZ_widths(lon,lat,fval,name=daname,region=region,fig_outdir=f_out,basemap=basemap,xy_coords2=xy)
 	 	self.AI = results[0]
@@ -792,7 +859,7 @@ class poly_stat:
 			      '7) '+str(UKW)
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
-				valid_class = 'outputs/'+dadate+'SDA/'+str(typo)
+				valid_class = './outputs/'+str(typo)+'/'+str(dadate)
 				if not os.path.exists(valid_class):
 					os.mkdir(valid_class)
 				if not os.path.exists(valid_class+'/'+region):
@@ -823,7 +890,7 @@ class poly_stat:
 			      '7) '+str(UKW)
 			tab.text(.2,.2,txt,fontsize=15,bbox=dict(boxstyle='round',facecolor='white',alpha=1))
 			if save:
-				valid_class = 'SDA/'+str(typo)
+				valid_class = './outputs/'+str(typo)+'/'+str(dadate)
 				if not os.path.exists(valid_class):
 					os.mkdir(valid_class)
 				if not os.path.exists(valid_class+'/'+region):
@@ -919,69 +986,131 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 ###########################################################################
 
-# NOTE here we put the loop to go looking for the various products
-# WE ARE STILL IN BETA TESTING HENCE WE WILL WORK WITH ONE DATSET ONLY :D
+# AOD TEST RUN
+if 0:
+	time0 = time.time()
+	dadate = '20150512'
+	osisaf = reader('Osisaf','20150512',hqm)
+	model = reader('Model','20150512',hqm)
+	XO,YO,ZO = osisaf.X,osisaf.Y,osisaf.Z
+	XM,YM,ZM = model.X,model.Y,model.ZC
+	AOD = AOD_poly(XM,YM,ZM,XO,YO,ZO)
+	over,under,DN,BM,BO = AOD.over,AOD.under,AOD.DN,AOD.B1,AOD.B2
+	
+	bar_m_widths = []
+	bar_area = []
+	bar_perim = []
+	gre_m_widths = []
+	gre_area = []
+	gre_perim = []
+	lab_m_widths = []
+	lab_area = []
+	lab_perim = []
+	les_m_widths = []
+	les_area = []
+	les_perim = []
+	ncb_m_widths = []
+	ncb_area = []
+	ncb_perim = []
+	
+	poly_list=[]
+	for n,el in enumerate(over):
+		# classification of positive polygons
+		aod=poly_stat(el,'1',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	try:
+		n
+	except NameError:
+		n = -1 
+	for n2,el in enumerate(under):
+		# classification of negative (n+1 for good enumeration)
+		n += 1 
+		aod=poly_stat(el,'0',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	
+	bar_m_widths = sum(np.array(bar_m_widths))
+	bar_area = sum(np.array(bar_area))
+	bar_perim = sum(np.array(bar_perim))
+	gre_m_widths = sum(np.array(gre_m_widths))
+	gre_area = sum(np.array(gre_area))
+	gre_perim = sum(np.array(gre_perim))
+	lab_m_widths = sum(np.array(lab_m_widths))
+	lab_area = sum(np.array(lab_area))
+	lab_perim = sum(np.array(lab_perim))
+	les_m_widths = sum(np.array(les_m_widths))
+	les_area = sum(np.array(les_area))
+	les_perim = sum(np.array(les_perim))
+	ncb_m_widths = sum(np.array(ncb_m_widths))
+	ncb_area = sum(np.array(ncb_area))
+	ncb_perim = sum(np.array(ncb_perim))			
+	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
+	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
+	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
+	les_stats = [les_m_widths,les_area,les_perim,dadate]
+	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	
+	elapsedtime = time.time() - time0
+	print str(dadate)+' done in ',elapsedtime
 
-time0 = time.time()
-dadate = '20150512'
-osisaf = reader('Osisaf','20150512',hqm)
-model = reader('Model','20150512',hqm)
-XO,YO,ZO = osisaf.X,osisaf.Y,osisaf.Z
-XM,YM,ZM = model.X,model.Y,model.ZC
-AOD = AOD_poly(XM,YM,ZM,XO,YO,ZO)
-over,under,DN,BM,BO = AOD.over,AOD.under,AOD.DN,AOD.B1,AOD.B2
-
-bar_m_widths = []
-bar_area = []
-bar_perim = []
-gre_m_widths = []
-gre_area = []
-gre_perim = []
-lab_m_widths = []
-lab_area = []
-lab_perim = []
-les_m_widths = []
-les_area = []
-les_perim = []
-ncb_m_widths = []
-ncb_area = []
-ncb_perim = []
-
-poly_list=[]
-for n,el in enumerate(over):
-	# classification of positive polygons
-	aod=poly_stat(el,'1',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
-	poly_list.append(aod)
-try:
-	n
-except NameError:
-	n = -1 
-for n2,el in enumerate(under):
-	# classification of negative (n+1 for good enumeration)
-	n += 1 
-	aod=poly_stat(el,'0',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
-	poly_list.append(aod)
-
-bar_m_widths = sum(np.array(bar_m_widths))
-bar_area = sum(np.array(bar_area))
-bar_perim = sum(np.array(bar_perim))
-gre_m_widths = sum(np.array(gre_m_widths))
-gre_area = sum(np.array(gre_area))
-gre_perim = sum(np.array(gre_perim))
-lab_m_widths = sum(np.array(lab_m_widths))
-lab_area = sum(np.array(lab_area))
-lab_perim = sum(np.array(lab_perim))
-les_m_widths = sum(np.array(les_m_widths))
-les_area = sum(np.array(les_area))
-les_perim = sum(np.array(les_perim))
-ncb_m_widths = sum(np.array(ncb_m_widths))
-ncb_area = sum(np.array(ncb_area))
-ncb_perim = sum(np.array(ncb_perim))			
-bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
-gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
-lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
-les_stats = [les_m_widths,les_area,les_perim,dadate]
-ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
-
-elapsedtime = time.time() - time0
-print str(dadate)+' done in ',elapsedtime
+if 1:
+	time0 = time.time()
+	dadate = '20150512'
+	model = reader('Model','20150512',hqm)
+	XM,YM,ZM = model.X,model.Y,model.ZC
+	SDA = SDA_poly(XM,YM,ZM)
+	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
+	
+	bar_m_widths = []
+	bar_area = []
+	bar_perim = []
+	gre_m_widths = []
+	gre_area = []
+	gre_perim = []
+	lab_m_widths = []
+	lab_area = []
+	lab_perim = []
+	les_m_widths = []
+	les_area = []
+	les_perim = []
+	ncb_m_widths = []
+	ncb_area = []
+	ncb_perim = []
+	
+	poly_list=[]
+	for n,el in enumerate(over):
+		# classification of positive polygons
+		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	try:
+		n
+	except NameError:
+		n = -1 
+	for n2,el in enumerate(under):
+		# classification of negative (n+1 for good enumeration)
+		n += 1 
+		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	
+	bar_m_widths = sum(np.array(bar_m_widths))
+	bar_area = sum(np.array(bar_area))
+	bar_perim = sum(np.array(bar_perim))
+	gre_m_widths = sum(np.array(gre_m_widths))
+	gre_area = sum(np.array(gre_area))
+	gre_perim = sum(np.array(gre_perim))
+	lab_m_widths = sum(np.array(lab_m_widths))
+	lab_area = sum(np.array(lab_area))
+	lab_perim = sum(np.array(lab_perim))
+	les_m_widths = sum(np.array(les_m_widths))
+	les_area = sum(np.array(les_area))
+	les_perim = sum(np.array(les_perim))
+	ncb_m_widths = sum(np.array(ncb_m_widths))
+	ncb_area = sum(np.array(ncb_area))
+	ncb_perim = sum(np.array(ncb_perim))			
+	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
+	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
+	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
+	les_stats = [les_m_widths,les_area,les_perim,dadate]
+	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	
+	elapsedtime = time.time() - time0
+	print str(dadate)+' done in ',elapsedtime
