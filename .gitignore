@@ -33,4 +33,4 @@ validation/ice_charts/test_inputs/*
 validation/ice_charts/test_inputs2/*
 #
 validation/data/*
-validation/outputs/aod/*
+validation/outputs/*
