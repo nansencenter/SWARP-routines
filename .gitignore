@@ -20,6 +20,7 @@ forecast_scripts/test_check/*
 forecast_scripts/out/*
 forecast_scripts/logs/*
 forecast_scripts/datelist.txt
+forecast_scripts/last_restart.txt
 forecast_scripts/loglog
 forecast_scripts/alert_waves/out/*
 #

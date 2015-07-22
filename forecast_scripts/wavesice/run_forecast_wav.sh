@@ -21,6 +21,7 @@ fc_day_mi4f=$(printf '%.f' $(echo "$fc_days-0.5" | bc))
 SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
 fcdir=$SWARP_ROUTINES/forecast_scripts
 TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
+wamnsea=/work/shared/nersc/msc/WAMNSEA/
 
 # CREATING THE LOG
 logdir=$fcdir/logs
@@ -53,82 +54,132 @@ echo $jday_today                             >> $datelist
 final_day=$(echo "$jday_today + $fc_days" | bc)    
 final_day_mi4f=$(expr $jday_today + $fc_day_mi4f)
 cyear=$(cat $datelist | sed '3!d')
+cday=$(cat $datelist | sed '1!d')
 
-rundir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$(cat $datelist | sed '1!d') # where the last_restart.txt will end up
+rundir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$cday # where the last_restart.txt will end up
 mkdir -p $rundir
 cd $rundir
 mkdir -p ./info
 cp $datelist ./info
 
-cday=$(cat $datelist | sed '1!d')
-if [ -d $rundir/$cday/final_output/ ]
+# location of final forecast output
+final_dir="$rundir/final_output/"
+
+#################################################################
+# CHECKS BEFORE RUNNING (QUIT IF THEY ARE FAILED):
+
+# 1. check if wave input is present
+wavfil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
+if [ ! -f "$wavfil" ]
 then
+   # echo "wave forecast file $wavfil not present - stopping"
    exit
-else
-   # RUNNING TOPAZ_GET_RESTART
-   echo "Launching topaz_get_restart_wav @ $date"                     >> $log
-   $fcdir/wavesice/topaz_get_restart_wav.sh                                # get latest restart file
-   cd $rundir                                                     # just in case we've changed dir in script
-
-   # GETTING INFOS FROM LAST_RESTART
-   out_restart=$rundir/info/last_restart.txt
-
-   rname=$(cat $out_restart)
-
-   rgen=${rname:0:3}                                              # eg TP4
-   ryear=${rname:10:4}                                            # year of restart file
-   rday=${rname:15:3}                                             # julian day of restart file (1 Jan = 0)
-
-   #################################################################
-
-   # MAKE INFILE 
-   echo "Launching make_infile4forecast_wav @ $date"                  >> $log
-
-
-
-   # print to screen - work out if last day of forecast is in a different year to current year
-   ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year
-   if [ $final_day_mi4f -gt $(($ndays-1)) ]
-   then
-           fc_final_day=$(expr $final_day - $ndays)
-           fc_year=$(expr $cyear + 1)
-   else
-           fc_year=$cyear
-   fi
-   echo "Restart files of ${cyear}_${jday_today}"                  >> $log
-   echo "Forecast final day ${fc_year}_${fc_final_day}"            >> $log
-
-   $SWARP_ROUTINES/forecast_scripts/wavesice/make_infile4forecast_wav.sh $rgen $ryear $rday $final_day_mi4f
-   xdir=$TP4_REALTIME/expt_01.2
-   infile=$xdir/infile.in
-
-   ###############################################################
-
-   # Launch job
-   echo "Launching pbsjob @ $(date)"                  >> $log
-   cd $xdir
-
-   # want to save archive files (TP4archv*.[ab]) every 3 hours
-   cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/blkdat.input .
-   cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/pbsjob.sh pbsjob.sh
-
-   # clean data directory before run
-   if [ -f "./data/TP4DAILY*" ]
-   then
-      rm data/TP4DAILY*
-   fi
-   if [ -f "./data/TP4archv*" ]
-   then
-      rm data/TP4archv*
-   fi
-
-   # clean log file - else mpijob.out gets too big
-   rm log/*
-
-   # launch job
-   # qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
-   $qsub pbsjob.sh
-   #################################################################
-      
-   echo "pbsjob done @ $(date)"                  >> $log
 fi
+
+# 2. check if forecast has already run and finished
+if [ -f $final_dir/SWARP* ]
+then
+   cd $final_dir
+   ofil=`echo SWARP*`
+   # echo "$final_dir/$ofil exists already - not running"
+   exit
+fi
+
+# 3. check if forecast is already running
+msg=`$qstat | grep TP4x012fc`
+if [ ${#msg} -ne 0 ]
+then
+   # echo "forecast is already running"
+   # echo "pbs job message:"
+   # echo $msg
+   exit
+fi
+#################################################################
+
+# RUNNING TOPAZ_GET_RESTART
+echo "Launching topaz_get_restart_wav @ $date"                 >> $log
+$fcdir/wavesice/topaz_get_restart_wav.sh                       # get latest restart file
+cd $rundir                                                     # just in case we've changed dir in script
+
+# GETTING INFOS FROM LAST_RESTART
+out_restart=$rundir/info/last_restart.txt
+
+rname=$(cat $out_restart)
+
+rgen=${rname:0:3}                                              # eg TP4
+ryear=${rname:10:4}                                            # year of restart file
+rday=${rname:15:3}                                             # julian day of restart file (1 Jan = 0)
+
+#################################################################
+
+# MAKE INFILE 
+echo "Launching make_infile4forecast_wav @ $date"                  >> $log
+
+
+
+# print to screen - work out if last day of forecast is in a different year to current year
+ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year
+if [ $final_day_mi4f -gt $(($ndays-1)) ]
+then
+        fc_final_day=$(expr $final_day - $ndays)
+        fc_year=$(expr $cyear + 1)
+else
+        fc_year=$cyear
+fi
+echo "Restart files of ${cyear}_${jday_today}"                  >> $log
+echo "Forecast final day ${fc_year}_${fc_final_day}"            >> $log
+
+$SWARP_ROUTINES/forecast_scripts/wavesice/make_infile4forecast_wav.sh $rgen $ryear $rday $final_day_mi4f
+xdir=$TP4_REALTIME/expt_01.2
+infile=$xdir/infile.in
+
+###############################################################
+
+# Launch job
+echo "Launching pbsjob @ $(date)"                  >> $log
+cd $xdir
+
+# want to save archive files (TP4archv*.[ab]) every 3 hours
+cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/blkdat.input .
+cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/pbsjob.sh pbsjob.sh
+
+# clean data directory before run
+if [ -f "./data/TP4DAILY*" ]
+then
+   rm data/TP4DAILY*
+fi
+if [ -f "./data/TP4archv*" ]
+then
+   rm data/TP4archv*
+fi
+
+# clean log file - else mpijob.out gets too big
+rm -f log/*
+
+# launch job
+$qsub pbsjob.sh
+#################################################################
+   
+echo "pbsjob done @ $(date)"                  >> $log
+
+### TODO move below to merge script
+# # check final output has correct number of records (11)
+# Nrecs="11" # eg "11" for 2.5 day fc
+# 
+# cd $final_dir
+# recs=`ncdump -h SWARP* | grep "time = UNLIMITED"`  # eg "time = UNLIMITED ; // (11 currently)"
+# recs=($recs)                                       # convert to array
+# nrecs=${recs[5]}
+# nrecs=${nrecs:1:2}                                 # remove "("
+# 
+# if [ $nrecs != $Nrecs ]
+# then
+#    ofil=`echo SWARP*`
+#    echo "Wrong number of records in $ofil:"
+#    echo " $nrecs (should be $Nrecs)"
+#    echo " Wrong number of records in $ofil:"    >> $log
+#    echo "  $nrecs (should be $Nrecs)"           >> $log
+# else
+#    echo " Correct number of records in $ofil:"  >> $log
+#    echo "  $nrecs (should be $Nrecs)"           >> $log
+# fi

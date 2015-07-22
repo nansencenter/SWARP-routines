@@ -15,8 +15,8 @@ class dirichlet_fund_soln:
 
 			import numpy as np
 			import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-			import geometry_planar	as GP		# also in py_funs
-			import rtree.index			as Rindex
+			import geometry_planar	as GP 	  # also in py_funs
+			import rtree.index	as Rindex
 
 			#######################################################
 			self.func_vals = np.array(func_vals)
@@ -78,9 +78,9 @@ class dirichlet_fund_soln:
 			if singularities is None:
 				get_sings = True
 			else:
-				get_sings										= False
-				self.singularities						= singularities 
-				self.number_of_singularities	= len(self.singularities)
+				get_sings		       = False
+				self.singularities	       = singularities 
+				self.number_of_singularities   = len(self.singularities)
 				print('Number of boundary points : '+str(self.number_of_points))
 				print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
 
@@ -512,22 +512,26 @@ class dirichlet_fund_soln:
 			from matplotlib import cm
 
 			if pobj is None:
-				# set a plot object if none exists
-				from matplotlib import pyplot as pobj
+		           # set a plot object if none exists
+			   from matplotlib import pyplot as plt
+                           fig = plt.figure()
+                           ax  = fig.add_subplot(1,1,1)
+                        else:
+                           fig,ax   = pobj
 			
 			if plot_boundary:
 				# just plot values of F at boundary
 				ss = self.get_arc_length()/1.e3 # km
-				pobj.plot(ss,self.func_vals_approx,'b')
-				pobj.plot(ss,self.func_vals,'.k')
+				ax.plot(ss,self.func_vals_approx,'b')
+				ax.plot(ss,self.func_vals,'.k')
 
-				x2,y2 = np.array(self.coords).transpose() # coords can be reversed
-				f2		= self.eval_solution_fast(x2,y2)
-				pobj.plot(ss,f2,'--r')
-				xc		= np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
-				yc		= np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
-				pobj.xlabel('arc length (km) from '+str((xc,yc))+' (km)')
-				pobj.ylabel('values of target function')
+				x2,y2  = np.array(self.coords).transpose() # coords can be reversed
+				f2     = self.eval_solution_fast(x2,y2)
+				ax.plot(ss,f2,'--r')
+				xc  = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
+				yc  = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
+				ax.set_xlabel('arc length (km) from '+str((xc,yc))+' (km)')
+				ax.set_ylabel('values of target function')
 
 			else:
 				# plot F everywhere
@@ -535,44 +539,44 @@ class dirichlet_fund_soln:
 				eps	= self.resolution/2.
 
 				# get a grid to plot F on:
-				x0 = bbox[0]
-				y0 = bbox[1]
-				x1 = bbox[2]
-				y1 = bbox[3]
-				x	= np.arange(x0,x1+eps,eps)
-				y	= np.arange(y0,y1+eps,eps)
-				xp = np.arange(x0-.5*eps,x1+1.5*eps,eps)/1.e3 #km
-				yp = np.arange(y0-.5*eps,y1+1.5*eps,eps)/1.e3
+				x0  = bbox[0]
+				y0  = bbox[1]
+				x1  = bbox[2]
+				y1  = bbox[3]
+				x   = np.arange(x0,x1+eps,eps)
+				y   = np.arange(y0,y1+eps,eps)
+				xp  = np.arange(x0-.5*eps,x1+1.5*eps,eps)/1.e3 #km
+				yp  = np.arange(y0-.5*eps,y1+1.5*eps,eps)/1.e3
 
 				# make pcolor/contour plot
 				nlevels	= 10
-				vmin		= self.func_vals.min()
-				vmax		= self.func_vals.max()
-				dv			= (vmax-vmin)/(nlevels)
-				vlev		= np.arange(vmin,vmax+dv,dv)
+				vmin	= self.func_vals.min()
+				vmax	= self.func_vals.max()
+				dv	= (vmax-vmin)/(nlevels)
+				vlev	= np.arange(vmin,vmax+dv,dv)
 				#
-				X,Y			= np.meshgrid(x,y)
-				F				= self.eval_solution(X,Y)
+				X,Y	= np.meshgrid(x,y)
+				F	= self.eval_solution(X,Y)
 				#
 				cmap	= cm.jet
 				cmap.set_bad(color='w')
-				Fm = np.ma.array(F,mask=np.isnan(F))
-				pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
-				pobj.colorbar()
-				pobj.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
+				Fm  = np.ma.array(F,mask=np.isnan(F))
+				PC  = ax.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
+				fig.colorbar(PC)
+				ax.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
 
 				# plot polygon boundary
 				x,y	= GP.coords2xy(self.coords)
-				pobj.plot(x/1.e3,y/1.e3,'k',linewidth=2)
+				ax.plot(x/1.e3,y/1.e3,'k',linewidth=2)
 
 				# plot singularities
 				x,y	= GP.coords2xy(self.singularities)
-				pobj.plot(x/1.e3,y/1.e3,'.k',markersize=5)
-				pobj.xlabel('x, km')
-				pobj.ylabel('y, km')
+				ax.plot(x/1.e3,y/1.e3,'.k',markersize=5)
+				ax.set_xlabel('x, km')
+				ax.set_ylabel('y, km')
 
 			if show:
-				pobj.show()
+				fig.show()
 
 			return
 	#######################################################
@@ -662,14 +666,16 @@ class dirichlet_fund_soln:
 			print(str(nlevels)+' contours, for isolines between '+\
 						str(vmin)+' and '+str(vmax))
 			#
-			contours	= []
+			contours          = []
+                        Fmin              = np.nanmin(F)
+                        F2                = F.copy() 
+                        F2[np.isnan(F)]   = Fmin-1
 			for V in vlev:
-				B							= np.zeros(F.shape)
-				B[F>=V]				= 1.
-				B[np.isnan(F)] = np.nan
-				conts0				= msr.find_contours(B,.5)	# list of [ivec,jvec] arrays
-				conts					= []											# list of (xvec,yvec)
-
+				B		= np.zeros(F.shape)
+				B[F2>=V]	= 1.
+				B[np.isnan(F)]  = np.nan
+				conts0		= msr.find_contours(B,.5)  # list of [ivec,jvec] arrays
+				conts		= []                       # list of (xvec,yvec) 
 				##################################################
 				#convert conts0->conts, or (i,j)->(x,y)
 				for m2,cont in enumerate(conts0):
@@ -968,7 +974,7 @@ class multipole:
 ##################################################
 
 ##################################################
-def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_coords2=None):
+def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,xy_coords2=None):
 
 	# Apparently the modules have to been called again 
 	import time
@@ -978,19 +984,37 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
   
 	sys.path.append('../py_funs')
 	import f_vals_smoother as smt	
-	
+
 	if xy_coords2 is None:
 		if basemap is not None:
-			x,y=basemap(lons,lats)
+                   x,y=basemap(lons,lats)
 		else:
-			#TODO make basemap
-			raise ValueError("make basemap")
-				
-		#TODO make xy_coords2=[(x1,y1),(x2,y2),...]
-		# with a conformal mapping (ie basemap with spherical earth)
-		# call basemap hqm
-	
-	fvals2 = smt.smoother(fvals2)
+                   from mpl_toolkits.basemap import Basemap
+                   import geometry_sphere as GS # from py_funs
+                   #
+                   R    = 6378273.# default is hyc2proj radius (m)
+                   AL   = GS.arc_length(lons,lats,R=R,radians=False,closed=True)
+                   P    = AL[-1]
+                   #
+                   latc = np.mean(lats)
+                   lonc = np.mean(lons)   # TODO 1st should make lon continuous around polygon
+                                          # - to make sure lonc is inside polygon
+                   basemap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
+                                     projection='stere',rsphere=[R,R],\
+                                     width=P,height=P)
+                   x,y  = basemap(lons,lats)
+
+                xy_coords2  = np.array([x,y]).transpose()
+        	
+        if fvals is not None:
+           fvals2 = smt.smoother(fvals)
+           CSopt  = 0
+        else:
+           # use principal components to set
+           # the function values on the boundary
+           PCA    = smt.pca_mapper(xy_coords2)
+           fvals2 = PCA.set_func_vals()
+           CSopt  = 1
 
 	t0 = time.clock()
 	print('\n**********************************************************************')
@@ -1042,32 +1066,48 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 				else:
 					keep	= ((fl==0.) or (fl==1.))
 				return keep
+	
+		def selector_opp_sign(self,i0,il):
+				# remove contours that end on values with opposite signs
+                                # - good for sinusoidal type functions
+				f0     = self.func_vals[i0]
+				fl     = self.func_vals[il]
+                                keep   = (f0*fl<0) # opposite signs
+				return keep
 	###########################################################################################
 	
 	
 	CS = contour_selection(fun_sol.func_vals)
-	if 1:
-		selector_function = CS.selector_binary
-		fstr	 					= '_v1'
-	elif 0:
-		selector_function = CS.selector_binary_v2
-		fstr							= '_v2'
-	else:
-		selector_function = None
-		fstr							= ''
+        if CSopt==1:
+		selector_function   = CS.selector_opp_sign
+		fstr	            = '_vOpp'
+        else:
+            if 1:
+		selector_function   = CS.selector_binary
+		fstr	            = '_v1'
+	    elif 0:
+		selector_function   = CS.selector_binary_v2
+		fstr		    = '_v2'
+	    else:
+		selector_function   = None
+		fstr		    = ''
 	
-	if fig_outdir is not None:
+	if fig_outdir is None:
+		# do not make a figure
+		pobj = None
+	else:
 		# make a figure
-		pobj=plt
-		outdir = './outputs/aod/'+str(fig_outdir)
+                fig     = plt.figure()
+                ax      = fig.add_subplot(111)
+		pobj    = [fig,ax]
+		outdir  = './outputs/aod/'+str(fig_outdir)
+
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
+
 		outdir = outdir+'/'+str(name)+'_laplacian'
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
-	else:
-		# do not make a figure
-		pobj=None
 	
 	print('\n**********************************************************************')
 	print('Getting streamlines...\n')
@@ -1086,17 +1126,19 @@ def get_MIZ_widths(lons,lats,fvals2,name=None,fig_outdir=None,basemap=None,xy_co
 			if pobj is not None:
 				figname	= outdir+'/test_Laplacian_spherical'+fstr+'.png'
 		
+        ttl	= 'Median length (km) '+str(np.round(10.*AI.length_median/1.e3)/10.)
 	if pobj is not None:
-		ttl	= 'Median length (km) '+str(np.round(10.*AI.length_median/1.e3)/10.)
-		plt.title(ttl)
+                fig,ax  = pobj
+		ax.title.set_text(ttl)
+                ax.set_aspect('equal')
 		if 0:
 			# show for testing
-			plt.show()
+			fig.show()
 		else:
 			# make figure
 			print('Saving plot to figure '+figname)
-			plt.savefig(figname)
-			plt.close()
+			fig.savefig(figname)
+			fig.clf()
 	
 	t3 = time.clock()
 	print('\nTime to get streamlines (mins): '+str((t3-t2)/60.))
