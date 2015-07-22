@@ -1056,7 +1056,7 @@ def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap
 	if fig_outdir is not None:
 		# make a figure
 		pobj=plt
-		outdir = './outputs/AOD/'+str(fig_outdir)
+		outdir = str(fig_outdir)
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
 		outdir = outdir+'/'+str(region)
