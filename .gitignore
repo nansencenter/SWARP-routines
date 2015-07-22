@@ -3,6 +3,7 @@ latex/*.out
 latex/*.log
 latex/*.toc
 latex/*.synctex.gz
+*.nc
 *.swp
 *.DS_Store
 *.npz
