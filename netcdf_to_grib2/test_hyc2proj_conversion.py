@@ -6,6 +6,8 @@ import pygrib
 from ncepgrib2 import Grib2Encode as g2e
 from ncepgrib2 import Grib2Decode as g2d
 #
+SR = os.getenv('SWARP_ROUTINES')
+sys.path.append(SR+'/py_funs')
 import mod_reading as m_rdg
 import mod_grib2_setup as m_g2s
 
@@ -19,14 +21,16 @@ if DO_TEST==1:
    tindx    = 0#time index to test
    vindx    = 0#variable index to test
    #
-   PLOT_OPT = 2 # 0: no plot
+   PLOT_OPT = 0 # 0: no plot
                 # 1: simple plot with imshow
                 # 2: more complicated plot with basemap
 #######################################################################
 
 #######################################################################
 # file inputs:
-ncfil = "test_ncfiles/TP4DAILY_start20120723_dump20120723.nc" # hyc2proj netcdf
+# ncfil = "test_ncfiles/TP4DAILY_start20120723_dump20120723.nc" # hyc2proj netcdf
+ncfil = "test_ncfiles/SWARPwavesice_forecast_start20150723T000000Z.nc" # hyc2proj netcdf
+print('\nConverting '+ncfil+'\n')
 
 # output file:
 outdir  = 'out'

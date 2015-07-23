@@ -1,4 +1,7 @@
-import os
+import os,sys
+
+SR = os.getenv('SWARP_ROUTINES')
+sys.path.append(SR+'/py_funs')
 import mod_grib2_setup as m_g2s
 
 if 1:

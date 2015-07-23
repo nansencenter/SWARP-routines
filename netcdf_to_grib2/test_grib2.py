@@ -7,7 +7,7 @@ from ncepgrib2 import Grib2Decode as g2d
 #plotting
 from mpl_toolkits.basemap import Basemap, cm
 from matplotlib import pyplot as plt
-import basemap_gridlines as bmg
+# import basemap_gridlines as bmg
 
 TEST_REWRITE   = 0
 if TEST_REWRITE:
@@ -20,14 +20,20 @@ print('reading '+fil1+'\n')
 gr       = pygrib.open(fil1)
 
 if 1:
-   N        = 1
-   grbmsgs  = gr.read(N) # get list of 1st N messages:
-   # grbmsgs  = gr.read()
+   if 0:
+      N        = 1
+      grbmsgs  = gr.read(N) # get list of 1st N messages:
+   else:
+      grbmsgs  = gr.read() # get all messages:
+
+   # get full info from msg #1
+   grb   = g2d(grbmsgs[0].tostring(),gribmsg=True)
+   print(grb)
+   print('\n')
+
    for msg in grbmsgs:
       print(msg)
       print('\n')
-      grb   = g2d(msg.tostring(),gribmsg=True)
-      print(grb)
       #
       lat,lon        = msg.latlons()
       data           = msg.values
@@ -53,7 +59,7 @@ if 1:
          X,Y      = bm(lon,lat)
          bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
          bm.colorbar()
-         bmg.latlon_grid(bm,10.,10.)
+         # bmg.latlon_grid(bm,10.,10.)
          
          nm    = str(msg.name)
          fct   = str(msg.forecastTime)

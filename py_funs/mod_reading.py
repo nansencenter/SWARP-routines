@@ -120,9 +120,13 @@ def nc_getinfo(ncfil,time_index=None):
    #
    tu    = time.units
    lst   = tu.split()
-   date2 = lst[2]
-   date3 = lst[3]
-   date_all = date2+'T'+date3+'Z'
+   if len(lst)==4:
+      # space between date and time
+      date2    = lst[2]
+      date3    = lst[3]
+      date_all = date2+'T'+date3+'Z'
+   else:
+      date_all = lst[2]
    # i0    = tu.index('-')
    # date0 = tu[i0-4:i0+6]
    # i1    = tu.index(':')
