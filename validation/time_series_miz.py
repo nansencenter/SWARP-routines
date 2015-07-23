@@ -97,7 +97,7 @@ class reader:
 			self.X,self.Y,self.ZC,self.ZD = self._read_mdl_(dadate,basemap)
 			return
 		elif name == 'Aari':
-			self._read_aari_(dadate,basemap)
+			self.ad = self._read_aari_(dadate,basemap)
 	
 	def _read_osi_(self,dadate,basemap):
 		# Read in OSI_SAF file
@@ -143,6 +143,8 @@ class reader:
 		
 	def _read_aari_(dadate,basemap):
 		# Read in AARI charts for Barents Sea
+		# NOTE this reader's output is a dictionary with a list of polygons and
+		# indexes for contours identification
 		outdir = './ice_charts/AARI/' 
 		ncfil = outdir+'aari_bar_'+dadate+'.txt'
 		if ncfil == '':
@@ -1052,7 +1054,7 @@ if 0:
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
 
-if 1:
+if 0:
 	time0 = time.time()
 	dadate = '20150512'
 	model = reader('Model','20150512',hqm)
@@ -1119,7 +1121,7 @@ if 0:
 	time0 = time.time()
 	dadate = '20150512'
 	model = reader('Model','20150512',hqm)
-	XM,YM,ZM = model.X,model.Y,model.ZC
+	XM,YM,ZM = model.X,model.Y,model.ZD
 	SDA = SDA_poly(XM,YM,ZM)
 	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
 	
@@ -1142,7 +1144,7 @@ if 0:
 	poly_list=[]
 	for n,el in enumerate(over):
 		# classification of positive polygons
-		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
 		poly_list.append(aod)
 	try:
 		n
@@ -1151,7 +1153,7 @@ if 0:
 	for n2,el in enumerate(under):
 		# classification of negative (n+1 for good enumeration)
 		n += 1 
-		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
 		poly_list.append(aod)
 	
 	bar_m_widths = sum(np.array(bar_m_widths))
@@ -1177,3 +1179,68 @@ if 0:
 	
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
+
+if 1:
+	time0 = time.time()
+	dadate = '20150512'
+	aari = reader('Aari','20150512',hqm)
+	# Now we have the aari dictionary with us, let's split it!
+	ad = aari.ad
+	SDA = SDA_poly(XM,YM,ZM)
+	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
+	
+	bar_m_widths = []
+	bar_area = []
+	bar_perim = []
+	gre_m_widths = []
+	gre_area = []
+	gre_perim = []
+	lab_m_widths = []
+	lab_area = []
+	lab_perim = []
+	les_m_widths = []
+	les_area = []
+	les_perim = []
+	ncb_m_widths = []
+	ncb_area = []
+	ncb_perim = []
+	
+	poly_list=[]
+	for n,el in enumerate(over):
+		# classification of positive polygons
+		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	try:
+		n
+	except NameError:
+		n = -1 
+	for n2,el in enumerate(under):
+		# classification of negative (n+1 for good enumeration)
+		n += 1 
+		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	
+	bar_m_widths = sum(np.array(bar_m_widths))
+	bar_area = sum(np.array(bar_area))
+	bar_perim = sum(np.array(bar_perim))
+	gre_m_widths = sum(np.array(gre_m_widths))
+	gre_area = sum(np.array(gre_area))
+	gre_perim = sum(np.array(gre_perim))
+	lab_m_widths = sum(np.array(lab_m_widths))
+	lab_area = sum(np.array(lab_area))
+	lab_perim = sum(np.array(lab_perim))
+	les_m_widths = sum(np.array(les_m_widths))
+	les_area = sum(np.array(les_area))
+	les_perim = sum(np.array(les_perim))
+	ncb_m_widths = sum(np.array(ncb_m_widths))
+	ncb_area = sum(np.array(ncb_area))
+	ncb_perim = sum(np.array(ncb_perim))			
+	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
+	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
+	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
+	les_stats = [les_m_widths,les_area,les_perim,dadate]
+	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	
+	elapsedtime = time.time() - time0
+	print str(dadate)+' done in ',elapsedtime
+
