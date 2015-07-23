@@ -14,7 +14,8 @@ if TEST_REWRITE:
    fil_out  = 'out/test_write_multi_1.grb2'
 
 # fil1  = 'eg_grib2/multi_1.at_10m.tp.200911.grb2'
-fil1  = 'out/SWARPwavesice_forecast_start20150723T000000Z.grb2'
+# fil1  = 'out/SWARPwavesice_forecast_start20150723T000000Z.grb2'
+fil1  = 'out/SWARPiceonly_forecast_start20150723T000000Z.grb2'
 print('reading '+fil1+'\n')
 gr       = pygrib.open(fil1)
 
