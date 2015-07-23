@@ -34,219 +34,225 @@ np.seterr(invalid='ignore')
 # Functions and classes
 ############################################################################
 def binary_mod(data1,thresh1):
-	odata = np.copy(data2)
-	odata[odata<thresh1] = 0
-	odata[odata>=thresh1] = 1	
-	thenans = np.isnan(odata)
-	odata[thenans] = 0
-	return(odata)
+  odata = np.copy(data2)
+  odata[odata<thresh1] = 0
+  odata[odata>=thresh1] = 1 
+  thenans = np.isnan(odata)
+  odata[thenans] = 0
+  return(odata)
 ############################################################################
 def baffin_bay():
-	fil = ('./data/baffin_bay.txt')
-	bbay = open(fil)
-	bblon = []
-	bblat = []
-	bblone = []
-	bblate = []
-	bblonw = []
-	bblatw = []
-	for n,en in enumerate(bbay):
-		nen = en.split(';')
-		lon = float(nen[0])
-		lat = float(nen[1])
-		bblon.append(lon)
-		bblat.append(lat)
-	for n,en in enumerate(bblon):
-		if n < 1266:
-			bblone.append(bblon[n])
-			bblate.append(bblat[n])
-		else:
-			bblonw.append(bblon[n])
-			bblatw.append(bblat[n])
-	return(bblone,bblate,bblonw,bblatw)
+  fil = ('./data/baffin_bay.txt')
+  bbay = open(fil)
+  bblon = []
+  bblat = []
+  bblone = []
+  bblate = []
+  bblonw = []
+  bblatw = []
+  for n,en in enumerate(bbay):
+    nen = en.split(';')
+    lon = float(nen[0])
+    lat = float(nen[1])
+    bblon.append(lon)
+    bblat.append(lat)
+  for n,en in enumerate(bblon):
+    if n < 1266:
+      bblone.append(bblon[n])
+      bblate.append(bblat[n])
+    else:
+      bblonw.append(bblon[n])
+      bblatw.append(bblat[n])
+  return(bblone,bblate,bblonw,bblatw)
 ############################################################################
 def north_canada():
-	fil = ('./data/north_canada.txt')
-	ncan = open(fil)
-	nclon = []
-	nclat = []
-	for n,en in enumerate(ncan):
-		nen = en.split(';')
-		lon = float(nen[0])
-		lat = float(nen[1])
-		nclon.append(lon)
-		nclat.append(lat)
-	return(nclon,nclat)
+  fil = ('./data/north_canada.txt')
+  ncan = open(fil)
+  nclon = []
+  nclat = []
+  for n,en in enumerate(ncan):
+    nen = en.split(';')
+    lon = float(nen[0])
+    lat = float(nen[1])
+    nclon.append(lon)
+    nclat.append(lat)
+  return(nclon,nclat)
 ############################################################################
 def open_close(self):
-	 kernel = np.ones((3,3),np.uint8)
-	 DN_op = np.copy(DN)
-	 DN_cl = np.copy(DN)
-	 DN_op = cv2.morphologyEx(DN_op,cv2.MORPH_OPEN,kernel)
-	 DN_cl = cv2.morphologyEx(DN_cl,cv2.MORPH_CLOSE,kernel)
-	 return(DN_op,DN_cl)
+   kernel = np.ones((3,3),np.uint8)
+   DN_op = np.copy(DN)
+   DN_cl = np.copy(DN)
+   DN_op = cv2.morphologyEx(DN_op,cv2.MORPH_OPEN,kernel)
+   DN_cl = cv2.morphologyEx(DN_cl,cv2.MORPH_CLOSE,kernel)
+   return(DN_op,DN_cl)
 ############################################################################
 # read in and prepare every file for polygon detection
 class reader:
-	def __init__(self,name,dadate,year,month,day,basemap):
-		self.filname = name+'_'+dadate
-		if name == 'Osisaf':
-			self.X,self.Y,self.Z = self._read_osi_(dadate,basemap) 
-			return
-		elif name == 'Model':
-			self.X,self.Y,self.ZC,self.ZD = self._read_mdl_(dadate,basemap)
-			return
-		elif name == 'Aari':
-			self._read_aari_(dadate,basemap)
-	
-	def _read_osi_(self,dadate,basemap):
-		# Read in OSI_SAF file
-		outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
-		ncfil = outdir+'ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
-		clon = 'lon'
-		clat = 'lat'
-		cconc = 'ice_conc'
-		lon2 = Mrdg.nc_get_var(ncfil,clon) # lon[:,:] is a numpy array
-		lat2 = Mrdg.nc_get_var(ncfil,clat) # lat[:,:] is a numpy array
-		conc = Mrdg.nc_get_var(ncfil,cconc,time_index=0)
-		xc = Mrdg.nc_get_var(ncfil,'xc')
-		yc = Mrdg.nc_get_var(ncfil,'yc')
-		X2,Y2 = basemap(lon2[:,:],lat2[:,:],inverse=False)
-		XO = np.copy(X2)
-		YO = np.copy(Y2)
-		Z2 = conc[:,:].data
-		mask2 = conc[:,:].mask
-		Z2[mask2] = np.NaN
-		ZO = Z2/100
-		return(XO,YO,ZO) 
-	
-	def _read_mdl_(self,dadate,basemap):
-	 	# Read TP4arch_wav
-		outdir = './data/'
-	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
-	 	slon = 'longitude'
-	 	slat = 'latitude'
-	 	sconc = 'fice'
-	 	sdmax = 'dmax'
-	 	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-	 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-	 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-	 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
-	 	X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
-	 	ZD = dmax[:,:].data
-	 	mask = dmax[:,:].mask
-	 	ZD[mask] = np.NaN
-	 	ZC = conc[:,:].data
-	 	mask = conc[:,:].mask
-	 	ZC[mask] = np.NaN
-	 	return(X,Y,ZC,ZD)
-		
-	def _read_aari_(dadate,basemap):
-		# Read in AARI charts for Barents Sea
-		outdir = './ice_charts/AARI/' 
-		ncfil = outdir+'aari_bar_'+dadate+'.txt'
-		if ncfil == '':
-		 	print('No Ice Chart for Barents sea in '+dadate+'\n')
-		else:
-		 	region = 'Barents'
-		 	icb = open(ncfil)
-		 	icblist = []
-		 	for n,en in enumerate(icb):
-				nen = en.split(';')
-		 	icblist.append(nen)
-		 	icb_cont = np.array(icblist)
-		 	# we want to cut first row (general info) and first column (number of points)
-		 	icb_cont = icb_cont[1:,1:]
-		 	# change 'in' as '1.' and 'out' as '0.'
-		 	for el in icb_cont:
-				if el[1] == 'in':
-					el[1] = 1
-		 	else:
-		 	 	el[1] = 0
-		 	# reads as string, we want floats
-		 	icb_cont = icb_cont.astype(np.float)
-		 	# find out number of polygons
-		 	bpolyn = np.int(icb_cont[:,0].max())
-		 	# split the array into polygons - creation of dict
-		 	ad = {}
-		 	for n in range(bpolyn):
-		 		 poly = []
-		 		 for m,em in enumerate(icb_cont):
-		 				if em[0] == n+1:
-		 					 poly.append(em)
-		 		 ad["apoly"+str(n+1)] = np.array(poly)
-		
-		# Read in AARI charts for Greenland Sea
-		ncfil2 = 'aari_gre_'+dadate+'.txt'
-		if ncfil2 == '':
-		 	print('No Ice Chart for Greenland sea in '+dadate+'\n')
-		else:
-		 	region = 'Greenland'
-		 	icg = open(ncfil2)
-		 	icglist = []
-		 	for n,en in enumerate(icg):
-		 		 nen = en.split(';')
-		 		 icglist.append(nen)
-		 	icg_cont = np.array(icglist)
-		 	# we want to cut first row (general info) and first column (number of points)
-		 	icg_cont = icg_cont[1:,1:]
-		 	# change 'in' as '1.' and 'out' as '0.'
-		 	for el in icg_cont:
-				if el[1] == 'in':
-				 	el[1] = 1
-				else:
-				 	el[1] = 0
-		 	# reads as string, we want floats
-		 	icg_cont = icg_cont.astype(np.float)
-		 	# find out number of polygons
-		 	gpolyn = np.int(icg_cont[:,0].max())
-		 	# split the array into polygons - creation of dict
-		 	if ncfil == '':
-				ad = {}
-		 	for n in range(gpolyn):
-				poly = []
-				for m,em in enumerate(icg_cont):
-				 	if em[0] == n+1:
-						poly.append(em)
-				if ncfil == '':
-				 	ad["apoly"+str(n+1)] = np.array(poly)
-				else:
-				 	ad["apoly"+str(n+bpolyn+1)] = np.array(poly)
-		
-		# Read in AARI charts for both Barents and Greenland
-		# sometimes the charts are united in case the some polygons belong to both regions
-		if ncfil == '' and ncfil2 == '':
-		 	ncfil3 = ''.join( glob.glob('*'+dadate+'.txt'))
-		 	if ncfil3 == '':
-				print('No Common (Barents+Greenland) Ice Chart in '+dadate+'\n')
-		 	else:
-				region = 'Barents/Greenland'
-				icbg = open(ncfil3)
-				icbglist = []
-				for n,en in enumerate(icbg):
-				 	nen = en.split(';')
-				 	icbglist.append(nen)
-				icbg_cont = np.array(icbglist)
-				# we want to cut first row (general info) and first column (number of points)
-				icbg_cont = icbg_cont[1:,1:]
-				# change 'in' as '1.' and 'out' as '0.'
-				for el in icbg_cont:
-				 	if el[1] == 'in':
-						el[1] = 1
-				 	else:
-						el[1] = 0
-				# reads as string, we want floats
-				icbg_cont = icbg_cont.astype(np.float)
-				# find out number of polygons
-				bgpolyn = np.int(icbg_cont[:,0].max())
-				ad = {}
-				for n in range(bgpolyn):
-				 	poly = []
-				 	for m,em in enumerate(icbg_cont):
-						if em[0] == n+1:
-							poly.append(em)
-				 	ad["apoly"+str(n+1)] = np.array(poly)
-		return(ad)
+  def __init__(self,name,dadate,year,month,day,basemap):
+    self.filname = name+'_'+dadate
+    if name == 'Osisaf':
+      self.X,self.Y,self.Z = self._read_osi_(dadate,basemap) 
+      return
+    elif name == 'Model':
+      self.X,self.Y,self.ZC,self.ZD = self._read_mdl_(dadate,basemap)
+      return
+    elif name == 'Aari':
+      self._read_aari_(dadate,basemap)
+  
+  def _read_osi_(self,dadate,basemap):
+    # Read in OSI_SAF file
+    outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
+    ncfil = outdir+'ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
+    print ''
+    print ncfil
+    print ''
+    clon = 'lon'
+    clat = 'lat'
+    cconc = 'ice_conc'
+    lon2 = Mrdg.nc_get_var(ncfil,clon) # lon[:,:] is a numpy array
+    lat2 = Mrdg.nc_get_var(ncfil,clat) # lat[:,:] is a numpy array
+    conc = Mrdg.nc_get_var(ncfil,cconc,time_index=0)
+    xc = Mrdg.nc_get_var(ncfil,'xc')
+    yc = Mrdg.nc_get_var(ncfil,'yc')
+    X2,Y2 = basemap(lon2[:,:],lat2[:,:],inverse=False)
+    XO = np.copy(X2)
+    YO = np.copy(Y2)
+    Z2 = conc[:,:].data
+    mask2 = conc[:,:].mask
+    Z2[mask2] = np.NaN
+    ZO = Z2/100
+    return(XO,YO,ZO) 
+  
+  def _read_mdl_(self,dadate,basemap):
+    # Read TP4arch_wav
+    outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
+    ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
+    print ''
+    print ncfil
+    print ''
+    slon = 'longitude'
+    slat = 'latitude'
+    sconc = 'fice'
+    sdmax = 'dmax'
+    lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+    lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+    conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+    dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+    X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
+    ZD = dmax[:,:].data
+    mask = dmax[:,:].mask
+    ZD[mask] = np.NaN
+    ZC = conc[:,:].data
+    mask = conc[:,:].mask
+    ZC[mask] = np.NaN
+    return(X,Y,ZC,ZD)
+    
+  def _read_aari_(dadate,basemap):
+    # Read in AARI charts for Barents Sea
+    outdir = './ice_charts/AARI/' 
+    ncfil = outdir+'aari_bar_'+dadate+'.txt'
+    if ncfil == '':
+      print('No Ice Chart for Barents sea in '+dadate+'\n')
+    else:
+      region = 'Barents'
+      icb = open(ncfil)
+      icblist = []
+      for n,en in enumerate(icb):
+        nen = en.split(';')
+      icblist.append(nen)
+      icb_cont = np.array(icblist)
+      # we want to cut first row (general info) and first column (number of points)
+      icb_cont = icb_cont[1:,1:]
+      # change 'in' as '1.' and 'out' as '0.'
+      for el in icb_cont:
+        if el[1] == 'in':
+          el[1] = 1
+      else:
+        el[1] = 0
+      # reads as string, we want floats
+      icb_cont = icb_cont.astype(np.float)
+      # find out number of polygons
+      bpolyn = np.int(icb_cont[:,0].max())
+      # split the array into polygons - creation of dict
+      ad = {}
+      for n in range(bpolyn):
+         poly = []
+         for m,em in enumerate(icb_cont):
+            if em[0] == n+1:
+               poly.append(em)
+         ad["apoly"+str(n+1)] = np.array(poly)
+    
+    # Read in AARI charts for Greenland Sea
+    ncfil2 = 'aari_gre_'+dadate+'.txt'
+    if ncfil2 == '':
+      print('No Ice Chart for Greenland sea in '+dadate+'\n')
+    else:
+      region = 'Greenland'
+      icg = open(ncfil2)
+      icglist = []
+      for n,en in enumerate(icg):
+         nen = en.split(';')
+         icglist.append(nen)
+      icg_cont = np.array(icglist)
+      # we want to cut first row (general info) and first column (number of points)
+      icg_cont = icg_cont[1:,1:]
+      # change 'in' as '1.' and 'out' as '0.'
+      for el in icg_cont:
+        if el[1] == 'in':
+          el[1] = 1
+        else:
+          el[1] = 0
+      # reads as string, we want floats
+      icg_cont = icg_cont.astype(np.float)
+      # find out number of polygons
+      gpolyn = np.int(icg_cont[:,0].max())
+      # split the array into polygons - creation of dict
+      if ncfil == '':
+        ad = {}
+      for n in range(gpolyn):
+        poly = []
+        for m,em in enumerate(icg_cont):
+          if em[0] == n+1:
+            poly.append(em)
+        if ncfil == '':
+          ad["apoly"+str(n+1)] = np.array(poly)
+        else:
+          ad["apoly"+str(n+bpolyn+1)] = np.array(poly)
+    
+    # Read in AARI charts for both Barents and Greenland
+    # sometimes the charts are united in case the some polygons belong to both regions
+    if ncfil == '' and ncfil2 == '':
+      ncfil3 = ''.join( glob.glob('*'+dadate+'.txt'))
+      if ncfil3 == '':
+        print('No Common (Barents+Greenland) Ice Chart in '+dadate+'\n')
+      else:
+        region = 'Barents/Greenland'
+        icbg = open(ncfil3)
+        icbglist = []
+        for n,en in enumerate(icbg):
+          nen = en.split(';')
+          icbglist.append(nen)
+        icbg_cont = np.array(icbglist)
+        # we want to cut first row (general info) and first column (number of points)
+        icbg_cont = icbg_cont[1:,1:]
+        # change 'in' as '1.' and 'out' as '0.'
+        for el in icbg_cont:
+          if el[1] == 'in':
+            el[1] = 1
+          else:
+            el[1] = 0
+        # reads as string, we want floats
+        icbg_cont = icbg_cont.astype(np.float)
+        # find out number of polygons
+        bgpolyn = np.int(icbg_cont[:,0].max())
+        ad = {}
+        for n in range(bgpolyn):
+          poly = []
+          for m,em in enumerate(icbg_cont):
+            if em[0] == n+1:
+              poly.append(em)
+          ad["apoly"+str(n+1)] = np.array(poly)
+    return(ad)
 
 ############################################################################
 # This class will find AOD polygons for 2 sets with different grid.
@@ -319,92 +325,92 @@ class SDA_poly:
 # NOTE the basemap used in the reprojector is thought for OSISAF database but 
 # may fit any stereographical map, the reprojection should be fine as well.
 class AOD_poly:
-	def __init__(self,X1,Y1,Z1,X2,Y2,Z2):
-		ZM = self._reprojector_(X1,Y1,Z1,X2,Y2,Z2)
-		ZO = Z2
-		self.DN,self.B1,self.B2,oDN,uDN = self.binary_diff(ZM,ZO,.15)
-		self.over,self.under = self.poly_maker(self.DN)
-		self.DN = self.mapper(self.DN,ZM,ZO)
-		return
+  def __init__(self,X1,Y1,Z1,X2,Y2,Z2):
+    ZM = self._reprojector_(X1,Y1,Z1,X2,Y2,Z2)
+    ZO = Z2
+    self.DN,self.B1,self.B2,oDN,uDN = self.binary_diff(ZM,ZO,.15)
+    self.over,self.under = self.poly_maker(self.DN)
+    self.DN = self.mapper(self.DN,ZM,ZO)
+    return
 
-	def _reprojector_(self,X1,Y1,Z1,X2,Y2,Z2):
-		time0 = time.time()
-		# low quality map
-		self.lqm = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),\
-					projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
-		# better quality map
-		self.hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
-					projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
+  def _reprojector_(self,X1,Y1,Z1,X2,Y2,Z2):
+    time0 = time.time()
+    # low quality map
+    self.lqm = Basemap(width=7600000,height=11200000,resolution='l',rsphere=(6378273,6356889.44891),\
+          projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
+    # better quality map
+    self.hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
+          projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 
-		# getting ready for reprojection
-		X3 = X1.reshape(X1.size)
-		Y3 = Y1.reshape(Y1.size)
-		Z3 = Z1.reshape(Z1.size)
-		C = [X3,Y3]
-		C = np.array(C)
-		C = C.T
+    # getting ready for reprojection
+    X3 = X1.reshape(X1.size)
+    Y3 = Y1.reshape(Y1.size)
+    Z3 = Z1.reshape(Z1.size)
+    C = [X3,Y3]
+    C = np.array(C)
+    C = C.T
 
-		# Interpolation can be done with other methods ('linear','cubic'<--doesn't work for our data)
-		ZN = grd(C,Z3,(X2,Y2),method='nearest')
+    # Interpolation can be done with other methods ('linear','cubic'<--doesn't work for our data)
+    ZN = grd(C,Z3,(X2,Y2),method='nearest')
 
-		elapsedtime = time.time() - time0
-		print 'Reprojection done in ',elapsedtime
-		print ''
-		return(ZN)
+    elapsedtime = time.time() - time0
+    print 'Reprojection done in ',elapsedtime
+    print ''
+    return(ZN)
 
-	def binary_diff(self,data1,data2,thresh):
+  def binary_diff(self,data1,data2,thresh):
 
-		def closing(DN):
-			# apply closing to avoid small polynias and clean up a little
-			kernel = np.ones((3,3),np.uint8)
-			DN_cl = morph.closing(DN,kernel)
-			return(DN_cl)
+    def closing(DN):
+      # apply closing to avoid small polynias and clean up a little
+      kernel = np.ones((3,3),np.uint8)
+      DN_cl = morph.closing(DN,kernel)
+      return(DN_cl)
 
 
-		# NOTE outputs are difference, overpredicitions and underpredictions (CLOSED & MAPPED)
+    # NOTE outputs are difference, overpredicitions and underpredictions (CLOSED & MAPPED)
 
-	 	# generating the binary file, get the difference, divide into overprediction and
-		# underprediction, apply the closing on both and finally re-map the land
-	 	ndata1 = np.copy(data1)
-		ndata2 = np.copy(data2)
-	 	ndata1[ndata1<thresh] = 0
-	 	ndata2[ndata2<thresh] = 0
-	 	ndata1[ndata1>=thresh] = 1	
-	 	ndata2[ndata2>=thresh] = 1	
-		ddata = ndata2 - ndata1
-		thenans = np.isnan(ddata)
-		ddata[thenans] = 0
-		over_data = np.copy(ddata)
-		under_data = np.copy(ddata)
-		over_data[over_data==-1] = 0
-		under_data[under_data==1] = 0
-		under_data = abs(under_data)
-		o_data = closing(over_data)
-		u_data = closing(under_data)
-		o_data[u_data==1] = -1
-		ddata = np.copy(o_data)
-		return(ddata,ndata1,ndata2,o_data,u_data)
+    # generating the binary file, get the difference, divide into overprediction and
+    # underprediction, apply the closing on both and finally re-map the land
+    ndata1 = np.copy(data1)
+    ndata2 = np.copy(data2)
+    ndata1[ndata1<thresh] = 0
+    ndata2[ndata2<thresh] = 0
+    ndata1[ndata1>=thresh] = 1  
+    ndata2[ndata2>=thresh] = 1  
+    ddata = ndata2 - ndata1
+    thenans = np.isnan(ddata)
+    ddata[thenans] = 0
+    over_data = np.copy(ddata)
+    under_data = np.copy(ddata)
+    over_data[over_data==-1] = 0
+    under_data[under_data==1] = 0
+    under_data = abs(under_data)
+    o_data = closing(over_data)
+    u_data = closing(under_data)
+    o_data[u_data==1] = -1
+    ddata = np.copy(o_data)
+    return(ddata,ndata1,ndata2,o_data,u_data)
 
-	def poly_maker(self,ddata):
-		# finding contours from the difference data map
-		over = msr.find_contours(ddata,.5)
-		over = sorted(over, key=len)
-		over = over[::-1]
-		under = msr.find_contours(ddata,-.5)
-		under = sorted(under, key=len)
-		under = under[::-1]
-		return(over,under)
- 	
-	def mapper(self,DIFF,INS,OUT):
-	 	# getting back the terrain lost during binary_mod (for contour finding reasons)
-	 	DN = DIFF
-	 	ZO = OUT
-	 	ZI = INS
-	 	thenan = np.isnan(ZO)
-	 	thenan2 = np.isnan(ZI)
-	 	DN[thenan] = None
-	 	DN[thenan2] = None
-	 	return(DN)
+  def poly_maker(self,ddata):
+    # finding contours from the difference data map
+    over = msr.find_contours(ddata,.5)
+    over = sorted(over, key=len)
+    over = over[::-1]
+    under = msr.find_contours(ddata,-.5)
+    under = sorted(under, key=len)
+    under = under[::-1]
+    return(over,under)
+  
+  def mapper(self,DIFF,INS,OUT):
+    # getting back the terrain lost during binary_mod (for contour finding reasons)
+    DN = DIFF
+    ZO = OUT
+    ZI = INS
+    thenan = np.isnan(ZO)
+    thenan2 = np.isnan(ZI)
+    DN[thenan] = None
+    DN[thenan2] = None
+    return(DN)
 
 ############################################################################
 # MIZ poly infos 
@@ -941,35 +947,35 @@ class poly_stat:
 
 ###########################################################################
 class reg_stats:
-	def _init_(self,bar,gre,lab,les,ncb,typo):
-		bar = self.bar
-		gre = self.gre
-		lab = self.lab
-		les = self.les
-		ncb = self.ncb
-		typo = self.typo
-		bar_plot = self._plotter_(bar,'Barents_Kara',typo)
-		gre_plot = self._plotter_(gre,'Greenland',typo)
-		lab_plot = self._plotter_(lab,'Labrador',typo)
-		les_plot = self._plotter_(les,'Laptev_EastSea',typo)
-		ncb_plot = self._plotter_(ncb,'NorthCanada_Beaufort',typo)
+  def _init_(self,bar,gre,lab,les,ncb,typo):
+    bar = self.bar
+    gre = self.gre
+    lab = self.lab
+    les = self.les
+    ncb = self.ncb
+    typo = self.typo
+    bar_plot = self._plotter_(bar,'Barents_Kara',typo)
+    gre_plot = self._plotter_(gre,'Greenland',typo)
+    lab_plot = self._plotter_(lab,'Labrador',typo)
+    les_plot = self._plotter_(les,'Laptev_EastSea',typo)
+    ncb_plot = self._plotter_(ncb,'NorthCanada_Beaufort',typo)
 
-	def _plotter_(self,data,name,typo):
-		m_width = data[:,0]
-		area = data[:,1]
-		perim = data[:,2]
-		dadate = data[:,3]
-		x = [date2num(dadate) for (m_width,area,perim,dadate) in data]
-		f, axarr = plt.subplots(3, sharex=True)
-		axarr[0].plot(x,m_width,'r-o')
-		axarr[0].set_title('Mean Width')
-		axarr[1].plot(x,area,'r-o')
-		axarr[1].set_title('Area')
-		axarr[2].plot(x,perim,'r-o')
-		axarr[2].set_title('Perim')
-		fig.savefig(str(typo)+str(dadate[0])+'_'+str(dadate[-1])+'_'+str(name)+'.png')
-		plt.close(fig) 
-		return
+  def _plotter_(self,data,name,typo):
+    m_width = data[:,0]
+    area = data[:,1]
+    perim = data[:,2]
+    dadate = data[:,3]
+    x = [date2num(dadate) for (m_width,area,perim,dadate) in data]
+    f, axarr = plt.subplots(3, sharex=True)
+    axarr[0].plot(x,m_width,'r-o')
+    axarr[0].set_title('Mean Width')
+    axarr[1].plot(x,area,'r-o')
+    axarr[1].set_title('Area')
+    axarr[2].plot(x,perim,'r-o')
+    axarr[2].set_title('Perim')
+    fig.savefig(str(typo)+str(dadate[0])+'_'+str(dadate[-1])+'_'+str(name)+'.png')
+    plt.close(fig) 
+    return
 ###########################################################################
 
 ###########################################################################
@@ -986,7 +992,6 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 ###########################################################################
 
-<<<<<<< HEAD
 # AOD TEST RUN
 if 0:
 	time0 = time.time()
@@ -1115,74 +1120,4 @@ if 1:
 	
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
-=======
-# NOTE here we put the loop to go looking for the various products
-# WE ARE STILL IN BETA TESTING HENCE WE WILL WORK WITH ONE DATSET ONLY :D
 
-time0 = time.time()
-dadate = '20150512'
-year = '2015'
-month = '05'
-day = '12'
-osisaf = reader('Osisaf','20150512',hqm)
-model = reader('Model','20150512',hqm)
-XO,YO,ZO = osisaf.X,osisaf.Y,osisaf.Z
-XM,YM,ZM = model.X,model.Y,model.ZC
-AOD = AOD_poly(XM,YM,ZM,XO,YO,ZO)
-over,under,DN,BM,BO = AOD.over,AOD.under,AOD.DN,AOD.B1,AOD.B2
-
-bar_m_widths = []
-bar_area = []
-bar_perim = []
-gre_m_widths = []
-gre_area = []
-gre_perim = []
-lab_m_widths = []
-lab_area = []
-lab_perim = []
-les_m_widths = []
-les_area = []
-les_perim = []
-ncb_m_widths = []
-ncb_area = []
-ncb_perim = []
-
-poly_list=[]
-for n,el in enumerate(over):
-	# classification of positive polygons
-	aod=poly_stat(el,'1',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
-	poly_list.append(aod)
-try:
-	n
-except NameError:
-	n = -1 
-for n2,el in enumerate(under):
-	# classification of negative (n+1 for good enumeration)
-	n += 1 
-	aod=poly_stat(el,'0',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
-	poly_list.append(aod)
-
-bar_m_widths = sum(np.array(bar_m_widths))
-bar_area = sum(np.array(bar_area))
-bar_perim = sum(np.array(bar_perim))
-gre_m_widths = sum(np.array(gre_m_widths))
-gre_area = sum(np.array(gre_area))
-gre_perim = sum(np.array(gre_perim))
-lab_m_widths = sum(np.array(lab_m_widths))
-lab_area = sum(np.array(lab_area))
-lab_perim = sum(np.array(lab_perim))
-les_m_widths = sum(np.array(les_m_widths))
-les_area = sum(np.array(les_area))
-les_perim = sum(np.array(les_perim))
-ncb_m_widths = sum(np.array(ncb_m_widths))
-ncb_area = sum(np.array(ncb_area))
-ncb_perim = sum(np.array(ncb_perim))			
-bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
-gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
-lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
-les_stats = [les_m_widths,les_area,les_perim,dadate]
-ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
-
-elapsedtime = time.time() - time0
-print str(dadate)+' done in ',elapsedtime
->>>>>>> 1cc21a6c9fcc7e26c808c91e0b39eb11abe2388e
