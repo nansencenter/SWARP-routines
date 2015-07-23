@@ -70,5 +70,5 @@ echo $base_restart > $out_restart
 # CREATING DAILY INFO DIR
 idir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$(cat $datelist | sed '1!d')/info
 mkdir -p $idir
-mv $out_restart $idir/
+cp $out_restart $idir/
 

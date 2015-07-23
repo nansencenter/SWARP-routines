@@ -1,0 +1,14 @@
+# ENVIRONMENT VARIABLES
+export SWARP_ROUTINES="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/"
+export FORECAST="$SWARP_ROUTINES/forecast_scripts"
+export VALIDATION="$SWARP_ROUTINES/validation"
+
+# PATHS TO APPLICATIONS
+
+# queue stuff
+export qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
+export qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"
+
+# other apps
+export python="/work/apps/python/2.7.9-dso-gnu/bin/python"
+export cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"

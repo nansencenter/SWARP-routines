@@ -5,7 +5,7 @@
 
 #########################################################################
 tday=$1
-firstday=$2
+firstday=`date --date="$2" +%Y-%m-%d` # convert YYYYMMDD to YYYY-MM-DD
 dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
 #########################################################################
 
@@ -28,9 +28,9 @@ echo "Unpacking files (ncpdq -U)..."                  >> $log
 
 flist=(*.nc)
 f=${flist[0]}
-#get start of forecast
-start_date=${f:9:8} # check date
-start_time=${f:18:2}0000 # HHMMSS
+# #get start of forecast
+# start_date=${f:9:8}        # check date
+# start_time=${f:18:2}:00:00 # HH:MM:SS
 
 for f in TP4archv_*.nc
 do
@@ -51,7 +51,7 @@ echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPiceonly_forecast_start${tday}_UTC000000.nc
+ofil=SWARPiceonly_forecast_start${tday}T000000Z.nc
 
 # make final file by repacking tmp.nc
 echo " "                                              >> $log
@@ -71,51 +71,14 @@ ncrename -v fice,icec   $ofil #ice cover
 ncrename -v hice,icetk  $ofil #ice thickness
 
 # change time:units
-ncatted -O -h -a units,time,m,c,"seconds since 1970-01-01 UTC 00:00:00" $ofil
+ncatted -O -h -a units,time,m,c,"seconds since 1970-01-01T00:00:00Z"  $ofil
 
-# ###########################################################################################
-# # now add variable attributes:
-# # icec:
-# ncatted -O -a long_name,icec,c,c,"Sea ice concentration" $ofil
-# ncatted -O -a units,icec,c,c," "                         $ofil
-# ncatted -O -a add_offset,icec,c,f,0.                     $ofil
-# ncatted -O -a scale_factor,icec,c,f,1.                   $ofil
-# ncatted -O -a _FillValue,icec,c,f,-32767.                $ofil
-
-# # icetk:
-# ncatted -O -a long_name,icetk,c,c,"Sea ice thickness"     $ofil
-# ncatted -O -a units,icetk,c,c,"m"                         $ofil
-# ncatted -O -a add_offset,icetk,c,f,0.                     $ofil
-# ncatted -O -a scale_factor,icetk,c,f,1.                   $ofil
-# ncatted -O -a _FillValue,icetk,c,f,-32767.                $ofil
-
-# # dmax:
-# ncatted -O -a long_name,dmax,c,c,"Sea ice maximum floe size"   $ofil
-# ncatted -O -a units,dmax,c,c,"m"                               $ofil
-# ncatted -O -a add_offset,dmax,c,f,0.                           $ofil
-# ncatted -O -a scale_factor,dmax,c,f,1.                         $ofil
-# ncatted -O -a _FillValue,dmax,c,f,-32767.                      $ofil
-
-# # Hs:
-# ncatted -O -a long_name,Hs,c,c,"Significant wave height" $ofil
-# ncatted -O -a units,Hs,c,c,"m"                           $ofil
-# ncatted -O -a add_offset,Hs,c,f,0.                       $ofil
-# ncatted -O -a scale_factor,Hs,c,f,1.                     $ofil
-# ncatted -O -a _FillValue,Hs,c,f,-32767.                  $ofil
-
-# # Tw:
-# ncatted -O -a long_name,Tw,c,c,"Mean wave period (T_m_02)"  $ofil
-# ncatted -O -a units,Tw,c,c,"s"                              $ofil
-# ncatted -O -a add_offset,Tw,c,f,0.                          $ofil
-# ncatted -O -a scale_factor,Tw,c,f,1.                        $ofil
-# ncatted -O -a _FillValue,Tw,c,f,-32767.                     $ofil
-# ###########################################################################################
-
-# ncrename -v icef,sea_ice_concentration    $ofil
-# ncrename -v iceh,sea_ice_thickness        $ofil
-# ncrename -v dmax,sea_ice_max_floe_size    $ofil
-# ncrename -v Hs,significant_wave_height    $ofil
-# ncrename -v Tw,mean_wave_period           $ofil
+###########################################################################################
+# most variable attributes set in hyc2proj:
+# - just add shape of earth to "int stereographic"
+ncatted -O -a "semi_major_axis",stereographic,c,f,6378273.     $ofil
+ncatted -O -a "semi_minor_axis",stereographic,c,f,6378273.     $ofil
+###########################################################################################
 
 ###########################################################################################
 # Global attributes for  files
@@ -125,7 +88,7 @@ ncatted -O -h -a references,global,c,c,"www.nersc.no"                         $o
 ncatted -O -h -a comment,global,c,c," "                                       $ofil
 ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
 ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
-ncatted -O -h -a forecast_start_date,global,c,c,"$firstday UTC 00:00:00"      $ofil
+ncatted -O -h -a forecast_start_date,global,c,c,"${firstday}T00:00:00Z"       $ofil
 ncatted -O -h -a forecast_range,global,c,c,"5 day forecast"                   $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
 ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
@@ -141,20 +104,28 @@ ncatted -O -h -a operational_status,global,c,c,"test"                         $o
 ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
-# Changing bulletin_date into forecast_restart_date (with new format)
-bdate_info=$(ncinfo $ofil | grep "bulletin_date")
-split=(${bdate_info//\ / }) # make array with delimiter space "\ "
-bdate_time=${split[1]}       # eg 2015-05-09T00:00:00Z
-split=(${bdate_time//T/ }) # make array with delimiter "T"
-bdate=${split[0]}               # eg 2015-05-09
-btime=${split[1]}               # eg 00:00:00Z
-btime=${btime:0:8} # remove "Z"
-ncatted -O -h -a bulletin_date,global,o,c,"$bdate UTC $btime" $ofil   # add new attribute "restart_file_date"
-ncrename -a bulletin_date,restart_file_date $ofil #clearer
+# Restart file date
+reformat=0
+if [ $reformat -eq 1 ]
+then
+   # reformat bulletin date
+   # eg 2015-05-09T00:00:00Z -> 2015-05-09 UTC 00:00:00
+   bdate_info=$(ncinfo $ofil | grep "bulletin_date")
+   split=(${bdate_info//\ / })   # make array with delimiter space "\ "
+   bdate_time=${split[1]}        # eg 2015-05-09T00:00:00Z
+   split=(${bdate_time//T/ })    # make array with delimiter "T"
+   bdate=${split[0]}             # eg 2015-05-09
+   btime=${split[1]}             # eg 00:00:00Z
+   btime=${btime:0:8}            # remove "Z"
+   ncatted -O -h -a bulletin_date,global,o,c,"$bdate UTC $btime" $ofil   # add new attribute "restart_file_date"
+fi
+
+# Rename bulletin_date to restart_file_date (clearer)
+ncrename -a bulletin_date,restart_file_date $ofil
 
 # delete old attribute(s)
-ncatted -a field_date,global,d,,                                              $ofil
-ncatted -a history,global,d,,                                                 $ofil
+ncatted -a field_date,global,d,,            $ofil
+ncatted -a history,global,d,,               $ofil
 ###########################################################################################
 
 mkdir -p /work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
