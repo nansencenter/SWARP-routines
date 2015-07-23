@@ -1,10 +1,13 @@
 import os
 import mod_grib2_setup as m_g2s
 
-# fildir      = 'test_ncfiles'
-fildir      = '../netcdf_production/output'
-file_list   = [ f for f in os.listdir(fildir)
-                  if os.path.isfile(os.path.join(fildir,f)) ]
+if 1:
+   fildir      = 'test_ncfiles'
+   file_list   = ['SWARPwavesice_forecast_start20150723T000000Z.nc']
+else:
+   fildir      = '../netcdf_production/output'
+   file_list   = [ f for f in os.listdir(fildir)
+                     if os.path.isfile(os.path.join(fildir,f)) ]
 
 #######################################################################
 for ncfil in file_list:
