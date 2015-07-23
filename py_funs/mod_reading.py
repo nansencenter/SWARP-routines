@@ -124,7 +124,7 @@ def nc_getinfo(ncfil,time_index=None):
       # space between date and time
       date2    = lst[2]
       date3    = lst[3]
-      date_all = date2+'T'+date3+'Z'
+      date_all = date2+date3
    else:
       date_all = lst[2]
    # i0    = tu.index('-')
