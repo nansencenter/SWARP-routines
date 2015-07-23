@@ -28,7 +28,7 @@ timeout_warning=08
 
 time_now=$(date +%H)
 
-if  [ $time_now -gt $timeout_start ] && [ $time_now -lt $timeout_end ]
+if  [ $time_now -ge $timeout_start ] && [ $time_now -le $timeout_end ]
 then
    exit
 fi
