@@ -22,7 +22,7 @@ fi
 
 #########################################################################
 dir0=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/netcdf
-odir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/final_product  
+odir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/final_output  
 #########################################################################
 
 #extract start date/time of forecast
