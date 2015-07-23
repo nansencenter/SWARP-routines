@@ -88,6 +88,7 @@ def open_close(self):
 ############################################################################
 # read in and prepare every file for polygon detection
 class reader:
+<<<<<<< HEAD
   def __init__(self,name,dadate,year,month,day,basemap):
     self.filname = name+'_'+dadate
     if name == 'Osisaf':
@@ -253,6 +254,169 @@ class reader:
               poly.append(em)
           ad["apoly"+str(n+1)] = np.array(poly)
     return(ad)
+=======
+	def __init__(self,name,dadate,year,month,day,basemap):
+		self.filname = name+'_'+dadate
+		if name == 'Osisaf':
+			self.X,self.Y,self.Z = self._read_osi_(dadate,basemap) 
+			return
+		elif name == 'Model':
+			self.X,self.Y,self.ZC,self.ZD = self._read_mdl_(dadate,basemap)
+			return
+		elif name == 'Aari':
+			self.ad = self._read_aari_(dadate,basemap)
+	
+	def _read_osi_(self,dadate,basemap):
+		# Read in OSI_SAF file
+		outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
+		ncfil = outdir+'ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
+		clon = 'lon'
+		clat = 'lat'
+		cconc = 'ice_conc'
+		lon2 = Mrdg.nc_get_var(ncfil,clon) # lon[:,:] is a numpy array
+		lat2 = Mrdg.nc_get_var(ncfil,clat) # lat[:,:] is a numpy array
+		conc = Mrdg.nc_get_var(ncfil,cconc,time_index=0)
+		xc = Mrdg.nc_get_var(ncfil,'xc')
+		yc = Mrdg.nc_get_var(ncfil,'yc')
+		X2,Y2 = basemap(lon2[:,:],lat2[:,:],inverse=False)
+		XO = np.copy(X2)
+		YO = np.copy(Y2)
+		Z2 = conc[:,:].data
+		mask2 = conc[:,:].mask
+		Z2[mask2] = np.NaN
+		ZO = Z2/100
+		return(XO,YO,ZO) 
+	
+	def _read_mdl_(self,dadate,basemap):
+	 	# Read TP4arch_wav
+		outdir = './data/'
+	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
+	 	slon = 'longitude'
+	 	slat = 'latitude'
+	 	sconc = 'fice'
+	 	sdmax = 'dmax'
+	 	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+	 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+	 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+	 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+	 	X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
+	 	ZD = dmax[:,:].data
+	 	mask = dmax[:,:].mask
+	 	ZD[mask] = np.NaN
+	 	ZC = conc[:,:].data
+	 	mask = conc[:,:].mask
+	 	ZC[mask] = np.NaN
+	 	return(X,Y,ZC,ZD)
+		
+	def _read_aari_(dadate,basemap):
+		# Read in AARI charts for Barents Sea
+		# NOTE this reader's output is a dictionary with a list of polygons and
+		# indexes for contours identification
+		outdir = './ice_charts/AARI/' 
+		ncfil = outdir+'aari_bar_'+dadate+'.txt'
+		if ncfil == '':
+		 	print('No Ice Chart for Barents sea in '+dadate+'\n')
+		else:
+		 	region = 'Barents'
+		 	icb = open(ncfil)
+		 	icblist = []
+		 	for n,en in enumerate(icb):
+				nen = en.split(';')
+		 	icblist.append(nen)
+		 	icb_cont = np.array(icblist)
+		 	# we want to cut first row (general info) and first column (number of points)
+		 	icb_cont = icb_cont[1:,1:]
+		 	# change 'in' as '1.' and 'out' as '0.'
+		 	for el in icb_cont:
+				if el[1] == 'in':
+					el[1] = 1
+		 	else:
+		 	 	el[1] = 0
+		 	# reads as string, we want floats
+		 	icb_cont = icb_cont.astype(np.float)
+		 	# find out number of polygons
+		 	bpolyn = np.int(icb_cont[:,0].max())
+		 	# split the array into polygons - creation of dict
+		 	ad = {}
+		 	for n in range(bpolyn):
+		 		 poly = []
+		 		 for m,em in enumerate(icb_cont):
+		 				if em[0] == n+1:
+		 					 poly.append(em)
+		 		 ad["apoly"+str(n+1)] = np.array(poly)
+		
+		# Read in AARI charts for Greenland Sea
+		ncfil2 = 'aari_gre_'+dadate+'.txt'
+		if ncfil2 == '':
+		 	print('No Ice Chart for Greenland sea in '+dadate+'\n')
+		else:
+		 	region = 'Greenland'
+		 	icg = open(ncfil2)
+		 	icglist = []
+		 	for n,en in enumerate(icg):
+		 		 nen = en.split(';')
+		 		 icglist.append(nen)
+		 	icg_cont = np.array(icglist)
+		 	# we want to cut first row (general info) and first column (number of points)
+		 	icg_cont = icg_cont[1:,1:]
+		 	# change 'in' as '1.' and 'out' as '0.'
+		 	for el in icg_cont:
+				if el[1] == 'in':
+				 	el[1] = 1
+				else:
+				 	el[1] = 0
+		 	# reads as string, we want floats
+		 	icg_cont = icg_cont.astype(np.float)
+		 	# find out number of polygons
+		 	gpolyn = np.int(icg_cont[:,0].max())
+		 	# split the array into polygons - creation of dict
+		 	if ncfil == '':
+				ad = {}
+		 	for n in range(gpolyn):
+				poly = []
+				for m,em in enumerate(icg_cont):
+				 	if em[0] == n+1:
+						poly.append(em)
+				if ncfil == '':
+				 	ad["apoly"+str(n+1)] = np.array(poly)
+				else:
+				 	ad["apoly"+str(n+bpolyn+1)] = np.array(poly)
+		
+		# Read in AARI charts for both Barents and Greenland
+		# sometimes the charts are united in case the some polygons belong to both regions
+		if ncfil == '' and ncfil2 == '':
+		 	ncfil3 = ''.join( glob.glob('*'+dadate+'.txt'))
+		 	if ncfil3 == '':
+				print('No Common (Barents+Greenland) Ice Chart in '+dadate+'\n')
+		 	else:
+				region = 'Barents/Greenland'
+				icbg = open(ncfil3)
+				icbglist = []
+				for n,en in enumerate(icbg):
+				 	nen = en.split(';')
+				 	icbglist.append(nen)
+				icbg_cont = np.array(icbglist)
+				# we want to cut first row (general info) and first column (number of points)
+				icbg_cont = icbg_cont[1:,1:]
+				# change 'in' as '1.' and 'out' as '0.'
+				for el in icbg_cont:
+				 	if el[1] == 'in':
+						el[1] = 1
+				 	else:
+						el[1] = 0
+				# reads as string, we want floats
+				icbg_cont = icbg_cont.astype(np.float)
+				# find out number of polygons
+				bgpolyn = np.int(icbg_cont[:,0].max())
+				ad = {}
+				for n in range(bgpolyn):
+				 	poly = []
+				 	for m,em in enumerate(icbg_cont):
+						if em[0] == n+1:
+							poly.append(em)
+				 	ad["apoly"+str(n+1)] = np.array(poly)
+		return(ad)
+>>>>>>> 473a103290b09ab81b5b2ea275fd1d6dcca94222
 
 ############################################################################
 # This class will find AOD polygons for 2 sets with different grid.
@@ -1058,7 +1222,7 @@ if 0:
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
 
-if 1:
+if 0:
 	time0 = time.time()
 	dadate = '20150512'
 	model = reader('Model','20150512',hqm)
@@ -1095,6 +1259,133 @@ if 1:
 		# classification of negative (n+1 for good enumeration)
 		n += 1 
 		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	
+	bar_m_widths = sum(np.array(bar_m_widths))
+	bar_area = sum(np.array(bar_area))
+	bar_perim = sum(np.array(bar_perim))
+	gre_m_widths = sum(np.array(gre_m_widths))
+	gre_area = sum(np.array(gre_area))
+	gre_perim = sum(np.array(gre_perim))
+	lab_m_widths = sum(np.array(lab_m_widths))
+	lab_area = sum(np.array(lab_area))
+	lab_perim = sum(np.array(lab_perim))
+	les_m_widths = sum(np.array(les_m_widths))
+	les_area = sum(np.array(les_area))
+	les_perim = sum(np.array(les_perim))
+	ncb_m_widths = sum(np.array(ncb_m_widths))
+	ncb_area = sum(np.array(ncb_area))
+	ncb_perim = sum(np.array(ncb_perim))			
+	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
+	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
+	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
+	les_stats = [les_m_widths,les_area,les_perim,dadate]
+	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	
+	elapsedtime = time.time() - time0
+	print str(dadate)+' done in ',elapsedtime
+
+if 0:
+	time0 = time.time()
+	dadate = '20150512'
+	model = reader('Model','20150512',hqm)
+	XM,YM,ZM = model.X,model.Y,model.ZD
+	SDA = SDA_poly(XM,YM,ZM)
+	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
+	
+	bar_m_widths = []
+	bar_area = []
+	bar_perim = []
+	gre_m_widths = []
+	gre_area = []
+	gre_perim = []
+	lab_m_widths = []
+	lab_area = []
+	lab_perim = []
+	les_m_widths = []
+	les_area = []
+	les_perim = []
+	ncb_m_widths = []
+	ncb_area = []
+	ncb_perim = []
+	
+	poly_list=[]
+	for n,el in enumerate(over):
+		# classification of positive polygons
+		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	try:
+		n
+	except NameError:
+		n = -1 
+	for n2,el in enumerate(under):
+		# classification of negative (n+1 for good enumeration)
+		n += 1 
+		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	
+	bar_m_widths = sum(np.array(bar_m_widths))
+	bar_area = sum(np.array(bar_area))
+	bar_perim = sum(np.array(bar_perim))
+	gre_m_widths = sum(np.array(gre_m_widths))
+	gre_area = sum(np.array(gre_area))
+	gre_perim = sum(np.array(gre_perim))
+	lab_m_widths = sum(np.array(lab_m_widths))
+	lab_area = sum(np.array(lab_area))
+	lab_perim = sum(np.array(lab_perim))
+	les_m_widths = sum(np.array(les_m_widths))
+	les_area = sum(np.array(les_area))
+	les_perim = sum(np.array(les_perim))
+	ncb_m_widths = sum(np.array(ncb_m_widths))
+	ncb_area = sum(np.array(ncb_area))
+	ncb_perim = sum(np.array(ncb_perim))			
+	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
+	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
+	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
+	les_stats = [les_m_widths,les_area,les_perim,dadate]
+	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	
+	elapsedtime = time.time() - time0
+	print str(dadate)+' done in ',elapsedtime
+
+if 1:
+	time0 = time.time()
+	dadate = '20150512'
+	aari = reader('Aari','20150512',hqm)
+	# Now we have the aari dictionary with us, let's split it!
+	ad = aari.ad
+	SDA = SDA_poly(XM,YM,ZM)
+	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
+	
+	bar_m_widths = []
+	bar_area = []
+	bar_perim = []
+	gre_m_widths = []
+	gre_area = []
+	gre_perim = []
+	lab_m_widths = []
+	lab_area = []
+	lab_perim = []
+	les_m_widths = []
+	les_area = []
+	les_perim = []
+	ncb_m_widths = []
+	ncb_area = []
+	ncb_perim = []
+	
+	poly_list=[]
+	for n,el in enumerate(over):
+		# classification of positive polygons
+		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	try:
+		n
+	except NameError:
+		n = -1 
+	for n2,el in enumerate(under):
+		# classification of negative (n+1 for good enumeration)
+		n += 1 
+		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
 		poly_list.append(aod)
 	
 	bar_m_widths = sum(np.array(bar_m_widths))
