@@ -986,7 +986,6 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 ###########################################################################
 
-<<<<<<< HEAD
 # AOD TEST RUN
 if 0:
 	time0 = time.time()
@@ -1115,74 +1114,66 @@ if 1:
 	
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
-=======
-# NOTE here we put the loop to go looking for the various products
-# WE ARE STILL IN BETA TESTING HENCE WE WILL WORK WITH ONE DATSET ONLY :D
 
-time0 = time.time()
-dadate = '20150512'
-year = '2015'
-month = '05'
-day = '12'
-osisaf = reader('Osisaf','20150512',hqm)
-model = reader('Model','20150512',hqm)
-XO,YO,ZO = osisaf.X,osisaf.Y,osisaf.Z
-XM,YM,ZM = model.X,model.Y,model.ZC
-AOD = AOD_poly(XM,YM,ZM,XO,YO,ZO)
-over,under,DN,BM,BO = AOD.over,AOD.under,AOD.DN,AOD.B1,AOD.B2
-
-bar_m_widths = []
-bar_area = []
-bar_perim = []
-gre_m_widths = []
-gre_area = []
-gre_perim = []
-lab_m_widths = []
-lab_area = []
-lab_perim = []
-les_m_widths = []
-les_area = []
-les_perim = []
-ncb_m_widths = []
-ncb_area = []
-ncb_perim = []
-
-poly_list=[]
-for n,el in enumerate(over):
-	# classification of positive polygons
-	aod=poly_stat(el,'1',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
-	poly_list.append(aod)
-try:
-	n
-except NameError:
-	n = -1 
-for n2,el in enumerate(under):
-	# classification of negative (n+1 for good enumeration)
-	n += 1 
-	aod=poly_stat(el,'0',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
-	poly_list.append(aod)
-
-bar_m_widths = sum(np.array(bar_m_widths))
-bar_area = sum(np.array(bar_area))
-bar_perim = sum(np.array(bar_perim))
-gre_m_widths = sum(np.array(gre_m_widths))
-gre_area = sum(np.array(gre_area))
-gre_perim = sum(np.array(gre_perim))
-lab_m_widths = sum(np.array(lab_m_widths))
-lab_area = sum(np.array(lab_area))
-lab_perim = sum(np.array(lab_perim))
-les_m_widths = sum(np.array(les_m_widths))
-les_area = sum(np.array(les_area))
-les_perim = sum(np.array(les_perim))
-ncb_m_widths = sum(np.array(ncb_m_widths))
-ncb_area = sum(np.array(ncb_area))
-ncb_perim = sum(np.array(ncb_perim))			
-bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
-gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
-lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
-les_stats = [les_m_widths,les_area,les_perim,dadate]
-ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
-
-elapsedtime = time.time() - time0
-print str(dadate)+' done in ',elapsedtime
->>>>>>> 1cc21a6c9fcc7e26c808c91e0b39eb11abe2388e
+if 0:
+	time0 = time.time()
+	dadate = '20150512'
+	model = reader('Model','20150512',hqm)
+	XM,YM,ZM = model.X,model.Y,model.ZC
+	SDA = SDA_poly(XM,YM,ZM)
+	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
+	
+	bar_m_widths = []
+	bar_area = []
+	bar_perim = []
+	gre_m_widths = []
+	gre_area = []
+	gre_perim = []
+	lab_m_widths = []
+	lab_area = []
+	lab_perim = []
+	les_m_widths = []
+	les_area = []
+	les_perim = []
+	ncb_m_widths = []
+	ncb_area = []
+	ncb_perim = []
+	
+	poly_list=[]
+	for n,el in enumerate(over):
+		# classification of positive polygons
+		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	try:
+		n
+	except NameError:
+		n = -1 
+	for n2,el in enumerate(under):
+		# classification of negative (n+1 for good enumeration)
+		n += 1 
+		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(aod)
+	
+	bar_m_widths = sum(np.array(bar_m_widths))
+	bar_area = sum(np.array(bar_area))
+	bar_perim = sum(np.array(bar_perim))
+	gre_m_widths = sum(np.array(gre_m_widths))
+	gre_area = sum(np.array(gre_area))
+	gre_perim = sum(np.array(gre_perim))
+	lab_m_widths = sum(np.array(lab_m_widths))
+	lab_area = sum(np.array(lab_area))
+	lab_perim = sum(np.array(lab_perim))
+	les_m_widths = sum(np.array(les_m_widths))
+	les_area = sum(np.array(les_area))
+	les_perim = sum(np.array(les_perim))
+	ncb_m_widths = sum(np.array(ncb_m_widths))
+	ncb_area = sum(np.array(ncb_area))
+	ncb_perim = sum(np.array(ncb_perim))			
+	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
+	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
+	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
+	les_stats = [les_m_widths,les_area,les_perim,dadate]
+	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	
+	elapsedtime = time.time() - time0
+	print str(dadate)+' done in ',elapsedtime
