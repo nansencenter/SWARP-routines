@@ -2,9 +2,11 @@
 export SWARP_ROUTINES="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/"
 export FORECAST="$SWARP_ROUTINES/forecast_scripts"
 export VALIDATION="$SWARP_ROUTINES/validation"
+export TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
+export TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
+export wmsc="/work/shared/nersc/msc"
 
 # PATHS TO APPLICATIONS
-
 # queue stuff
 export qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
 export qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"

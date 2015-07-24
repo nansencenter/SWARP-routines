@@ -119,22 +119,38 @@ def nc_getinfo(ncfil,time_index=None):
       time_info[0]   = 'second'
    #
    tu    = time.units
-   lst   = tu.split()
-   if len(lst)==4:
-      # space between date and time
-      date2    = lst[2]
-      date3    = lst[3]
-      date_all = date2+date3
+   if ('T' in tu) and ('Z' in tu):
+      # using the T...Z format for time
+      # eg hyc2proj (this is the standard)
+      split1   = tu.split('T')
+      ctime    = split1[1].split('Z')[0]
+      cdate    = split1[0].split()[2]
    else:
-      date_all = lst[2]
-   # i0    = tu.index('-')
-   # date0 = tu[i0-4:i0+6]
-   # i1    = tu.index(':')
-   # date1 = tu[i1-2:i1+6]
-   # #
-   # date2    = date0+'T'+date1+'Z'
-   time_fmt = '%Y-%m-%dT%H:%M:%SZ' # eg 1950-1-1 12:00:00
-   refpoint = datetime.strptime(date_all,time_fmt)
+      # eg WAMNSEA product from met.no
+      split1   = tu.split()
+      cdate    = split1[2]
+      ctime    = split1[3]
+
+   if '-' in cdate:
+      # remove '-'
+      # - otherwise assume YYYYMMDD format
+      split2   = cdate.split('-')
+      for loop_i in range(1,3):
+         if (split2[loop_i])==1:
+            split2[loop_i] = '0'+split2[loop_i]
+      cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
+
+   if ':' in ctime:
+      # remove ':'
+      # - otherwise assume HHMMSS format
+      split2   = ctime.split(':')
+      for loop_i in range(0,3):
+         if (split2[loop_i])==1:
+            split2[loop_i] = '0'+split2[loop_i]
+      ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
+
+   time_fmt = '%Y%m%d %H%M%S' # eg 19500101 120000
+   refpoint = datetime.strptime(cdate+' '+ctime,time_fmt)
    #
    if time_info[0]=='second':
       ncinfo.reftime = refpoint+timedelta(seconds=reftime_u)
