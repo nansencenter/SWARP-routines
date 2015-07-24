@@ -11,13 +11,13 @@ datelist=$SWARP_ROUTINES/forecast_scripts/datelist.txt
 if [ -f $datelist ]
 then
    # set vbl's
-   tday=$1
+   tday=$(cat $datelist | sed '1!d')
    tday_long=`date --date=$tday +%Y-%m-%d`
 
    # run scripts
    $SWARP_ROUTINES/forecast_scripts/wavesice/gather_FCresults_wav.sh  $tday # $(cat $datelist | sed '2!d') #$1 $2 
    $SWARP_ROUTINES/netcdf_production/convert_TP4archv_wav.sh $tday #$1
-   $SWARP_ROUTINES/netcdf_production/merge_TP4archv_wav.sh   $tday $(cat $datelist | sed '2!d') #$1 $2
+   $SWARP_ROUTINES/netcdf_production/merge_TP4archv_wav.sh   $tday # $(cat $datelist | sed '2!d') #$1 $2
    $SWARP_ROUTINES/forecast_scripts/wavesice/collect_FCresults_wav.sh $tday # $(cat $datelist | sed '2!d') #$1 $2
 
    # finish up
