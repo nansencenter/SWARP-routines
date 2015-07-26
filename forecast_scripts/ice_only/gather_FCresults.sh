@@ -20,9 +20,9 @@ then
 fi
 touch $log
 
-echo "Collecting data produced in date $2"               >> $log
-
 tday=$1
+tday_long=`date --date=$tday +%Y-%m-%d`
+echo "Collecting data produced in date $tday_long"       >> $log
 
 TDIR=$WKDIR/$tday
 mkdir -p $WKDIR/$tday/bin

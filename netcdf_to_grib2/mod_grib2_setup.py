@@ -50,6 +50,7 @@ def hyc2proj_to_grib2(ncfil,grb2fil,KEEP_MASK=1):
          # grid definition template:
          # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
          gdtnum,gdt  = def_grid_template(ncinfo)
+         # print('grid definition template: '+str(gdt))
 
          # INPUT 1)
          # grid definition section:
@@ -186,18 +187,57 @@ def def_grid_template(ncinfo):
       ny    = ncinfo.Npts_y
       gdt   = []
 
-      # grid parameters for polar stereographic projection
-      # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
-      i_earth_shape  = 1   #spherical (specified radius) > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
-      gdt.append(i_earth_shape)
+      ###############################################################################
+      # shape of earth
+      a  = proj_in.semi_major_axis
+      b  = proj_in.semi_minor_axis
 
-      # parameters for spherical earth
-      re_h2c         = 6378273 # radius of earth (in m) from Hyc2proj/mod_toproj.F90 (subroutine polar_stereographic)
-      re_scale_fac   = 0       # radius = scaled_radius*10^(-scale_fac)
-      gdt.extend([re_scale_fac,re_h2c])
+      if a==b:
+         # print('sphere: '+str(a)+','+str(b))
 
-      #not applicable (oblate spherical)
-      gdt.extend([0,0,0,0])
+         # SPHERICAL
+         # grid parameters for polar stereographic projection
+         # > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_temp3-20.shtml
+         i_earth_shape  = 1   #spherical (specified radius) > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
+         gdt.append(i_earth_shape)
+
+         re_h2c         = a
+         re_scale_fac   = 0
+         while int(re_h2c)!=re_h2c:
+            re_h2c         = 10*re_h2c
+            re_scale_fac   = re_scale_fac+1
+
+         # parameters for spherical earth
+         gdt.extend([re_scale_fac,int(re_h2c)])
+
+         #not applicable (param's for oblate spheroid)
+         gdt.extend([0,0,0,0])
+      else:
+         # print('spheroid: '+str(a)+','+str(b))
+
+         # OBLATE SPHEROID
+         i_earth_shape  = 3   #(specified maj/min axes in km) > http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
+         gdt.append(i_earth_shape)
+
+         # NA: parameters for spherical earth
+         gdt.extend([0,0])
+
+         # major axis
+         maj_ax         = a/1.e3
+         ma_scale_fac   = 0
+         while int(maj_ax)!=maj_ax:
+            maj_ax         = 10*maj_ax
+            ma_scale_fac   = ma_scale_fac+1
+         gdt.extend([ma_scale_fac,int(maj_ax)])
+
+         # minor axis
+         min_ax         = b/1.e3
+         ma_scale_fac   = 0
+         while int(min_ax)!=min_ax:
+            min_ax         = 10*min_ax
+            ma_scale_fac   = ma_scale_fac+1
+         gdt.extend([ma_scale_fac,int(min_ax)])
+      ###############################################################################
 
       # no of points in each dirn
       gdt.extend([nx,ny])

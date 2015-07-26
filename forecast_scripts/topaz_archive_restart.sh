@@ -5,7 +5,7 @@
 #I thought that reading through a text file would be faster than checking the whole work folder
 
 # EMAIL ADDRESS FOR THE WEEKLY UPDATE
-email_list=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_mail.txt
+email_list=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # =========================================================================================================
 email=$(cat $email_list)
 # =========================================================================================================
