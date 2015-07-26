@@ -69,29 +69,32 @@ do
    echo "Looking for product $hdate" >> $cplog
    hex_fil=SWARPiceonly_forecast_start${hdate}*  # final file
 
-   echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
-   scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
-
-   if [ -f $tmp_dir/$hex_fil ]
+   # only do scp if file not present
+   if [ ! -f $joh_dir/$hex_fil ]
    then
-      mv $tmp_dir/* $joh_dir/
-      chmod o+r $joh_dir/$hex_fil
-      echo "Product found on $hdate!" >> $cplog
-      echo "Latest product uploaded" >> $cplog
-      echo "" >> $cplog
-      break
-   else
-      echo "No product on $hdate" >> $cplog
-      wrn_count=$(expr $wrn_count + 1)
-      if [ "$wrn_count" -gt 2 ]
+      echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+      scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+
+      if [ -f $tmp_dir/$hex_fil ]
       then
-         echo ""                          >> $cplog
-         echo "PRODUCT OLDER THAN 3 DAYS" >> $cplog
-         mail -s "WARNING - Johansen Old Product" $email < $cplog
-         break
+         # if scp worked move it to THREDDS dir
+         mv $tmp_dir/* $joh_dir/
+         chmod o+r $joh_dir/$hex_fil
+         echo "Product found on $hdate!" >> $cplog
+         echo "" >> $cplog
+      else
+         # if scp didn't work, give warning
+         echo "No product on $hdate" >> $cplog
+         wrn_count=$(expr $wrn_count + 1)
       fi
    fi
 done
+
+if [ "$wrn_count" -gt 0 ]
+then
+   echo ""                          >> $cplog
+   mail -s "WARNING - Johansen Missing ice_only Product(s)" $email < $cplog
+fi
 
 thour=`date +%H`
 if [ $thour -lt 5 ]
@@ -109,29 +112,34 @@ do
    echo "Looking for product $hdate" >> $cplog
    hex_fil=SWARPwavesice_forecast_start${hdate}*  # final file
 
-   echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
-   scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
-
-   if [ -f $tmp_dir_w/$hex_fil ]
+   # only do scp if final product is not present
+   if [ ! -f $joh_dir_w/$hex_fil ]
    then
-      mv $tmp_dir_w/* $joh_dir_w/
-      chmod o+r $joh_dir_w/$hex_fil
-      echo "Product found on $hdate!" >> $cplog
-      echo "Latest product uploaded" >> $cplog
-      echo "" >> $cplog
-      break
-   else
-      echo "No product on $hdate" >> $cplog
-      wrn_count=$(expr $wrn_count + 1)
-      if [ "$wrn_count" -gt 2 ]
+      echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
+      scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
+
+      if [ -f $tmp_dir_w/$hex_fil ]
       then
-         echo ""                          >> $cplog
-         echo "PRODUCT OLDER THAN 3 DAYS" >> $cplog
-         mail -s "WARNING - Johansen Old Product" $email < $cplog
-         break
+         # if scp worked move it to THREDDS dir
+         mv $tmp_dir_w/* $joh_dir_w/
+         chmod o+r $joh_dir_w/$hex_fil
+         echo "Product found on $hdate!" >> $cplog
+         echo "Latest product uploaded" >> $cplog
+         echo "" >> $cplog
+      else
+         # if scp didn't work, give warning
+         echo "No product on $hdate" >> $cplog
+         wrn_count=$(expr $wrn_count + 1)
       fi
    fi
 done
+
+if [ "$wrn_count" -gt 0 ]
+then
+   echo ""                          >> $cplog
+   mail -s "WARNING - Johansen Missing waves_ice Product(s)" $email < $cplog
+   break
+fi
 
 # make key with:
 # ssh-keygen -t dsa $HOME/.ssh/$keyname
