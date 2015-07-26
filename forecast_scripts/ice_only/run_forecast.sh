@@ -11,12 +11,12 @@
 fc_days=5            
 # ================================================================================================
 
-# DIRECTORIES
-SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
-TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
+# get variables
+# ($SWARP_ROUTINES defined in crontab or .bash_profile)
+source $SWARP_ROUTINES/source_files/hex_vars.src
 
 # CREATING THE LOG
-logdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs
+logdir=$SWARP_ROUTINES/forecast_scripts/logs
 mkdir -p $logdir
 log=$logdir/run_forecast_log.txt
 if [ -f "$log" ]
@@ -33,8 +33,9 @@ then
    rm $datelist
 fi
 
+tday=$(date +%Y%m%d)
 touch $datelist
-echo $(date +%Y%m%d)       >> $datelist
+echo $tday                 >> $datelist
 echo $(date +%Y-%m-%d)     >> $datelist
 echo $(date +%Y)           >> $datelist
 echo $(date +%m)           >> $datelist
@@ -44,7 +45,8 @@ jday_today0=$(expr $jday0 - 1)                                 # julian day of T
 jday_today=$(printf '%3.3d' $jday_today0)
 echo $jday_today           >> $datelist
 
-rundir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d') # where the last_restart.txt will end up
+rundir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday # where the last_restart.txt will end up
+mkdir -p $rundir
 cd $rundir
 mkdir -p ./info
 cp $datelist ./info
@@ -52,17 +54,17 @@ cp $datelist ./info
 # RUNNING TOPAZ_GET_RESTART
 echo "Launching topaz_get_restart @ $date"                     >> $log
 $SWARP_ROUTINES/forecast_scripts/ice_only/topaz_get_restart.sh          # get latest restart file
-cd $rundir                                                     # just in case we've changed dir in script
 
 # GETTING INFOS FROM LAST_RESTART
+cd $rundir  # just in case we've changed dir in script
 out_restart=info/last_restart.txt
 
 year_today=$(cat $datelist | sed '3!d')
 rname=$(cat $out_restart)
 
-rgen=${rname:0:3}                                              # eg TP4
-ryear=${rname:10:4}                                            # year of restart file
-rday=${rname:15:3}                                             # julian day of restart file (1 Jan = 0)
+rgen=${rname:0:3}    # eg TP4
+ryear=${rname:10:4}  # year of restart file
+rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
 
 #################################################################
 
@@ -73,8 +75,8 @@ echo "Launching make_infile4forecast @ $date"                  >> $log
 # if last restart was in different year to this year:
 if [ $year_today -ne $ryear ]
 then
-	jday_today=$(expr $jday_today + $rday + 1)              # integer
-        jday_today=$(printf '%3.3d' $jday_today)                # 3 digits (compare to rday)
+   jday_today=$(expr $jday_today + $rday + 1) # integer
+   jday_today=$(printf '%3.3d' $jday_today)   # 3 digits (compare to rday)
 fi
 
 final_day=$(expr $jday_today + $fc_days)
@@ -83,10 +85,10 @@ final_day=$(expr $jday_today + $fc_days)
 ndays=$(date --date="${year_today}-12-31" +%j)                 # days in current year
 if [ $final_day -gt $((ndays-1)) ]
 then
-	fc_final_day=`expr $final_day - $ndays`
-	fc_year=`expr $year_today + 1`
+   fc_final_day=`expr $final_day - $ndays`
+   fc_year=`expr $year_today + 1`
 else
-	fc_year=$year_today
+   fc_year=$year_today
 fi
 echo "Restart files of ${ryear}_$rday"
 echo "Forecast final day ${fc_year}_${final_day}"
@@ -130,6 +132,5 @@ rm log/*
 echo $qsub
 $qsub pbsjob.sh
 #################################################################
-   
-echo "pbsjob done @ $(date)"                  >> $log
 
+echo "pbsjob done @ $(date)"                  >> $log
