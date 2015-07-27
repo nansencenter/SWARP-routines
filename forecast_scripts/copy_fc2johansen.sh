@@ -90,7 +90,7 @@ do
       fi
    else
       echo "Product already on johansen" >> $cplog
-      echo " "
+      echo " " >> $cplog
    fi
 done
 
@@ -136,7 +136,7 @@ do
       fi
    else
       echo "Product already on johansen" >> $cplog
-      echo " "
+      echo " " >> $cplog
    fi
 done
 
