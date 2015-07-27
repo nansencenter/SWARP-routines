@@ -16,8 +16,8 @@ def prepMultiPolygon4ShapeFile(MP):
    # convert shapely MultiPolygon to form usable by shapefile
    # also calculate field values
    Np          = len(MP.geoms)
-   parts_list  = Np*[0]
-   rec_list    = Np*[0]
+   parts_list  = Np*[0] # list of lists of coordinates of each polygon (parts_list[0]=exterior, others can be "holes")
+   rec_list    = Np*[0] # list of properties for each polygon
 
    for n in range(Np):
       parts = []
@@ -31,7 +31,9 @@ def prepMultiPolygon4ShapeFile(MP):
       # record list: [Area]
       # TODO do stereographic projection
       #      > calc area,perimeter and width
-      rec_list.append([q.area])
+      #      eg recs = [L_width,E_width,status,...]
+      recs  = [q.area]
+      rec_list.append(recs)
       
       # pyshp: if points are anti-clockwise, the points are treated as exterior ones
       # TODO check if shapely does the same
@@ -56,6 +58,8 @@ def MultiPolygon2ShapeFile(MP,filename):
    # save MultiPolygon to shapefile
    # 1. convert shapely MultiPolygon to form usable by shapefile
    # 2. save shapefile
+   # uses shapefile (PYSHP)
+   # https://code.google.com/p/pyshp/wiki/PyShpDocs
 
 
    w  = shapefile.Writer(shapefile.POLYGON)
@@ -63,7 +67,7 @@ def MultiPolygon2ShapeFile(MP,filename):
    # define attributes
    w.field('Area','N','40') # name,type ('C'=character, 'N'=number), size (?)
 
-   # TODO calculate these and add fields for them
+   # How to add more fields:
    # w.field('Perimeter','N','40')
    # w.field('Width','N','40')
 
