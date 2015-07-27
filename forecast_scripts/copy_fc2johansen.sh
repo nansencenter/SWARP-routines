@@ -89,7 +89,7 @@ do
          wrn_count=$(expr $wrn_count + 1)
       fi
    else
-      echo "Product already on johansen"
+      echo "Product already on johansen" >> $cplog
       echo " "
    fi
 done
@@ -135,7 +135,7 @@ do
          wrn_count=$(expr $wrn_count + 1)
       fi
    else
-      echo "Product already on johansen"
+      echo "Product already on johansen" >> $cplog
       echo " "
    fi
 done
