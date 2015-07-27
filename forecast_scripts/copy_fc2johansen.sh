@@ -88,6 +88,9 @@ do
          echo "No product on $hdate" >> $cplog
          wrn_count=$(expr $wrn_count + 1)
       fi
+   else
+      echo "Product already on johansen"
+      echo " "
    fi
 done
 
@@ -125,13 +128,15 @@ do
          mv $tmp_dir_w/* $joh_dir_w/
          chmod o+r $joh_dir_w/$hex_fil
          echo "Product found on $hdate!" >> $cplog
-         echo "Latest product uploaded" >> $cplog
          echo "" >> $cplog
       else
          # if scp didn't work, give warning
          echo "No product on $hdate" >> $cplog
          wrn_count=$(expr $wrn_count + 1)
       fi
+   else
+      echo "Product already on johansen"
+      echo " "
    fi
 done
 
