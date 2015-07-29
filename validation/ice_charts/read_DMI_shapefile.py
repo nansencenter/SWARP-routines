@@ -261,7 +261,7 @@ for fname in snames:
 
       #########################################################
       if PLOT_COMBINED==1:
-         MP = shops.unary_union(MPlist) # merge neighbouring polygons
+         MP = shops.unary_union(MPlist) # merge neighbouring polygons (dissolve holes)
          if not hasattr(MP,'geoms'):
             MP = shgeom.MultiPolygon(MP)
          print('len(MP)='+str(len(MP.geoms)))
