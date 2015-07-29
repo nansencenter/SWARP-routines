@@ -3,6 +3,7 @@
 from netCDF4 import Dataset
 import sys,os
 import time
+import datetime
 import glob
 import numpy as np
 import subprocess
@@ -92,6 +93,10 @@ class reader:
 		self.year = dadate[:4]
 		self.month = dadate[4:6]
 		self.day = dadate[6:8]
+		gigio = datetime.datetime(self.year,self.month,self.day,0,0)
+		gigio = gigio.strftime('%j')
+		gigio = int(float(gigio))
+		self.julian = gigio - 1
 		self.filname = name+'_'+dadate
 		if name == 'Osisaf':
 			self.X,self.Y,self.Z = self._read_osi_(dadate,basemap) 
@@ -107,8 +112,8 @@ class reader:
 		month = self.month
 		year = self.year
 		# Read in OSI_SAF file
-		outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
-		#outdir = './data/'
+		#outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
+		outdir = './data/'
 		ncfil = outdir+'ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
 		clon = 'lon'
 		clat = 'lat'
@@ -128,29 +133,74 @@ class reader:
 		return(XO,YO,ZO) 
 	
 	def _read_mdl_(self,dadate,basemap):
-		day = self.day
-		month = self.month
-		year = self.year
-		# Read TP4arch_wav
-		outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
-		#outdir = './data/'
-	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
-	 	slon = 'longitude'
-	 	slat = 'latitude'
-	 	sconc = 'fice'
-	 	sdmax = 'dmax'
-	 	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-	 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-	 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-	 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
-	 	X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
-	 	ZD = dmax[:,:].data
-	 	mask = dmax[:,:].mask
-	 	ZD[mask] = np.NaN
-	 	ZC = conc[:,:].data
-	 	mask = conc[:,:].mask
-	 	ZC[mask] = np.NaN
-	 	return(X,Y,ZC,ZD)
+
+		# Binary reader version
+		def get_grid(grid_dir='.'):
+			gfil  = grid_dir+'/regional.grid.a'
+			dfil  = grid_dir+'/regional.depth.a'
+			#   
+			plon  = Mrdg.get_array_from_HYCOM_binary(gfil,1)
+			nx,ny = plon.shape
+			#   
+			plat     = Mrdg.get_array_from_HYCOM_binary(gfil,2,dims=(nx,ny))
+			depths   = Mrdg.get_array_from_HYCOM_binary(dfil,1,dims=(nx,ny))
+			return plon,plat,depths,nx,ny
+
+		icp		= 'fice' #daily average
+		icpma = 1.
+		icpmi = 0.
+		dfp   = 'dfloe'
+		dfpma = 300.
+		dfpmi = 0.
+		Bc    = 0.  # look for contours of this binary array from getbin
+		Ccol  = 'k'
+
+		##################################################################
+		# read in arrays from TP4 binaries (.a)
+		# lon/lat from grid binary
+		tdir  = './data/MDL'
+		plon,plat,depths,nx,ny  = get_grid(tdir)
+		# 
+		afil  = tdir+'/TP4archv_wav.'+str(year)+'_'+str(self.julian)+'_120000.a'
+		bfil  = afil[:-2]+'.b'
+		
+		# make dictionary from bfil to get record number in afil
+		vlst  = Mrdg.get_record_numbers_HYCOM(bfil)
+		
+		# get recno from dictionary created from bfil
+		icprecno = vlst[icp]
+		dfprecno = vlst[dfp]
+		ZC     = Mrdg.get_array_from_HYCOM_binary(afil,icprecno,dims=(nx,ny))
+		ZD     = Mrdg.get_array_from_HYCOM_binary(afil,dfprecno,dims=(nx,ny))
+		##################################################################
+
+	 	X,Y = basemap(plon[:,:],plat[:,:],inverse=False)
+
+#		# NetCDF reader (NOTE it works but not used because data is missingin the repos)
+#		day = self.day
+#		month = self.month
+#		year = self.year
+#		# Read TP4arch_wav
+#		#outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
+#		outdir = './data/'
+#	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
+#	 	slon = 'longitude'
+#	 	slat = 'latitude'
+#	 	sconc = 'fice'
+#	 	sdmax = 'dmax'
+#	 	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+#	 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+#	 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+#	 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+#	 	X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
+#	 	ZD = dmax[:,:].data
+#	 	mask = dmax[:,:].mask
+#	 	ZD[mask] = np.NaN
+#	 	ZC = conc[:,:].data
+#	 	mask = conc[:,:].mask
+#	 	ZC[mask] = np.NaN
+	
+		return(X,Y,ZC,ZD)
 		
 	def _read_aari_(self,dadate,basemap):
 		# Read in AARI charts for Barents Sea
@@ -824,25 +874,25 @@ class poly_stat:
 		if PLOT:             		
 			self.poly_contour_plot()
 		if self.region == 'Barents_Kara_sea':
-			bar_poly_stat.append([self.name, self.polygon_status, self.polygon_class, self.centroid_longitude, \
-												self.centroid_latitude, self.L_width, self.E_width, self.L_area, self.E_area, \
-												self.L_perim, self.E_perim])
+			bar_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
+												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
+												str(self.L_perim), str(self.E_perim)])
 		elif self.region == 'Greenland_sea':
-			gre_poly_stat.append([self.name, self.polygon_status, self.polygon_class, self.centroid_longitude, \
-												self.centroid_latitude, self.L_width, self.E_width, self.L_area, self.E_area, \
-												self.L_perim, self.E_perim])
+			gre_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
+												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
+												str(self.L_perim), str(self.E_perim)])
 		elif self.region == 'Labrador_sea':
-			lab_poly_stat.append([self.name, self.polygon_status, self.polygon_class, self.centroid_longitude, \
-												self.centroid_latitude, self.L_width, self.E_width, self.L_area, self.E_area, \
-												self.L_perim, self.E_perim])
+			lab_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
+												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
+												str(self.L_perim), str(self.E_perim)])
 		elif self.region == 'Laptev_East_Siberian_sea':
-			les_poly_stat.append([self.name, self.polygon_status, self.polygon_class, self.centroid_longitude, \
-												self.centroid_latitude, self.L_width, self.E_width, self.L_area, self.E_area, \
-												self.L_perim, self.E_perim])
+			les_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
+												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
+												str(self.L_perim), str(self.E_perim)])
 		elif self.region == 'North_Canada_Beaufort_sea':
-			ncb_poly_stat.append([self.name, self.polygon_status, self.polygon_class, self.centroid_longitude, \
-												self.centroid_latitude, self.L_width, self.E_width, self.L_area, self.E_area, \
-												self.L_perim, self.E_perim])
+			ncb_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
+												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
+												str(self.L_perim), str(self.E_perim)])
 
 	def ij2xy(self,cont,X,Y):
 		# changes indexes to x and y (NOTE i and j are inverted -> i = [:,1], j = [:,0])
@@ -1029,9 +1079,9 @@ class poly_stat:
 	 	self.AI = results[0]
 	 	self.fun_sol = results[1]
 	 	self.stream = results[2]
-		self.L_width = result[3]
-		self.L_area = result[4]
-		self.L_perim = result[5]
+		self.L_width = results[3]
+		self.L_area = results[4]
+		self.L_perim = results[5]
 		if results[3] != results[3]:
 			in2out = self.widths_in2out
 			out2in = self.widths_out2in
@@ -1106,6 +1156,7 @@ class poly_stat:
 		if len(inside_contour) == 0 or len(outside_contour) == 0:
 			width_in2out	= [0,0,0,0,0]
 			width_out2in	= [0,0,0,0,0]
+			self.E_width = 0
 		else:
 			unk = 100*(len(unknown_contour)/float(len(tcont)))
 			dmo = 100*(abs(len(inside_contour)-len(outside_contour))/float(len(tcont)))
@@ -1127,11 +1178,13 @@ class poly_stat:
 					dist_pt.append([dist1,en[0],en[1],em[0],em[1]])
 				idx,value = min(enumerate(dist_pt),key=itg(1))
 				width_out2in.append(value)
+			gigio = np.array(width_in2out)
+			topo = np.array(width_out2in)
+			in2out_m = np.mean(gigio[:,0])
+			out2in_m = np.mean(topo[:,0])
+			self.E_width = (in2out_m+out2in_m)/float(2)
 		self.widths_in2out = np.array(width_in2out)
 		self.widths_out2in = np.array(width_out2in)
-		in2out_m = np.mean(width_in2out[:,0])
-		out2in_m = np.mean(width_out2in[:,0])
-		self.E_width = (in2out_m+out2in_m)/float(2)
 		self.UKW = UKW
  		self.DMW = DMW
  		return
@@ -1174,10 +1227,12 @@ class poly_stat:
 		clon = '%1.2f' %self.centroid_longitude
 		clat = '%1.2f' %self.centroid_latitude
 		clonlat = '{0}/{1}'.format(clon,clat)
-		area = self.p_area
-		area = '%1.4e' %area 
-		perim = self.p_perim
-		perim = '%1.4e' %perim
+		L_area = self.L_area
+		E_area = self.E_area
+		area = '%1.4e %1.4e' %(L_area,E_area) 
+		L_perim = self.L_perim
+		E_perim = self.E_perim
+		perim = '%1.4e %1.4e' %(L_perim,E_perim)
 		if dist_in2out.tolist() != [0,0,0,0,0]:
 			# changing units from decakilometer to kilometer
 			dist_in = np.median(dist_in2out[:,0])*10
@@ -1410,10 +1465,50 @@ if 1:
 		aod=poly_stat(el,'0',BO,BM,DN,XO,YO,n,'AOD',basemap=hqm,PLOT=None,STCH=True)
 		poly_list.append(aod)
 	
-	f = open(str(dadate)+'.txt', 'w')
+	outdir = './outputs/AOD/'+str(dadate)
+	if not os.path.exists(outdir):
+		os.mkdir(outdir)
+	
+	reg_repo = outdir+'/Barents_Kara_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/AOD/'+str(dadate)+'/Barents_Kara_sea/analysis.txt', 'w')
 	f.write('\n'.join(map(lambda x: str(x), bar_poly_stat)))
 	f.close()
 	
+	reg_repo = outdir+'/Greenland_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/AOD/'+str(dadate)+'/Greenland_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), gre_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/Labrador_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/AOD/'+str(dadate)+'/Labrador_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), lab_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/Laptev_East_Siberian_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/AOD/'+str(dadate)+'/Laptev_East_Siberian_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), les_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/North_Canada_Beaufort_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/AOD/'+str(dadate)+'/North_Canada_Beaufort_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), ncb_poly_stat)))
+	f.close()
+
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
 
