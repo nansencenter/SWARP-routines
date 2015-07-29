@@ -1521,22 +1521,12 @@ if 0:
 	SDA = SDA_poly(XM,YM,ZM)
 	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
 	
-	bar_m_widths = []
-	bar_area = []
-	bar_perim = []
-	gre_m_widths = []
-	gre_area = []
-	gre_perim = []
-	lab_m_widths = []
-	lab_area = []
-	lab_perim = []
-	les_m_widths = []
-	les_area = []
-	les_perim = []
-	ncb_m_widths = []
-	ncb_area = []
-	ncb_perim = []
-	
+	bar_poly_stat = []
+	gre_poly_stat = []
+	lab_poly_stat = []
+	les_poly_stat = []
+	ncb_poly_stat = []
+
 	poly_list=[]
 	for n,el in enumerate(over):
 		# classification of positive polygons
