@@ -9,6 +9,12 @@
 # FORECAST DAYS
 # ================================================================================================
 fc_days=5            
+# thour=`date "+%H"`
+# if [ $thour -le 1 ]
+# then
+#    # too early (winds not there)
+#    exit
+# fi
 # ================================================================================================
 
 # get variables
@@ -50,6 +56,27 @@ mkdir -p $rundir
 cd $rundir
 mkdir -p ./info
 cp $datelist ./info
+
+##############################################################
+# Checks before run:
+
+# 1. check if forecast has already run
+if [ -f $rundir/final_product/SWARP*.nc ]
+then
+   # echo "Ice-only FC has already run - stopping"
+   exit
+fi
+
+# 2. check if forecast is already running
+msg=`$qstat | grep TP4x011fc`
+if [ ${#msg} -ne 0 ]
+then
+   # echo "forecast is already running - stopping"
+   # echo "pbs job message:"
+   # echo $msg
+   exit
+fi
+###################################################################
 
 # RUNNING TOPAZ_GET_RESTART
 echo "Launching topaz_get_restart @ $date"                     >> $log
@@ -128,7 +155,6 @@ fi
 rm log/*
 
 # launch job
-# qsub=/opt/torque/2.5.13pre-up/bin/qsub #get full path from which qsub
 echo $qsub
 $qsub pbsjob.sh
 #################################################################

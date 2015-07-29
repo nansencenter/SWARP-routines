@@ -3,8 +3,8 @@ export SWARP_ROUTINES="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/"
 export FORECAST="$SWARP_ROUTINES/forecast_scripts"
 export VALIDATION="$SWARP_ROUTINES/validation"
 export TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
-export TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
 export wmsc="/work/shared/nersc/msc"
+export wamnsea="$wmsc/WAMNSEA"
 
 # PATHS TO APPLICATIONS
 # queue stuff
