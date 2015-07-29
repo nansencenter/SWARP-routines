@@ -1,5 +1,6 @@
 ############################################################################
 def DMI_form_dictionary():
+   import numpy as np
 
    # dictionary to map from strings to integers
    form_vals      = {'X':-1,'-9':np.NaN}

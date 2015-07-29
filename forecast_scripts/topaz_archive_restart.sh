@@ -56,12 +56,12 @@ for el in "${eye[@]}"                                                # analizing
 	do
 	if [ -f $el ]                                                # checking their existence
 	then
-                afil=$(basename $el)                                 # *.a filename without full path
-                base=${afil%%_mem001.a}                              # cutting _mem001.a
+		afil=$(basename $el)                                 # *.a filename without full path
+		base=${afil%%_mem001.a}                              # cutting _mem001.a
 		dcre=${base#TP4restart}                              # cutting TP4restart
-                bfil=$rdir/${base}_mem001.b
-                ufil=$rdir/${base}ICE.uf
-                ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
+		bfil=$rdir/${base}_mem001.b
+		ufil=$rdir/${base}ICE.uf
+		ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
 
 		if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST
 		then

@@ -50,7 +50,7 @@ fi
 
 if [ $(date +%A) == "Monday" ]
 then
-   rm $wrk_dir/old_logs/*
+   rm -f $wrk_dir/old_logs/*
 fi
 
 if [ ! -f "$cplog" ]
@@ -60,9 +60,10 @@ then
 fi
 
 # finding the latest final product - ICE_ONLY
-# - check last 4 days
+# - check last $Nback days
+Nback=4
 wrn_count=0
-for n in {0..4}
+for n in `seq 0 $Nback`
 do
    echo "$(date +%H:%M) - looking for ICE_ONLY latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
@@ -87,6 +88,9 @@ do
          echo "No product on $hdate" >> $cplog
          wrn_count=$(expr $wrn_count + 1)
       fi
+   else
+      echo "Product already on johansen" >> $cplog
+      echo " " >> $cplog
    fi
 done
 
@@ -97,15 +101,15 @@ then
 fi
 
 thour=`date +%H`
-if [ $thour -lt 5 ]
+if [ $thour -lt 6 ]
 then
    exit
 fi
 # finding the latest final product - WAVESICE
-# - check last 4 days
+# - check last $Nback days
 # TODO add check to see if file exists already, before downloading
 wrn_count=0
-for n in {0..4}
+for n in `seq 0 $Nback`
 do
    echo "$(date +%H:%M) - looking for WAVESICE latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
@@ -124,13 +128,15 @@ do
          mv $tmp_dir_w/* $joh_dir_w/
          chmod o+r $joh_dir_w/$hex_fil
          echo "Product found on $hdate!" >> $cplog
-         echo "Latest product uploaded" >> $cplog
          echo "" >> $cplog
       else
          # if scp didn't work, give warning
          echo "No product on $hdate" >> $cplog
          wrn_count=$(expr $wrn_count + 1)
       fi
+   else
+      echo "Product already on johansen" >> $cplog
+      echo " " >> $cplog
    fi
 done
 
@@ -138,7 +144,6 @@ if [ "$wrn_count" -gt 0 ]
 then
    echo ""                          >> $cplog
    mail -s "WARNING - Johansen Missing waves_ice Product(s)" $email < $cplog
-   break
 fi
 
 # make key with:
