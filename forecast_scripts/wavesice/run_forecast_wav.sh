@@ -17,14 +17,11 @@ fc_day_mi4f=$(printf '%.f' $(echo "$fc_days-0.5" | bc))
 
 # ================================================================================================
 
-# DIRECTORIES
-SWARP_ROUTINES=$HOME/GITHUB-REPOSITORIES/SWARP-routines
-fcdir=$SWARP_ROUTINES/forecast_scripts
-TP4_REALTIME=/work/timill/RealTime_Models/TP4a0.12
-wamnsea=/work/shared/nersc/msc/WAMNSEA/
+# Get directories + paths
+source $SWARP_ROUTINES/hex_vars.src
 
 # CREATING THE LOG
-logdir=$fcdir/logs
+logdir=$FORECAST/logs
 mkdir -p $logdir
 log=$logdir/run_forecast_wav_log.txt
 if [ -f "$log" ]
@@ -34,7 +31,7 @@ fi
 touch $log
 
 # CREATING THE DATELIST 
-datelist=$fcdir/datelist.txt
+datelist=$FORECAST/datelist.txt
 
 if [ -f "$datelist" ]
 then
@@ -56,7 +53,7 @@ final_day_mi4f=$(expr $jday_today + $fc_day_mi4f)
 cyear=$(cat $datelist | sed '3!d')
 cday=$(cat $datelist | sed '1!d')
 
-rundir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$cday # where the last_restart.txt will end up
+rundir=$TP4_REALTIME/../results/TP4a0.12/wavesice/work/$cday # where the last_restart.txt will end up
 mkdir -p $rundir
 cd $rundir
 mkdir -p ./info
@@ -67,6 +64,14 @@ final_dir="$rundir/final_output/"
 
 #################################################################
 # CHECKS BEFORE RUNNING (QUIT IF THEY ARE FAILED):
+
+# 0. check if ice_only forecast has run
+icedir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday/final_output # where the ice_only product goes
+if [ ! -f $icedir/SWARP*.nc ]
+then
+   echo "ice only FC hasn't run yet - stopping (no restart)"
+   exit
+fi
 
 # 1. check if wave input is present
 wavfil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
@@ -98,7 +103,7 @@ fi
 
 # RUNNING TOPAZ_GET_RESTART
 echo "Launching topaz_get_restart_wav @ $date"                 >> $log
-$fcdir/wavesice/topaz_get_restart_wav.sh                       # get latest restart file
+$FORECAST/wavesice/topaz_get_restart_wav.sh                       # get latest restart file
 cd $rundir                                                     # just in case we've changed dir in script
 
 # GETTING INFOS FROM LAST_RESTART
@@ -161,25 +166,3 @@ $qsub pbsjob.sh
 #################################################################
    
 echo "pbsjob done @ $(date)"                  >> $log
-
-### TODO move below to merge script
-# # check final output has correct number of records (11)
-# Nrecs="11" # eg "11" for 2.5 day fc
-# 
-# cd $final_dir
-# recs=`ncdump -h SWARP* | grep "time = UNLIMITED"`  # eg "time = UNLIMITED ; // (11 currently)"
-# recs=($recs)                                       # convert to array
-# nrecs=${recs[5]}
-# nrecs=${nrecs:1:2}                                 # remove "("
-# 
-# if [ $nrecs != $Nrecs ]
-# then
-#    ofil=`echo SWARP*`
-#    echo "Wrong number of records in $ofil:"
-#    echo " $nrecs (should be $Nrecs)"
-#    echo " Wrong number of records in $ofil:"    >> $log
-#    echo "  $nrecs (should be $Nrecs)"           >> $log
-# else
-#    echo " Correct number of records in $ofil:"  >> $log
-#    echo "  $nrecs (should be $Nrecs)"           >> $log
-# fi

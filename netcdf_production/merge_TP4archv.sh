@@ -1,7 +1,9 @@
 #!/bin/bash
 # script to extract some variables from a netcdf file
 
-# NO NEED FOR A MAIL ALLERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
+# NO NEED FOR A MAIL ALERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
+
+source $SWARP_ROUTINES/source_files/hex_vars.src
 
 #########################################################################
 # inputs are start date of forecast
@@ -18,18 +20,15 @@ else
    # tday_long=`date --date="$2" +%Y-%m-%d`  # start date of forecast YYYY-MM-DD
    lognm=merge_log.txt
 fi
-dir0=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/netcdf
-odir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$tday/final_output
+dir0=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday/netcdf
+odir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday/final_output
 #########################################################################
 
-#extract start date/time of forecast
-# and put it into output filename
-odir=$(pwd)  # output file will be placed in current directory
 cd $dir0
 mkdir -p tmp
 
 # LOG
-log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/$lognm
+log=$SWARP_ROUTINES/forecast_scripts/logs/$lognm
 if [ -f "$log" ]
 then
    rm $log
@@ -41,9 +40,6 @@ echo "Unpacking files (ncpdq -U)..."                  >> $log
 
 flist=(*.nc)
 f=${flist[0]}
-# #get start of forecast
-# start_date=${f:9:8}        # check date
-# start_time=${f:18:2}:00:00 # HH:MM:SS
 
 Nfiles=0
 for f in TP4archv_*.nc
@@ -76,11 +72,6 @@ ncpdq tmp.nc $ofil
 rm -r tmp tmp.nc
 
 #########################################################################
-# rename dimensions
-# ncrename -d dim00800,index1 $ofil
-# ncrename -d dim00880,index2 $ofil
-# ncrename -d record,time     $ofil
-
 # change variable names to standard abbreviations in GRIB2 tables
 ncrename -v fice,icec   $ofil #ice cover
 ncrename -v hice,icetk  $ofil #ice thickness
