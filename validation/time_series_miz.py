@@ -1433,12 +1433,14 @@ hqm = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356
       projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
 ###########################################################################
 
-# AOD TEST RUN
-if 1:
+mission = sys.argv[1]
+
+# AOD RUN
+if mission == 'AOD':
 	time0 = time.time()
-	dadate = '20150512'
-	osisaf = reader('Osisaf','20150512',hqm)
-	model = reader('Model','20150512',hqm)
+	dadate = sys.argv[2] 
+	osisaf = reader('Osisaf',dadate,hqm)
+	model = reader('Model',dadate,hqm)
 	XO,YO,ZO = osisaf.X,osisaf.Y,osisaf.Z
 	XM,YM,ZM = model.X,model.Y,model.ZC
 	AOD = AOD_poly(XM,YM,ZM,XO,YO,ZO)
@@ -1513,7 +1515,7 @@ if 1:
 	print str(dadate)+' done in ',elapsedtime
 
 # ICP model test run
-if 0:
+if mission == 'ICP':
 	time0 = time.time()
 	dadate = '20150512'
 	model = reader('Model','20150512',hqm)
@@ -1567,7 +1569,7 @@ if 0:
 	print str(dadate)+' done in ',elapsedtime
 
 # DFP model
-if 0:
+if mission == 'DFP':
 	time0 = time.time()
 	dadate = '20150512'
 	model = reader('Model','20150512',hqm)
