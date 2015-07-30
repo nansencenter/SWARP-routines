@@ -20,7 +20,7 @@ qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"
 cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # get wamnsea waves as early as possible
-# NOTE the wamnsea products are usually uploaded just after 4 am
+# NOTE the wamnsea products are usually uploaded at 5am
 00 * * * * $FORECAST/wamnsea_update.sh
 
 # TP4 restarts less urgent
