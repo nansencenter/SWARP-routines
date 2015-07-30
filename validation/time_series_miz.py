@@ -93,7 +93,7 @@ class reader:
 		self.year = dadate[:4]
 		self.month = dadate[4:6]
 		self.day = dadate[6:8]
-		gigio = datetime.datetime(self.year,self.month,self.day,0,0)
+		gigio = datetime.datetime(int(float(self.year)),int(float(self.month)),int(float(self.day)),0,0)
 		gigio = gigio.strftime('%j')
 		gigio = int(float(gigio))
 		self.julian = gigio - 1
@@ -134,71 +134,74 @@ class reader:
 	
 	def _read_mdl_(self,dadate,basemap):
 
-		# Binary reader version
-		def get_grid(grid_dir='.'):
-			gfil  = grid_dir+'/regional.grid.a'
-			dfil  = grid_dir+'/regional.depth.a'
-			#   
-			plon  = Mrdg.get_array_from_HYCOM_binary(gfil,1)
-			nx,ny = plon.shape
-			#   
-			plat     = Mrdg.get_array_from_HYCOM_binary(gfil,2,dims=(nx,ny))
-			depths   = Mrdg.get_array_from_HYCOM_binary(dfil,1,dims=(nx,ny))
-			return plon,plat,depths,nx,ny
+#	#TODO I couldn't make the binary version work properly
+#	# work on the binary reader, for now *.nc will be used 
+#		# Binary reader version
+#		def get_grid(grid_dir='.'):
+#			gfil  = grid_dir+'/regional.grid.a'
+#			dfil  = grid_dir+'/regional.depth.a'
+#			#   
+#			plon  = Mrdg.get_array_from_HYCOM_binary(gfil,1)
+#			nx,ny = plon.shape
+#			#   
+#			plat     = Mrdg.get_array_from_HYCOM_binary(gfil,2,dims=(nx,ny))
+#			depths   = Mrdg.get_array_from_HYCOM_binary(dfil,1,dims=(nx,ny))
+#			return plon,plat,depths,nx,ny
+#
+#		icp		= 'fice' #daily average
+#		icpma = 1.
+#		icpmi = 0.
+#		dfp   = 'dfloe'
+#		dfpma = 300.
+#		dfpmi = 0.
+#		Bc    = 0.  # look for contours of this binary array from getbin
+#		Ccol  = 'k'
+#
+#		##################################################################
+#		# read in arrays from TP4 binaries (.a)
+#		# lon/lat from grid binary
+#		tdir  = './data/MDL'
+#		gridir = './data'
+#		plon,plat,depths,nx,ny  = get_grid(gridir)
+#		# 
+#		afil  = tdir+'/TP4archv_wav.'+str(self.year)+'_'+str(self.julian)+'_120000.a'
+#		bfil  = afil[:-2]+'.b'
+#		
+#		# make dictionary from bfil to get record number in afil
+#		vlst  = Mrdg.get_record_numbers_HYCOM(bfil)
+#		
+#		# get recno from dictionary created from bfil
+#		icprecno = vlst[icp]
+#		dfprecno = vlst[dfp]
+#		ZC     = Mrdg.get_array_from_HYCOM_binary(afil,icprecno,dims=(nx,ny))
+#		ZD     = Mrdg.get_array_from_HYCOM_binary(afil,dfprecno,dims=(nx,ny))
+#		##################################################################
+#
+#	 	X,Y = basemap(plon[:,:],plat[:,:],inverse=False)
 
-		icp		= 'fice' #daily average
-		icpma = 1.
-		icpmi = 0.
-		dfp   = 'dfloe'
-		dfpma = 300.
-		dfpmi = 0.
-		Bc    = 0.  # look for contours of this binary array from getbin
-		Ccol  = 'k'
-
-		##################################################################
-		# read in arrays from TP4 binaries (.a)
-		# lon/lat from grid binary
-		tdir  = './data/MDL'
-		plon,plat,depths,nx,ny  = get_grid(tdir)
-		# 
-		afil  = tdir+'/TP4archv_wav.'+str(year)+'_'+str(self.julian)+'_120000.a'
-		bfil  = afil[:-2]+'.b'
-		
-		# make dictionary from bfil to get record number in afil
-		vlst  = Mrdg.get_record_numbers_HYCOM(bfil)
-		
-		# get recno from dictionary created from bfil
-		icprecno = vlst[icp]
-		dfprecno = vlst[dfp]
-		ZC     = Mrdg.get_array_from_HYCOM_binary(afil,icprecno,dims=(nx,ny))
-		ZD     = Mrdg.get_array_from_HYCOM_binary(afil,dfprecno,dims=(nx,ny))
-		##################################################################
-
-	 	X,Y = basemap(plon[:,:],plat[:,:],inverse=False)
-
-#		# NetCDF reader (NOTE it works but not used because data is missingin the repos)
-#		day = self.day
-#		month = self.month
-#		year = self.year
-#		# Read TP4arch_wav
-#		#outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
-#		outdir = './data/'
-#	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
-#	 	slon = 'longitude'
-#	 	slat = 'latitude'
-#	 	sconc = 'fice'
-#	 	sdmax = 'dmax'
-#	 	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
-#	 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
-#	 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-#	 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
-#	 	X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
-#	 	ZD = dmax[:,:].data
-#	 	mask = dmax[:,:].mask
-#	 	ZD[mask] = np.NaN
-#	 	ZC = conc[:,:].data
-#	 	mask = conc[:,:].mask
-#	 	ZC[mask] = np.NaN
+		# NetCDF reader 
+		day = self.day
+		month = self.month
+		year = self.year
+		# Read TP4arch_wav
+		#outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
+		outdir = './data/'
+	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
+	 	slon = 'longitude'
+	 	slat = 'latitude'
+	 	sconc = 'fice'
+	 	sdmax = 'dmax'
+	 	lon = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+	 	lat = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+	 	conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+	 	dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+	 	X,Y = basemap(lon[:,:],lat[:,:],inverse=False)
+	 	ZD = dmax[:,:].data
+	 	mask = dmax[:,:].mask
+	 	ZD[mask] = np.NaN
+	 	ZC = conc[:,:].data
+	 	mask = conc[:,:].mask
+	 	ZC[mask] = np.NaN
 	
 		return(X,Y,ZC,ZD)
 		
