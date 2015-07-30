@@ -8,16 +8,17 @@ email=$(cat $address)
 # ====================================================================================
 
 # DIRECTORIES AND DATELIST
-fcdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
-datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist.txt
+source $SWARP_ROUTINES/source_files/hex_vars.src
+
+datelist=$FORECAST/wavesice/datelist.txt
 rdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts      # directory with restarts
-ddir=/work/timill/RealTime_Models/TP4a0.12/expt_01.1/data # where ice_only forecast will be done
-wdir=/work/timill/RealTime_Models/TP4a0.12/expt_01.2/data # where waves_in_ice forecast will be done
-logdir=$fcdir/logs
+ddir=$TP4_REALTIME/expt_01.1/data # where ice_only restart is
+wdir=$TP4_REALTIME/expt_01.2/data # where to put restart
+logdir=$FORECAST/logs
 mkdir -p $logdir
 
 # TEXTFILE AND LOG
-out_restart=$fcdir/last_restart.txt
+out_restart=$FORECAST/last_restart.txt
 log=$logdir/tp_get_wav_log.txt
 
 if [ $(date +%A) == "Monday" ]

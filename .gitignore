@@ -19,8 +19,10 @@ forecast_scripts/test/*
 forecast_scripts/test_check/*
 forecast_scripts/out/*
 forecast_scripts/logs/*
-forecast_scripts/datelist.txt
-forecast_scripts/last_restart.txt
+forecast_scripts/ice_only/datelist.txt
+forecast_scripts/ice_only/last_restart.txt
+forecast_scripts/wavesice/datelist.txt
+forecast_scripts/wavesice/last_restart.txt
 forecast_scripts/loglog
 forecast_scripts/alert_waves/out/*
 #

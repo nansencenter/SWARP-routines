@@ -7,7 +7,7 @@
 email="gcmdnt90@gmail.com"
 # ===================================================================================
 
-datelist=$SWARP_ROUTINES/forecast_scripts/datelist.txt
+datelist=$SWARP_ROUTINES/forecast_scripts/wavesice/datelist.txt
 if [ -f $datelist ]
 then
    # set vbl's

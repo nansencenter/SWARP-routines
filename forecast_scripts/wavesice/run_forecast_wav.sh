@@ -18,7 +18,8 @@ fc_day_mi4f=$(printf '%.f' $(echo "$fc_days-0.5" | bc))
 # ================================================================================================
 
 # Get directories + paths
-source $SWARP_ROUTINES/hex_vars.src
+source $SWARP_ROUTINES/source_files/hex_vars.src
+print_info=0 # print info
 
 # CREATING THE LOG
 logdir=$FORECAST/logs
@@ -30,46 +31,66 @@ then
 fi
 touch $log
 
-# CREATING THE DATELIST 
-datelist=$FORECAST/datelist.txt
-
-if [ -f "$datelist" ]
-then
-   rm $datelist
-fi
-
-touch $datelist
-echo $(date +%Y%m%d)                         >> $datelist
-echo $(date +%Y-%m-%d)                       >> $datelist
-echo $(date +%Y)                             >> $datelist
-echo $(date +%m)                             >> $datelist
-echo $(date +%d)                             >> $datelist
+cday=$(date +%Y%m%d)
+cyear=$(date +%Y)
 jday0=$(date +%j)
-jday_today0=$(expr $jday0 - 1)                                 # julian day of TOPAZ (0=1st Jan)
-jday_today=$(printf '%3.3d' $jday_today0)
-echo $jday_today                             >> $datelist
+jday_today0=$(expr $jday0 - 1)            # julian day of TOPAZ (0=1st Jan)
+jday_today=$(printf '%3.3d' $jday_today0) # 3 digits
+rundir=$TP4_REALTIME/../results/TP4a0.12/wavesice/work/$cday # where the last_restart.txt will end up
+
+mkdir -p $rundir
+mkdir -p $rundir/info
+
+# CREATING THE DATELIST
+# NB don't make one in $FORECAST since both
+# ice-only and waves-ice FC's use it
+# - if they run at the same time it gets messed up
+datelist=$rundir/info/datelist.txt
+echo $cday              >  $datelist
+echo $(date +%Y-%m-%d)  >> $datelist
+echo $cyear             >> $datelist
+echo $(date +%m)        >> $datelist
+echo $(date +%d)        >> $datelist
+echo $jday_today        >> $datelist
+cp $datelist $FORECAST/wavesice
+
 final_day=$(echo "$jday_today + $fc_days" | bc)    
 final_day_mi4f=$(expr $jday_today + $fc_day_mi4f)
-cyear=$(cat $datelist | sed '3!d')
-cday=$(cat $datelist | sed '1!d')
 
-rundir=$TP4_REALTIME/../results/TP4a0.12/wavesice/work/$cday # where the last_restart.txt will end up
-mkdir -p $rundir
-cd $rundir
-mkdir -p ./info
-cp $datelist ./info
+if [ $print_info -eq 1 ]
+then
+   echo Datelist:
+   echo $datelist
+   echo Contents:
+   cat $datelist
+   echo " "
+fi
 
 # location of final forecast output
 final_dir="$rundir/final_output/"
+cd $rundir
 
 #################################################################
 # CHECKS BEFORE RUNNING (QUIT IF THEY ARE FAILED):
 
-# 0. check if ice_only forecast has run
+# 0A. check if ice_only forecast has run
 icedir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday/final_output # where the ice_only product goes
 if [ ! -f $icedir/SWARP*.nc ]
 then
-   echo "ice only FC hasn't run yet - stopping (no restart)"
+   echo "ice-only FC hasn't run yet - stopping (no restart)"
+   exit
+fi
+
+# 0B. check if ice-only forecast is already running
+msg=`$qstat | grep TP4x011fc`
+if [ ${#msg} -ne 0 ]
+then
+   if [ $print_info -eq 1 ]
+   then
+      echo "ice-only FC is still running"
+      echo "pbs job message:"
+      echo $msg
+   fi
    exit
 fi
 
@@ -77,7 +98,10 @@ fi
 wavfil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
 if [ ! -f "$wavfil" ]
 then
-   # echo "wave forecast file $wavfil not present - stopping"
+   if [ $print_info -eq 1 ]
+   then
+      echo "wave forecast file $wavfil not present - stopping"
+   fi
    exit
 fi
 
@@ -86,7 +110,10 @@ if [ -f $final_dir/SWARP* ]
 then
    cd $final_dir
    ofil=`echo SWARP*`
-   # echo "$final_dir/$ofil exists already - not running"
+   if [ $print_info -eq 1 ]
+   then
+      echo "$final_dir/$ofil exists already - not running"
+   fi
    exit
 fi
 
@@ -94,10 +121,18 @@ fi
 msg=`$qstat | grep TP4x012fc`
 if [ ${#msg} -ne 0 ]
 then
-   # echo "forecast is already running"
-   # echo "pbs job message:"
-   # echo $msg
+   if [ $print_info -eq 1 ]
+   then
+      echo "forecast is already running"
+      echo "pbs job message:"
+      echo $msg
+   fi
    exit
+fi
+
+if [ $print_info -eq 1 ]
+then
+   echo "continuing"
 fi
 #################################################################
 
@@ -110,17 +145,20 @@ cd $rundir                                                     # just in case we
 out_restart=$rundir/info/last_restart.txt
 
 rname=$(cat $out_restart)
-
 rgen=${rname:0:3}                                              # eg TP4
 ryear=${rname:10:4}                                            # year of restart file
 rday=${rname:15:3}                                             # julian day of restart file (1 Jan = 0)
+if [ $print_info -eq 1 ]
+then
+   echo "Restart name: $rname"
+   echo "Restart year: $ryear"
+   echo "Restart day:  $rday"
+fi
 
 #################################################################
 
 # MAKE INFILE 
 echo "Launching make_infile4forecast_wav @ $date"                  >> $log
-
-
 
 # print to screen - work out if last day of forecast is in a different year to current year
 ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year

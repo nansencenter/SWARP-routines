@@ -31,31 +31,38 @@ then
 fi
 touch $log
 
-# CREATING THE DATELIST 
-datelist=$SWARP_ROUTINES/forecast_scripts/datelist.txt
+cday=$(date +%Y%m%d)
+cyear=$(date +%Y)
+jday0=$(date +%j)
+jday_today0=$(expr $jday0 - 1)            # julian day of TOPAZ (0=1st Jan)
+jday_today=$(printf '%3.3d' $jday_today0) # 3 digits
+rundir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday # where the last_restart.txt will end up
 
-if [ -f "$datelist" ]
-then
-   rm $datelist
-fi
-
-tday=$(date +%Y%m%d)
-touch $datelist
-echo $tday                 >> $datelist
-echo $(date +%Y-%m-%d)     >> $datelist
-echo $(date +%Y)           >> $datelist
-echo $(date +%m)           >> $datelist
-echo $(date +%d)           >> $datelist
-jday0=$(date +%j)                             # julian day of today (1=1st Jan => need to change)
-jday_today0=$(expr $jday0 - 1)                                 # julian day of TOPAZ (0=1st Jan)
-jday_today=$(printf '%3.3d' $jday_today0)
-echo $jday_today           >> $datelist
-
-rundir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday # where the last_restart.txt will end up
 mkdir -p $rundir
-cd $rundir
-mkdir -p ./info
-cp $datelist ./info
+mkdir -p $rundir/info
+
+# CREATING THE DATELIST
+# NB don't make one in $FORECAST since both
+# ice-only and waves-ice FC's use it
+# - if they run at the same time it gets messed up
+datelist=$rundir/info/datelist.txt
+echo $cday              >  $datelist
+echo $(date +%Y-%m-%d)  >> $datelist
+echo $cyear             >> $datelist
+echo $(date +%m)        >> $datelist
+echo $(date +%d)        >> $datelist
+echo $jday_today        >> $datelist
+cp $datelist $FORECAST/ice_only
+
+print_info=1
+if [ $print_info -eq 1 ]
+then
+   echo Datelist:
+   echo $datelist
+   echo Contents:
+   cat $datelist
+   echo " "
+fi
 
 ##############################################################
 # Checks before run:
@@ -63,7 +70,10 @@ cp $datelist ./info
 # 1. check if forecast has already run
 if [ -f $rundir/final_product/SWARP*.nc ]
 then
-   # echo "Ice-only FC has already run - stopping"
+   if [ $print_info -eq 1 ]
+   then
+      echo "Ice-only FC has already run - stopping"
+   fi
    exit
 fi
 
@@ -71,9 +81,12 @@ fi
 msg=`$qstat | grep TP4x011fc`
 if [ ${#msg} -ne 0 ]
 then
-   # echo "forecast is already running - stopping"
-   # echo "pbs job message:"
-   # echo $msg
+   if [ $print_info -eq 1 ]
+   then
+      echo "Ice-only FC is already running - stopping"
+      echo "pbs job message:"
+      echo $msg
+   fi
    exit
 fi
 ###################################################################
@@ -85,10 +98,7 @@ $SWARP_ROUTINES/forecast_scripts/ice_only/topaz_get_restart.sh          # get la
 # GETTING INFOS FROM LAST_RESTART
 cd $rundir  # just in case we've changed dir in script
 out_restart=info/last_restart.txt
-
-year_today=$(cat $datelist | sed '3!d')
 rname=$(cat $out_restart)
-
 rgen=${rname:0:3}    # eg TP4
 ryear=${rname:10:4}  # year of restart file
 rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
@@ -100,7 +110,14 @@ echo "Launching make_infile4forecast @ $date"                  >> $log
 
 
 # if last restart was in different year to this year:
-if [ $year_today -ne $ryear ]
+if [ $print_info -eq 1 ]
+then
+   echo current year: $cyear
+   echo restart year: $ryear
+   echo restart name: $rname
+fi
+
+if [ $cyear -ne $ryear ]
 then
    jday_today=$(expr $jday_today + $rday + 1) # integer
    jday_today=$(printf '%3.3d' $jday_today)   # 3 digits (compare to rday)
@@ -109,13 +126,13 @@ fi
 final_day=$(expr $jday_today + $fc_days)
 
 # print to screen - work out if last day of forecast is in a different year to current year
-ndays=$(date --date="${year_today}-12-31" +%j)                 # days in current year
+ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year
 if [ $final_day -gt $((ndays-1)) ]
 then
    fc_final_day=`expr $final_day - $ndays`
-   fc_year=`expr $year_today + 1`
+   fc_year=`expr $cyear + 1`
 else
-   fc_year=$year_today
+   fc_year=$cyear
 fi
 echo "Restart files of ${ryear}_$rday"
 echo "Forecast final day ${fc_year}_${final_day}"
@@ -152,10 +169,9 @@ then
 fi
 
 # clean log file - else mpijob.out gets too big
-rm log/*
+rm -f log/*
 
 # launch job
-echo $qsub
 $qsub pbsjob.sh
 #################################################################
 

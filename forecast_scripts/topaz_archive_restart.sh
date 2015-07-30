@@ -4,8 +4,10 @@
 #18-03-15 VERSION: creating a TP4restart LIST that will register the name of every restart already archived
 #I thought that reading through a text file would be faster than checking the whole work folder
 
+source $SWARP_ROUTINES/source_files/hex_vars.src
+
 # EMAIL ADDRESS FOR THE WEEKLY UPDATE
-email_list=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
+email_list=$FORECAST/fc_alert_email.txt
 # =========================================================================================================
 email=$(cat $email_list)
 # =========================================================================================================
@@ -13,7 +15,7 @@ email=$(cat $email_list)
 # DIRECTORIES AND TIME DEFINITION
 rdir=/work/fanf/TOPAZ_RT 
 bdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts 
-fcldir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs
+fcldir=$FORECAST/logs
 cyear=$(date +%Y) 
 pyear=$(expr $cyear - 1)
 tday=$(date +%Y%m%d-%A)

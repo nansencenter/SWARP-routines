@@ -1,22 +1,23 @@
 #!/bin/bash
 #Get latest restart from the internal repo to the working dir
 
+source $SWARP_ROUTINES/source_files/hex_vars.src
+
 # EMAIL ADDRESS
-address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
+address=$FORECAST/fc_alert_email.txt
 # ====================================================================================
 email=$(cat $address)
 # ====================================================================================
 
 # DIRECTORIES AND DATELIST
-fcdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
-datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist.txt
+datelist=$FORECAST/ice_only/datelist.txt
 rdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts      # directory with restarts
-ddir=/work/timill/RealTime_Models/TP4a0.12/expt_01.1/data # location of TP4a0.12 directory (where forecast will be done)
-logdir=$fcdir/logs
+ddir=$TP4_REALTIME/expt_01.1/data # location of TP4a0.12 directory (where forecast will be done)
+logdir=$FORECAST/logs
 mkdir -p $logdir
 
 # TEXTFILE AND LOG
-out_restart=$fcdir/last_restart.txt
+out_restart=$FORECAST/ice_only/last_restart.txt
 log=$logdir/tp_get_log.txt
 
 touch $log
@@ -77,7 +78,8 @@ echo " "                                                          >> $log
 echo $f > $out_restart
 
 # CREATING DAILY INFO DIR
-idir=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work/$(cat $datelist | sed '1!d')/info
+tday=$(cat $datelist | sed '1!d')
+idir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday/info
 mkdir -p $idir
 mv $out_restart $idir/
 

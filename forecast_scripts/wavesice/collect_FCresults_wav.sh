@@ -2,7 +2,7 @@
 # This script will collect and archive the whole directory with the final products of the SWARP model
 
 # AS LONG AS THE OTHER SCRIPTS WORK I DON'T SEE HOW THIS SIMPLE ONE COULD FAIL.
-#TODO FOR FUTURE ALLERTS?
+#TODO FOR FUTURE ALERTS?
 
 tday=$1
 tday_long=`date --date=$tday +%Y-%m-%d`
