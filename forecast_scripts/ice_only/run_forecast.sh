@@ -68,7 +68,7 @@ fi
 # Checks before run:
 
 # 1. check if forecast has already run
-if [ -f $rundir/final_product/SWARP*.nc ]
+if [ -f $rundir/final_output/SWARP*.nc ]
 then
    if [ $print_info -eq 1 ]
    then
