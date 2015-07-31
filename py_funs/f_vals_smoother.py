@@ -3,6 +3,10 @@ def smoother(fvals_array):
 	fvals = np.array(fvals_array,dtype=float)
 	n = 0
 	N = len(fvals)
+	if 1 not in fvals and 2 in fvals:
+		fvals[fvals==2] = 1
+	if 0 not in fvals and 2 in fvals:
+		fvals[fvals==2] = 0
 	if len(fvals[fvals==1])!=0 and len(fvals[fvals==0])!=0:
 		while n < N:
 			en = fvals[n]
