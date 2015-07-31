@@ -8,6 +8,8 @@ import glob
 import numpy as np
 import subprocess
 import shutil
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
