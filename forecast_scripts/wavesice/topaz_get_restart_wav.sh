@@ -18,7 +18,7 @@ logdir=$FORECAST/logs
 mkdir -p $logdir
 
 # TEXTFILE AND LOG
-out_restart=$FORECAST/last_restart.txt
+out_restart=$FORECAST/wavesice/last_restart.txt
 log=$logdir/tp_get_wav_log.txt
 
 if [ $(date +%A) == "Monday" ]

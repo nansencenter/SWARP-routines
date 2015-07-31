@@ -19,7 +19,7 @@ fc_day_mi4f=$(printf '%.f' $(echo "$fc_days-0.5" | bc))
 
 # Get directories + paths
 source $SWARP_ROUTINES/source_files/hex_vars.src
-print_info=0 # print info
+print_info=0 # print info to screen (or email in crontab)
 
 # CREATING THE LOG
 logdir=$FORECAST/logs

@@ -20,6 +20,7 @@ fc_days=5
 # get variables
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
+print_info=0 # print info to screen (or email in crontab)
 
 # CREATING THE LOG
 logdir=$SWARP_ROUTINES/forecast_scripts/logs
@@ -54,7 +55,6 @@ echo $(date +%d)        >> $datelist
 echo $jday_today        >> $datelist
 cp $datelist $FORECAST/ice_only
 
-print_info=1
 if [ $print_info -eq 1 ]
 then
    echo Datelist:
