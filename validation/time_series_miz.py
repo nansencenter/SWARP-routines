@@ -113,8 +113,8 @@ class reader:
 		year = self.year
 		# Read in OSI_SAF file
 		#outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
-		outdir = './data/'
-		ncfil = outdir+'ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
+		outdir = './data/OSI'
+		ncfil = outdir+'/ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
 		clon = 'lon'
 		clat = 'lat'
 		cconc = 'ice_conc'
@@ -185,8 +185,8 @@ class reader:
 		year = self.year
 		# Read TP4arch_wav
 		#outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
-		outdir = './data/'
-	 	ncfil = outdir+'TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
+		outdir = './data/MDL'
+	 	ncfil = outdir+'/TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
 	 	slon = 'longitude'
 	 	slat = 'latitude'
 	 	sconc = 'fice'
@@ -1520,8 +1520,8 @@ if mission == 'AOD':
 # ICP model test run
 if mission == 'ICP':
 	time0 = time.time()
-	dadate = '20150512'
-	model = reader('Model','20150512',hqm)
+	dadate = sys.argv[2] 
+	model = reader('Model',dadate,hqm)
 	XM,YM,ZM = model.X,model.Y,model.ZC
 	SDA = SDA_poly(XM,YM,ZM)
 	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
@@ -1535,8 +1535,8 @@ if mission == 'ICP':
 	poly_list=[]
 	for n,el in enumerate(over):
 		# classification of positive polygons
-		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
-		poly_list.append(aod)
+		sda=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(sda)
 	try:
 		n
 	except NameError:
@@ -1544,63 +1544,76 @@ if mission == 'ICP':
 	for n2,el in enumerate(under):
 		# classification of negative (n+1 for good enumeration)
 		n += 1 
-		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
-		poly_list.append(aod)
+		sda=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'ICP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(sda)
+
+	outdir = './outputs/ICP/'+str(dadate)
+	if not os.path.exists(outdir):
+		os.mkdir(outdir)
 	
-	bar_m_widths = sum(np.array(bar_m_widths))
-	bar_area = sum(np.array(bar_area))
-	bar_perim = sum(np.array(bar_perim))
-	gre_m_widths = sum(np.array(gre_m_widths))
-	gre_area = sum(np.array(gre_area))
-	gre_perim = sum(np.array(gre_perim))
-	lab_m_widths = sum(np.array(lab_m_widths))
-	lab_area = sum(np.array(lab_area))
-	lab_perim = sum(np.array(lab_perim))
-	les_m_widths = sum(np.array(les_m_widths))
-	les_area = sum(np.array(les_area))
-	les_perim = sum(np.array(les_perim))
-	ncb_m_widths = sum(np.array(ncb_m_widths))
-	ncb_area = sum(np.array(ncb_area))
-	ncb_perim = sum(np.array(ncb_perim))			
-	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
-	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
-	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
-	les_stats = [les_m_widths,les_area,les_perim,dadate]
-	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	reg_repo = outdir+'/Barents_Kara_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/ICP/'+str(dadate)+'/Barents_Kara_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), bar_poly_stat)))
+	f.close()
 	
+	reg_repo = outdir+'/Greenland_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/ICP/'+str(dadate)+'/Greenland_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), gre_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/Labrador_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/ICP/'+str(dadate)+'/Labrador_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), lab_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/Laptev_East_Siberian_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/ICP/'+str(dadate)+'/Laptev_East_Siberian_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), les_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/North_Canada_Beaufort_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/ICP/'+str(dadate)+'/North_Canada_Beaufort_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), ncb_poly_stat)))
+	f.close()
+
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
 
 # DFP model
 if mission == 'DFP':
 	time0 = time.time()
-	dadate = '20150512'
-	model = reader('Model','20150512',hqm)
+	dadate = sys.argv[2] 
+	model = reader('Model',dadate,hqm)
 	XM,YM,ZM = model.X,model.Y,model.ZD
 	SDA = SDA_poly(XM,YM,ZM)
 	over,under,DN,BM1,BM2 = SDA.over,SDA.under,SDA.DN,SDA.B1,SDA.B2
-	
-	bar_m_widths = []
-	bar_area = []
-	bar_perim = []
-	gre_m_widths = []
-	gre_area = []
-	gre_perim = []
-	lab_m_widths = []
-	lab_area = []
-	lab_perim = []
-	les_m_widths = []
-	les_area = []
-	les_perim = []
-	ncb_m_widths = []
-	ncb_area = []
-	ncb_perim = []
-	
+		
+	bar_poly_stat = []
+	gre_poly_stat = []
+	lab_poly_stat = []
+	les_poly_stat = []
+	ncb_poly_stat = []
+
 	poly_list=[]
 	for n,el in enumerate(over):
 		# classification of positive polygons
-		aod=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
-		poly_list.append(aod)
+		sda=poly_stat(el,'1',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(sda)
 	try:
 		n
 	except NameError:
@@ -1608,30 +1621,53 @@ if mission == 'DFP':
 	for n2,el in enumerate(under):
 		# classification of negative (n+1 for good enumeration)
 		n += 1 
-		aod=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
-		poly_list.append(aod)
+		sda=poly_stat(el,'0',BM2,BM1,DN,XM,YM,n,'DFP',basemap=hqm,PLOT=None,STCH=True)
+		poly_list.append(sda)
+
+	outdir = './outputs/DFP/'+str(dadate)
+	if not os.path.exists(outdir):
+		os.mkdir(outdir)
 	
-	bar_m_widths = sum(np.array(bar_m_widths))
-	bar_area = sum(np.array(bar_area))
-	bar_perim = sum(np.array(bar_perim))
-	gre_m_widths = sum(np.array(gre_m_widths))
-	gre_area = sum(np.array(gre_area))
-	gre_perim = sum(np.array(gre_perim))
-	lab_m_widths = sum(np.array(lab_m_widths))
-	lab_area = sum(np.array(lab_area))
-	lab_perim = sum(np.array(lab_perim))
-	les_m_widths = sum(np.array(les_m_widths))
-	les_area = sum(np.array(les_area))
-	les_perim = sum(np.array(les_perim))
-	ncb_m_widths = sum(np.array(ncb_m_widths))
-	ncb_area = sum(np.array(ncb_area))
-	ncb_perim = sum(np.array(ncb_perim))			
-	bar_stats = [bar_m_widths,bar_area,bar_perim,dadate]
-	gre_stats = [gre_m_widths,gre_area,gre_perim,dadate]
-	lab_stats = [lab_m_widths,lab_area,lab_perim,dadate]
-	les_stats = [les_m_widths,les_area,les_perim,dadate]
-	ncb_stats = [ncb_m_widths,ncb_area,ncb_perim,dadate]
+	reg_repo = outdir+'/Barents_Kara_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/DFP/'+str(dadate)+'/Barents_Kara_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), bar_poly_stat)))
+	f.close()
 	
+	reg_repo = outdir+'/Greenland_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/DFP/'+str(dadate)+'/Greenland_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), gre_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/Labrador_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/DFP/'+str(dadate)+'/Labrador_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), lab_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/Laptev_East_Siberian_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/DFP/'+str(dadate)+'/Laptev_East_Siberian_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), les_poly_stat)))
+	f.close()
+
+	reg_repo = outdir+'/North_Canada_Beaufort_sea'
+	if not os.path.exists(reg_repo):
+		os.mkdir(reg_repo)
+
+	f = open('./outputs/DFP/'+str(dadate)+'/North_Canada_Beaufort_sea/analysis.txt', 'w')
+	f.write('\n'.join(map(lambda x: str(x), ncb_poly_stat)))
+	f.close()
+
 	elapsedtime = time.time() - time0
 	print str(dadate)+' done in ',elapsedtime
 
