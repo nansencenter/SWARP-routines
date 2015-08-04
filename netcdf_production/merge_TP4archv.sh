@@ -25,7 +25,8 @@ odir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday/final_output
 #########################################################################
 
 cd $dir0
-mkdir -p tmp
+rm -r -f  tmp
+mkdir tmp
 
 # LOG
 log=$SWARP_ROUTINES/forecast_scripts/logs/$lognm
