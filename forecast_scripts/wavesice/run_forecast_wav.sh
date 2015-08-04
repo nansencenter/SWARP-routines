@@ -9,6 +9,13 @@
 # FORECAST DAYS
 # ================================================================================================
 
+thour=`date +%H`
+if [ $thour -lt 4 ]
+then
+   # usually runs at 5.10
+   exit
+fi
+
 fc_days=2.5           
 
 # INSIDE INFILE.MAL.OUTER THE HALF DAY IS ALREADY CALCULATED
@@ -77,7 +84,10 @@ cd $rundir
 icedir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday/final_output # where the ice_only product goes
 if [ ! -f $icedir/SWARP*.nc ]
 then
-   echo "ice-only FC hasn't run yet - stopping (no restart)"
+   if [ $print_info -eq 1 ]
+   then
+      echo "ice-only FC hasn't run yet - stopping (no restart)"
+   fi
    exit
 fi
 
@@ -105,7 +115,7 @@ then
    exit
 fi
 
-# 2. check if forecast has already run and finished
+# 2. check if wave-ice FC has already run and finished
 if [ -f $final_dir/SWARP* ]
 then
    cd $final_dir
@@ -117,7 +127,7 @@ then
    exit
 fi
 
-# 3. check if forecast is already running
+# 3. check if wave-ice FC is already running
 msg=`$qstat | grep TP4x012fc`
 if [ ${#msg} -ne 0 ]
 then
