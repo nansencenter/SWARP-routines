@@ -108,7 +108,6 @@ rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
 # MAKE INFILE 
 echo "Launching make_infile4forecast @ $date"                  >> $log
 
-
 # if last restart was in different year to this year:
 if [ $print_info -eq 1 ]
 then
@@ -148,6 +147,7 @@ then
    sed '17d' $infile >> infile.in.replace
    mv infile.in.replace $infile
 fi
+cp $infile $rundir/info
 #################################################################
 
 # Launch job

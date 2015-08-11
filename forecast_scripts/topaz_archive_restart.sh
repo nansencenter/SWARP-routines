@@ -55,49 +55,49 @@ eye=`find ${rdir} -name $pckg`                                       # gathering
 eye=( $eye )                                                         # string into array
 baselist=""                                                          # empty archive variable
 for el in "${eye[@]}"                                                # analizing one by one the restart files
-	do
-	if [ -f $el ]                                                # checking their existence
-	then
-		afil=$(basename $el)                                 # *.a filename without full path
-		base=${afil%%_mem001.a}                              # cutting _mem001.a
-		dcre=${base#TP4restart}                              # cutting TP4restart
-		bfil=$rdir/${base}_mem001.b
-		ufil=$rdir/${base}ICE.uf
-		ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
-
-		if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST
-		then
-			echo "$base CHECKED" >> $TP4rlog             # file present -> check confirmation
-		else 
-			echo "$base" >> $TP4rlist                    # file not present -> update the LIST                      
-                        sort $TP4rlist -o $TP4rlist                  # sort the list
-			baselist="$baselist $base"                   # adding the file group to the transfer variable
-		fi
-	else
-		echo "MISSING RESTART FILES in $rdir" >> $TP4rlog
-                echo "Check if the restarts are still uploaded on $rdir" >> $TP4rlog
-                mail -s "WARNING - TOPAZ restart files" $email < $TP4rlog
-		exit
-	fi
+   do
+   if [ -f $el ]                                                # checking their existence
+   then
+      afil=$(basename $el)                                 # *.a filename without full path
+      base=${afil%%_mem001.a}                              # cutting _mem001.a
+      dcre=${base#TP4restart}                              # cutting TP4restart
+      bfil=$rdir/${base}_mem001.b
+      ufil=$rdir/${base}ICE.uf
+      ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
+      
+      if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST
+      then
+      	echo "$base CHECKED" >> $TP4rlog             # file present -> check confirmation
+      else 
+      	echo "$base" >> $TP4rlist                    # file not present -> update the LIST                      
+                 sort $TP4rlist -o $TP4rlist                  # sort the list
+      	baselist="$baselist $base"                   # adding the file group to the transfer variable
+      fi
+   else
+      echo "MISSING RESTART FILES in $rdir" >> $TP4rlog
+         echo "Check if the restarts are still uploaded on $rdir" >> $TP4rlog
+         mail -s "WARNING - TOPAZ restart files" $email < $TP4rlog
+      exit
+   fi
 done
 
 # ARCHIVING OPERATION
 if [ -z "$baselist" ]                                             # if baselist is empty there are no new restart files
 then
-     echo " NO MODIFICATIONS - ARCHIVE UP TO DATE " >> $TP4rlog
+   echo " NO MODIFICATIONS - ARCHIVE UP TO DATE " >> $TP4rlog
 else
-     for base in $baselist
-     do
-        afil=${base}_mem001.a
-        bfil=${base}_mem001.b
-        ufil=${base}ICE.uf
-        dcre=${base#TP4restart}                                   # cutting TP4restart
-        ryear=${dcre%%_*}                                         # keeping the year, we want to distinguish between ops year and file year
-        tfil=${bdir}/$ryear/$base.tar.gz                          # tar file to create
-        tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil              # remove /work/fanf/TOPAZ_RT from inside tar file
-        echo "$base -ADDED" >> $TP4rlog
-     done
-     echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
+   for base in $baselist
+   do
+      afil=${base}_mem001.a
+      bfil=${base}_mem001.b
+      ufil=${base}ICE.uf
+      dcre=${base#TP4restart}                                   # cutting TP4restart
+      ryear=${dcre%%_*}                                         # keeping the year, we want to distinguish between ops year and file year
+      tfil=${bdir}/$ryear/$base.tar.gz                          # tar file to create
+      tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil              # remove /work/fanf/TOPAZ_RT from inside tar file
+      echo "$base -ADDED" >> $TP4rlog
+   done
+   echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
 
 cp $TP4rlog $fcldir/
