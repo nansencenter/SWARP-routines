@@ -23,6 +23,7 @@ if 1:
 bmap        = Basemap(projection='stere',lat_0=90.,lon_0=-45.,lat_ts=90.,height=100.e3,width=100.e3)
 lons,lats   = bmap(x0,y0,inverse=True)
 
+####################################################################################
 if 1:
    AI,fun_sol,stream = Leqs.get_MIZ_widths(lons,lats)
 else:
@@ -78,6 +79,7 @@ else:
    fun_sol  = Leqs.dirichlet_fund_soln(xy_coords2,fvals2)
    stream   = Leqs.dirichlet_stream_func(potential=fun_sol)
    AI       =  stream.get_contour_lengths()
+####################################################################################
 
 if 1:
    fig   = plt.figure()
