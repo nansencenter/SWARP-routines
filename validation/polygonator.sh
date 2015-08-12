@@ -10,9 +10,10 @@
 mdldir=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/wavesice
 osidir=/work/shared/nersc/msc/OSI-SAF
 wrkdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/data
+results=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/outputs
 
-startdate='20150525'
-enddate='20150526'
+startdate='20150501'
+enddate='20150731'
 sdj=$(date --date="$startdate" +%j)
 edj=$(date --date="$enddate" +%j)
 ndays=$(expr $edj - $sdj)
@@ -71,7 +72,15 @@ do
    echo ""
    if [ -f ${wrkdir}/OSI/* ] && ([ -f ${wrkdir}/MDL/*.a ] || [ -f ${wrkdir}/MDL/*.nc ])
    then
-      python time_series_miz.py "AOD" "${hdate}"
+      # for ICP
+      python time_series_miz.py "ICP" "${hdate}"
+      mv -f ${results}/ICP/* /work/users/timill/RESULTS/POLYGONS/ICP
+      ## for DFP
+      #python time_series_miz.py "DFP" "${hdate}"
+      #mv -f ${results}/DFP/* /work/users/timill/RESULTS/POLYGONS/DFP
+      ## for AOD
+      #python time_series_miz.py "AOD" "${hdate}"
+      #mv -f ${results}/AOD/* /work/users/timill/RESULTS/POLYGONS/AOD
    else
       echo "Data not available"
    fi

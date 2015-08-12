@@ -881,23 +881,23 @@ class poly_stat:
 		if self.region == 'Barents_Kara_sea':
 			bar_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
 												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
-												str(self.L_perim), str(self.E_perim)])
+												str(self.L_perim), str(self.E_perim), str(dadate)])
 		elif self.region == 'Greenland_sea':
 			gre_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
 												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
-												str(self.L_perim), str(self.E_perim)])
+												str(self.L_perim), str(self.E_perim), str(dadate)])
 		elif self.region == 'Labrador_sea':
 			lab_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
 												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
-												str(self.L_perim), str(self.E_perim)])
+												str(self.L_perim), str(self.E_perim), str(dadate)])
 		elif self.region == 'Laptev_East_Siberian_sea':
 			les_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
 												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
-												str(self.L_perim), str(self.E_perim)])
+												str(self.L_perim), str(self.E_perim), str(dadate)])
 		elif self.region == 'North_Canada_Beaufort_sea':
 			ncb_poly_stat.append([str(self.name), str(self.polygon_status), str(self.polygon_class), str(self.centroid_longitude), \
 												str(self.centroid_latitude), str(self.L_width), str(self.E_width), str(self.L_area), str(self.E_area), \
-												str(self.L_perim), str(self.E_perim)])
+												str(self.L_perim), str(self.E_perim), str(dadate)])
 
 	def ij2xy(self,cont,X,Y):
 		# changes indexes to x and y (NOTE i and j are inverted -> i = [:,1], j = [:,0])

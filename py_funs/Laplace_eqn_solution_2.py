@@ -1079,12 +1079,26 @@ def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap
 		if pobj is not None:
 			figname	= outdir+'/test_Laplacian_planar'+fstr+'.png'
 	else:
-			# spherical stuff
-			AI = stream.get_contour_lengths(pobj=pobj,bmap=basemap,show=False,\
-			test_function=selector_function,\
-			func_vals_orig=1*fun_sol.func_vals)
-			if pobj is not None:
-				figname	= outdir+'/'+str(name)+'_Laplacian_spherical'+fstr+'.png'
+		# spherical stuff
+		AI = stream.get_contour_lengths(pobj=pobj,bmap=basemap,show=False,\
+		test_function=selector_function,\
+		func_vals_orig=1*fun_sol.func_vals)
+
+		# Here starts the script from python_tutorials that hopefully will work
+      # it didn't
+ 		#fig   = plt.figure()
+ 		#ax    = fig.add_subplot(111)
+ 		#fun_sol.plot_solution(plot_boundary=False,pobj=[fig,ax],show=False)
+ 		##   
+ 		#for cc in AI.xy_contours:
+ 		# 	xx,yy = np.array(cc).transpose()
+ 		# 	ax.plot(xx/1.e3,yy/1.e3,'k',linewidth=2)
+ 		#ax.title.set_text('median contour length (km): '+str(AI.length_median/1.e3))
+ 		#ax.set_aspect('equal')
+ 		# End of script from python tutorials
+
+	if pobj is not None:
+		figname	= outdir+'/'+str(name)+'_Laplacian_spherical'+fstr+'.png'
 		
 	if pobj is not None:
 		ttl	= 'Median length (km) '+str(np.round(10.*AI.length_median/1.e3)/10.)
