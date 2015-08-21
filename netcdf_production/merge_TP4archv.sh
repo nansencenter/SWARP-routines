@@ -4,6 +4,7 @@
 # NO NEED FOR A MAIL ALERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
+email=`cat $SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt`
 
 #########################################################################
 # inputs are start date of forecast
@@ -20,8 +21,8 @@ else
    # tday_long=`date --date="$2" +%Y-%m-%d`  # start date of forecast YYYY-MM-DD
    lognm=merge_log.txt
 fi
-dir0=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday/netcdf
-odir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$tday/final_output
+dir0=$TP4_REALTIME_RES/ice_only/work/$tday/netcdf
+odir=$TP4_REALTIME_RES/ice_only/work/$tday/final_output
 #########################################################################
 
 cd $dir0
@@ -148,8 +149,17 @@ mv $ofil $odir
 Ncorrect=41
 if [ $Nfiles -ne $Ncorrect ]
 then
-   echo Wrong number of records
-   echo "($Nfiles -  should be $Ncorrect)"
-   # TODO email alert for this case (eg crash, or too short wall time)
+   efil=swarp_tmp.txt
+   echo Warning: merge_TP4archv.sh           >  $efil
+   echo Wrong number of records in $ofil     >> $efil
+   echo "($Nfiles -  should be $Ncorrect)"   >> $efil
+   mail -s "WARNING: ice-only final product faulty" $email < $efil
+   rm $efil
+else
+   efil=swarp_tmp.txt
+   echo Confirmation: merge_TP4archv.sh                  >  $efil
+   echo Correct number of records ($Ncorrect) in $ofil   >> $efil
+   mail -s "Ice-only final product OK" $email < $efil
+   rm $efil
 fi
 ###########################################################################################

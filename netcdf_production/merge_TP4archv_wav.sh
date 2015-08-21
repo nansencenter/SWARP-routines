@@ -1,7 +1,8 @@
 #!/bin/bash
 # script to extract some variables from a netcdf file
 
-# NO NEED FOR A MAIL ALLERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
+source $SWARP_ROUTINES/source_files/hex_vars.src
+email=`cat $SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt`
 
 #########################################################################
 # inputs are start date of forecast
@@ -21,8 +22,8 @@ fi
 #########################################################################
 
 #########################################################################
-dir0=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/netcdf
-odir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/final_output  
+dir0=$TP4_REALTIME_RES/wavesice/work/$tday/netcdf
+odir=$TP4_REALTIME_RES/wavesice/work/$tday/final_output  
 #########################################################################
 
 #extract start date/time of forecast
@@ -32,7 +33,7 @@ cd $dir0
 mkdir -p tmp
 
 # LOG
-log=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/logs/$lognm
+log=$SWARP_ROUTINES/forecast_scripts/logs/$lognm
 if [ -f "$log" ]
 then
    rm $log
@@ -143,8 +144,17 @@ mv $ofil $odir
 Ncorrect=11
 if [ $Nfiles -ne $Ncorrect ]
 then
-   echo Wrong number of records
-   echo "($Nfiles -  should be $Ncorrect)"
-   # TODO email alert for this case (eg wrong compiler flag, or crash, or too short wall time)
+   efil=swarp_tmp.txt
+   echo Warning: merge_TP4archv_wav.sh       >  $efil
+   echo Wrong number of records in $ofil     >> $efil
+   echo "($Nfiles -  should be $Ncorrect)"   >> $efil
+   mail -s "WARNING: waves-ice final product faulty" $email < $efil
+   rm $efil
+else
+   efil=swarp_tmp.txt
+   echo Confirmation: merge_TP4archv_wav.sh              >  $efil
+   echo Correct number of records ($Ncorrect) in $ofil   >> $efil
+   mail -s "Waves-ice final product OK" $email < $efil
+   rm $efil
 fi
 ###########################################################################################

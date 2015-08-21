@@ -185,6 +185,7 @@ echo "Forecast final day ${fc_year}_${fc_final_day}"            >> $log
 $SWARP_ROUTINES/forecast_scripts/wavesice/make_infile4forecast_wav.sh $rgen $ryear $rday $final_day_mi4f
 xdir=$TP4_REALTIME/expt_01.2
 infile=$xdir/infile.in
+cp $infile $rundir/info
 
 ###############################################################
 
