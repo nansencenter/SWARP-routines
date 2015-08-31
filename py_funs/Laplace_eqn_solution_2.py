@@ -15,13 +15,13 @@ class dirichlet_fund_soln:
 
 			import numpy as np
 			import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-			import geometry_planar	as GP		# also in py_funs
-			import rtree.index			as Rindex
+			import geometry_planar	as GP 	  # also in py_funs
+			import rtree.index	as Rindex
 
 			#######################################################
 			self.func_vals = np.array(func_vals)
-			self.coords = 1*coords # no longer pointer to list from outside the function
-			pcoords = 1*coords
+			self.coords		= 1*coords # no longer pointer to list from outside the function
+			pcoords				= 1*coords
 
 			if (pcoords[0][0]!=pcoords[-1][0]) and (pcoords[0][1]!=pcoords[-1][1]):
 				# not periodic
@@ -34,17 +34,17 @@ class dirichlet_fund_soln:
 			# make shapely polygon
 			# (coords now has end-point repeated,
 			#	self.coords doesn't)
-			self.shapely_polygon = shgeom.Polygon(pcoords)
+			self.shapely_polygon	= shgeom.Polygon(pcoords)
 			#######################################################
 			
 			#######################################################
 			# want to go round curve anti-clockwise
-			x,y = GP.coords2xy(self.coords)
-			area = GP.area_polygon_euclidean(x,y)
-			self.area = abs(area)
+			x,y				= GP.coords2xy(self.coords)
+			area				= GP.area_polygon_euclidean(x,y)
+			self.area	= abs(area)
 
 			if area<0:
-				#print("Curve traversed in clockwise direction - reversing arrays' order")
+				print("Curve traversed in clockwise direction - reversing arrays' order")
 				self.func_vals = list(self.func_vals)
 				self.func_vals.reverse()
 				self.func_vals = np.array(self.func_vals)
@@ -69,7 +69,7 @@ class dirichlet_fund_soln:
 
 			# get points around boundary of polygon, then
 			# expand points by an amount related to the spacings of the coords
-			self.buffer_resolution = 16 # default buffer resolution
+			self.buffer_resolution	= 16 # default buffer resolution
 																	# (number of segments used to approximate a quarter circle around a point.)
 
 			# self.solve_exactly	= solve_exactly
@@ -78,11 +78,11 @@ class dirichlet_fund_soln:
 			if singularities is None:
 				get_sings = True
 			else:
-				get_sings = False
-				self.singularities = singularities 
-				self.number_of_singularities = len(self.singularities)
-				#print('Number of boundary points : '+str(self.number_of_points))
-				#print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
+				get_sings		       = False
+				self.singularities	       = singularities 
+				self.number_of_singularities   = len(self.singularities)
+				print('Number of boundary points : '+str(self.number_of_points))
+				print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
 
 			while get_sings:
 				# May need a couple of repetitions if too few singularities are found
@@ -92,13 +92,13 @@ class dirichlet_fund_soln:
 			self._solve_laplace_eqn()
 
 			# # evaluate error on boundary:
-			#print('\nCalculating error on the boundary...')
+			print('\nCalculating error on the boundary...')
 			self._eval_solution_boundary()
-			#print(str(self.boundary_error)+'\n')
+			print(str(self.boundary_error)+'\n')
 
 			if 0:
 				# evaluate normal derivative -> stream function on boundary:
-				#print('\nCalculating normal derivative -> stream function on the boundary...\n')
+				print('\nCalculating normal derivative -> stream function on the boundary...\n')
 				self._eval_derivs_boundary()
 
 			elif 1:
@@ -132,11 +132,11 @@ class dirichlet_fund_soln:
 			perimeter,resolution,\
 						spacings,tangent_dirn	= GP.curve_info(self.singularities)
 			for i,sing in enumerate(self.singularities):
-				an = self.sing_coeffs[i]
-				branch_dir = np.pi/2.+tangent_dirn[i]
-				atan2 = GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
-				atan2 = GP.make_arctan2_cts(atan2)
-				sfun = sfun+an*atan2
+				an					= self.sing_coeffs[i]
+				branch_dir	= np.pi/2.+tangent_dirn[i]
+				atan2			= GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
+				atan2			= GP.make_arctan2_cts(atan2)
+				sfun				= sfun+an*atan2
 
 			self.stream_func_bdy = sfun
 			return
@@ -145,19 +145,19 @@ class dirichlet_fund_soln:
 	#######################################################
 	def _get_singularities(self):
 
-			#print('Getting singularities...\n')
+			print('Getting singularities...\n')
 
-			bufres = self.buffer_resolution
-			eps = self.resolution/2.
-			poly = self.shapely_polygon.buffer(eps,resolution=bufres)
+			bufres	= self.buffer_resolution
+			eps			= self.resolution/2.
+			poly		= self.shapely_polygon.buffer(eps,resolution=bufres)
 
 			# put singularities (z_n) on the boundary of expanded polygon
-			self.singularities = list(poly.exterior.coords)
+			self.singularities	= list(poly.exterior.coords)
 
-			if self.singularities[0] == self.singularities[-1]:
-				self.singularities = self.singularities[:-1]
+			if self.singularities[0]==self.singularities[-1]:
+				self.singularities	= self.singularities[:-1]
 
-			self.number_of_singularities = len(self.singularities)
+			self.number_of_singularities	= len(self.singularities)
 
 			if 1:
 				# check the number of singularities:
@@ -165,9 +165,9 @@ class dirichlet_fund_soln:
 			else:
 				# accept automatically
 				do_check = False
-				#print('Warning: not checking singularities')
-				#print('Number of boundary points : '+str(self.number_of_points))
-				#print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
+				print('Warning: not checking singularities')
+				print('Number of boundary points : '+str(self.number_of_points))
+				print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
 
 			return do_check
 	#######################################################
@@ -182,8 +182,8 @@ class dirichlet_fund_soln:
 			N1 = self.number_of_singularities
 
 			# set limits for N1
-			Nthresh = 100
-			frac = 1.3
+			Nthresh	= 100
+			frac		= 1.3
 			# frac		= .2
 
 			# if self.solve_exactly:
@@ -197,32 +197,32 @@ class dirichlet_fund_soln:
 				# try to get N1~frac*N0, if frac*N0<Nthresh
 				Ntarget	= int(np.max([np.round(frac*N0),Nthresh]))
 
-			#print('\nChecking singularities...\n')
-			#print('Number of boundary points			: '+str(N0))
-			#print('Number of singularities				: '+str(N1))
-			#print('Desired number of singularities : '+str(Ntarget))
+			print('\nChecking singularities...\n')
+			print('Number of boundary points			: '+str(N0))
+			print('Number of singularities				: '+str(N1))
+			print('Desired number of singularities : '+str(Ntarget))
 
 			check_again = False
 			# NB this applies to the case where N1==Ntarget
 			# NB also if N1>=Ntarget, we can reduce N1 to Ntarget exactly in 1 go
 
-			if N1 > Ntarget:
+			if N1>Ntarget:
 
 				##########################################################################
 				# reduce the number of sing's by increasing spacing between points
-				coords = self.singularities
+				coords	= self.singularities
 				perimeter,resolution,\
 						spacings,tangent_dirn	= GP.curve_info(coords)
 				#
-				s_target = N1/float(Ntarget)*resolution # increase mean spacing between points
-				new_coords = [coords[0]]
+				s_target		= N1/float(Ntarget)*resolution # increase mean spacing between points
+				new_coords	= [coords[0]]
 				#
 				ss = 0
 				s0 = 0
 				s1 = s0+s_target
 				for n,c0 in enumerate(coords[1:]):
-						ss = ss + spacings[n]
-						if ss >= s1:
+						ss = ss+spacings[n]
+						if ss>=s1:
 							new_coords.append(c0)
 							s0 = s1
 							s1 = s0+s_target
@@ -234,71 +234,71 @@ class dirichlet_fund_soln:
 				self.number_of_singularities	= N2
 				#######################################################################
 
-				if N2 > Ntarget:
+				if N2>Ntarget:
 
 						#######################################################################
 						# delete a few points randomly from new_coords to get right number
-						Ndel = N2-Ntarget
+						Ndel	= N2-Ntarget
 						while Ndel>0:
-							idel = np.random.randint(N2)
+							idel	= np.random.randint(N2)
 							new_coords.remove(new_coords[idel])
-							N2 = len(new_coords)
-							Ndel = N2-Ntarget
+							N2		= len(new_coords)
+							Ndel	= N2-Ntarget
 
 						# update list of singularities
-						self.singularities = new_coords
-						self.number_of_singularities = N2
+						self.singularities						= new_coords
+						self.number_of_singularities	= N2
 						#######################################################################
 
 				##########################################################################
-				elif N2 < Ntarget:
+				elif N2<Ntarget:
 
 						#######################################################################
 						# get some more points from self.singularities
 						# *this adds more at start preferentially
 						# but shouldn't matter since it won't be too many
-						Nadd = Ntarget-N2
-						iadd = 0
+						Nadd	= Ntarget-N2
+						iadd	= 0
 
 						for coord in self.singularities:
 							if coord in new_coords:
 									# in there so now need to insert before next element of new_coords
-									iadd = iadd+1
+									iadd	= iadd+1
 							else:
 									# adds coord before new_coords[iadd]
-									new_coords = list(new_coords)
+									new_coords	= list(new_coords)
 									new_coords.insert(iadd,coord)
-									N2 = len(new_coords)
-									Nadd = Ntarget-N2
+									N2					= len(new_coords)
+									Nadd				= Ntarget-N2
 
 									# new element so still need to increase point at which to place 
-									iadd = iadd+1
+									iadd	= iadd+1
 
-							if Nadd == 0:
+							if Nadd==0:
 									break
 
 						# update list of singularities
-						self.singularities = new_coords
-						self.number_of_singularities = N2
+						self.singularities						= new_coords
+						self.number_of_singularities	= N2
 						#######################################################################
 
 				##########################################################################
-				#print('New number of singularities		: '+str(Ntarget)+'\n')
+				print('New number of singularities		: '+str(Ntarget)+'\n')
 				##########################################################################
 
-			elif N1 < Ntarget:
+			elif N1<Ntarget:
 
 				##########################################################################
 				# set up for another iteration
 				# TODO this may not be the best way
 				# - perhaps add more points on line segments of polygon
-				fac = int(np.ceil(1.2*Nmax/float(N1)))
-				self.buffer_resolution = fac*self.buffer_resolution
+				fac										= int(np.ceil(1.2*Nmax/float(N1)))
+				self.buffer_resolution	= fac*self.buffer_resolution
 
 				# need to call _get_singularities again,
 				# to reset the singularities and check them
 				check_again = True
-				#print('Trying again to get singularities (too few)...\n')
+				print('Trying again to get singularities (too few)...\n')
 				##########################################################################
 
 			return check_again
@@ -309,20 +309,20 @@ class dirichlet_fund_soln:
 			import numpy as np
 			import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
 
-			#print("\nSolving Laplace's equation...\n")
+			print("\nSolving Laplace's equation...\n")
 			Nc = len(self.coords)
 			Ns = len(self.singularities)
 			M	= np.zeros((Nc,Ns))
 			for m,c0 in enumerate(self.coords): # rows of matrix (eqn's)
 				p0 = shgeom.Point(c0)
 				for n,c1 in enumerate(self.singularities): # cols of matrix (var's)
-						p1 = shgeom.Point(c1)
-						R = p0.distance(p1)
-						M[m,n] = np.log(R)
+						p1			= shgeom.Point(c1)
+						R				= p0.distance(p1)
+						M[m,n]	= np.log(R)
 
 			# solve in a least squares sense:
 			# M*a=self.func_vals
-			self.sing_coeffs = np.linalg.lstsq(M,self.func_vals)[0]
+			self.sing_coeffs	= np.linalg.lstsq(M,self.func_vals)[0]
 			return
 	#######################################################
 
@@ -426,9 +426,9 @@ class dirichlet_fund_soln:
 			if 0:
 				nvec	= np.arange(Nx)
 				nc		= nvec[mask]
-				#print(mask)
-				#print(nc)
-				#print(Nx,len(nc))
+				print(mask)
+				print(nc)
+				print(Nx,len(nc))
 
 			F[mask]	= self.eval_solution_fast(x[mask],y[mask])
 			return F.reshape(shp)
@@ -512,22 +512,26 @@ class dirichlet_fund_soln:
 			from matplotlib import cm
 
 			if pobj is None:
-				# set a plot object if none exists
-				from matplotlib import pyplot as pobj
+		           # set a plot object if none exists
+			   from matplotlib import pyplot as plt
+                           fig = plt.figure()
+                           ax  = fig.add_subplot(1,1,1)
+                        else:
+                           fig,ax   = pobj
 			
 			if plot_boundary:
 				# just plot values of F at boundary
 				ss = self.get_arc_length()/1.e3 # km
-				pobj.plot(ss,self.func_vals_approx,'b')
-				pobj.plot(ss,self.func_vals,'.k')
+				ax.plot(ss,self.func_vals_approx,'b')
+				ax.plot(ss,self.func_vals,'.k')
 
-				x2,y2 = np.array(self.coords).transpose() # coords can be reversed
-				f2		= self.eval_solution_fast(x2,y2)
-				pobj.plot(ss,f2,'--r')
-				xc		= np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
-				yc		= np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
-				pobj.xlabel('arc length (km) from '+str((xc,yc))+' (km)')
-				pobj.ylabel('values of target function')
+				x2,y2  = np.array(self.coords).transpose() # coords can be reversed
+				f2     = self.eval_solution_fast(x2,y2)
+				ax.plot(ss,f2,'--r')
+				xc  = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
+				yc  = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
+				ax.set_xlabel('arc length (km) from '+str((xc,yc))+' (km)')
+				ax.set_ylabel('values of target function')
 
 			else:
 				# plot F everywhere
@@ -535,44 +539,44 @@ class dirichlet_fund_soln:
 				eps	= self.resolution/2.
 
 				# get a grid to plot F on:
-				x0 = bbox[0]
-				y0 = bbox[1]
-				x1 = bbox[2]
-				y1 = bbox[3]
-				x	= np.arange(x0,x1+eps,eps)
-				y	= np.arange(y0,y1+eps,eps)
-				xp = np.arange(x0-.5*eps,x1+1.5*eps,eps)/1.e3 #km
-				yp = np.arange(y0-.5*eps,y1+1.5*eps,eps)/1.e3
+				x0  = bbox[0]
+				y0  = bbox[1]
+				x1  = bbox[2]
+				y1  = bbox[3]
+				x   = np.arange(x0,x1+eps,eps)
+				y   = np.arange(y0,y1+eps,eps)
+				xp  = np.arange(x0-.5*eps,x1+1.5*eps,eps)/1.e3 #km
+				yp  = np.arange(y0-.5*eps,y1+1.5*eps,eps)/1.e3
 
 				# make pcolor/contour plot
 				nlevels	= 10
-				vmin		= self.func_vals.min()
-				vmax		= self.func_vals.max()
-				dv			= (vmax-vmin)/(nlevels)
-				vlev		= np.arange(vmin,vmax+dv,dv)
+				vmin	= self.func_vals.min()
+				vmax	= self.func_vals.max()
+				dv	= (vmax-vmin)/(nlevels)
+				vlev	= np.arange(vmin,vmax+dv,dv)
 				#
-				X,Y			= np.meshgrid(x,y)
-				F				= self.eval_solution(X,Y)
+				X,Y	= np.meshgrid(x,y)
+				F	= self.eval_solution(X,Y)
 				#
 				cmap	= cm.jet
 				cmap.set_bad(color='w')
-				Fm = np.ma.array(F,mask=np.isnan(F))
-				pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
-				pobj.colorbar()
-				pobj.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
+				Fm  = np.ma.array(F,mask=np.isnan(F))
+				PC  = ax.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
+				fig.colorbar(PC)
+				ax.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
 
 				# plot polygon boundary
 				x,y	= GP.coords2xy(self.coords)
-				pobj.plot(x/1.e3,y/1.e3,'k',linewidth=2)
+				ax.plot(x/1.e3,y/1.e3,'k',linewidth=2)
 
 				# plot singularities
 				x,y	= GP.coords2xy(self.singularities)
-				pobj.plot(x/1.e3,y/1.e3,'.k',markersize=5)
-				pobj.xlabel('x, km')
-				pobj.ylabel('y, km')
+				ax.plot(x/1.e3,y/1.e3,'.k',markersize=5)
+				ax.set_xlabel('x, km')
+				ax.set_ylabel('y, km')
 
 			if show:
-				pobj.show()
+				fig.show()
 
 			return
 	#######################################################
@@ -646,30 +650,32 @@ class dirichlet_fund_soln:
 
 			t0 = time.clock()
 			# evaluate solution on the grid
-			#print('evaluating solution on the grid...')
+			print('evaluating solution on the grid...')
 			X,Y			= np.meshgrid(xv,yv)
 			F				= self.eval_solution(X,Y)
 			t1 = time.clock()
-			#print('time taken (mins): '+str((t1-t0)/60.)+'\n')
+			print('time taken (mins): '+str((t1-t0)/60.)+'\n')
 
 			# get contours
-			#print('extracting isolines...\n')
+			print('extracting isolines...\n')
 			nlevels	= self.number_of_points/4
 			vmin			= self.func_vals.min()
 			vmax			= self.func_vals.max()
 			dv				= (vmax-vmin)/float(nlevels)
 			vlev			= np.arange(vmin,vmax+dv,dv)
-			#print(str(nlevels)+' contours, for isolines between '+\
-			#	str(vmin)+' and '+str(vmax))
+			print(str(nlevels)+' contours, for isolines between '+\
+						str(vmin)+' and '+str(vmax))
 			#
-			contours	= []
+			contours          = []
+                        Fmin              = np.nanmin(F)
+                        F2                = F.copy() 
+                        F2[np.isnan(F)]   = Fmin-1
 			for V in vlev:
-				B							= np.zeros(F.shape)
-				B[F>=V]				= 1.
-				B[np.isnan(F)] = np.nan
-				conts0				= msr.find_contours(B,.5)	# list of [ivec,jvec] arrays
-				conts					= []											# list of (xvec,yvec)
-
+				B		= np.zeros(F.shape)
+				B[F2>=V]	= 1.
+				B[np.isnan(F)]  = np.nan
+				conts0		= msr.find_contours(B,.5)  # list of [ivec,jvec] arrays
+				conts		= []                       # list of (xvec,yvec) 
 				##################################################
 				#convert conts0->conts, or (i,j)->(x,y)
 				for m2,cont in enumerate(conts0):
@@ -718,7 +724,7 @@ class dirichlet_fund_soln:
 				##################################################
 
 			t2 = time.clock()
-			#print('time taken (s): '+str(t2-t1)+'\n')
+			print('time taken (s): '+str(t2-t1)+'\n')
 
 			##################################################
 			# merge contours from different vlevels
@@ -735,7 +741,7 @@ class dirichlet_fund_soln:
 				# cmap2 = cm.coolwarm
 				cmap2 = cm.PRGn
 
-				#print('plotting isolines...\n')
+				print('plotting isolines...\n')
 				xb,yb = np.array(poly.boundary.coords).transpose()
 				pobj.plot(xb,yb,color='k',linewidth=2)
 
@@ -812,8 +818,8 @@ class dirichlet_fund_soln:
 						# some summarising info about "lengths"
 						lens											= np.array(lengths)
 						self.length_median				= np.median(lens)
-						#self.length_percentile05	= np.percentile(lens,5)
-						#self.length_percentile95	= np.percentile(lens,95)
+						self.length_percentile05	= np.percentile(lens,5)
+						self.length_percentile95	= np.percentile(lens,95)
 
 						return
 			###########################################################################################
@@ -823,7 +829,7 @@ class dirichlet_fund_soln:
 				# - use routines for sphere
 				import geometry_sphere as GS
 
-				#print('getting contour lengths on sphere...\n')
+				print('getting contour lengths on sphere...\n')
 
 				x,y						= np.array(self.coords).transpose()
 				lons,lats			= bmap(x,y,inverse=True)
@@ -862,7 +868,7 @@ class dirichlet_fund_soln:
 				# - just Euclidean routines
 				import geometry_planar as GP
 
-				#print('getting contour lengths in the plane...\n')
+				print('getting contour lengths in the plane...\n')
 
 				x,y				= np.array(self.coords).transpose()
 				area				= self.shapely_polygon.area
@@ -968,41 +974,62 @@ class multipole:
 ##################################################
 
 ##################################################
-def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap=None,xy_coords2=None):
+def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,xy_coords2=None):
 
 	# Apparently the modules have to been called again 
 	import time
 	import sys,os
 	import numpy as np 
 	from matplotlib import pyplot as plt
+  
+	sys.path.append('../py_funs')
 	import f_vals_smoother as smt	
-	
+
 	if xy_coords2 is None:
 		if basemap is not None:
-			x,y=basemap(lons,lats)
+                   x,y=basemap(lons,lats)
 		else:
-			#TODO make basemap
-			raise ValueError("make basemap")
-				
-		#TODO make xy_coords2=[(x1,y1),(x2,y2),...]
-		# with a conformal mapping (ie basemap with spherical earth)
-		# call basemap hqm
-	fvals2 = smt.smoother(fvals)
+                   from mpl_toolkits.basemap import Basemap
+                   import geometry_sphere as GS # from py_funs
+                   #
+                   R    = 6378273.# default is hyc2proj radius (m)
+                   AL   = GS.arc_length(lons,lats,R=R,radians=False,closed=True)
+                   P    = AL[-1]
+                   #
+                   latc = np.mean(lats)
+                   lonc = np.mean(lons)   # TODO 1st should make lon continuous around polygon
+                                          # - to make sure lonc is inside polygon
+                   basemap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
+                                     projection='stere',rsphere=[R,R],\
+                                     width=P,height=P)
+                   x,y  = basemap(lons,lats)
+
+                xy_coords2  = np.array([x,y]).transpose()
+        	
+        if fvals is not None:
+           fvals2 = smt.smoother(fvals)
+           CSopt  = 0
+        else:
+           # use principal components to set
+           # the function values on the boundary
+           PCA    = smt.pca_mapper(xy_coords2)
+           fvals2 = PCA.set_func_vals()
+           CSopt  = 1
 
 	t0 = time.clock()
-	#print('\n**********************************************************************')
-	#print('Calculating potential...\n')
+	print('\n**********************************************************************')
+	print('Calculating potential...\n')
 	fun_sol	= dirichlet_fund_soln(xy_coords2,fvals2)#,bmap=basemap)
 	t1 = time.clock()
-	#print('\nTime to get potential (s): '+str(t1-t0))
-	#print('**********************************************************************\n')
+	print('\nTime to get potential (s): '+str(t1-t0))
+	print('**********************************************************************\n')
 	
-	#print('\n**********************************************************************')
-	#print('Calculating stream function...\n')
+	print('\n**********************************************************************')
+	print('Calculating stream function...\n')
 	stream	= dirichlet_stream_func(potential=fun_sol)
 	t2 = time.clock()
-	#print('\nTime to get stream function (s): '+str(t2-t1))
-	#print('**********************************************************************\n')
+	print('\nTime to get stream function (s): '+str(t2-t1))
+	print('**********************************************************************\n')
 	
 	###########################################################################################
 	#add a test function to eliminate contours that don't cross from "0" to "1":
@@ -1039,24 +1066,42 @@ def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap
 				else:
 					keep	= ((fl==0.) or (fl==1.))
 				return keep
+	
+		def selector_opp_sign(self,i0,il):
+				# remove contours that end on values with opposite signs
+                                # - good for sinusoidal type functions
+				f0     = self.func_vals[i0]
+				fl     = self.func_vals[il]
+                                keep   = (f0*fl<0) # opposite signs
+				return keep
 	###########################################################################################
 	
 	
 	CS = contour_selection(fun_sol.func_vals)
-	if 1:
-		selector_function = CS.selector_binary
-		fstr	 					= '_v1'
-	elif 0:
-		selector_function = CS.selector_binary_v2
-		fstr							= '_v2'
-	else:
-		selector_function = None
-		fstr							= ''
+        if CSopt==1:
+		selector_function   = CS.selector_opp_sign
+		fstr	            = '_vOpp'
+        else:
+            if 1:
+		selector_function   = CS.selector_binary
+		fstr	            = '_v1'
+	    elif 0:
+		selector_function   = CS.selector_binary_v2
+		fstr		    = '_v2'
+	    else:
+		selector_function   = None
+		fstr		    = ''
 	
-	if fig_outdir is not None:
+	if fig_outdir is None:
+		# do not make a figure
+		pobj = None
+	else:
 		# make a figure
-		pobj=plt
-		outdir = str(fig_outdir)
+                fig     = plt.figure()
+                ax      = fig.add_subplot(111)
+		pobj    = [fig,ax]
+		outdir  = './outputs/aod/'+str(fig_outdir)
+
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
 		outdir = outdir+'/'+str(region)
@@ -1065,12 +1110,9 @@ def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap
 		outdir = outdir+'/Laplacian_Solutions'
 		if not os.path.exists(outdir):
 			os.mkdir(outdir)
-	else:
-		# do not make a figure
-		pobj=None
 	
-	#print('\n**********************************************************************')
-	#print('Getting streamlines...\n')
+	print('\n**********************************************************************')
+	print('Getting streamlines...\n')
 	if 0:
 		# euclidean space
 		AI = stream.get_contour_lengths(pobj=pobj,show=False,\
@@ -1079,38 +1121,26 @@ def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap
 		if pobj is not None:
 			figname	= outdir+'/test_Laplacian_planar'+fstr+'.png'
 	else:
-		# spherical stuff
-		AI = stream.get_contour_lengths(pobj=pobj,bmap=basemap,show=False,\
-		test_function=selector_function,\
-		func_vals_orig=1*fun_sol.func_vals)
-
-		# Here starts the script from python_tutorials that hopefully will work
-      # it didn't
- 		#fig   = plt.figure()
- 		#ax    = fig.add_subplot(111)
- 		#fun_sol.plot_solution(plot_boundary=False,pobj=[fig,ax],show=False)
- 		##   
- 		#for cc in AI.xy_contours:
- 		# 	xx,yy = np.array(cc).transpose()
- 		# 	ax.plot(xx/1.e3,yy/1.e3,'k',linewidth=2)
- 		#ax.title.set_text('median contour length (km): '+str(AI.length_median/1.e3))
- 		#ax.set_aspect('equal')
- 		# End of script from python tutorials
-
-	if pobj is not None:
-		figname	= outdir+'/'+str(name)+'_Laplacian_spherical'+fstr+'.png'
+			# spherical stuff
+			AI = stream.get_contour_lengths(pobj=pobj,bmap=basemap,show=False,\
+			test_function=selector_function,\
+			func_vals_orig=1*fun_sol.func_vals)
+			if pobj is not None:
+				figname	= outdir+'/test_Laplacian_spherical'+fstr+'.png'
 		
+        ttl	= 'Median length (km) '+str(np.round(10.*AI.length_median/1.e3)/10.)
 	if pobj is not None:
-		ttl	= 'Median length (km) '+str(np.round(10.*AI.length_median/1.e3)/10.)
-		plt.title(ttl)
+                fig,ax  = pobj
+		ax.title.set_text(ttl)
+                ax.set_aspect('equal')
 		if 0:
 			# show for testing
-			plt.show()
+			fig.show()
 		else:
 			# make figure
 			#print('Saving plot to figure '+figname)
-			plt.savefig(figname)
-			plt.close()
+			fig.savefig(figname)
+			fig.clf()
 
 	median_width = np.round(10.*AI.length_median/1.e3)/10.
 	median_width = np.array(median_width)
@@ -1120,8 +1150,8 @@ def get_MIZ_widths(lons,lats,fvals,name=None,region=None,fig_outdir=None,basemap
 	p_perim = np.array(p_perim)
 	
 	t3 = time.clock()
-	#print('\nTime to get streamlines (mins): '+str((t3-t2)/60.))
-	#print(ttl)
-	#print('**********************************************************************\n')
+	print('\nTime to get streamlines (mins): '+str((t3-t2)/60.))
+	print(ttl)
+	print('**********************************************************************\n')
 	
 	return AI,fun_sol,stream,median_width,p_area,p_perim
