@@ -190,7 +190,7 @@ class dirichlet_fund_soln:
 			#		# number of singularities and number of boundary points should be the same
 			#		# - this doesn't work too well - need more sing's
 			#		Ntarget	= N0
-			if N0<=Nthresh:
+			if N0 <= Nthresh:
 				# if N0<=Nthresh, try to get N1~N0
 				Ntarget	= N0+30
 			else:
