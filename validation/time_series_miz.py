@@ -25,7 +25,7 @@ from operator import itemgetter as itg
 
 sys.path.append('../py_funs')
 import mod_reading as Mrdg
-import Laplace_eqn_solution_2 as Leqs
+import Laplace_eqn_solution_2tw as Leqs
 ############################################################################
 
 ############################################################################
@@ -239,7 +239,7 @@ class reader:
 		 	for el in icb_cont:
 				if el[idx] == 'in':
 				 	el[idx] = 1
-				else:
+				elif el[idx] == 'out':
 				 	el[idx] = 0
 			# cut out extra columns
 		 	icb_cont = icb_cont[:,idx:]
@@ -726,7 +726,7 @@ class aari_stat:
 		leg.set_frame_on(False)
 
 		# Main image on the top left
-		main.imshow(DN[::-1],interpolation='nearest',cmap='winter')
+		main.imshow(DN,interpolation='nearest',cmap='winter')
 		x1,x2,y1,y2 = np.min(ij[:,1])-10,np.max(ij[:,1])+10,np.min(ij[:,0])-10,np.max(ij[:,0])+10
 		main.axvspan(x1,x2,ymin=1-((y1-320)/float(len(DN)-320)),\
 		      ymax=1-((y2-320)/float(len(DN)-320)),color='red',alpha=0.3)
@@ -1268,7 +1268,7 @@ class poly_stat:
 		leg.set_frame_on(False)
 
 		# Main image on the top left
-		main.imshow(DN[::-1],interpolation='nearest',cmap='winter')
+		main.imshow(DN,interpolation='nearest',cmap='winter')
 		x1,x2,y1,y2 = np.min(ij[:,1])-10,np.max(ij[:,1])+10,np.min(ij[:,0])-10,np.max(ij[:,0])+10
 		main.axvspan(x1,x2,ymin=1-((y1-320)/float(len(DN)-320)),\
 		      ymax=1-((y2-320)/float(len(DN)-320)),color='red',alpha=0.3)
