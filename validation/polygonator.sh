@@ -12,8 +12,8 @@ osidir=/work/shared/nersc/msc/OSI-SAF
 wrkdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/data
 results=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/outputs
 
-startdate='20150601'
-enddate='20150605'
+startdate='20150501'
+enddate='20150731'
 sdj=$(date --date="$startdate" +%j)
 edj=$(date --date="$enddate" +%j)
 ndays=$(expr $edj - $sdj)
@@ -73,14 +73,14 @@ do
    if [ -f ${wrkdir}/OSI/* ] && ([ -f ${wrkdir}/MDL/*.a ] || [ -f ${wrkdir}/MDL/*.nc ])
    then
       # for ICP
-      python time_series_miz.py "ICP" "${hdate}"
-#      mv -f ${results}/ICP/* /work/users/timill/RESULTS/POLYGONS/ICP
-      ## for DFP
-      #python time_series_miz.py "DFP" "${hdate}"
-      #mv -f ${results}/DFP/* /work/users/timill/RESULTS/POLYGONS/DFP
-      ## for AOD
-      #python time_series_miz.py "AOD" "${hdate}"
-      #mv -f ${results}/AOD/* /work/users/timill/RESULTS/POLYGONS/AOD
+      #python time_series_miz.py "ICP" "${hdate}"
+      #mv -f ${results}/ICP/* /work/users/timill/RESULTS/POLYGONS/ICP
+      # for DFP
+      python time_series_miz.py "DFP" "${hdate}"
+      mv -f ${results}/DFP/* /work/users/timill/RESULTS/POLYGONS/DFP
+      # for AOD
+      python time_series_miz.py "AOD" "${hdate}"
+      mv -f ${results}/AOD/* /work/users/timill/RESULTS/POLYGONS/AOD
    else
       echo "Data not available"
    fi

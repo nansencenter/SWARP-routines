@@ -740,10 +740,11 @@ class dirichlet_fund_soln:
 				cmap	= cm.jet
 				# cmap2 = cm.coolwarm
 				cmap2 = cm.PRGn
+                                fig,ax = pobj
 
 				print('plotting isolines...\n')
 				xb,yb = np.array(poly.boundary.coords).transpose()
-				pobj.plot(xb,yb,color='k',linewidth=2)
+				ax.plot(xb,yb,color='k',linewidth=2)
 
 				if func_vals_orig is not None:
 						c	= func_vals_orig
@@ -755,7 +756,7 @@ class dirichlet_fund_soln:
 				elif (len(c)==len(xb)-1):
 						c	= np.concatenate([c,np.array([c[0]])])
 
-				pobj.scatter(xb, yb, marker='o', s=150, linewidths=0.5,\
+				ax.scatter(xb, yb, marker='o', s=150, linewidths=0.5,\
 											c=c, cmap=cmap2)
 				#
 				xp = np.arange(x0-eps/2.,x1+1.5*eps,eps)
@@ -763,15 +764,15 @@ class dirichlet_fund_soln:
 				#
 				cmap.set_bad(color='w')
 				Fm = np.ma.array(F,mask=np.isnan(F))
-				pobj.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
-				pobj.colorbar()
+				PC = ax.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
+				fig.colorbar(PC)
 
 				for cont in merged_levels:
 						xx,yy = np.array(cont).transpose()
-						pobj.plot(xx,yy)
+						ax.plot(xx,yy)
 
 				if show:
-						pobj.show()
+						fig.show()
 			##################################################
 
 			return merged_levels
@@ -818,8 +819,8 @@ class dirichlet_fund_soln:
 						# some summarising info about "lengths"
 						lens											= np.array(lengths)
 						self.length_median				= np.median(lens)
-						self.length_percentile05	= np.percentile(lens,5)
-						self.length_percentile95	= np.percentile(lens,95)
+						#self.length_percentile05	= np.percentile(lens,5)
+						#self.length_percentile95	= np.percentile(lens,95)
 
 						return
 			###########################################################################################
