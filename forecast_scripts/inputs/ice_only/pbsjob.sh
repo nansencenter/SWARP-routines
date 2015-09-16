@@ -87,14 +87,4 @@ then
    /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/process_FCresults_wav.sh
 fi
 
-datelist=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/datelist.txt
-cday=$(cat $datelist | sed '1!d')
-cyear=$(cat $datelist | sed '3!d')
-
-# LAUNCH THE WAVE JOB ONLY IF WE HAVE ALREADY DOWNLOADED THE WAMNSEA PRODUCT
-if [ -f /work/shared/nersc/msc/WAMNSEA/$cyear/forecasts/wam_nsea.fc.$cday.nc ]
-then
-   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/run_forecast_wav.sh
-fi
-
 exit $?
