@@ -80,7 +80,7 @@ def get_nice_meridians(lonmin,lonmax):
 ############################################################################
 
 ############################################################################
-def finish_map(bm):
+def finish_map(bm,**kwargs):
    # finish_map(bm)
    # *bm is a basemap
 
@@ -93,10 +93,10 @@ def finish_map(bm):
    parals   = get_nice_meridians(bm.latmin,bm.latmax)
 
    bm.drawparallels(parals,\
-         labels=[True,False,True,True]) # labels = [left,right,top,bottom]
+         labels=[True,False,True,True],**kwargs) # labels = [left,right,top,bottom]
    bm.drawmeridians(merids,latmax=90.,\
-         labels=[True,False,False,True])
-   bm.drawmapboundary() # fill_color='aqua')
+         labels=[True,False,False,True],**kwargs)
+   bm.drawmapboundary(**kwargs) # fill_color='aqua')
 
    return
 ############################################################################
