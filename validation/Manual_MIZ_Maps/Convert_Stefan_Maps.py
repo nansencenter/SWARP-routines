@@ -7,7 +7,8 @@ import rtree.index	as Rindex
 from datetime import datetime
 import shapely.geometry as SHgeom
 
-sys.path.append('../py_funs')
+SR = os.getenv('SWARP_ROUTINES')
+sys.path.append(SR+'/py_funs')
 import fns_plotting as Fplt
 import geometry_planar as GP
 
@@ -29,7 +30,7 @@ def write_polys(fname,Polys):
 #######################################################################
 class line_info:
    # make object with helpful info:
-   def __init__(self,cdate,lon,lat,bmap,func_val):
+   def __init__(self,cdate,ll_coords,bmap,func_val):
 
       if type(cdate)==type('hi'):
          self.datetime  = datetime.strptime(cdate,'%Y%m%d')
@@ -37,34 +38,32 @@ class line_info:
          self.datetime  = cdate # already a datetime object
 
       self.func_val  = func_val
-      self.lon       = 1*lon
-      self.lat       = 1*lat
+      llc            = 1*ll_coords
 
       if type(bmap)==type([]):
          # already given list of x,y
-         self.x,self.y  = np.array(bmap).transpose()
+         coords   = 1*bmap
       else:
          # get x,y from basemap
-         self.x,self.y  = bmap(lon,lat)
+         lon,lat  = np.array(llc).transpose()
+         x,y      = bmap(lon,lat)
+         coords   = list(np.array([x,y]).transpose())
 
-      coords         = list(np.array([self.x,self.y]).transpose())
+      # make sure coords is a list of tuples
+      coords   = [tuple(xy) for xy in coords]
 
       ###################################################
       # check for repeats
       xyc2 = []
-      lon2 = []
-      lat2 = []
+      llc2 = []
       for i,cc in enumerate(coords):
-         tcc   = tuple(cc)
-         if tcc not in xyc2:
-            xyc2.append(tcc)
-            lon2.append(self.lon[i])
-            lat2.append(self.lat[i])
+         if cc not in xyc2:
+            xyc2.append(cc)
+            llc2.append(tuple(llc[i]))
 
-      self.lon       = lon2
-      self.lat       = lat2
-      self.x,self.y  = np.array(xyc2).transpose()
-      self.length    = len(self.lon)
+      self.ll_coords = llc2
+      self.xy_coords = xyc2
+      self.length    = len(llc2)
       self.perimeter = GP.calc_perimeter(xyc2)
       ###################################################
 
@@ -72,9 +71,9 @@ class line_info:
       # make rtree index
       idx   = Rindex.Index()
       for i in range(self.length):
-         xp = self.x[i]
-         yp = self.y[i]
+         xp,yp = xyc2[i]
          idx.insert(i,(xp,yp,xp,yp)) # a point is a rectangle of zero side-length
+
       self.index  = idx
       ###################################################
 
@@ -90,14 +89,14 @@ class poly_info:
       self.length    = len(xy_coords)
       #
       fvals = list(func_vals)
-      xyc2  = [tuple(xyp) for xyp in xy_coords]
-      llc2  = [tuple(llp) for llp in ll_coords]
+      xyc2  = [tuple(xyp) for xyp in xy_coords] # list of tuples (otherwise logical ops are difficult)
+      llc2  = [tuple(llp) for llp in ll_coords] # list of tuples (otherwise logical ops are difficult)
 
       critter  =     (len(ll_coords)!=len(xy_coords))\
                   or (len(ll_coords)!=len(func_vals))\
                   or (len(xy_coords)!=len(func_vals))
       if critter:
-         print('ll,xy,f')
+         print('lengths (ll,xy,f):')
          print(len(ll_coords))
          print(len(xy_coords))
          print(len(func_vals))
@@ -184,15 +183,15 @@ def shapely2poly(shp,Lino,Lino_ref):
       i1    = list(Lino_ref.index.nearest(cc))[0]
       # print(i0,i1,Lino.length,Lino_ref.length)
 
-      d0    = np.sqrt(pow(x-Lino.x[i0],2)+pow(y-Lino.y[i0],2))
-      d1    = np.sqrt(pow(x-Lino_ref.x[i1],2)+pow(y-Lino_ref.y[i1],2))
+      d0    = np.sqrt( pow(x-Lino    .xy_coords[i0][0],2) + pow(y-Lino    .xy_coords[i0][1],2) )
+      d1    = np.sqrt( pow(x-Lino_ref.xy_coords[i1][0],2) + pow(y-Lino_ref.xy_coords[i1][1],2) )
       if d0<d1:
          # part of "Lino" line (usually ice edge)
-         ll_coords.append((Lino.lon[i0],Lino.lat[i0]))
+         ll_coords.append(Lino.ll_coords[i0])
          func_vals.append(Lino.func_val)
       else:
          # part of "Lino_ref" line (usually MIZ edge)
-         ll_coords.append((Lino_ref.lon[i1],Lino_ref.lat[i1]))
+         ll_coords.append(Lino_ref.ll_coords[i1])
          func_vals.append(Lino_ref.func_val)
 
    Poly  = poly_info(Lino.datetime,ll_coords,xy_coords,func_vals)
@@ -202,7 +201,7 @@ def shapely2poly(shp,Lino,Lino_ref):
 #######################################################################
 def check_refpoints(Poly,Lino_ref,Lino):
    # check end points of Lino_ref are not too far from their neighbours:
-   coords   = list(np.array([Lino_ref.x,Lino_ref.y]).transpose())
+   coords   = Lino_ref.xy_coords
    fv       = np.array(Poly.func_vals)
    nref     = np.arange(len(fv),dtype=int)[fv==Lino_ref.func_val]
    # print(fv)
@@ -236,9 +235,7 @@ def check_refpoints(Poly,Lino_ref,Lino):
       # make line_info object from Poly
       # => want no repeats (not closed curve now)
       lon0,lat0   = np.array(Poly.ll_coords[:-1]).transpose()
-      PolyL       = line_info(Poly.datetime,lon0,lat0,Poly.xy_coords[:-1],-1)
-      Pxy_coords  = list(np.array([PolyL.x,PolyL.y]).transpose())
-      Pll_coords  = list(np.array([lon0,lat0]).transpose())
+      PolyL       = line_info(Poly.datetime,Poly.ll_coords[:-1],Poly.xy_coords[:-1],-1)
       Pfunc_vals  = Poly.func_vals[:-1]
 
       cc0   = endc[m]                           # own coords
@@ -247,7 +244,7 @@ def check_refpoints(Poly,Lino_ref,Lino):
       in1   = list(PolyL.index.nearest(cc1))[0] # index of MIZ neighbour in polygon
       #
       in2   = list(Lino.index.nearest(cc0))[0]  # index of nearest point on ice edge
-      cc2   = (Lino.x[in2],Lino.y[in2])         # coords of nearest point on ice edge
+      cc2   = Lino.xy_coords[in2]               # coords of nearest point on ice edge
       in2   = list(PolyL.index.nearest(cc2))[0] # index of this point in polygon
 
       # dx = cc2[0]-cc0[0]
@@ -271,38 +268,38 @@ def check_refpoints(Poly,Lino_ref,Lino):
          if in2>in0:
             # remove points between indices
             # - get points <= in0
-            xy_coords2  = Pxy_coords[:in0+1]
-            ll_coords2  = Pll_coords[:in0+1]
+            xy_coords2  = PolyL.xy_coords[:in0+1]
+            ll_coords2  = PolyL.ll_coords[:in0+1]
             fvals2      = Pfunc_vals[:in0+1]
 
             # - get points >= in2
-            xy_coords2.extend(Pxy_coords[in2:])
-            ll_coords2.extend(Pll_coords[in2:])
+            xy_coords2.extend(PolyL.xy_coords[in2:])
+            ll_coords2.extend(PolyL.ll_coords[in2:])
             fvals2    .extend(Pfunc_vals[in2:])
          else:
             # remove points >in0 & <in2
             # ie keep points in2<=index<=in0
-            xy_coords2  = Pxy_coords[in2:in0+1]
-            ll_coords2  = Pll_coords[in2:in0+1]
+            xy_coords2  = PolyL.xy_coords[in2:in0+1]
+            ll_coords2  = PolyL.ll_coords[in2:in0+1]
             fvals2      = Pfunc_vals[in2:in0+1]
       else:
          # decreasing index moves away from MIZ line
          if in2<in0:
             # remove points between indices
             # - get points <= in2
-            xy_coords2  = Pxy_coords[:in2+1]
-            ll_coords2  = Pll_coords[:in2+1]
+            xy_coords2  = PolyL.xy_coords[:in2+1]
+            ll_coords2  = PolyL.ll_coords[:in2+1]
             fvals2      = Pfunc_vals[:in2+1]
 
             # - get points >= in0
-            xy_coords2.extend(Pxy_coords[in0:])
-            ll_coords2.extend(Pll_coords[in0:])
+            xy_coords2.extend(PolyL.xy_coords[in0:])
+            ll_coords2.extend(PolyL.ll_coords[in0:])
             fvals2    .extend(Pfunc_vals[in0:])
          else:
             # remove points >in2 & <in0
             # ie keep points in0<=index<=in2
-            xy_coords2  = Pxy_coords[in0:in2+1]
-            ll_coords2  = Pll_coords[in0:in2+1]
+            xy_coords2  = PolyL.xy_coords[in0:in2+1]
+            ll_coords2  = PolyL.ll_coords[in0:in2+1]
             fvals2      = Pfunc_vals[in0:in2+1]
 
       #######################################################################
@@ -317,57 +314,93 @@ def check_refpoints(Poly,Lino_ref,Lino):
 #######################################################################
 
 #######################################################################
-def Linos2polys(Lino_ref,Linos):
+def Linos2polys(Lino_ref,Linos,fix_invalid=True,check_ends=True,use_thresh=False):
 
    ####################################################################
-   def make_poly(Lino_ref,Lino):
-      xy_coords   = list(np.array([Lino.x,Lino.y]).transpose())
-      ll_coords   = list(np.array([Lino.lon,Lino.lat]).transpose())
-      xy_coords1  = list(np.array([Lino_ref.x,  Lino_ref.y]).transpose())
-      xy_coords1  = [tuple(xyp) for xyp in xy_coords1]
-      ll_coords1  = list(np.array([Lino_ref.lon,Lino_ref.lat]).transpose())
+   def make_poly(Lino_ref,Lino,use_thresh=False):
+      xy_coords   = Lino.xy_coords
+      ll_coords   = Lino.ll_coords
+      xy_coords1  = Lino_ref.xy_coords
+      ll_coords1  = Lino_ref.ll_coords
 
       ########################################################################
       # first remove points from Lino that are already in Lino_ref
-      # - should no longer be duplicate points
+      # - should no longer be duplicate points 
+      #   as repeats in indiv lines are removed in line_info
       xyc   = []
       llc   = []
       for i,cc in enumerate(xy_coords):
-         tcc   = tuple(cc)
-         if tcc not in xy_coords1:
-            xyc.append(tcc)
+         if cc not in xy_coords1:
+            xyc.append(cc)
             llc.append(ll_coords[i])
 
       lon,lat  = np.array(llc).transpose()
-      Lino     = line_info(Lino.datetime,lon,lat,xyc,Lino.func_val)
+      Lino     = line_info(Lino.datetime,llc,xyc,Lino.func_val)
       ########################################################################
 
-      cc0   = (Lino.x[0],Lino.y[0])
-      cc1   = (Lino.x[-1],Lino.y[-1])
+      cc0   = Lino.xy_coords[0]
+      cc1   = Lino.xy_coords[-1]
+      N0    = Lino.length
       j0    = list(Lino_ref.index.nearest(cc0))[0]
       j1    = list(Lino_ref.index.nearest(cc1))[0]
-      N0    = Lino.length
-      # print(j0,j1,N0,len(Lino.x))
-      # print(cc0,(Lino_ref.x[j0],Lino_ref.y[j0]))
-      # print(cc1,(Lino_ref.x[j1],Lino_ref.y[j1]))
+      jj    = [j0,j1]
+      ccs   = [cc0,cc1]
+
+      # print(j0,j1,N0,len(Lino.xy_coords))
+      # print(cc0,Lino_ref.xy_coords[j0])
+      # print(cc1,Lino_ref.xy_coords[j1])
+      # print('\n')
+
+      #####################################################################################
+      if use_thresh:
+         # if over a certain threshold,
+         # connect to nearest end point
+         x0,y0    = Lino_ref.xy_coords[0]
+         x1,y1    = Lino_ref.xy_coords[-1]
+         thresh   = 150.e3
+         # print((x0,y0),(x1,y1))
+
+         # loop over ends of Lino
+         for i,cc in enumerate(ccs):
+            j     = jj[i]
+            x,y   = Lino_ref.xy_coords[j]
+            dd    = np.sqrt( pow(x -cc[0],2) + pow(y -cc[1],2) ) # length to nearest point
+            d0    = np.sqrt( pow(x0-cc[0],2) + pow(y0-cc[1],2) ) # length to 1st end point
+            d1    = np.sqrt( pow(x1-cc[0],2) + pow(y1-cc[1],2) ) # length to last end point
+            # print(j,cc)
+            # print(dd/1.e3,thresh/1.e3,d0/1.e3,d1/1.e3)
+            # print(jj)
+            if dd>thresh:
+               if d0<d1:
+                  jj[i] = 0
+               else:
+                  jj[i] = len(Lino_ref.xy_coords)-1
+            # print(jj)
+         j0,j1 = jj
+      #####################################################################################
+
+      # print(j0,j1,N0,len(Lino.xy_coords))
+      # print(cc0,Lino_ref.xy_coords[j0])
+      # print(cc1,Lino_ref.xy_coords[j1])
+      # print('\n')
       #
       fvals = list(np.zeros(N0,dtype=int)+Lino.func_val)
       if j1>j0:
-         xy_coords2  = list(np.array([Lino_ref.x[j0:j1+1],Lino_ref.y[j0:j1+1]]).transpose())
+         xy_coords2  = Lino_ref.xy_coords[j0:j1+1]
          xy_coords2.reverse()
          xyc.extend(xy_coords2)
          #
-         ll_coords2  = list(np.array([Lino_ref.lon[j0:j1+1],Lino_ref.lat[j0:j1+1]]).transpose())
+         ll_coords2  = Lino_ref.ll_coords[j0:j1+1]
          ll_coords2.reverse()
          llc.extend(ll_coords2)
          #
          fvals2   = list(np.zeros(len(xy_coords2),dtype=int)+Lino_ref.func_val)
          fvals.extend(fvals2)
       else:
-         xy_coords2  = list(np.array([Lino_ref.x[j1:j0+1],Lino_ref.y[j1:j0+1]]).transpose())
+         xy_coords2  = Lino_ref.xy_coords[j1:j0+1]
          xyc.extend(xy_coords2)
          #
-         ll_coords2  = list(np.array([Lino_ref.lon[j1:j0+1],Lino_ref.lat[j1:j0+1]]).transpose())
+         ll_coords2  = Lino_ref.ll_coords[j1:j0+1]
          llc.extend(ll_coords2)
          #
          fvals2   = list(np.zeros(len(xy_coords2),dtype=int)+Lino_ref.func_val)
@@ -380,12 +413,12 @@ def Linos2polys(Lino_ref,Linos):
    Polys    = []
    Linos2   = []
    for Lino in Linos:
-      Poly,Lino   = make_poly(Lino_ref,Lino)
+      Poly,Lino   = make_poly(Lino_ref,Lino,use_thresh=use_thresh)
       Linos2.append(Lino)
 
       # print(Poly.func_vals)
       ##########################################################################
-      if 1:
+      if fix_invalid:
          shp   = SHgeom.Polygon(Poly.xy_coords)
          if not shp.is_valid:
             # make valid polygon with shp.buffer(0)
@@ -397,8 +430,8 @@ def Linos2polys(Lino_ref,Linos):
                L  = 0
                nn = 0
                for n,shpp in enumerate(shp.geoms):
-                  print(shpp.length)
-                  print(shpp.area)
+                  # print(shpp.length)
+                  # print(shpp.area)
                   if shpp.length>L:
                      nn = n
                      L  = shpp.length
@@ -409,7 +442,7 @@ def Linos2polys(Lino_ref,Linos):
       ##########################################################################
 
       ##########################################################################
-      if 1:
+      if check_ends:
          # check end points of Lino_ref are not too far from their neighbours:
          Poly  = check_refpoints(Poly,Lino_ref,Lino)
          if 0:
@@ -439,16 +472,25 @@ def Linos2polys(Lino_ref,Linos):
    return Polys,Linos2
 #######################################################################
 
-if 1:
-   fmon     = '201402'
+if 0:
+   fmon        = '201402'
+   fix_invalid = True
+   check_ends  = True
+   use_thresh  = False
+   if 0:
+      vsn   = 'SWARP_MIZ_maps_def'
+   elif 0:
+      vsn   = 'SWARP_MIZ_maps_def_v2'
+   else:
+      vsn   = 'SWARP_MIZ_maps_def_new'
 else:
-   fmon     = '201309'
+   fmon        = '201309'
+   vsn         = 'SWARP_MIZ_maps_def'
+   fix_invalid = True
+   check_ends  = False
+   use_thresh  = True
 
 rootdir  = '/Volumes/sim/tim/Projects/SWARP/Stefan'
-if 1:
-   vsn   = 'SWARP_MIZ_maps_def'
-else:
-   vsn   = 'SWARP_MIZ_maps_def_v2'
 tdir     = rootdir+'/'+fmon+'/'+vsn+'/txt'
 idir     = rootdir+'/'+fmon+'/'+vsn+'/pdf'
 outdir   = rootdir+'/'+fmon+'/'+vsn+'/polygons'
@@ -473,7 +515,10 @@ xmax  = rad*111.e3   # half width of image [m]
 ymax  = rad*111.e3   # half height of image [m]
 cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
 #
-lon_0    = 36.    # deg E
+if fmon=='201402':
+   lon_0    = 36.    # deg E
+elif fmon=='201309':
+   lon_0    = 5.    # deg E
 lat_0    = 80.    # deg N
 lat_ts   = lat_0  # deg N
 bmap  = Basemap(width=2*xmax,height=2*ymax,\
@@ -487,19 +532,29 @@ if 1:
    show  = False
 else:
    # day   = 1
-   day   = 8
+   # day   = 5
+   # day   = 8
    # day   = 17
    # day   = 18
    # day   = 25
-   day0 = day
-   day1 = day
+   day   = 28
+   day0  = day
+   day1  = day
    show  = True
+   # fix_invalid = False
+   # check_ends  = False
 
-refno = {}
+refno       = {}
+check_endsD = {}
 for day in range(1,29):
    refno.update({day:0})
-for day in [1,15]:
-   refno[day]  = 1
+   check_endsD.update({day:check_ends})
+
+if fmon=='201402':
+   for day in [1,15]:
+      refno[day]  = 1
+   for day in [1,28]:
+      check_endsD[day]  = False
 
 for iday in range(day0,day1+1):
    cday  = '%2.2d' %(iday)
@@ -513,22 +568,24 @@ for iday in range(day0,day1+1):
 
       #################################################################
       if len(Lins)>1:
+         #################################################################
+         # convert to list of line_info objects
          for n,Lin in enumerate(Lins):
             # only ever 1 part, Lin[0]
-            lon,lat  = np.array(Lin[0]).transpose()
-
             if n==refno[iday]:
                # 1st is usually MIZ but not always
                # - define manually
                func_val = 1 #MIZ
-               Lino_ref = line_info(cdate,lon,lat,bmap,func_val)
+               Lino_ref = line_info(cdate,Lin[0],bmap,func_val)
             else:
                func_val = 0 #ice edge
-               Lino     = line_info(cdate,lon,lat,bmap,func_val)
+               Lino     = line_info(cdate,Lin[0],bmap,func_val)
                Linos.append(Lino)
          #################################################################
                
-         Polys,Linos2 = Linos2polys(Lino_ref,Linos)
+         Polys,Linos2 = Linos2polys(Lino_ref,Linos,\
+               fix_invalid=fix_invalid,check_ends=check_endsD[iday],use_thresh=use_thresh)
+
          if 0:
             for n,Lin in enumerate(Lins):
                print('n (0=MIZ edge,1=ice edge)), no of parts')
@@ -570,13 +627,15 @@ for iday in range(day0,day1+1):
             write_polys(fout,Polys)
 
             # MIZ line
-            bmap.plot(Lino_ref.x,Lino_ref.y,linestyle=lstil[Lino_ref.func_val],ax=ax1)
-            bmap.plot(Lino_ref.x[:1],Lino_ref.y[:1],'v',ax=ax1) # 1st point
+            x,y   = np.array(Lino_ref.xy_coords).transpose()
+            bmap.plot(x,y,linestyle=lstil[Lino_ref.func_val],ax=ax1)
+            bmap.plot(x[:1],y[:1],'v',ax=ax1) # 1st point
 
             # ice edges
             for Lino in Linos:
-               bmap.plot(Lino.x,Lino.y,linestyle=lstil[Lino.func_val],ax=ax1)
-               bmap.plot(Lino.x[:1],Lino.y[:1],'^',ax=ax1) # 1st point
+               x,y   = np.array(Lino.xy_coords).transpose()
+               bmap.plot(x,y,linestyle=lstil[Lino.func_val],ax=ax1)
+               bmap.plot(x[:1],y[:1],'^',ax=ax1) # 1st point
 
 
             Fplt.finish_map(bmap,ax=ax1)
