@@ -78,7 +78,7 @@ else:
    # solve Laplace's eqn (2x)
    fun_sol  = Leqs.dirichlet_fund_soln(xy_coords2,fvals2)
    stream   = Leqs.dirichlet_stream_func(potential=fun_sol)
-   AI       =  stream.get_contour_lengths()
+   AI       = stream.get_contour_lengths()
 ####################################################################################
 
 if 1:
