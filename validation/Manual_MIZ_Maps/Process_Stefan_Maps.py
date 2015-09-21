@@ -11,6 +11,7 @@ sys.path.append(SR+'/py_funs')
 import fns_plotting as Fplt
 import geometry_planar as GP
 import fns_Stefan_Maps as FSM
+import Laplace_eqn_solution as Leqs
 
 if 1:
    fmon        = '201402'
@@ -30,7 +31,8 @@ else:
    check_ends  = False
    use_thresh  = True
 
-rootdir  = '/Volumes/sim/tim/Projects/SWARP/Stefan'
+# rootdir  = '/Volumes/sim/tim/Projects/SWARP/Stefan'
+rootdir  = '/Users/timill/Documents/SWARP/Stefan'
 indir    = rootdir+'/'+fmon+'/'+vsn+'/polygons/txt'
 
 #######################################################################
@@ -86,13 +88,27 @@ for iday in range(day0,day1+1):
          Polys.append(Poly)
       ############################################################
 
-      """
-      TODO: run Laplacian on Polys
-      - save as .shp files with info
-      - plot on big basemap + indicate width on poly
-      """
+      fig      = plt.figure()
+      ax1      = fig.add_subplot(1,1,1)
+      Psolns   = []
+      for Poly in Polys:
+         lons,lats   = np.array(Poly.ll_coords).transpose()
+         Psoln       = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
+         cbar        = (Psolns==[])
+         Psoln.plot(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
+         Psolns.append(Psoln)
 
-      if 1:
+      Fplt.finish_map(bmap,ax=ax1)
+      if 1:#show:
+         plt.show(fig)
+      else:
+         figname  = figdir+'/'+cdate+"_polys.png"
+         print('>'+figname)
+         fig.savefig(figname)
+      ax1.cla()
+      plt.close(fig)
+
+      if 0:
          # TEST PLOT - with polygons
          #
          fig   = plt.figure()
@@ -101,11 +117,7 @@ for iday in range(day0,day1+1):
 
          for Poly in Polys:
             x,y   = np.array(Poly.xy_coords).transpose()
-            shp   = SHgeom.Polygon(Poly.xy_coords)
-            if shp.is_valid:
-               bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-            else:
-               bmap.plot(x,y,'c',linewidth=2,ax=ax1)
+            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
 
          Fplt.finish_map(bmap,ax=ax1)
 

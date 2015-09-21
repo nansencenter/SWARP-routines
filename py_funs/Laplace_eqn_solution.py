@@ -504,15 +504,17 @@ class dirichlet_fund_soln:
    #######################################################
    
    #######################################################
-   def plot_solution(self,pobj=None,plot_boundary=True,show=True):
+   def plot_solution(self,pobj=None,plot_boundary=True,show=True,\
+         cbar=True,**kwargs):
+
       import numpy            as np
       import shapefile_utils  as SFU
       import geometry_planar  as GP
       from matplotlib import cm
+      from matplotlib import pyplot as plt
       
       if pobj is None:
          # set a plot object if none exists
-         from matplotlib import pyplot as plt
          fig = plt.figure()
          ax  = fig.add_subplot(1,1,1)
       else:
@@ -521,12 +523,12 @@ class dirichlet_fund_soln:
       if plot_boundary:
          # just plot values of F at boundary
          ss = self.get_arc_length()/1.e3 # km
-         ax.plot(ss,self.func_vals_approx,'b')
-         ax.plot(ss,self.func_vals,'.k')
+         ax.plot(ss,self.func_vals_approx,'b',**kwargs)
+         ax.plot(ss,self.func_vals,'.k',**kwargs)
 
          x2,y2  = np.array(self.coords).transpose() # coords can be reversed
          f2     = self.eval_solution_fast(x2,y2)
-         ax.plot(ss,f2,'--r')
+         ax.plot(ss,f2,'--r',**kwargs)
          xc  = np.round(10.*self.coords[0][0]/1.e3)/10. # km (1dp)
          yc  = np.round(10.*self.coords[0][1]/1.e3)/10. # km (1dp)
          ax.set_xlabel('arc length (km) from '+str((xc,yc))+' (km)')
@@ -548,11 +550,11 @@ class dirichlet_fund_soln:
          yp  = np.arange(y0-.5*eps,y1+1.5*eps,eps)/1.e3
 
          # make pcolor/contour plot
-         nlevels	= 10
-         vmin	= self.func_vals.min()
-         vmax	= self.func_vals.max()
-         dv	= (vmax-vmin)/(nlevels)
-         vlev	= np.arange(vmin,vmax+dv,dv)
+         nlevels  = 10
+         vmin	  = self.func_vals.min()
+         vmax	  = self.func_vals.max()
+         dv	  = (vmax-vmin)/(nlevels)
+         vlev	  = np.arange(vmin,vmax+dv,dv)
          #
          X,Y	= np.meshgrid(x,y)
          F	= self.eval_solution(X,Y)
@@ -560,22 +562,45 @@ class dirichlet_fund_soln:
          cmap	= cm.jet
          cmap.set_bad(color='w')
          Fm  = np.ma.array(F,mask=np.isnan(F))
-         PC  = ax.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap)
-         fig.colorbar(PC)
-         ax.contour(X/1.e3,Y/1.e3,F,vlev,colors='k')
 
-         # plot polygon boundary
-         x,y   = GP.coords2xy(self.coords)
-         ax.plot(x/1.e3,y/1.e3,'k',linewidth=2)
+         ##################################################################
+         if 'basemap' not in str(type(ax)):
+            # plotter is not a basemap (eg a normal axis object)
+            PC  = ax.pcolor(xp,yp,Fm,vmin=vmin,vmax=vmax,cmap=cmap,**kwargs)
+            if cbar:
+               fig.colorbar(PC)
+            ax.contour(X/1.e3,Y/1.e3,F,vlev,colors='k',**kwargs)
 
-         # plot singularities
-         x,y   = GP.coords2xy(self.singularities)
-         ax.plot(x/1.e3,y/1.e3,'.k',markersize=5)
-         ax.set_xlabel('x, km')
-         ax.set_ylabel('y, km')
-      
+            # plot polygon boundary
+            x,y   = GP.coords2xy(self.coords)
+            ax.plot(x/1.e3,y/1.e3,'k',linewidth=2,**kwargs)
+
+            # plot singularities
+            x,y   = GP.coords2xy(self.singularities)
+            ax.plot(x/1.e3,y/1.e3,'.k',markersize=5)
+
+            # axes labels
+            ax.set_xlabel('x, km')
+            ax.set_ylabel('y, km')
+         else:
+            # plotter is a basemap
+
+            # NB need units in m for basemap
+            PC = ax.pcolor(xp*1e3,yp*1e3,Fm,vmin=vmin,vmax=vmax,cmap=cmap,**kwargs)
+            if cbar:
+               fig.colorbar(PC)
+
+            # plot outline
+            x,y   = GP.coords2xy(self.coords)
+            ax.plot(x,y,'k',linewidth=2,**kwargs)
+
+            # plot singularities
+            x,y   = GP.coords2xy(self.singularities)
+            ax.plot(x,y,'.k',markersize=5,**kwargs)
+         ##################################################################
+
       if show:
-         fig.show()
+         plt.show(fig)
 
       return
    #######################################################
@@ -805,8 +830,8 @@ class dirichlet_fund_soln:
                   raise ValueError('"ll_contours" not given')
                if ll_bdy_coords is None:
                   raise ValueError('"ll_bdy_coords" not given')
-               self.lonlat_contours = 1*ll_contours	# (lon,lat) coordinates of each contour
-               self.ll_bdy_coords	= 1*ll_bdy_coords # (lon,lat) coordinates of boundary
+               self.lonlat_contours = 1*ll_contours   # (lon,lat) coordinates of each contour
+               self.ll_bdy_coords   = 1*ll_bdy_coords # (lon,lat) coordinates of boundary
 
             if func_vals is not None:
                self.func_vals	 = 1*func_vals	   # value of function used by Laplace's equation
@@ -930,6 +955,64 @@ def dirichlet_stream_func(coords=None,potential=None,func_vals=None):
    return stream
 #######################################################
 
+#######################################################################
+class MIZ_soln:
+   def __init__(self,AI,potential,stream):
+      self.area_info = AI
+      self.potential = potential
+      self.stream    = stream
+      return
+
+   def plot(self,option='Potential',pobj=None,show=False,bmap=None,\
+         cbar=False,title=False):
+
+      import numpy as np
+
+      if pobj is None:
+         fig   = plt.figure()
+         ax    = fig.add_subplot(111)
+      else:
+         fig,ax   = pobj
+
+      #################################################
+      if option=='Potential':
+         # plot potential
+         plot_fun = self.potential.plot_solution
+      elif option=='Stream':
+         # plot stream function
+         plot_fun = self.stream.plot_solution
+      #################################################
+
+      #################################################
+      if bmap is not None:
+         plot_fun(plot_boundary=False,pobj=[fig,bmap],show=False,
+               cbar=cbar,ax=ax)
+
+         # plot streamlines (m)
+         for cc in self.area_info.xy_contours:
+            xx,yy = np.array(cc).transpose()
+            bmap.plot(xx,yy,'k',linewidth=2,ax=ax)
+
+      else:
+         plot_fun(plot_boundary=False,pobj=[fig,ax],show=False,cbar=cbar)
+
+         # plot streamlines (km)
+         for cc in self.area_info.xy_contours:
+            xx,yy = np.array(cc).transpose()
+            ax.plot(xx/1.e3,yy/1.e3,'c',linewidth=2)
+
+         ax.set_aspect('equal')
+      #################################################
+
+      if title:
+         ss = str(self.area_info.length_median/1.e3)
+         ax.title.set_text('median contour length (km): '+ss)
+
+      if show:
+         fig.show()
+      return pobj
+#######################################################################
+
 ##################################################
 class multipole:
    # make a test function that satisfies Laplace's equation
@@ -984,9 +1067,10 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
    import f_vals_smoother as smt	
    
    if xy_coords2 is None:
-      if basemap is not None:
-         x,y=basemap(lons,lats)
-      else:
+
+      ######################################################################################
+      # make basemap if needed
+      if basemap is None:
          from mpl_toolkits.basemap import Basemap
          import geometry_sphere as GS # from py_funs
          #
@@ -1000,9 +1084,11 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
          basemap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
                               projection='stere',rsphere=[R,R],\
                               width=P,height=P)
-         x,y  = basemap(lons,lats)
+         ###################################################################################
 
-         xy_coords2  = np.array([x,y]).transpose()
+      x,y         = basemap(lons,lats)
+      xy_coords2  = np.array([x,y]).transpose()
+      ######################################################################################
 
    if fvals is not None:
       fvals2 = smt.smoother(fvals)
@@ -1014,18 +1100,20 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
       fvals2 = PCA.set_func_vals()
       CSopt  = 1
 
+   print(fvals2)
+   print(xy_coords2)
    t0 = time.clock()
    print('\n**********************************************************************')
    print('Calculating potential...\n')
    fun_sol  = dirichlet_fund_soln(xy_coords2,fvals2)#,bmap=basemap)
-   t1 = time.clock()
+   t1       = time.clock()
    print('\nTime to get potential (s): '+str(t1-t0))
    print('**********************************************************************\n')
 
    print('\n**********************************************************************')
    print('Calculating stream function...\n')
    stream   = dirichlet_stream_func(potential=fun_sol)
-   t2 = time.clock()
+   t2       = time.clock()
    print('\nTime to get stream function (s): '+str(t2-t1))
    print('**********************************************************************\n')
 
@@ -1036,7 +1124,7 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
       def __init__(self,func_vals):
       	 self.func_vals = 1*func_vals
          return
-   
+
       def selector_binary(self,i0,il):
    	 # assume func_vals are a binary function
    	 # keep contours that end on the opposite value
@@ -1051,7 +1139,7 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
    	    #keep = False
    	    keep  = np.logical_or(fl==0.,fl==1.)
    	 return keep
-   
+
       def selector_binary_v2(self,i0,il):
          # assume func_vals are a binary function
          # remove contours that end on the same value (or group of values)
@@ -1064,7 +1152,7 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
          else:
             keep  = ((fl==0.) or (fl==1.))
          return keep
-   
+
       def selector_opp_sign(self,i0,il):
          # remove contours that end on values with opposite signs
             # - good for sinusoidal type functions
@@ -1073,7 +1161,6 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
          keep   = (f0*fl<0) # opposite signs
          return keep
    ###########################################################################################
-
 
    CS = contour_selection(fun_sol.func_vals)
    if CSopt==1:
@@ -1119,8 +1206,8 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
    else:
       # spherical stuff
       AI = stream.get_contour_lengths(pobj=pobj,bmap=basemap,show=False,\
-      test_function=selector_function,\
-      func_vals_orig=1*fun_sol.func_vals)
+                                       test_function=selector_function,\
+                                       func_vals_orig=1*fun_sol.func_vals)
       if pobj is not None:
       	figname	= outdir+'/test_Laplacian_spherical'+fstr+'.png'
    	
@@ -1144,4 +1231,8 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
    print(ttl)
    print('**********************************************************************\n')
    
-   return AI,fun_sol,stream
+
+   Psoln = MIZ_soln(AI,fun_sol,stream)
+   # Psoln = [AI,fun_sol,stream]
+
+   return Psoln
