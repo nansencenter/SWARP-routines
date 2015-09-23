@@ -25,7 +25,10 @@ lons,lats   = bmap(x0,y0,inverse=True)
 
 ####################################################################################
 if 1:
-   AI,fun_sol,stream = Leqs.get_MIZ_widths(lons,lats)
+   Psoln = Leqs.get_MIZ_widths(lons,lats)
+   fun_sol  = Psoln.potential
+   stream   = Psoln.stream
+   AI       = Psoln.area_info
 else:
    import geometry_sphere as GS # from py_funs
    import f_vals_smoother as smt	
@@ -52,8 +55,8 @@ else:
       fig   = plt.figure()
       ax    = fig.add_subplot(111)
       ax.plot(PCA.X,PCA.Y)
-      # x2,y2 = PCA.map(x0,y0,inverse=False)
-      x2,y2 = PCA.map(PCA.x,PCA.y,inverse=False)
+      # x2,y2 = PCA.mapper(x0,y0,inverse=False)
+      x2,y2 = PCA.mapper(PCA.x,PCA.y,inverse=False)
       ax.plot(x2,y2,'--r')
       ax.set_aspect('equal')
       fig.show()
@@ -64,7 +67,7 @@ else:
       ax2   = fig2.add_subplot(111)
       ax2.plot(PCA.x,PCA.y)
       # ax2.plot(x0,y0,'--m')
-      x1,y1 = PCA.map(PCA.X,PCA.Y,inverse=True)
+      x1,y1 = PCA.mapper(PCA.X,PCA.Y,inverse=True)
       ax2.plot(x1,y1,'--r')
       ax2.set_aspect('equal')
       fig2.show()
@@ -79,9 +82,12 @@ else:
    fun_sol  = Leqs.dirichlet_fund_soln(xy_coords2,fvals2)
    stream   = Leqs.dirichlet_stream_func(potential=fun_sol)
    AI       = stream.get_contour_lengths()
+   Psoln    = Leqs.MIZ_soln(fun_sol,stream,AI)
 ####################################################################################
 
-if 1:
+####################################################################################
+#plotting
+if 0:
    fig   = plt.figure()
    ax    = fig.add_subplot(111)
    fun_sol.plot_solution(plot_boundary=False,pobj=[fig,ax],show=False)
@@ -93,3 +99,9 @@ if 1:
    ax.title.set_text('median contour length (km): '+str(AI.length_median/1.e3))
    ax.set_aspect('equal')
    fig.show()
+else:
+   fig   = plt.figure()
+   ax    = fig.add_subplot(111)
+   Psoln.plot_soln('Potential',pobj=[fig,ax],show=True,\
+            cbar=True,title=True)
+####################################################################################
