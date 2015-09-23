@@ -292,7 +292,7 @@ class dirichlet_fund_soln:
          # set up for another iteration
          # TODO this may not be the best way
          # - perhaps add more points on line segments of polygon
-         fac                     = int(np.ceil(1.2*Nmax/float(N1)))
+         fac                     = int(np.ceil(1.2*Ntarget/float(N1)))
          self.buffer_resolution  = fac*self.buffer_resolution
 
          # need to call _get_singularities again,
@@ -963,12 +963,13 @@ class MIZ_soln:
       self.stream    = stream
       return
 
-   def plot(self,option='Potential',pobj=None,show=False,bmap=None,\
+   def plot_soln(self,option='Potential',pobj=None,show=False,bmap=None,\
          cbar=False,title=False):
 
       import numpy as np
 
       if pobj is None:
+         from matplotlib import pyplot as plt
          fig   = plt.figure()
          ax    = fig.add_subplot(111)
       else:
@@ -1094,9 +1095,10 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
       fvals2 = smt.smoother(fvals)
       CSopt  = 0
    else:
+      import MIZchar as mizc
       # use principal components to set
       # the function values on the boundary
-      PCA    = smt.pca_mapper(xy_coords2)
+      PCA    = mizc.pca_mapper(xy_coords2)
       fvals2 = PCA.set_func_vals()
       CSopt  = 1
 
