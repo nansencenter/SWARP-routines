@@ -169,8 +169,14 @@ for iday in range(day0,day1+1):
       for Poly in Polys:
          lons,lats   = np.array(Poly.ll_coords).transpose()
          if 0:
-            #direct Laplacian soln
-            Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
+            if 1:
+               # direct Laplacian soln
+               # - use fvals
+               Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
+            else:
+               # - use PCA
+               Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=bmap)
+
             cbar  = (Psolns==[])
             Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
             Psolns.append(Psoln)

@@ -69,7 +69,7 @@ bmap  = Basemap(width=2*xmax,height=2*ymax,\
                 lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 #######################################################################
 
-if 0:
+if 1:
    day0  = 1
    day1  = 28
    show  = False

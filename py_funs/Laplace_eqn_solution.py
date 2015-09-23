@@ -992,7 +992,7 @@ class MIZ_soln:
          # plot streamlines (m)
          for cc in self.area_info.xy_contours:
             xx,yy = np.array(cc).transpose()
-            bmap.plot(xx,yy,'k',linewidth=2,ax=ax)
+            bmap.plot(xx,yy,'c',linewidth=2,ax=ax)
 
       else:
          plot_fun(plot_boundary=False,pobj=[fig,ax],show=False,cbar=cbar)
