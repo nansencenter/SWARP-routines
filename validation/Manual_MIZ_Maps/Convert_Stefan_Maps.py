@@ -30,7 +30,10 @@ else:
    check_ends  = False
    use_thresh  = True
 
-rootdir  = '/Volumes/sim/tim/Projects/SWARP/Stefan'
+if 0:
+   rootdir  = '/Volumes/sim/tim/Projects/SWARP/Stefan'
+else:
+   rootdir  = '/Users/timill/Documents/SWARP/Stefan'
 tdir     = rootdir+'/'+fmon+'/'+vsn+'/txt'
 idir     = rootdir+'/'+fmon+'/'+vsn+'/pdf'
 outdir   = rootdir+'/'+fmon+'/'+vsn+'/polygons'
@@ -66,18 +69,18 @@ bmap  = Basemap(width=2*xmax,height=2*ymax,\
                 lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 #######################################################################
 
-if 1:
+if 0:
    day0  = 1
    day1  = 28
    show  = False
 else:
-   # day   = 1
+   day   = 1
    # day   = 5
    # day   = 8
    # day   = 17
    # day   = 18
    # day   = 25
-   day   = 28
+   # day   = 28
    day0  = day
    day1  = day
    show  = True
@@ -115,10 +118,12 @@ for iday in range(day0,day1+1):
                # 1st is usually MIZ but not always
                # - define manually
                func_val = 1 #MIZ
-               Lino_ref = FSM.line_info(cdate,Lin[0],bmap,func_val)
+               # Lino_ref = FSM.line_info(cdate,Lin[0],bmap,func_val)
+               Lino_ref = FSM.line_info(Lin[0],bmap,cdate=cdate,func_val=func_val)
             else:
                func_val = 0 #ice edge
-               Lino     = FSM.line_info(cdate,Lin[0],bmap,func_val)
+               #Lino     = FSM.line_info(cdate,Lin[0],bmap,func_val)
+               Lino     = FSM.line_info(Lin[0],bmap,cdate=cdate,func_val=func_val)
                Linos.append(Lino)
          #################################################################
                

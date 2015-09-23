@@ -27,12 +27,12 @@ def write_polys(fname,Polys):
 #######################################################################
 class line_info:
    # make object with helpful info:
-   def __init__(self,cdate,ll_coords,bmap,func_val):
+   def __init__(self,ll_coords,bmap,cdate=None,func_val=None):
 
       if type(cdate)==type('string'):
          self.datetime  = datetime.strptime(cdate,'%Y%m%d')
       else:
-         self.datetime  = cdate # already a datetime object
+         self.datetime  = cdate # already a datetime object (or is None)
 
       self.func_val  = func_val
       llc            = 1*ll_coords
@@ -80,12 +80,12 @@ class line_info:
 #######################################################################
 class poly_info:
    # make object with helpful info:
-   def __init__(self,cdate,ll_coords,bmap,func_vals):
+   def __init__(self,ll_coords,bmap,func_vals=None,cdate=None):
 
       if type(cdate)==type('string'):
          self.datetime  = datetime.strptime(cdate,'%Y%m%d')
       else:
-         self.datetime  = cdate # already a datetime object
+         self.datetime  = cdate # already a datetime object (or is None)
       self.length    = len(ll_coords)
 
       if type(bmap)==type([]):
@@ -93,37 +93,54 @@ class poly_info:
          xy_coords   = 1*bmap
       else:
          # get x,y from basemap
-         lon,lat  = np.array(ll_coords).transpose()
-         x,y      = bmap(lon,lat)
+         lon,lat     = np.array(ll_coords).transpose()
+         x,y         = bmap(lon,lat)
          xy_coords   = list(np.array([x,y]).transpose())
 
-      fvals = list(func_vals)
+      if func_vals is not None:
+         fvals = list(func_vals)
+      else:
+         fvals = None
       xyc2  = [tuple(xyp) for xyp in xy_coords] # list of tuples (otherwise logical ops are difficult)
       llc2  = [tuple(llp) for llp in ll_coords] # list of tuples (otherwise logical ops are difficult)
 
-      critter  =     (len(ll_coords)!=len(xy_coords))\
-                  or (len(ll_coords)!=len(func_vals))\
-                  or (len(xy_coords)!=len(func_vals))
+      critter  = (len(ll_coords)!=len(xy_coords))
+      flen     = 0
+      if func_vals is not None:
+         flen     = len(func_vals)
+         critter  = critter\
+                     or (len(ll_coords)!=len(func_vals))\
+                     or (len(xy_coords)!=len(func_vals))
+
+      #####################################################
       if critter:
-         print('lengths (ll,xy,f):')
-         print(len(ll_coords))
-         print(len(xy_coords))
-         print(len(func_vals))
+         if flen>0:
+            print('lengths (ll,xy,f):')
+            print(len(ll_coords))
+            print(len(xy_coords))
+            print(flen)
+         else:
+            print('lengths (ll,xy):')
+            print(len(ll_coords))
+            print(len(xy_coords))
          raise ValueError('Inconsistent lengths of inputs')
+      #####################################################
 
       # close if necessary
       if xyc2[0]!=xyc2[-1]:
          llc2.append(llc2[0])
          xyc2.append(xyc2[0])
-         fvals.append(fvals[0])
+         if func_vals is not None:
+            fvals.append(fvals[0])
 
       x,y   = np.array(xyc2).transpose()
       area  = GP.area_polygon_euclidean(x,y)
       if area<0:
          # reverse order (want anti-clockwise ordering)
-         fvals.reverse()
          xyc2.reverse()
          llc2.reverse()
+         if func_vals is not None:
+            fvals.reverse()
 
       self.area      = abs(area)
       self.func_vals = fvals
@@ -235,7 +252,7 @@ def shapely2poly(shp,Lino,Lino_ref):
          ll_coords.append(Lino_ref.ll_coords[i1])
          func_vals.append(Lino_ref.func_val)
 
-   Poly  = poly_info(Lino.datetime,ll_coords,xy_coords,func_vals)
+   Poly  = poly_info(ll_coords,xy_coords,cdate=Lino.datetime,func_vals=func_vals)
    return Poly
 #######################################################################
 
@@ -276,7 +293,8 @@ def check_refpoints(Poly,Lino_ref,Lino):
       # make line_info object from Poly
       # => want no repeats (not closed curve now)
       lon0,lat0   = np.array(Poly.ll_coords[:-1]).transpose()
-      PolyL       = line_info(Poly.datetime,Poly.ll_coords[:-1],Poly.xy_coords[:-1],-1)
+      # PolyL       = line_info(Poly.datetime,Poly.ll_coords[:-1],Poly.xy_coords[:-1],-1)
+      PolyL       = line_info(Poly.ll_coords[:-1],Poly.xy_coords[:-1],cdate=Poly.datetime,func_val=-1)
       Pfunc_vals  = Poly.func_vals[:-1]
 
       cc0   = endc[m]                           # own coords
@@ -345,7 +363,8 @@ def check_refpoints(Poly,Lino_ref,Lino):
 
       #######################################################################
       # make new polygon
-      Poly  = poly_info(Lino.datetime,ll_coords2,xy_coords2,fvals2)
+      #Poly  = poly_info(Lino.datetime,ll_coords2,xy_coords2,fvals2)
+      Poly  = poly_info(ll_coords2,xy_coords2,cdate=Lino.datetime,func_vals=fvals2)
       #######################################################################
 
    # end loop over endpoints of Lino_ref
@@ -376,7 +395,8 @@ def Linos2polys(Lino_ref,Linos,fix_invalid=True,check_ends=True,use_thresh=False
             llc.append(ll_coords[i])
 
       lon,lat  = np.array(llc).transpose()
-      Lino     = line_info(Lino.datetime,llc,xyc,Lino.func_val)
+      # Lino     = line_info(Lino.datetime,llc,xyc,Lino.func_val)
+      Lino     = line_info(llc,xyc,cdate=Lino.datetime,func_val=Lino.func_val)
       ########################################################################
 
       cc0   = Lino.xy_coords[0]
@@ -425,7 +445,7 @@ def Linos2polys(Lino_ref,Linos,fix_invalid=True,check_ends=True,use_thresh=False
       # print(cc1,Lino_ref.xy_coords[j1])
       # print('\n')
       #
-      fvals = list(np.zeros(N0,dtype=int)+Lino.func_val)
+      fvals = N0*[Lino.func_val]
       if j1>j0:
          xy_coords2  = Lino_ref.xy_coords[j0:j1+1]
          xy_coords2.reverse()
@@ -447,7 +467,8 @@ def Linos2polys(Lino_ref,Linos,fix_invalid=True,check_ends=True,use_thresh=False
          fvals2   = list(np.zeros(len(xy_coords2),dtype=int)+Lino_ref.func_val)
          fvals.extend(fvals2)
       
-      Poly  = poly_info(Lino.datetime,llc,xyc,fvals)
+      # Poly  = poly_info(Lino.datetime,llc,xyc,fvals)
+      Poly  = poly_info(llc,xyc,cdate=Lino.datetime,func_vals=fvals)
       return Poly,Lino
    ####################################################################
 
