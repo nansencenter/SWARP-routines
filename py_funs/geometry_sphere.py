@@ -155,6 +155,31 @@ def arc_length(lons,lats,R=None,radians=False,closed=False):
 #######################################################
 
 #######################################################
+def perimeter(lons,lats,R=None,radians=False,closed=False):
+   # given vectors or lists lons,lats
+   # returns the perimeter
+
+   import numpy as np
+
+   if closed and (lons[0]!=lons[-1] or lats[0]!=lats[-1]):
+      # repeat last point
+      lons  = list(lons)
+      lats  = list(lats)
+      lons.append(lons[0])
+      lats.append(lats[0])
+
+   P  = 0
+   for n in range(1,len(lons)):
+      lon0  = lons[n-1]
+      lat0  = lats[n-1]
+      lon1  = lons[n]
+      lat1  = lats[n]
+      P     = P+greatcircledist(lat1, lon1, lat0, lon0, R=R,radians=radians)
+   
+   return P
+#######################################################
+
+#######################################################
 def area_polygon_ellipsoid(lon,lat,ellipsoid_mat=None,ellipsoid=None,radians=False):
    # area of polygon on ellipsoid
    # translation of areaint.m
