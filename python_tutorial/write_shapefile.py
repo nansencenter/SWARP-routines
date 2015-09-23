@@ -99,7 +99,16 @@ w.record(Area=40,Perimeter=80,Width=5)
 
 # add another polygon
 w.poly(parts=[coords_list])
-w.record(Area=50,Perimeter=70,Width=6)
+
+if 0:
+   # use keywords
+   w.record(Area=50,Perimeter=70,Width=6)
+elif 0:
+   # use list
+   w.record(*[50,70,6])
+elif 1:
+   # use dictionary
+   w.record(**{'Area':50,'Perimeter':70,'Width':6})
 
 # save file
 w.save('test')

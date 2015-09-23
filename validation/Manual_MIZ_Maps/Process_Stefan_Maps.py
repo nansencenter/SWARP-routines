@@ -15,6 +15,8 @@ import fns_Stefan_Maps as FSM
 import Laplace_eqn_solution as Leqs
 import MIZchar as mizc
 
+SV_SHP   = 0
+
 if 1:
    fmon        = '201402'
    fix_invalid = True
@@ -180,7 +182,7 @@ for iday in range(day0,day1+1):
             cbar  = (Psolns==[])
             Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
             Psolns.append(Psoln)
-         elif 1:
+         elif 0:
             # apply Laplacian method to simpler covering polygon
             method         = 'ConvexHull'
             # method         = 'Buffer'
@@ -201,6 +203,8 @@ for iday in range(day0,day1+1):
             PCA      = mizc.pca_mapper(Poly.xy_coords)
             MIZinfo  = PCA.get_MIZ_lines(bmap)
             MIZinfo.plot_soln(bmap,ax=ax1,color='c')
+            Psolns.append(MIZinfo)
+            SV_SHP   = 1
       ############################################################
 
       Fplt.finish_map(bmap,ax=ax1)
@@ -213,24 +217,6 @@ for iday in range(day0,day1+1):
       ax1.cla()
       plt.close(fig)
 
-      if 0:
-         # TEST PLOT - with polygons
-         #
-         fig   = plt.figure()
-         ax1   = fig.add_subplot(1,1,1)
-         lstil = ['-','--']
-
-         for Poly in Polys:
-            x,y   = np.array(Poly.xy_coords).transpose()
-            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-
-         Fplt.finish_map(bmap,ax=ax1)
-
-         if 1:#show:
-            plt.show(fig)
-         else:
-            figname  = figdir+'/'+cdate+"_polys.png"
-            print('>'+figname)
-            fig.savefig(figname)
-         ax1.cla()
-         plt.close(fig)
+      if SV_SHP:
+         #save shapefile
+         mizc.save_shapefile(Psolns)

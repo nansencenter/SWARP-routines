@@ -51,6 +51,8 @@ class MIZ_info:
          MIZc.plot_lines(bmap,**kwargs)
       return
    #################################################################
+
+   # end class MIZ_info
 ####################################################################
 
 ####################################################################
@@ -367,4 +369,52 @@ class pca_mapper:
       #TODO also collect MIZwidths into area_info object
       MIZi  = MIZ_info(xyc,mapper,MIZlines,MIZwidths_int,MIZwidths_tot)
       return MIZi
+################################################################################################
+
+################################################################################################
+def save_shapefile(MIZpolys,filename='test.shp'):
+
+   import shapefile
+   w  = shapefile.Writer(shapefile.POLYGON)
+
+   ###############################################################################
+   # define attributes
+   fields   = ['Area','Perimeter',\
+               'Width_inner_percentile05','Width_inner_percentile50','Width_inner_percentile95',\
+               'Width_tot_percentile05','Width_tot_percentile50','Width_tot_percentile95']
+
+   # corresponding attributes
+   attrs    = ['area','perimeter',\
+               'int_width_percentile05','int_width_median','int_width_percentile95',\
+               'tot_width_percentile05','tot_width_median','tot_width_percentile95']
+
+   fdict = {}
+   for i,fld in enumerate(fields):
+      # create field in shapefile
+      w.field(fld,'N','40') # name,type ('C'=character, 'N'=number), size (?)
+
+      # create dictionary of corresponding MIZ_info object attributes
+      fdict.update({fld:attrs[i]})
+   ###############################################################################
+
+   ###############################################################################
+   for MIZi in MIZpolys:
+
+      # get record:
+      rec   = {}
+      for fld in fields:
+         rec.update({fld:getattr(MIZi,fdict[fld])})
+
+      # get parts:
+      parts = [MIZi.ll_bdy_coords]
+
+      # write them to the file
+      w.poly(parts=parts)
+      w.record(**rec)
+   ###############################################################################
+
+   # save file
+   print('\nSaving polygons to shapefile: '+filename)
+   w.save(filename)
+   return
 ################################################################################################
