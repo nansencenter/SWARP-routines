@@ -410,7 +410,7 @@ class pca_mapper:
       #
       xyc   = np.array([self.X,self.Y]).transpose()
       xyc   = [tuple(xy) for xy in xyc]
-      shp   = shg.Polygon(xyc)
+      shp   = shg.Polygon(xyc).buffer(0)
       #
       P,resolution,spacings,th_vec  = GP.curve_info(xyc)
       #
@@ -439,6 +439,50 @@ class pca_mapper:
       MIZi  = MIZ_info(xyc,mapper,MIZlines,MIZwidths_int,MIZwidths_tot)
       return MIZi
 ################################################################################################
+
+#######################################################################
+def SimplifyPolygon(lons,lats,bmap,res=10000.,method='ConvexHull'):
+   import shapely.geometry       as shg
+   import Laplace_eqn_solution   as Leqs
+
+   x,y   = bmap(lons,lats)
+   xy    = np.array([x,y]).transpose()
+   xyc   = [tuple(xyi) for xyi in xy]
+   shp   = shg.Polygon(xyc).buffer(0)
+
+   if method=='ConvexHull':
+      # get convex hull
+      shp2  = shp.convex_hull
+      x2,y2 = shp2.exterior.coords.xy
+   else:
+      # get convex hull
+      shp2  = covering_polygon(shp)
+      x2,y2 = shp2.exterior.coords.xy
+
+   # increase resolution (m) (this increases the number of points):
+   x3,y3       = fill_poly(x2,y2,res=res)
+   lons2,lats2 = bmap(x3,y3,inverse=True)
+   
+   # apply Laplacian soln to simplified polygon
+   Psoln = Leqs.get_MIZ_widths(lons2,lats2,basemap=bmap)
+
+   ####################################################################
+   # restrict contour lines to within original poly
+   MIZlines = []
+   for llc in Psoln.area_info.lonlat_contours:
+      lonv,latv   = np.array(llc).transpose()
+      xx,yy       = bmap(lonv,latv)
+      xyv         = np.array([xx,yy]).transpose()
+      xyv         = [tuple(xyi) for xyi in xyv]
+      #
+      LS = shg.LineString(xyv)
+      if LS.intersects(shp):
+         LSi   = LS.intersection(shp)
+         MIZlines.append(MIZcont(LSi,bmap))
+   ####################################################################
+
+   return Psoln,MIZlines
+#######################################################################
 
 ################################################################################################
 def save_shapefile(MIZpolys,filename='test.shp'):
@@ -470,3 +514,92 @@ def save_shapefile(MIZpolys,filename='test.shp'):
    w.save(filename)
    return
 ################################################################################################
+
+#########################################################
+def single_file(filename,bmap,pobj=None,cdate=None,METH=4):
+
+   """
+   0     : direct Laplacian with specified boundary flags
+   1     : direct Laplacian with boundary flags determined from PCA
+   2,3   : direct Laplacian to simplified polygon (lower fractal dimension index),
+            with boundary flags determined from PCA for new shape
+    * 2 > get convex hull
+    * 3 > dilation to get less complicated shape (in between original and convex hull)
+   4     : Use PCA to determine direction to get the width in,
+            then just take straight lines across (in stereographic projection space)
+   """
+
+   import fns_Stefan_Maps as FSM
+
+   MK_PLOT  = 0
+   if pobj is not None:
+      fig,ax1  = pobj
+      MK_PLOT  = 1
+
+   ############################################################
+   # get polys as "poly_info" objects
+   Pols  = FSM.read_txt_file_polys(filename)
+   Polys = []
+   for llc,fvals in Pols:
+      Poly  = FSM.poly_info(llc,bmap,cdate=cdate,func_vals=fvals)
+      Polys.append(Poly)
+   ############################################################
+
+   ############################################################
+   Psolns   = []
+   for Poly in Polys:
+      lons,lats   = np.array(Poly.ll_coords).transpose()
+      if METH<2:
+         if METH==0:
+            # direct Laplacian soln
+            # - use fvals
+            print('\nUsing Laplacian on original polygon, with boundary flags\n')
+            Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
+         else:
+            print('\nUsing Laplacian on original polygon, with PCA\n')
+            # - use PCA
+            Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=bmap)
+
+         if MK_PLOT:
+            cbar  = (Psolns==[])
+            Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
+         Psolns.append(Psoln)
+
+      elif METH<4:
+         # apply Laplacian method to simpler covering polygon
+         if METH==2:
+            method   = 'ConvexHull'
+         else:
+            method   = 'Buffer'
+
+         print('\nUsing Laplacian on simplified polygon ('+method\
+               +'), with PCA\n')
+         Psoln,MIZlines = SimplifyPolygon(lons,lats,bmap,method=method)
+
+         if MK_PLOT:
+            cbar  = (Psolns==[])
+            Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
+            #
+            x,y   = np.array(Poly.xy_coords).transpose()
+            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
+            #
+            for MIZc in MIZlines:
+               MIZc.plot_lines(bmap,ax=ax1,color='c')
+
+         Psolns.append(Psoln)
+
+      elif METH==4:
+         print('\nUsing PCA without Laplacian solution\n')
+         
+         PCA      = pca_mapper(Poly.xy_coords)
+         MIZinfo  = PCA.get_MIZ_lines(bmap)
+         Psolns.append(MIZinfo)
+
+         if MK_PLOT:
+            x,y   = np.array(Poly.xy_coords).transpose()
+            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
+            MIZinfo.plot_soln(bmap,ax=ax1,color='c')
+   ############################################################
+
+   return Psolns
+#########################################################

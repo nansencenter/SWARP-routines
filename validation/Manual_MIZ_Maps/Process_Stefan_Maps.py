@@ -16,7 +16,8 @@ import Laplace_eqn_solution as Leqs
 import MIZchar as mizc
 
 # Choose method (METH)
-METH     = 1
+METH  = 2
+# METH  = 4
 """
 0     : direct Laplacian with specified boundary flags
 1     : direct Laplacian with boundary flags determined from PCA
@@ -24,7 +25,8 @@ METH     = 1
          with boundary flags determined from PCA for new shape
  * 2 > get convex hull
  * 3 > dilation to get less complicated shape (in between original and convex hull)
-4     : Use PCA to determine direction to get the width in
+4     : Use PCA to determine direction to get the width in,
+         then just take straight lines across (in stereographic projection space)
 """
 
 # save/don't save results to shapefile (1/0)
@@ -52,6 +54,17 @@ else:
 rootdir  = '/Users/timill/Documents/SWARP/Stefan'
 indir    = rootdir+'/'+fmon+'/'+vsn+'/polygons/txt'
 
+# location of outputs
+outdir   = rootdir+'/'+fmon+'/'+vsn+'/polygons/out'
+if not os.path.exists(outdir):
+   os.mkdir(outdir)
+figdir   = outdir+'/figs'
+if not os.path.exists(figdir):
+   os.mkdir(figdir)
+shpdir   = outdir+'/shps'
+if not os.path.exists(shpdir):
+   os.mkdir(shpdir)
+
 #######################################################################
 # make standard stereographic basemap
 # - for plotting and also for limiting search area
@@ -72,64 +85,24 @@ bmap     = Basemap(width=2*xmax,height=2*ymax,\
               resolution=cres,projection='stere',\
               lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 
-
-#######################################################################
-def Simplify(lons,lats,bmap,res=10000.,method='ConvexHull'):
-
-   x,y   = bmap(lons,lats)
-   xy    = np.array([x,y]).transpose()
-   xyc   = [tuple(xyi) for xyi in xy]
-   shp   = SHgeom.Polygon(xyc)
-
-   if method=='ConvexHull':
-      # get convex hull
-      shp2  = shp.convex_hull
-      x2,y2 = shp2.exterior.coords.xy
-   else:
-      # get convex hull
-      shp2  = mizc.covering_polygon(shp)
-      x2,y2 = shp2.exterior.coords.xy
-
-   # increase resolution (m) (this increases the number of points):
-   x3,y3       = mizc.fill_poly(x2,y2,res=res)
-   lons2,lats2 = bmap(x3,y3,inverse=True)
-   
-   # apply Laplacian soln to simplified polygon
-   Psoln = Leqs.get_MIZ_widths(lons2,lats2,basemap=bmap)
-
-   ####################################################################
-   # restrict contour lines to within original poly
-   MIZlines = []
-   for llc in Psoln.area_info.lonlat_contours:
-      lonv,latv   = np.array(llc).transpose()
-      xx,yy       = bmap(lonv,latv)
-      xyv         = np.array([xx,yy]).transpose()
-      xyv         = [tuple(xyi) for xyi in xyv]
-      #
-      LS    = SHgeom.LineString(xyv)
-      if LS.intersects(shp):
-         LSi   = LS.intersection(shp)
-         MIZlines.append(mizc.MIZcont(LSi,bmap))
-   ####################################################################
-
-   return Psoln,MIZlines
-#######################################################################
-
-if 0:
+if 1:
    day0  = 1
+   #day0  = 25
    day1  = 28
    show  = False
 else:
    # day   = 1
    # day   = 5
    # day   = 8
-   day   = 17
+   # day   = 17
    # day   = 18
-   # day   = 25
+   day   = 26
    # day   = 28
    day0  = day
    day1  = day
+
    show  = True
+   # show  = False
 
 for iday in range(day0,day1+1):
    cday  = '%2.2d' %(iday)
@@ -137,70 +110,15 @@ for iday in range(day0,day1+1):
    fname = indir+'/'+cdate+'_polys.txt'
    if os.path.exists(fname):
       print('\n'+60*'--'+'\nReading '+fname+'\n')
-
-      ############################################################
-      # get polys as "poly_info" objects
-      Pols  = FSM.read_txt_file_polys(fname)
-      Polys = []
-      for llc,fvals in Pols:
-         Poly  = FSM.poly_info(llc,bmap,cdate=cdate,func_vals=fvals)
-         Polys.append(Poly)
-      ############################################################
-
-      ############################################################
       fig      = plt.figure()
       ax1      = fig.add_subplot(1,1,1)
-      Psolns   = []
-      for Poly in Polys:
-         lons,lats   = np.array(Poly.ll_coords).transpose()
-         if METH<2:
-            if METH==0:
-               # direct Laplacian soln
-               # - use fvals
-               print('\nUsing Laplacian on original polygon, with boundary flags\n')
-               Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
-            else:
-               print('\nUsing Laplacian on original polygon, with PCA\n')
-               # - use PCA
-               Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=bmap)
+      Psolns   = mizc.single_file(fname,bmap,pobj=[fig,ax1],\
+                                    cdate=cdate,METH=METH)
 
-            cbar  = (Psolns==[])
-            Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
-            Psolns.append(Psoln)
-
-         elif METH<4:
-            # apply Laplacian method to simpler covering polygon
-            if METH==2:
-               method   = 'ConvexHull'
-            else:
-               method   = 'Buffer'
-
-            print('\nUsing Laplacian on simplified polygon ('+method\
-                  +'), with PCA\n')
-            Psoln,MIZlines = Simplify(lons,lats,bmap,method=method)
-            cbar           = (Psolns==[])
-            Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
-            Psolns.append(Psoln)
-            #
-            x,y   = np.array(Poly.xy_coords).transpose()
-            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-            #
-            for MIZc in MIZlines:
-               MIZc.plot_lines(bmap,ax=ax1,color='c')
-
-         elif METH==4:
-            print('\nUsing PCA without Laplacian solution\n')
-            x,y   = np.array(Poly.xy_coords).transpose()
-            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-            #
-            PCA      = mizc.pca_mapper(Poly.xy_coords)
-            MIZinfo  = PCA.get_MIZ_lines(bmap)
-            MIZinfo.plot_soln(bmap,ax=ax1,color='c')
-            Psolns.append(MIZinfo)
       ############################################################
-
+      # finish off fig and show/save
       Fplt.finish_map(bmap,ax=ax1)
-      if 1:#show:
+      if show:
          plt.show(fig)
       else:
          figname  = figdir+'/'+cdate+"_polys.png"
@@ -208,7 +126,10 @@ for iday in range(day0,day1+1):
          fig.savefig(figname)
       ax1.cla()
       plt.close(fig)
+      ############################################################
 
       if SV_SHP:
          #save shapefile
-         mizc.save_shapefile(Psolns,filename='out/test.shp')
+         # sname = 'out/test.shp'
+         sname = shpdir+'/'+cdate+'_polys.shp'
+         mizc.save_shapefile(Psolns,filename=sname)
