@@ -4,6 +4,51 @@ import geometry_sphere as GS
 import shapely.geometry as shg
 from matplotlib import pyplot as plt
 
+######################################################################
+def fill_poly(x,y,res=None):
+   # if resolution of a poly is too low, increase it artificially
+   xy                            = np.array([x,y]).transpose()
+   xyc                           = [tuple(xyi) for xyi in xy]
+   P,resolution,spacings,th_vec  = GP.curve_info(xyc)
+
+   ############################################################
+   if res is None:
+      # add a point in between each current one
+      x2,y2 = xyc[0]
+      x2    = [x2]
+      y2    = [y2]
+      for i in range(1,len(xyc)):
+         x0,y0 = x2[-1],y2[-1]
+         x1,y1 = xyc[i]
+         x2.extend([.5*(x0+x1),x1])
+         y2.extend([.5*(y0+y1),y1])
+   else:
+      # add points to make spacings <=res
+      x2 = []
+      y2 = []
+      for i,spc in enumerate(spacings):
+         x0,y0 = xyc[i]
+         x1,y1 = xyc[i+1]
+         dist  = np.sqrt(pow(x1-x0,2)+pow(y1-y0,2))
+         if dist>res:
+            N  = np.ceil(dist/float(res))
+            xx = list(np.linspace(x0,x1,num=N))[:-1]
+            yy = list(np.linspace(y0,y1,num=N))[:-1]
+         else:
+            xx = [x0]
+            yy = [y0]
+
+         x2.extend(xx)
+         y2.extend(yy)
+
+      # include last point
+      x2.append(x1)
+      y2.append(y1)
+   ############################################################
+
+   return np.array(x2),np.array(y2)
+#######################################################################
+
 ########################################################################################
 class MIZ_info:
 
@@ -19,8 +64,9 @@ class MIZ_info:
       # - like copy, but works for lists also
       self.int_widths   = 1*MIZwidths_int
       self.tot_widths   = 1*MIZwidths_tot
-      self.area	        = GS.area_polygon_ellipsoid(lons,lats) # area of polygon
+      self.area	      = GS.area_polygon_ellipsoid(lons,lats) # area of polygon
       self.perimeter    = GS.perimeter(lons,lats)              # perimeter of polygon
+      self.FDI          = frac_dim_index([self.area,self.perimeter])
       
       # lon-lat info if present
       self.spherical_geometry = True
@@ -32,18 +78,35 @@ class MIZ_info:
       # some summarising info about "lengths"
       # - intersection widths
       lens                          = np.array(self.int_widths)
+      self.int_width_mean           = np.mean(lens)
       self.int_width_median         = np.median(lens)
       self.int_width_percentile05   = np.percentile(lens,5)
       self.int_width_percentile95   = np.percentile(lens,95)
 
       # - total widths
       lens                          = np.array(self.tot_widths)
+      self.tot_width_mean           = np.mean(lens)
       self.tot_width_median         = np.median(lens)
       self.tot_width_percentile05   = np.percentile(lens,5)
       self.tot_width_percentile95   = np.percentile(lens,95)
 
+      # record for shapefile
+      self.record = {}
+      self.record.update({'Area'                      : self.area})
+      self.record.update({'Perimeter'                 : self.perimeter})
+      self.record.update({'Fractal_dimension_index'   : self.FDI})
+      self.record.update({'Width_mean'                : self.int_width_mean})
+      self.record.update({'Width_median'              : self.int_width_median})
+      self.record.update({'Width_percentile05'        : self.int_width_percentile05})
+      self.record.update({'Width_percentile95'        : self.int_width_percentile95})
       return
       ##############################################################
+
+   #################################################################
+   def parts(self):
+      # give the "parts" needed by shapefile
+      return [1*self.ll_bdy_coords]
+   #################################################################
 
    #################################################################
    def plot_soln(self,bmap,**kwargs):
@@ -170,8 +233,14 @@ def frac_dim_index(poly):
    # circle ~ .78
    # square ~ 1.
    # increases with complexity (<2 in 2d space)
-   P  = poly.length
-   A  = poly.area
+   if type(poly)==type([]):
+      # just a list with P,A
+      P,A   = poly
+   else:
+      # shapely poly
+      P  = poly.length
+      A  = poly.area
+
    if A==1:
       A  = 3
       P  = np.sqrt(3)*P
@@ -379,37 +448,20 @@ def save_shapefile(MIZpolys,filename='test.shp'):
 
    ###############################################################################
    # define attributes
-   fields   = ['Area','Perimeter',\
-               'Width_inner_percentile05','Width_inner_percentile50','Width_inner_percentile95',\
-               'Width_tot_percentile05','Width_tot_percentile50','Width_tot_percentile95']
-
-   # corresponding attributes
-   attrs    = ['area','perimeter',\
-               'int_width_percentile05','int_width_median','int_width_percentile95',\
-               'tot_width_percentile05','tot_width_median','tot_width_percentile95']
-
-   fdict = {}
-   for i,fld in enumerate(fields):
+   fields   = MIZpolys[0].record.keys()
+   for fld in fields:
       # create field in shapefile
       w.field(fld,'N','40') # name,type ('C'=character, 'N'=number), size (?)
-
-      # create dictionary of corresponding MIZ_info object attributes
-      fdict.update({fld:attrs[i]})
    ###############################################################################
 
    ###############################################################################
    for MIZi in MIZpolys:
-
-      # get record:
-      rec   = {}
-      for fld in fields:
-         rec.update({fld:getattr(MIZi,fdict[fld])})
-
-      # get parts:
-      parts = [MIZi.ll_bdy_coords]
-
-      # write them to the file
+      # add parts:
+      parts = MIZi.parts()
       w.poly(parts=parts)
+
+      # add record (dictionary):
+      rec   = MIZi.record
       w.record(**rec)
    ###############################################################################
 

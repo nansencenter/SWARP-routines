@@ -13,88 +13,40 @@ class dirichlet_fund_soln:
    def __init__(self,coords,func_vals,singularities=None):
       # initialise object
       
-      import numpy as np
-      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
-      import geometry_planar	as GP 	  # also in py_funs
-      import rtree.index	as Rindex
+      import numpy   as np
       
       #######################################################
-      self.func_vals = np.array(func_vals)
-      self.coords    = 1*coords # no longer pointer to list from outside the function
-      pcoords        = 1*coords
-      
-      if (pcoords[0][0]!=pcoords[-1][0]) and (pcoords[0][1]!=pcoords[-1][1]):
-         # not periodic
-         # - BUT need last and first coordinate the same for shapely polygon
-         print('not periodic')
-         pcoords.append(pcoords[0])
+      # check enough points, anticlockwise rotation, evenly spaced,...
+      # - also define area, perimeter...
+      # - define rtree index
+      self._check_coords(coords,func_vals,do_check=(singularities is None))
       #######################################################
       
       #######################################################
-      # make shapely polygon
-      # (coords now has end-point repeated,
-      #	self.coords doesn't)
-      self.shapely_polygon = shgeom.Polygon(pcoords)
-      #######################################################
-      
-      #######################################################
-      # want to go round curve anti-clockwise
-      x,y         = GP.coords2xy(self.coords)
-      area        = GP.area_polygon_euclidean(x,y)
-      self.area   = abs(area)
-      
-      if area<0:
-         print("Curve traversed in clockwise direction - reversing arrays' order")
-         self.func_vals = list(self.func_vals)
-         self.func_vals.reverse()
-         self.func_vals = np.array(self.func_vals)
-         #
-         self.coords = list(self.coords)
-         self.coords.reverse()
-         self.coords = self.coords
-      
-      # make rtree index
-      idx   = Rindex.Index()
-      for i,(xp,yp) in enumerate(self.coords):
-         idx.insert(i,(xp,yp,xp,yp)) # a point is a rectangle of zero side-length
-      self.coord_index	= idx
-      #######################################################
-      
-      self.number_of_points   = len(self.coords)
-      
-      # gets spacings,directions between points, and perimeter
-      self.perimeter,self.resolution,\
-      	 self.spacings,self.tangent_dirn  = GP.curve_info(self.coords)
-
-      # get points around boundary of polygon, then
-      # expand points by an amount related to the spacings of the coords
-      self.buffer_resolution	= 16 # default buffer resolution
+      # GET SINGULARITIES
+      self.buffer_resolution	= 8 # default buffer resolution
          # (number of segments used to approximate a quarter circle around a point.)
       
-      # self.solve_exactly	= solve_exactly
-      # # if True: number of singularities and number of boundary points should be the same
-
       if singularities is None:
-         get_sings = True
+         self._get_singularities()
       else:
-         get_sings                     = False
          self.singularities            = singularities 
          self.number_of_singularities  = len(self.singularities)
          print('Number of boundary points : '+str(self.number_of_points))
          print('Number of singularities   : '+str(self.number_of_singularities)+'\n')
+      #######################################################
 
-      while get_sings:
-      	# May need a couple of repetitions if too few singularities are found
-      	get_sings = self._get_singularities()
-
-      # solve Laplace's eqn (get a_n)
+      #######################################################
+      # SOLVE LAPLACE'S EQN (get a_n)
       self._solve_laplace_eqn()
 
       # # evaluate error on boundary:
       print('\nCalculating error on the boundary...')
       self._eval_solution_boundary()
       print(str(self.boundary_error)+'\n')
+      #######################################################
 
+      #######################################################
       if 0:
          # evaluate normal derivative -> stream function on boundary:
          print('\nCalculating normal derivative -> stream function on the boundary...\n')
@@ -104,12 +56,131 @@ class dirichlet_fund_soln:
          # use analytical definition of stream function
          # - for log, this is arctan2 (+const)
          self._get_stream_func_bdy()
+      #######################################################
 
       return
    #######################################################
    
    #######################################################
    # FUNCTIONS FOR INITIALISATION OF THE OBJECT BELOW:
+   #######################################################
+
+   #############################################################
+   def _check_coords(self,coords,fvals,do_check=True):
+
+      import rtree.index	as Rindex
+      import numpy            as np
+      import MIZchar          as mizc
+      import geometry_planar  as GP
+      import shapely.geometry as shgeom # http://toblerity.org/shapely/manual.html
+
+      #############################################################
+      def do_fill(pcoords,res=None,f=None):
+
+         #############################################################
+         if res is None: 
+            print('Too few points - adding more')
+         else:
+            print('Checking boundary points are close enough together')
+
+         xc,yc    = np.array(pcoords).transpose()
+         xc2,yc2  = mizc.fill_poly(xc,yc,res=res)
+         pc       = np.array([xc2,yc2]).transpose()   # arrays of arrays: coords = rows
+         pc       = [tuple(xy) for xy in pc]          # list of tuples
+         #############################################################
+
+         #############################################################
+         if f is not None:
+            fv = []
+            i0 = -1
+            for i,cc in enumerate(pc):
+               if cc in pcoords:
+                  # NB this includes 1st and last points
+                  i0 = i0+1
+                  fv.append(f[i0])
+               else:
+                  x,y   = cc
+                  x0,y0 = pcoords[i0]
+                  x1,y1 = pcoords[i0+1]
+                  wt    = np.sqrt(pow(x-x0,2)+pow(y-y0,2))/np.sqrt(pow(x1-x0,2)+pow(y1-y0,2))
+                  #
+                  f0 = f[i0]
+                  f1 = f[i0+1]
+                  fv.append(f0+wt*(f1-f0))
+         #############################################################
+
+         return pc,fv
+      #############################################################
+
+      pcoords  = list(coords)
+      fvals    = list(fvals)
+      pcoords  = [tuple(cc) for cc in pcoords]
+
+      #######################################################
+      # check for periodicity
+      if (pcoords[0]!=pcoords[-1]):
+         # not periodic
+         # - BUT need last and first coordinate the same for shapely polygon
+         print('not periodic')
+         pcoords.append(pcoords[0])
+         fvals.append(fvals[0])
+      #######################################################
+
+      if do_check:
+
+         #######################################################
+         # want to go round curve anti-clockwise
+         x,y         = np.array(pcoords).transpose()
+         area        = GP.area_polygon_euclidean(x,y)
+         self.area   = abs(area)
+         if area<0:
+            print("Curve traversed in clockwise direction - reversing arrays' order")
+            pcoords.reverse()
+            fvals.reverse()
+         #######################################################
+
+         #############################################################
+         #check that there are enough points 
+         Nmin  = 40
+         while len(pcoords)<Nmin:
+            #double no of points
+            pcoords,fvals  = do_fill(pcoords,f=fvals)
+         #############################################################
+
+         #############################################################
+         #check the points are evenly spaced
+         spc            = GP.curve_info(pcoords)[2]
+         res            = np.mean(spc)
+         pcoords,fvals  = do_fill(pcoords,res=res,f=fvals)
+         #######################################################
+         
+
+      #######################################################
+      # make shapely polygon
+      # (coords now has end-point repeated,
+      #	self.coords doesn't)
+      self.shapely_polygon = shgeom.Polygon(pcoords)
+      self.coords          = pcoords[:-1]
+      self.func_vals       = np.array(fvals[:-1])
+      #######################################################
+
+
+      #######################################################
+      # gets spacings,directions between points, and perimeter
+      self.number_of_points   = len(self.coords)
+      self.perimeter,self.resolution,\
+      	 self.spacings,self.tangent_dirn  = GP.curve_info(self.coords)
+      #######################################################
+
+      #######################################################
+      # make rtree index
+      idx   = Rindex.Index()
+      for i,(xp,yp) in enumerate(self.coords):
+         idx.insert(i,(xp,yp,xp,yp)) # a point is a rectangle of zero side-length
+      self.coord_index	= idx
+      #######################################################
+
+      return
    #######################################################
    
    #######################################################
@@ -118,8 +189,8 @@ class dirichlet_fund_soln:
       # calculate stream function on boundary
       # - continuous on boundary (also should be periodic)
 
-      import numpy as np
-      import geometry_planar as GP
+      import numpy            as np
+      import geometry_planar  as GP
       
       # coordinates of polygon
       x,y   = np.array(self.coords).transpose()
@@ -132,10 +203,10 @@ class dirichlet_fund_soln:
          spacings,tangent_dirn	= GP.curve_info(self.singularities)
 
       for i,sing in enumerate(self.singularities):
-         an	     = self.sing_coeffs[i]
+         an	         = self.sing_coeffs[i]
          branch_dir  = np.pi/2.+tangent_dirn[i]
-         atan2	     = GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
-         atan2	     = GP.make_arctan2_cts(atan2)
+         atan2	   = GP.arctan2_branch(y,x=x,branch_point=sing,branch_dir=branch_dir)
+         atan2	   = GP.make_arctan2_cts(atan2)
          sfun        = sfun+an*atan2
       
       self.stream_func_bdy = sfun
@@ -144,12 +215,22 @@ class dirichlet_fund_soln:
 
    #######################################################
    def _get_singularities(self):
+      import MIZchar as mizc
+      import numpy as np
 
       print('Getting singularities...\n')
 
       bufres   = self.buffer_resolution
       eps      = self.resolution/2.
       poly     = self.shapely_polygon.buffer(eps,resolution=bufres)
+
+      # make sure sing's are evenly spaced:
+      xs,ys = np.array(poly.exterior.coords).transpose()
+      xs,ys = mizc.fill_poly(xs,ys,1.5*eps)
+      xys   = np.array([xs,ys]).transpose()
+      #
+      self.singularities            = [tuple(xyi) for xyi in xys]
+      self.number_of_singularities  = len(xys)
 
       # put singularities (z_n) on the boundary of expanded polygon
       self.singularities   = list(poly.exterior.coords)
@@ -159,17 +240,18 @@ class dirichlet_fund_soln:
 
       self.number_of_singularities  = len(self.singularities)
       
-      if 1:
+      do_check = True
+      while do_check:
          # check the number of singularities:
          do_check = self._check_singularities()
-      else:
-         # accept automatically
-         do_check = False
-         print('Warning: not checking singularities')
-         print('Number of boundary points : '+str(self.number_of_points))
-         print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
+      # else:
+      #    # accept automatically
+      #    do_check = False
+      #    print('Warning: not checking singularities')
+      #    print('Number of boundary points : '+str(self.number_of_points))
+      #    print('Number of singularities	: '+str(self.number_of_singularities)+'\n')
          
-      return do_check
+      return
    #######################################################
    
    #######################################################
@@ -290,10 +372,24 @@ class dirichlet_fund_soln:
 
          ##########################################################################
          # set up for another iteration
-         # TODO this may not be the best way
-         # - perhaps add more points on line segments of polygon
-         fac                     = int(np.ceil(1.2*Ntarget/float(N1)))
-         self.buffer_resolution  = fac*self.buffer_resolution
+         if 0:
+            # increase buffer_resolution
+            # - not so good since this only adds more points round corners
+            fac                     = int(np.ceil(1.2*Ntarget/float(N1)))
+            self.buffer_resolution  = fac*self.buffer_resolution
+         else:
+            import MIZchar as mizc
+            xs,ys = np.array(self.singularities).transpose()
+
+            # double the number of sings
+            # TODO this may not be the best way
+            # - perhaps specify resolution
+            xs,ys = mizc.fill_poly(xs,ys)
+            xys   = np.array([xs,ys]).transpose()
+            #
+            self.singularities            = [tuple(xyi) for xyi in xys]
+            self.number_of_singularities  = len(xys)
+         ##########################################################################
 
          # need to call _get_singularities again,
          # to reset the singularities and check them
@@ -815,13 +911,15 @@ class dirichlet_fund_soln:
                         ll_bdy_coords=None,ll_contours=None,\
                         func_vals=None,stream_func=None):
          
+            import MIZchar as mizc
             # NB use "1*" to remove pointers to the arrays outside the function
             # - like copy, but works for lists also
-            self.xy_bdy_coords	 = 1*xy_bdy_coords # (x,y) coordinates of boundary (ie in projected space)
+            self.xy_bdy_coords   = 1*xy_bdy_coords # (x,y) coordinates of boundary (ie in projected space)
             self.xy_contours     = 1*xy_conts      # (x,y) coordinates of each contour
             self.lengths         = 1*lengths	   # lengths of each contour
             self.area	         = area		   # area of polygon
             self.perimeter       = perimeter	   # perimeter of polygon
+            self.FDI             = mizc.frac_dim_index([self.area,self.perimeter])
             
             # lon-lat info if present
             self.spherical_geometry = spherical_geometry
@@ -840,6 +938,7 @@ class dirichlet_fund_soln:
 
             # some summarising info about "lengths"
             lens                       = np.array(lengths)
+            self.length_mean           = np.mean(lens)
             self.length_median         = np.median(lens)
             self.length_percentile05   = np.percentile(lens,5)
             self.length_percentile95   = np.percentile(lens,95)
@@ -957,12 +1056,31 @@ def dirichlet_stream_func(coords=None,potential=None,func_vals=None):
 
 #######################################################################
 class MIZ_soln:
+
+   #######################################################
    def __init__(self,AI,potential,stream):
       self.area_info = AI
       self.potential = potential
       self.stream    = stream
-      return
 
+      # record for shapefile
+      self.record = {}
+      self.record.update({'Area'                      : AI.area})
+      self.record.update({'Perimeter'                 : AI.perimeter})
+      self.record.update({'Fractal_dimension_index'   : AI.FDI})
+      self.record.update({'Width_mean'                : AI.length_mean})
+      self.record.update({'Width_median'              : AI.length_median})
+      self.record.update({'Width_percentile05'        : AI.length_percentile05})
+      self.record.update({'Width_percentile95'        : AI.length_percentile95})
+      return
+   #######################################################
+
+   #######################################################
+   def parts(self):
+      return [self.area_info.ll_bdy_coords]
+   #######################################################
+
+   #######################################################
    def plot_soln(self,option='Potential',pobj=None,show=False,bmap=None,\
          cbar=False,title=False):
 
@@ -992,7 +1110,7 @@ class MIZ_soln:
          # plot streamlines (m)
          for cc in self.area_info.xy_contours:
             xx,yy = np.array(cc).transpose()
-            bmap.plot(xx,yy,'c',linewidth=2,ax=ax)
+            bmap.plot(xx,yy,'m',linewidth=2,ax=ax)
 
       else:
          plot_fun(plot_boundary=False,pobj=[fig,ax],show=False,cbar=cbar)
@@ -1000,7 +1118,7 @@ class MIZ_soln:
          # plot streamlines (km)
          for cc in self.area_info.xy_contours:
             xx,yy = np.array(cc).transpose()
-            ax.plot(xx/1.e3,yy/1.e3,'c',linewidth=2)
+            ax.plot(xx/1.e3,yy/1.e3,'m',linewidth=2)
 
          ax.set_aspect('equal')
       #################################################
@@ -1012,6 +1130,7 @@ class MIZ_soln:
       if show:
          fig.show()
       return pobj
+   ####################################################################
 #######################################################################
 
 ##################################################
@@ -1102,8 +1221,8 @@ def get_MIZ_widths(lons,lats,fvals=None,name=None,fig_outdir=None,basemap=None,x
       fvals2 = PCA.set_func_vals()
       CSopt  = 1
 
-   print(fvals2)
-   print(xy_coords2)
+   #print(fvals2)
+   #print(xy_coords2)
    t0 = time.clock()
    print('\n**********************************************************************')
    print('Calculating potential...\n')

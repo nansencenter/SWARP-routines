@@ -15,7 +15,20 @@ import fns_Stefan_Maps as FSM
 import Laplace_eqn_solution as Leqs
 import MIZchar as mizc
 
-SV_SHP   = 0
+# Choose method (METH)
+METH     = 1
+"""
+0     : direct Laplacian with specified boundary flags
+1     : direct Laplacian with boundary flags determined from PCA
+2,3   : direct Laplacian to simplified polygon (lower fractal dimension index),
+         with boundary flags determined from PCA for new shape
+ * 2 > get convex hull
+ * 3 > dilation to get less complicated shape (in between original and convex hull)
+4     : Use PCA to determine direction to get the width in
+"""
+
+# save/don't save results to shapefile (1/0)
+SV_SHP   = 1
 
 if 1:
    fmon        = '201402'
@@ -55,42 +68,13 @@ elif fmon=='201309':
    lon_0    = 5.    # deg E
 lat_0    = 80.    # deg N
 lat_ts   = lat_0  # deg N
-bmap  = Basemap(width=2*xmax,height=2*ymax,\
-                resolution=cres,projection='stere',\
-                lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
+bmap     = Basemap(width=2*xmax,height=2*ymax,\
+              resolution=cres,projection='stere',\
+              lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
 
-######################################################################
-def fill_poly(x,y,res):
-   # if resolution is too low, increase it artificially
-   xy                            = np.array([x,y]).transpose()
-   xyc                           = [tuple(xyi) for xyi in xy]
-   P,resolution,spacings,th_vec  = GP.curve_info(xyc)
-
-   x2 = []
-   y2 = []
-   for i,spc in enumerate(spacings):
-      x0,y0 = xyc[i]
-      x1,y1 = xyc[i+1]
-      dist  = np.sqrt(pow(x1-x0,2)+pow(y1-y0,2))
-      if dist>res:
-         N  = np.ceil(dist/float(res))
-         xx = list(np.linspace(x0,x1,num=N))[:-1]
-         yy = list(np.linspace(y0,y1,num=N))[:-1]
-      else:
-         xx = [x0]
-         yy = [y0]
-
-      x2.extend(xx)
-      y2.extend(yy)
-
-   # include last point
-   x2.append(x1)
-   y2.append(y1)
-   return np.array(x2),np.array(y2)
-#######################################################################
 
 #######################################################################
-def Simplify(lons,lats,bmap,method='ConvexHull'):
+def Simplify(lons,lats,bmap,res=10000.,method='ConvexHull'):
 
    x,y   = bmap(lons,lats)
    xy    = np.array([x,y]).transpose()
@@ -107,11 +91,10 @@ def Simplify(lons,lats,bmap,method='ConvexHull'):
       x2,y2 = shp2.exterior.coords.xy
 
    # increase resolution (m) (this increases the number of points):
-   res   = 10000.
-   x3,y3 = fill_poly(x2,y2,res)
+   x3,y3       = mizc.fill_poly(x2,y2,res=res)
    lons2,lats2 = bmap(x3,y3,inverse=True)
    
-   # apply Laplacian soln to convex hull
+   # apply Laplacian soln to simplified polygon
    Psoln = Leqs.get_MIZ_widths(lons2,lats2,basemap=bmap)
 
    ####################################################################
@@ -170,22 +153,30 @@ for iday in range(day0,day1+1):
       Psolns   = []
       for Poly in Polys:
          lons,lats   = np.array(Poly.ll_coords).transpose()
-         if 0:
-            if 1:
+         if METH<2:
+            if METH==0:
                # direct Laplacian soln
                # - use fvals
+               print('\nUsing Laplacian on original polygon, with boundary flags\n')
                Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
             else:
+               print('\nUsing Laplacian on original polygon, with PCA\n')
                # - use PCA
                Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=bmap)
 
             cbar  = (Psolns==[])
             Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
             Psolns.append(Psoln)
-         elif 0:
+
+         elif METH<4:
             # apply Laplacian method to simpler covering polygon
-            method         = 'ConvexHull'
-            # method         = 'Buffer'
+            if METH==2:
+               method   = 'ConvexHull'
+            else:
+               method   = 'Buffer'
+
+            print('\nUsing Laplacian on simplified polygon ('+method\
+                  +'), with PCA\n')
             Psoln,MIZlines = Simplify(lons,lats,bmap,method=method)
             cbar           = (Psolns==[])
             Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
@@ -196,7 +187,9 @@ for iday in range(day0,day1+1):
             #
             for MIZc in MIZlines:
                MIZc.plot_lines(bmap,ax=ax1,color='c')
-         else:
+
+         elif METH==4:
+            print('\nUsing PCA without Laplacian solution\n')
             x,y   = np.array(Poly.xy_coords).transpose()
             bmap.plot(x,y,'k',linewidth=2,ax=ax1)
             #
@@ -204,7 +197,6 @@ for iday in range(day0,day1+1):
             MIZinfo  = PCA.get_MIZ_lines(bmap)
             MIZinfo.plot_soln(bmap,ax=ax1,color='c')
             Psolns.append(MIZinfo)
-            SV_SHP   = 1
       ############################################################
 
       Fplt.finish_map(bmap,ax=ax1)
@@ -219,4 +211,4 @@ for iday in range(day0,day1+1):
 
       if SV_SHP:
          #save shapefile
-         mizc.save_shapefile(Psolns)
+         mizc.save_shapefile(Psolns,filename='out/test.shp')
