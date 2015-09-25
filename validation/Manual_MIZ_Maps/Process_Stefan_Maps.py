@@ -16,8 +16,8 @@ import Laplace_eqn_solution as Leqs
 import MIZchar as mizc
 
 # Choose method (METH)
-# METH  = 2
-METH  = 4
+METH  = 2
+# METH  = 4
 """
 0     : direct Laplacian with specified boundary flags
 1     : direct Laplacian with boundary flags determined from PCA
@@ -74,18 +74,22 @@ rad   = 10.          # approx radius of image (degrees)
 xmax  = rad*111.e3   # half width of image [m]
 ymax  = rad*111.e3   # half height of image [m]
 cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
-#
+
 if fmon=='201402':
+   # Barents Sea
    lon_0    = 36.    # deg E
 elif fmon=='201309':
+   # Fram Strait
    lon_0    = 5.    # deg E
+
 lat_0    = 80.    # deg N
 lat_ts   = lat_0  # deg N
 bmap     = Basemap(width=2*xmax,height=2*ymax,\
               resolution=cres,projection='stere',\
               lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
+#######################################################################
 
-if 1:
+if 0:
    day0  = 1
    #day0  = 25
    day1  = 28
@@ -116,18 +120,16 @@ for iday in range(day0,day1+1):
                                     cdate=cdate,METH=METH)
 
       ############################################################
-      if METH==4:
-         #TODO implement this for other methods
-         for pp in Psolns:
-            pp.plot_representative_lines(bmap,ax=ax1,color='r',linewidth=1.5)
-            Wav   = pp.record['Width_mean']/1.e3 # mean width in km
+      for pp in Psolns:
+         pp.plot_representative_lines(bmap,ax=ax1,color='r',linewidth=1.5)
+         Wav   = pp.record['Width_mean']/1.e3 # mean width in km
 
-            # add text with mean width
-            xmin,xmax,ymin,ymax  = pp.bbox(bmap)
-            xav   = (xmin+xmax)/2.
-            ax1.text(xmax,ymin,'%4.1f km' %(Wav),\
-               color='r',fontsize=16,horizontalalignment='right',\
-               verticalalignment='top')
+         # add text with mean width
+         xmin,xmax,ymin,ymax  = pp.bbox(bmap)
+         xav   = (xmin+xmax)/2.
+         ax1.text(xmax,ymin,'%4.1f km' %(Wav),\
+            color='r',fontsize=16,horizontalalignment='right',\
+            verticalalignment='top')
       ############################################################
 
       ############################################################

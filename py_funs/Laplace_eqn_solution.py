@@ -1131,6 +1131,35 @@ class MIZ_soln:
          fig.show()
       return pobj
    ####################################################################
+
+   #################################################################
+   def plot_representative_lines(self,bmap,**kwargs):
+      # locate representative curves for plotting
+      import numpy as np
+
+      Wav   = self.area_info.length_mean
+      count = 0
+      for i,llc in enumerate(self.area_info.lonlat_contours):
+         L     = self.area_info.lengths[i]
+         diff  = abs(Wav-L)/Wav
+         if (diff<.05):
+            lon,lat  = np.array(llc).transpose()
+            bmap.plot(lon,lat,latlon=True,**kwargs)
+            count = count+1
+
+      # if count==0:
+      #    # TODO find median line
+
+      return
+   #################################################################
+
+   #################################################################
+   def bbox(self,bmap):
+      import numpy as np
+      lon,lat  = np.array(self.area_info.ll_bdy_coords).transpose()
+      x,y      = bmap(lon,lat)
+      return [x.min(),x.max(),y.min(),y.max()]
+   #################################################################
 #######################################################################
 
 ##################################################

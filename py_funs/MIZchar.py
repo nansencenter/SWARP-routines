@@ -53,7 +53,7 @@ def fill_poly(x,y,res=None):
 class MIZ_info:
 
    ########################################################################################
-   def __init__(self,xy_coords,mapper,MIZlines,MIZwidths_int,MIZwidths_tot,func_vals=None):
+   def __init__(self,xy_coords,mapper,MIZlines,func_vals=None):
    
       #################################################################
       x,y                  = np.array(xy_coords).transpose()
@@ -62,11 +62,15 @@ class MIZ_info:
 
       # NB use "1*" to remove pointers to the arrays outside the function
       # - like copy, but works for lists also
-      self.int_widths   = 1*MIZwidths_int
-      self.tot_widths   = 1*MIZwidths_tot
       self.area	      = GS.area_polygon_ellipsoid(lons,lats) # area of polygon
       self.perimeter    = GS.perimeter(lons,lats)              # perimeter of polygon
       self.FDI          = frac_dim_index([self.area,self.perimeter])
+
+      self.int_widths   = []
+      self.tot_widths   = []
+      for MIZc in MIZlines:
+         self.int_widths.append(MIZc.intersection_length)
+         self.tot_widths.append(MIZc.total_length)
       
       # lon-lat info if present
       self.spherical_geometry = True
@@ -74,6 +78,8 @@ class MIZ_info:
 
       if func_vals is not None:
          self.func_vals	 = 1*func_vals	   # value of function used by Laplace's equation
+      else:
+         self.func_vals = None
 
       # some summarising info about "lengths"
       # - intersection widths
@@ -465,15 +471,109 @@ class pca_mapper:
       return MIZi
 ################################################################################################
 
+################################################################################################
+class MIZ_info_Lap:
+
+   #################################################################
+   def __init__(self,Psoln,MIZlines,lonlat):
+      self.Laplacian_soln  = Psoln
+      #
+      lons,lats            = lonlat
+      self.ll_bdy_coords   = [(lons[i],lats[i]) for i in range(len(lons))]
+      #
+      self.area      = GS.area_polygon_ellipsoid(lons,lats)
+      self.perimeter = GS.perimeter(lons,lats,closed=True)
+      self.FDI       = frac_dim_index([self.perimeter,self.area])
+      #
+      self.MIZlines        = 1*MIZlines
+      self.int_widths   = []
+      self.tot_widths   = []
+      for MIZc in MIZlines:
+         self.int_widths.append(MIZc.intersection_length)
+         self.tot_widths.append(MIZc.total_length)
+
+      # some summarising info about "lengths"
+      # - intersection widths
+      lens                          = np.array(self.int_widths)
+      self.int_width_mean           = np.mean(lens)
+      self.int_width_median         = np.median(lens)
+      self.int_width_percentile05   = np.percentile(lens,5)
+      self.int_width_percentile95   = np.percentile(lens,95)
+
+      # - total widths
+      lens                          = np.array(self.tot_widths)
+      self.tot_width_mean           = np.mean(lens)
+      self.tot_width_median         = np.median(lens)
+      self.tot_width_percentile05   = np.percentile(lens,5)
+      self.tot_width_percentile95   = np.percentile(lens,95)
+
+      # record for shapefile
+      self.record = {}
+      self.record.update({'Area'                      : self.area})
+      self.record.update({'Perimeter'                 : self.perimeter})
+      self.record.update({'Fractal_dimension_index'   : self.FDI})
+      self.record.update({'Width_mean'                : self.int_width_mean})
+      self.record.update({'Width_median'              : self.int_width_median})
+      self.record.update({'Width_percentile05'        : self.int_width_percentile05})
+      self.record.update({'Width_percentile95'        : self.int_width_percentile95})
+
+      return
+   #################################################################
+
+   #################################################################
+   def parts(self):
+      # give the "parts" needed by shapefile
+      return [1*self.ll_bdy_coords]
+   #################################################################
+
+   #################################################################
+   def plot_soln(self,bmap,**kwargs):
+      for MIZc in self.MIZlines:
+         MIZc.plot_lines(bmap,**kwargs)
+      return
+   #################################################################
+
+   #################################################################
+   def plot_representative_lines(self,bmap,**kwargs):
+      # locate representative curves for plotting
+      Wav   = self.int_width_mean
+      count = 0
+      for i,MIZc in enumerate(self.MIZlines):
+         diff  = abs(Wav-MIZc.intersection_length)/Wav
+         if (diff<.05) and (MIZc.Nlines==1):
+            MIZc.plot_lines(bmap,**kwargs)
+            count = count+1
+
+      # if count==0:
+      #    # TODO find median line
+
+      return
+   #################################################################
+
+   #################################################################
+   def bbox(self,bmap):
+      lon,lat  = np.array(self.ll_bdy_coords).transpose()
+      x,y      = bmap(lon,lat)
+      return [x.min(),x.max(),y.min(),y.max()]
+   #################################################################
+
+   # end class MIZ_info_Lap
+################################################################################################
+
 #######################################################################
 def SimplifyPolygon(lons,lats,bmap,res=10000.,method='ConvexHull'):
    import shapely.geometry       as shg
    import Laplace_eqn_solution   as Leqs
+   import geometry_sphere        as GS
 
    x,y   = bmap(lons,lats)
    xy    = np.array([x,y]).transpose()
    xyc   = [tuple(xyi) for xyi in xy]
    shp   = shg.Polygon(xyc).buffer(0)
+
+   area        = GS.area_polygon_ellipsoid(lons,lats)
+   perimeter   = GS.perimeter(lons,lats,closed=True)
+   FDI         = frac_dim_index([perimeter,area])
 
    if method=='ConvexHull':
       # get convex hull
@@ -489,12 +589,12 @@ def SimplifyPolygon(lons,lats,bmap,res=10000.,method='ConvexHull'):
    lons2,lats2 = bmap(x3,y3,inverse=True)
    
    # apply Laplacian soln to simplified polygon
-   Psoln = Leqs.get_MIZ_widths(lons2,lats2,basemap=bmap)
+   Lsoln = Leqs.get_MIZ_widths(lons2,lats2,basemap=bmap)
 
    ####################################################################
    # restrict contour lines to within original poly
    MIZlines = []
-   for llc in Psoln.area_info.lonlat_contours:
+   for llc in Lsoln.area_info.lonlat_contours:
       lonv,latv   = np.array(llc).transpose()
       xx,yy       = bmap(lonv,latv)
       xyv         = np.array([xx,yy]).transpose()
@@ -505,8 +605,9 @@ def SimplifyPolygon(lons,lats,bmap,res=10000.,method='ConvexHull'):
          LSi   = LS.intersection(shp)
          MIZlines.append(MIZcont(LSi,bmap))
    ####################################################################
-
-   return Psoln,MIZlines
+   
+   Psoln = MIZ_info_Lap(Lsoln,MIZlines,[lons,lats])
+   return Psoln
 #######################################################################
 
 ################################################################################################
@@ -555,6 +656,7 @@ def single_file(filename,bmap,pobj=None,cdate=None,METH=4):
    """
 
    import fns_Stefan_Maps as FSM
+   import Laplace_eqn_solution   as Leqs
 
    MK_PLOT  = 0
    if pobj is not None:
@@ -599,16 +701,17 @@ def single_file(filename,bmap,pobj=None,cdate=None,METH=4):
 
          print('\nUsing Laplacian on simplified polygon ('+method\
                +'), with PCA\n')
-         Psoln,MIZlines = SimplifyPolygon(lons,lats,bmap,method=method)
+         Psoln = SimplifyPolygon(lons,lats,bmap,method=method)
 
          if MK_PLOT:
+            # plot Laplacian solution
             cbar  = (Psolns==[])
-            Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
+            Psoln.Laplacian_soln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=cbar)
             #
             x,y   = np.array(Poly.xy_coords).transpose()
             bmap.plot(x,y,'k',linewidth=2,ax=ax1)
             #
-            for MIZc in MIZlines:
+            for MIZc in Psoln.MIZlines:
                MIZc.plot_lines(bmap,ax=ax1,color='c')
 
          Psolns.append(Psoln)
