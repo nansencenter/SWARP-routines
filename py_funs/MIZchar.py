@@ -99,6 +99,7 @@ class MIZ_info:
       self.record.update({'Width_median'              : self.int_width_median})
       self.record.update({'Width_percentile05'        : self.int_width_percentile05})
       self.record.update({'Width_percentile95'        : self.int_width_percentile95})
+
       return
       ##############################################################
 
@@ -113,6 +114,30 @@ class MIZ_info:
       for MIZc in self.MIZlines:
          MIZc.plot_lines(bmap,**kwargs)
       return
+   #################################################################
+
+   #################################################################
+   def plot_representative_lines(self,bmap,**kwargs):
+      # locate representative curves for plotting
+      Wav   = self.int_width_mean
+      count = 0
+      for i,MIZc in enumerate(self.MIZlines):
+         diff  = abs(Wav-MIZc.intersection_length)/Wav
+         if (diff<.05) and (MIZc.Nlines==1):
+            MIZc.plot_lines(bmap,**kwargs)
+            count = count+1
+
+      # if count==0:
+      #    # TODO find median line
+
+      return
+   #################################################################
+
+   #################################################################
+   def bbox(self,bmap):
+      lon,lat  = np.array(self.ll_bdy_coords).transpose()
+      x,y      = bmap(lon,lat)
+      return [x.min(),x.max(),y.min(),y.max()]
    #################################################################
 
    # end class MIZ_info

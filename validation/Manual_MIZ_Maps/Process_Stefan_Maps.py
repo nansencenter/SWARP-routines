@@ -16,8 +16,8 @@ import Laplace_eqn_solution as Leqs
 import MIZchar as mizc
 
 # Choose method (METH)
-METH  = 2
-# METH  = 4
+# METH  = 2
+METH  = 4
 """
 0     : direct Laplacian with specified boundary flags
 1     : direct Laplacian with boundary flags determined from PCA
@@ -96,7 +96,7 @@ else:
    # day   = 8
    # day   = 17
    # day   = 18
-   day   = 26
+   day   = 24
    # day   = 28
    day0  = day
    day1  = day
@@ -114,6 +114,21 @@ for iday in range(day0,day1+1):
       ax1      = fig.add_subplot(1,1,1)
       Psolns   = mizc.single_file(fname,bmap,pobj=[fig,ax1],\
                                     cdate=cdate,METH=METH)
+
+      ############################################################
+      if METH==4:
+         #TODO implement this for other methods
+         for pp in Psolns:
+            pp.plot_representative_lines(bmap,ax=ax1,color='r',linewidth=1.5)
+            Wav   = pp.record['Width_mean']/1.e3 # mean width in km
+
+            # add text with mean width
+            xmin,xmax,ymin,ymax  = pp.bbox(bmap)
+            xav   = (xmin+xmax)/2.
+            ax1.text(xmax,ymin,'%4.1f km' %(Wav),\
+               color='r',fontsize=16,horizontalalignment='right',\
+               verticalalignment='top')
+      ############################################################
 
       ############################################################
       # finish off fig and show/save
