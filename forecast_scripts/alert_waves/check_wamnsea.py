@@ -639,7 +639,7 @@ for loop_i in check_list:
                         line  = line+blk+str(dist_list[ii])
                      print(line)
                      tf.write(line+'\n')
-            
+
          tf.close()
    #################################################################################
 
