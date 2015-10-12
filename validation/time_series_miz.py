@@ -416,7 +416,7 @@ class AOD_poly:
       return(DN_cl)
 
 
-    # NOTE outputs are difference, overpredicitions and underpredictions (CLOSED & MAPPED)
+    # NOTE outputs are difference, overpredictions and underpredictions (CLOSED & MAPPED)
 
     # generating the binary file, get the difference, divide into overprediction and
     # underprediction, apply the closing on both and finally re-map the land
