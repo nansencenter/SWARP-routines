@@ -7,11 +7,14 @@ import numpy as np
 import time
 from datetime import date, timedelta
 
-if 1:
+############################################################################
+WANT2SHOW   = 0 # show the figure - make sure you don't use this if you need to run inside crontab
+if not WANT2SHOW:
    # don't need to show figure
    # - this lets the script be run through crontab or on compute node
    import matplotlib
    matplotlib.use('Agg')
+############################################################################
 
 from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
@@ -104,6 +107,32 @@ def binary_diff(data,thresh1,thresh2):
    #
    D = Z2 - Z1
    return D,Z1,Z2
+############################################################################
+
+############################################################################
+def Hs_filter():
+   # filter some contours out, depending on wave height and distance to ice edge
+   # - distance to threshhold
+   thrdic      = {5  :50}
+   thrdic.update({4.5:35})
+   thrdic.update({4  :20})
+   thrdic.update({3.5:10})
+   thrdic.update({3  :5 })
+
+   # - symbol
+   symdic      = {5  :'+g'}
+   symdic.update({4.5:'^g'})
+   symdic.update({4  :'vg'})
+   symdic.update({3.5:'og'})
+   symdic.update({3  :'*g'})
+
+   # - marker size
+   ms_dic      = {5  :7}
+   ms_dic.update({4.5:5})
+   ms_dic.update({4  :5})
+   ms_dic.update({3.5:5})
+   ms_dic.update({3  :7})
+   return thrdic,symdic,ms_dic
 ############################################################################
 
 ############################################################################
@@ -507,6 +536,7 @@ for loop_i in check_list:
 			      
       ##############################################################################
 			
+      ##########################################################################################
       if 1:
          # plot nearest points on ice edge
          nout = len(out_list)
@@ -519,19 +549,14 @@ for loop_i in check_list:
             dist,lon_plot,lat_plot,Hs  = dist_list
 
             # filter some out, depending on wave height and distance to ice edge
-            if Hs >= 5 and dist <= 50:
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'^g',markersize=5)
-            elif Hs >= 4 and dist <= 20:
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'*g',markersize=7)
-            elif Hs >= 3 and dist <= 5:
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'og',markersize=5)
+            thrdic,symdic,ms_dic = Hs_filter()
+            for Hsc in  thrdic.keys():
+               if Hs >= Hsc and dist <= thrdic[Hsc]:
+                  print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                  bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
+      ##########################################################################################
 
+      ##########################################################################################
       if 0:
          # add manual test point(s) to plot
          # - to check if SAR image is ordered in the right place
@@ -542,10 +567,9 @@ for loop_i in check_list:
          man_list = [[40.,82.5]] # list of lon/lat points
          for lonm,latm in man_list:
             print('('+str(lonm)+' E, '+str(latm)+' N)')
-            x_plot,y_plot  = bm(lonm,latm)
-            bm.plot(x_plot,y_plot,'^g',markersize=7)
-
+            bm.plot(lonm,latm,'^g',markersize=7,latlon=True)
          print('\n')
+      ##########################################################################################
 
       finish_map(bm)
 
@@ -559,9 +583,15 @@ for loop_i in check_list:
       figname  = odir+'/img/'+fnday+'.png'
       if not os.path.exists(odir+'/img'):
          os.mkdir(odir+'/img')
-      plt.savefig(figname)
       print('saving figure:')
       print(figname+'\n')
+      plt.savefig(figname)
+
+      if WANT2SHOW:
+         # show figure to enable zooming etc
+         print('Showing figure - close it to continue\n')
+         plt.show()
+
       plt.close()
       f.clf()
       # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
@@ -587,6 +617,7 @@ for loop_i in check_list:
          tf.write(line+'\n')
          print(line)
          
+         thrdic   = Hs_filter()[0]
          for mm in range(nout):
             #get info from out_list
             dist_list         = 1*out_list[mm]
@@ -602,21 +633,12 @@ for loop_i in check_list:
                tf.write(line+'\n')
             else:
                # filter some out, depending on wave height and distance to ice edge
-               if Hs >= 5 and dist <= 50:
-                  for ii in ordr:
-                     line  = line+blk+str(dist_list[ii])
-                  print(line)
-                  tf.write(line+'\n')
-               elif Hs >= 4 and dist <= 20:
-                  for ii in ordr:
-                     line  = line+blk+str(dist_list[ii])
-                  print(line)
-                  tf.write(line+'\n')
-               elif Hs >= 3 and dist <= 5:
-                  for ii in ordr:
-                     line  = line+blk+str(dist_list[ii])
-                  print(line)
-                  tf.write(line+'\n')
+               for Hsc in  thrdic.keys():
+                  if Hs >= Hsc and dist <= thrdic[Hsc]:
+                     for ii in ordr:
+                        line  = line+blk+str(dist_list[ii])
+                     print(line)
+                     tf.write(line+'\n')
             
          tf.close()
    #################################################################################
