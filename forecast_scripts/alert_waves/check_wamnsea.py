@@ -17,8 +17,8 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
 from skimage import measure as msr
 
-sr = os.getenv('SWARP_ROUTINES')
-sys.path.append(sr+'/py_funs')
+SR = os.getenv('SWARP_ROUTINES')
+sys.path.append(SR+'/py_funs')
 import mod_reading as Mrdg
 
 ############################################################################
@@ -514,27 +514,25 @@ for loop_i in check_list:
             print('No large waves close to ice\n')
 
          for mm in range(nout):
-            list1 = out_list[mm]
-            if list1[3] >= 3 and list1[0] <= 5:
-               lon_plot = list1[1]
-               lat_plot = list1[2]
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'og',markersize=5)
-            elif list1[3] >= 4 and list1[0] <= 20:
-               lon_plot = list1[1]
-               lat_plot = list1[2]
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'*g',markersize=5)
-            elif list1[3] >= 5 and list1[0] <= 50:
-               lon_plot = list1[1]
-               lat_plot = list1[2]
+            dist_list                  = 1*out_list[mm]
+            dist_list[0]               = dist_list[0]/1.e3 #km
+            dist,lon_plot,lat_plot,Hs  = dist_list
+
+            # filter some out, depending on wave height and distance to ice edge
+            if Hs >= 5 and dist <= 50:
                print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
                x_plot,y_plot  = bm(lon_plot,lat_plot)
                bm.plot(x_plot,y_plot,'^g',markersize=5)
+            elif Hs >= 4 and dist <= 20:
+               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+               x_plot,y_plot  = bm(lon_plot,lat_plot)
+               bm.plot(x_plot,y_plot,'*g',markersize=7)
+            elif Hs >= 3 and dist <= 5:
+               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+               x_plot,y_plot  = bm(lon_plot,lat_plot)
+               bm.plot(x_plot,y_plot,'og',markersize=5)
 
-      if 1:
+      if 0:
          # add manual test point(s) to plot
          # - to check if SAR image is ordered in the right place
          # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
@@ -579,23 +577,47 @@ for loop_i in check_list:
       nout=len(out_list)
       SEND_EMAIL3 = (nout>0)
       if SEND_EMAIL3:
-         tf = open(textfile,'w')
+         tf    = open(textfile,'w')
+         hdr   = ['Dist (km)','lon (deg N)','lat (deg E)','Hs (m)']
+         blk   = 3*' '
+         line  = ''
+         ordr  = [3,0,1,2]
+         for ii in ordr:
+            line  = line+blk+hdr[ii]
+         tf.write(line+'\n')
+         print(line)
          
          for mm in range(nout):
-            list1 = out_list[mm]
-            line  = '' #get info from out_list
-            if list1[3] >= 3 and list1[0] <= 5:
+            #get info from out_list
+            dist_list         = 1*out_list[mm]
+            dist,lon,lat,Hs   = dist_list
+            dist              = dist/1.e3 # dist now in km
+            dist_list         = [dist,lon,lat,Hs]
+            line              = ''
+            if 0:
+               # just print everything
                for ii in range(3,-1,-1):
-                  line=3*' '+str(list1[ii])+line
-            elif list1[3] >= 4 and list1[0] <= 20:
-               for ii in range(3,-1,-1):
-                  line=3*' '+str(list1[ii])+line
-            elif list1[3] >= 5 and list1[0] <= 50:
-               for ii in range(3,-1,-1):
-                  line=3*' '+str(list1[ii])+line
+                  line  = line+blk+str(dist_list[ii])
+               print(line)
+               tf.write(line+'\n')
+            else:
+               # filter some out, depending on wave height and distance to ice edge
+               if Hs >= 5 and dist <= 50:
+                  for ii in ordr:
+                     line  = line+blk+str(dist_list[ii])
+                  print(line)
+                  tf.write(line+'\n')
+               elif Hs >= 4 and dist <= 20:
+                  for ii in ordr:
+                     line  = line+blk+str(dist_list[ii])
+                  print(line)
+                  tf.write(line+'\n')
+               elif Hs >= 3 and dist <= 5:
+                  for ii in ordr:
+                     line  = line+blk+str(dist_list[ii])
+                  print(line)
+                  tf.write(line+'\n')
             
-            tf.write(line+'\n')
-         
          tf.close()
    #################################################################################
 
@@ -604,8 +626,16 @@ for loop_i in check_list:
 # EMAIL SYSTEM
 if SEND_EMAIL and (SEND_EMAIL2 or SEND_EMAIL3):
    import subprocess
-   subprocess.call(["chmod +x out/img/*"])
-   subprocess.call(["chmod +x out/lst/*"])
-   awdir = '/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/alert_waves'
-   subprocess.check_call([awdir+'/waves_alert.sh', fnday])
+   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
+   subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
+   #
+   awdir = SR+'/forecast_scripts/alert_waves'
+   subprocess.check_call([awdir+'/waves_alert.sh', cday])
+elif SEND_EMAIL:
+   import subprocess
+   # just send pic
+   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
+   #
+   awdir = SR+'/forecast_scripts/alert_waves'
+   subprocess.check_call([awdir+'/waves_pic.sh', cday])
 ################################################################

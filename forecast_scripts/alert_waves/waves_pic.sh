@@ -7,7 +7,7 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 if [ $# -eq 0 ]
 then
    echo Usage:
-   echo "./waves_alert.sh [date]"
+   echo "./waves_pic.sh [date]"
    echo "date in YYYYMMDD format"
    exit
 fi
@@ -18,11 +18,11 @@ fc_email=$SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt
 email=$(cat $fc_email)
 #######################################################################################################
 
+# wdir=$SWARP_ROUTINES/forecast_scripts/alert_waves/out
 wdir=/work/timill/RealTime_Models/check_wamnsea/$1
-echo "waves_alert.sh called by check_wamnsea.py:"  >  tmp.txt
-echo " "                                           >> tmp.txt
-cat $wdir/lst/*.txt                                >> tmp.txt
-
-# mutt -s "WAM forecast for $1" -a $wdir/lst/*.txt -a $wdir/img/*.png -- $email < /dev/null
-mutt -s "WAM forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email < tmp.txt
+echo "waves_pic.sh called by check_wamnsea.py:" >  tmp.txt
+echo " "                                        >> tmp.txt
+echo "No large waves close to ice"              >> tmp.txt
+# mutt -s "WAM forecast for $1" -a tmp.txt -a $wdir/img/*.png -- $email < /dev/null
+mutt -s "WAM forecast for $1" -a $wdir/img/*.png -- $email < tmp.txt
 rm tmp.txt
