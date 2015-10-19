@@ -627,7 +627,7 @@ for loop_i in check_list:
             line              = ''
             if 0:
                # just print everything
-               for ii in range(3,-1,-1):
+               for ii in ordr:
                   line  = line+blk+str(dist_list[ii])
                print(line)
                tf.write(line+'\n')
