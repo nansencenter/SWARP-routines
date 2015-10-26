@@ -23,6 +23,12 @@ echo "waves_alert.sh called by check_wamnsea.py:"  >  tmp.txt
 echo " "                                           >> tmp.txt
 cat $wdir/lst/*.txt                                >> tmp.txt
 
-# mutt -s "WAM forecast for $1" -a $wdir/lst/*.txt -a $wdir/img/*.png -- $email < /dev/null
-mutt -s "WAM forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email < tmp.txt
+if [ 1 -eq 0 ]
+then
+   # just email person from file
+   mutt -s "WAM forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email < tmp.txt
+else
+   # add Giacomo for his interest
+   mutt -s "WAM forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email,gcmdnt90@gmail.com < tmp.txt
+fi
 rm tmp.txt

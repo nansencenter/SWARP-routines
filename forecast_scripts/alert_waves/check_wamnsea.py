@@ -496,20 +496,23 @@ for loop_i in check_list:
             bm.plot(x4,y4,'m',linewidth=1.5)
             
             # working on the waves threshold
-            Hthresh=3
-            Hmax=np.ceil(Zmax)
-            Hlev=np.arange(Hthresh,Hmax,.5)
+            Hthresh  = 3
+            Hmax     = np.ceil(Zmax)
+            Hlev     = np.arange(Hthresh,Hmax,.5)
             
             if len(Hlev)==0:
                #no waves over threshhold
                out_list = []
-            else:
+            elif 1:
                #some waves over threshhold
+               # - use basemap.contour
                cs3         = bm.contour(X,Y,Z,Hlev)
                coll3       = cs3.collections
                nlev3       = len(coll3)
                dist_thresh = 50.e3
                out_list    = []
+
+               # loop over Hs values
                for nl3 in range(nlev3):
                   swh3  = cs3.levels[nl3]
                   p3    = coll3[nl3].get_paths() # only one conc contour so use 0 
@@ -533,7 +536,42 @@ for loop_i in check_list:
                            if dist<dist_thresh:
                               dist_list   = [dist,lon_min,lat_min,swh3]
                               out_list.append(dist_list)
-			      
+
+               # add labels - this shouldn't affect above results since bm.contour has been called already
+               #              and the results processed
+               texth = plt.clabel(cs3,inline=1,fontsize=10,fmt='%1.1f')
+
+            # elif 1:
+            #    #some waves over threshhold
+            #    # - use skimage
+            #    import skimage.measure as msr
+
+            #    # loop over Hs values
+            #    for Hs in Hlev:
+            #       B1       = 0.*Z
+            #       B1[Z>Hs] = 1.
+            #       conts    = msr.find_contours(B1,.5)
+
+            #       for v3 in conts:
+            #          x3 = v3[:,0]
+            #          y3 = v3[:,1]
+            #          
+            #          #loop over all ice edges
+            #          for nl4 in range(nlev4):
+            #             p4    = coll4[nl4].get_paths() # only one conc contour so use 0 
+            #             nseg4 = len(p4)
+            #             for ns4 in range(nseg4):
+            #                # loop over segments
+            #                v4 = p4[ns4].vertices
+            #                x4 = v4[:,0]
+            #                y4 = v4[:,1]
+            #                dist,lon_min,lat_min=dist_cont2cont(x4,y4,x3,y3,bm) # output (lon,lat) for ice
+            #                if dist<dist_thresh:
+            #                   dist_list   = [dist,lon_min,lat_min,swh3]
+            #                   out_list.append(dist_list)
+
+            #    # plot with bm.contour (plot numbers on figure without changing the v3 conts)
+            #    CS = bm.contour(X,Y,Z,Hlev)
       ##############################################################################
 			
       ##########################################################################################
