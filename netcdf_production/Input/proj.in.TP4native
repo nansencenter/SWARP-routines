@@ -1,0 +1,7 @@
+native 
+  222               # Longitude of W edge
+  770               # Longitude of E edge
+    1               # Longitude grid spacing
+  540               # Latitude of S edge
+  868               # Latitude of N edge
+    1               # Latitude grid spacing
