@@ -53,8 +53,8 @@ def get_ice_edge(ficem,depths,plon,plat,bm):
    Bl       = get_land(depths)
 
    # get ice boundary/coasts
-   i_contours  = measure.find_contours(Bi,0.)
-   l_contours  = measure.find_contours(Bl,0.)
+   i_contours  = measure.find_contours(Bi,0.5)
+   l_contours  = measure.find_contours(Bl,0.5)
 
    # project lon/lat so discontinuities etc don't confuse shapely
    X,Y   = bm(plon,plat)
