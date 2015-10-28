@@ -4,13 +4,16 @@ def start_HYCOM_map(region,cres='i'):
    from mpl_toolkits.basemap import Basemap
 
    if region=='TP4':
+      lonc     = -45.
+      latc     = 85.
+      lat_ts   = latc
       rad      = 33 # radius in deg
       width    = 2*rad*111.e3
       height   = 2*rad*111.e3
       #
       bm = Basemap(width=width,height=height,\
                    resolution='i',projection='stere',\
-                   lat_ts=90.,lat_0=90.,lon_0=-45.)
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    return bm
 ############################################################################
