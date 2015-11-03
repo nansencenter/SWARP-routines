@@ -496,6 +496,8 @@ for loop_i in check_list:
             bm.plot(x4,y4,'m',linewidth=1.5)
             
             # working on the waves threshold
+            # Creating array with .5 interval from 3 meters to Max Wave Height
+            # IF MWH < 3 meters --> empty array
             Hthresh  = 3
             Hmax     = np.ceil(Zmax)
             Hlev     = np.arange(Hthresh,Hmax,.5)
@@ -580,18 +582,18 @@ for loop_i in check_list:
          nout = len(out_list)
          if nout==0:
             print('No large waves close to ice\n')
-
-         for mm in range(nout):
-            dist_list                  = 1*out_list[mm]
-            dist_list[0]               = dist_list[0]/1.e3 #km
-            dist,lon_plot,lat_plot,Hs  = dist_list
-
-            # filter some out, depending on wave height and distance to ice edge
-            thrdic,symdic,ms_dic = Hs_filter()
-            for Hsc in  thrdic.keys():
-               if Hs >= Hsc and dist <= thrdic[Hsc]:
-                  print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-                  bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
+         else:
+            for mm in range(nout):
+               dist_list                  = 1*out_list[mm]
+               dist_list[0]               = dist_list[0]/1.e3 #km
+               dist,lon_plot,lat_plot,Hs  = dist_list
+            
+               # filter some out, depending on wave height and distance to ice edge
+               thrdic,symdic,ms_dic = Hs_filter()
+               for Hsc in  thrdic.keys():
+                  if Hs >= Hsc and dist <= thrdic[Hsc]:
+                     print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                     bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
       ##########################################################################################
 
       ##########################################################################################
