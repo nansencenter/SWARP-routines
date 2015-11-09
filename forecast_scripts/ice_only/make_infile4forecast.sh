@@ -40,7 +40,7 @@ else
   thr=`printf '%3.3d' $3`	#three digits modification
   fou=`printf '%3.3d' $4`	#three digits modification
   fiv=`printf '%3.3d' $5`	#three digits modification
-  cd ${MAINDIR}/inputs
+  cd ${MAINDIR}/inputs/ice_only
   if [ -z "${rungen}" -o "${rungen}" == "TP4" ]
   then
      file=infile.mal.outer
