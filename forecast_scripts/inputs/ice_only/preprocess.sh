@@ -356,6 +356,9 @@ if [ "$frc" != "month" -a  "$clm" != "prep" ] ; then
    elif [ "${frc}" == "ecnc2" ] ; then
       pathvar="ECNC_PATH"
       pathvar2="./Ecmwf.nc"
+   elif [ "${frc}" == "ecncF" ] ; then
+      pathvar="ECNC_PATH"
+      pathvar2="./Ecmwf.nc"
    elif [ "${frc}" == "ncepr" ] ; then
       pathvar="NCEP_PATH"
    else
@@ -716,6 +719,15 @@ touch archv.dummy.b
 for f  in arch* ; do
   /bin/mv $f KEEP/$f
 done
+
+# copy archv.extract from data to SCRATCH
+# - if using ARCHIVE_SELECT flag,
+#   this determines fields to dump
+if [ -f $D/archv.extract ]
+then
+   echo cp $D/archv.extract $S
+   cp $D/archv.extract $S
+fi
 
 
 #

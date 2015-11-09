@@ -80,11 +80,11 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 if [ $SWARP_PP -eq 1 ]
 then
    # SWARP post-processing - ice only version
-   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ice_only/process_FCresults.sh
+   $SWARP_ROUTINES/forecast_scripts/ice_only/process_FCresults.sh
 elif [ $SWARP_PP -eq 2 ]
 then
    # SWARP post-processing - waves version
-   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/process_FCresults_wav.sh
+   $SWARP_ROUTINES/forecast_scripts/wavesice/process_FCresults_wav.sh
 fi
 
 exit $?
