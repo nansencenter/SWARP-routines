@@ -373,31 +373,37 @@ for loop_i in check_list:
       ##############################################################################
       
       if 1:
-         # add test point to plot
+         # add critical points to plot
+         # Order: ^ > o > *
          # - to check if SAR image is ordered in the right place
          # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
          #   then use trial and error
          nout = len(out_list)
+         do_plots = [1,1,1] # figs can be crowded - turn off some points
+
          for mm in range(nout):
             list0=out_list[mm]
             if list0[3] >= 3 and list0[0] <= 5:
                lon_plot = list0[1]
                lat_plot = list0[2]
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'*g',markersize=5)
+               if do_plots[0]==1:
+                  print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                  x_plot,y_plot  = bm(lon_plot,lat_plot)
+                  bm.plot(x_plot,y_plot,'*g',markersize=5)
             elif list0[3] >= 4 and list0[0] <= 20:
                lon_plot = list0[1]
                lat_plot = list0[2]
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'og',markersize=5)
+               if do_plots[1]==1:
+                  print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                  x_plot,y_plot  = bm(lon_plot,lat_plot)
+                  bm.plot(x_plot,y_plot,'og',markersize=5)
             elif list0[3] >= 5 and list0[0] <= 50:
                lon_plot = list0[1]
                lat_plot = list0[2]
-               print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-               x_plot,y_plot  = bm(lon_plot,lat_plot)
-               bm.plot(x_plot,y_plot,'^g',markersize=5)
+               if do_plots[2]==1:
+                  print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                  x_plot,y_plot  = bm(lon_plot,lat_plot)
+                  bm.plot(x_plot,y_plot,'^g',markersize=5)
       
       finish_map(bm)
       
@@ -580,6 +586,8 @@ for loop_i in check_list:
       if 1:
          # plot nearest points on ice edge
          nout = len(out_list)
+         sym_skip = [] # skip some symbols (plots can get crowded)
+         # sym_skip = ['*'] # skip some symbols (plots can get crowded)
          if nout==0:
             print('No large waves close to ice\n')
          else:
@@ -592,8 +600,9 @@ for loop_i in check_list:
                thrdic,symdic,ms_dic = Hs_filter()
                for Hsc in  thrdic.keys():
                   if Hs >= Hsc and dist <= thrdic[Hsc]:
-                     print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-                     bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
+                     if symdic[Hsc][0] not in sym_skip:
+                        print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                        bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
       ##########################################################################################
 
       ##########################################################################################
