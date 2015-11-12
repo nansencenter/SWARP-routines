@@ -265,7 +265,7 @@ class nc_getinfo:
 
    ###########################################################
    def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg=None,time_index=0,\
-         clim=None,show=True):
+         clim=None,show=True,test_lonlats=None):
 
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
@@ -306,11 +306,15 @@ class nc_getinfo:
       PC = bmap.pcolor(lon,lat,vbl.values,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
       fig.colorbar(PC)
 
+      if test_lonlats is not None:
+         for lont,latt in test_lonlats:
+            bmap.plot(lont,latt,'^m',markersize=5,latlon=True)
+
       Fplt.finish_map(bmap)
       if show:
          fig.show()
 
-      return fig,ax
+      return fig,ax,bmap
    ###########################################################
 
 
@@ -375,6 +379,7 @@ def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
 ##############################################################
 def get_array_from_HYCOM_binary(afile,recno,dims=None,grid_dir='.'):
    # routine to get the array from the .a (binary) file
+   # * recno=1 is 1st record 
    # * fmt_size = size in bytes of each entry)
    #   > default = 4 (real*4/single precision)
 

@@ -15,6 +15,30 @@ def start_HYCOM_map(region,cres='i'):
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
+   elif region=='BS1':
+      lonc     = 48.
+      latc     = 74.
+      lat_ts   = latc
+      rad      = 12 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='FR1':
+      lonc     = 0.5
+      latc     = 78.75
+      lat_ts   = latc
+      rad      = 6.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
    return bm
 ############################################################################
 
