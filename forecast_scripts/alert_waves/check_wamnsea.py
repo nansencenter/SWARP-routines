@@ -146,9 +146,9 @@ xmax  = rad*111.e3   # half width of image [m]
 ymax  = rad*111.e3   # half height of image [m]
 cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
 #
-lat_ts   = 74. # deg N
-lon_0    = 50. # deg E
-lat_0    = 74. # deg N
+lon_0    = 50.    # deg E
+lat_0    = 74.    # deg N
+lat_ts   = lat_0  # deg N
 #
 bm = Basemap(width=2*xmax,height=2*ymax,\
              resolution=cres,projection='stere',\
@@ -224,7 +224,6 @@ for loop_i in check_list:
    mask  = swh.values.mask
    Zmax  = swh.values[in_area].max() # restrict max calc to relevant area
    Zmin  = swh.values[in_area].min() # restrict max calc to relevant area
-   print(Zmin,Zmax)
    
    # make plot
    Z[mask] = np.NaN
@@ -240,7 +239,7 @@ for loop_i in check_list:
       # Plotting waves
       f  = plt.figure()
       bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
-      print('range in '+sswh+' (m):') 
+      print('Range in '+sswh+' (m):') 
       print(Zmin,Zmax)
       print(' ')
       
