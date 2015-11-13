@@ -89,8 +89,9 @@ class nc_getinfo:
 
 
       # open the file
-      lonname,latname   = lonlat_names(ncfil)
-      nc = ncopen(ncfil)
+      self.lonname,self.latname  = lonlat_names(ncfil)
+      nc                         = ncopen(ncfil)
+      self.dimensions            = nc.dimensions.keys()
 
       # get global netcdf attributes
       self.ncattrs  = nc.ncattrs()
@@ -168,16 +169,16 @@ class nc_getinfo:
 
       ########################################################
       # grid info:
-      self.lon0    = nc.variables[lonname][0,0]
-      self.lat0    = nc.variables[latname][0,0]
+      self.lon0    = nc.variables[self.lonname][0,0]
+      self.lat0    = nc.variables[self.latname][0,0]
       #
-      self.shape   = nc.variables[lonname][:,:].shape
+      self.shape   = nc.variables[self.lonname][:,:].shape
       ny,nx        = self.shape
       self.Npts_x  = nx # No of points in x dirn
       self.Npts_y  = ny # No of points in y dirn
       self.Npts    = nx*ny # Total no of points
 
-      self.shape   = nc.variables[lonname] [:,:].shape
+      self.shape   = nc.variables[self.lonname] [:,:].shape
       ########################################################
 
       ########################################################
@@ -230,13 +231,13 @@ class nc_getinfo:
       ########################################################
       # variable list
       vlist = []
-      bkeys = [proj_name,lonname,latname,'model_depth']
+      bkeys = [proj_name,self.lonname,self.latname,'model_depth']
       bkeys.extend(dkeys)
       for key in vkeys:
          if key not in bkeys:
             vlist.append(key)
 
-      self.variable_list = vlist
+      self.variable_list   = vlist
       ########################################################
 
       nc.close()
@@ -257,12 +258,9 @@ class nc_getinfo:
    ###########################################################
    def get_lonlat(self):
 
-      nc = ncopen(self.filename)
-      for vbl in nc.variables:
-         if 'lon' in vbl or 'Lon' in vbl:
-            lon   = nc.variables[vbl][:,:]
-         if 'lat' in vbl or 'Lat' in vbl:
-            lat   = nc.variables[vbl][:,:]
+      nc    = ncopen(self.filename)
+      lon   = nc.variables[self.lonname][:,:]
+      lat   = nc.variables[self.latname][:,:]
       nc.close()
 
       return lon,lat
