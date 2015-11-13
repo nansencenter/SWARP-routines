@@ -148,14 +148,16 @@ class nc_getinfo:
          self.reftime = refpoint+timedelta(seconds=reftime_u)
       elif time_info[0]=='hour':
          self.reftime = refpoint+timedelta(hours=reftime_u)
+      elif time_info[0]=='day':
+         self.reftime = refpoint+timedelta(reftime_u) #NB works for fraction of days also
 
-      if time_info[0]=='hour':
-         self.timeunits  = time_info[0]
-         self.timevalues = [time[i]-time[0] for i in range(Nt)]
-      elif time_info[0]=='second':
+      if time_info[0]=='second':
          # convert time units to hours for readability of the messages:
          self.timeunits  = 'hour'
          self.timevalues = [int((time[i]-time[0])/3600.) for i in range(Nt)]
+      else:
+         self.timeunits  = time_info[0]
+         self.timevalues = [time[i]-time[0] for i in range(Nt)]
 
       if time_index is not None:
          self.datatime   = self.timevalues[time_index]
@@ -175,7 +177,7 @@ class nc_getinfo:
       self.Npts_y  = ny # No of points in y dirn
       self.Npts    = nx*ny # Total no of points
 
-      self.shape   = nc.variables['latitude'] [:,:].shape
+      self.shape   = nc.variables[lonname] [:,:].shape
       ########################################################
 
       ########################################################
@@ -228,7 +230,7 @@ class nc_getinfo:
       ########################################################
       # variable list
       vlist = []
-      bkeys = [proj_name,'longitude','latitude','model_depth']
+      bkeys = [proj_name,lonname,latname,'model_depth']
       bkeys.extend(dkeys)
       for key in vkeys:
          if key not in bkeys:
@@ -239,6 +241,17 @@ class nc_getinfo:
 
       nc.close()
       return
+   ###########################################################
+
+   ###########################################################
+   def timeval_to_datetime(self,timeval):
+      if self.timeunits=='second':
+         dt = self.reftime +timedelta(seconds=timeval)
+      elif self.timeunits=='hour':
+         dt = self.reftime +timedelta(hours=timeval)
+      elif self.timeunits=='day':
+         dt = self.reftime +timedelta(timeval) #NB works for fraction of days also
+      return dt
    ###########################################################
 
    ###########################################################
