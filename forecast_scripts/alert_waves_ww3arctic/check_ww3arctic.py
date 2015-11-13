@@ -31,7 +31,6 @@ np.seterr(invalid='ignore')
 ############################################################################
 
 SEND_EMAIL  = 1     # send email alert if there are big waves close to ice
-SEND_EMAIL3 = 0     # change to 1 if threshhold method says there are big waves close to ice
 
 tday  = date.today()
 cday  = tday.strftime('%Y%m%d')
@@ -59,18 +58,18 @@ if not os.path.exists(odir):
 chc = '1'
 
 ############################################################################
-def finish_map(bm):
+def finish_map(bm,**kwargs):
    # finish_map(bm)
    # *bm is a basemap
-   bm.drawcoastlines()
-   bm.fillcontinents(color='gray')
+   bm.drawcoastlines(**kwargs)
+   bm.fillcontinents(color='gray',**kwargs)
 
    # draw parallels and meridians.
    bm.drawparallels(np.arange(60.,91.,10.),\
-         labels=[True,False,True,True]) # labels = [left,right,top,bottom]
+         labels=[True,False,True,True],**kwargs) # labels = [left,right,top,bottom]
    bm.drawmeridians(np.arange(-180.,181.,20.),latmax=90.,\
-         labels=[True,False,False,True])
-   bm.drawmapboundary() # fill_color='aqua')
+         labels=[True,False,False,True],**kwargs)
+   bm.drawmapboundary(**kwargs) # fill_color='aqua')
 
    return
 ############################################################################
@@ -137,24 +136,38 @@ def Hs_filter():
    return thrdic,symdic,ms_dic
 ############################################################################
 
+def get_bmap(reg):
+   ############################################################################
+   # setup stereographic basemap
+   # - for plotting and also for limiting search area
+   # lat_ts is latitude of true scale.
+   # (lon_0,lat_0) is central point -> (x,y)=(0,0)
+   if reg=='BeS':
+      # Beaufort Sea
+      rad   = 8.           # approx radius of image (degrees)
+      xmax  = rad*111.e3   # half width of image [m]
+      ymax  = rad*111.e3   # half height of image [m]
+      cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
+      #
+      lon_0    = -170.  # deg E
+      lat_0    = 66.    # deg N
+      lat_ts   = lat_0  # deg N
+   elif reg=='BaS':
+      # Barents Sea
+      rad   = 18.          # approx radius of image (degrees)
+      xmax  = rad*111.e3   # half width of image [m]
+      ymax  = rad*111.e3   # half height of image [m]
+      cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
+      #
+      lon_0    = 40.    # deg E
+      lat_0    = 71.    # deg N
+      lat_ts   = lat_0  # deg N
 
-############################################################################
-# setup stereographic basemap
-# - for plotting and also for limiting search area
-# lat_ts is latitude of true scale.
-# (lon_0,lat_0) is central point -> (x,y)=(0,0)
-rad   = 18.          # approx radius of image (degrees)
-xmax  = rad*111.e3   # half width of image [m]
-ymax  = rad*111.e3   # half height of image [m]
-cres  = 'i'          # resolution of coast (c=coarse,l=low,i=intermediate,h)
-#
-lat_ts   = 74. # deg N
-lon_0    = 50. # deg E
-lat_0    = 74. # deg N
-#
-bm = Basemap(width=2*xmax,height=2*ymax,\
-             resolution=cres,projection='stere',\
-             lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
+   # make the basemap
+   bm = Basemap(width=2*xmax,height=2*ymax,\
+                resolution=cres,projection='stere',\
+                lat_ts=lat_ts,lat_0=lat_0,lon_0=lon_0)
+   return bm
 ############################################################################
 
 
@@ -178,18 +191,24 @@ print('Time values ('+nci.timeunits+'):')
 print(times)
 print(' ')
 
-# check forecast 4 days ahead:
-irec  = nci.timevalues.index(4.0)
-	
+# check forecast 4.5 days ahead:
+irec  = nci.timevalues.index(4.5)
+
+
+##############################################
 # get lon/lat and restrict to relevant area
 sswh     = 'hs'
-lon,lat  = nci.get_lonlat()
-X,Y      = bm(lon,lat,inverse=False)
-#
-in_area  = np.logical_and(X>bm.xmin,X<bm.xmax)
-in_area  = np.logical_and(in_area,Y<bm.ymax)
-in_area  = np.logical_and(in_area,Y>bm.ymin)
-	
+wlon,wlat  = nci.get_lonlat()
+swh = nci.get_var(sswh,time_index=irec)
+# swh.values is a numpy masked array
+
+Z        = swh.values.data
+mask     = swh.values.mask
+Z[mask]  = np.NaN
+   # if mask is 'True' (data is missing or invalid) set to NaN
+##############################################
+
+##############################################
 # read in yesterday's OSISAF conc file
 # plot conc + ice edge (15% bm.pcontour? )
 # get lon/lat and restrict to relevant area
@@ -207,40 +226,41 @@ cconc       = 'ice_conc'
 edge_level  = 15
 nci2        = Mrdg.nc_getinfo(ncfil2)
 lon2,lat2   = nci2.get_lonlat()
-X2,Y2       = bm(lon2,lat2,inverse=False)
-#in_area = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
 conc        = nci2.get_var(cconc,time_index=0)
 Z2          = conc.values.data
 mask2       = conc.values.mask
 Z2[mask2]   = np.NaN
-	
-	
-#check_list=0
-#check_list=range(Ntimes)
-check_list  = [irec]
-for loop_i in check_list:
+##############################################
 
-   dt    = nci.timeval_to_datetime(nci.timevalues[loop_i])
+
+lut   = {'BaS':'Barents','BeS':'Beaufort'}
+# for reg in ['BeS']:
+# for reg in ['BaS']:
+for reg in ['BaS','BeS']:
+   # loop over regions (check Beaufort Sea too)
+   SEND_EMAIL3 = 0
+
+   dt    = nci.timeval_to_datetime(nci.timevalues[irec])
    fnday = dt.strftime("%Y%m%dT%H%M%SZ")
-   print('\nChecking record number: '+str(loop_i))
-   print('Date: '+fnday+'\n')
+   print('\n')
+   print('Checking record number : '+str(irec))
+   print('Date                   : '+fnday+'\n')
 
    ###########################################################################
-   swh = nci.get_var(sswh,time_index=loop_i)
-   # swh.values is a numpy masked array
-
-   Z     = swh.values.data
-   mask  = swh.values.mask
-   Zmax  = swh.values[in_area].max() # restrict max calc to relevant area
-   Zmin  = swh.values[in_area].min() # restrict max calc to relevant area
-   print(Zmin,Zmax)
+   # get region-specific basemap
+   print('Region: '+lut[reg]+' Sea\n')
+   bm    = get_bmap(reg)
+   #
+   X,Y      = bm(wlon,wlat,inverse=False)
+   in_area  = np.logical_and(X>bm.xmin,X<bm.xmax)
+   in_area  = np.logical_and(in_area,Y<bm.ymax)
+   in_area  = np.logical_and(in_area,Y>bm.ymin)
+   Zmax     = swh.values[in_area].max() # restrict max calc to relevant area
+   Zmin     = swh.values[in_area].min() # restrict max calc to relevant area
+   #
+   X2,Y2 = bm(lon2,lat2,inverse=False)
+   ###########################################################################
    
-   # make plot
-   Z[mask] = np.NaN
-   # if mask is 'True' (data is missing or invalid) set to NaN
-   ###########################################################################
-		
-		
    #################################################################################
    if 1:
       ##############################################################################
@@ -248,13 +268,14 @@ for loop_i in check_list:
       ##############################################################################
       
       # Plotting waves
-      f  = plt.figure()
-      bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
+      fig   = plt.figure()
+      ax    = fig.add_subplot(1,1,1)
+      PC    = bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax,ax=ax)
       print('range in '+sswh+' (m):') 
       print(Zmin,Zmax)
       print(' ')
       
-      cb = plt.colorbar()
+      cb = fig.colorbar(PC)
       cb.set_label('SWH [m]',rotation=270)
       
       ##############################################################################
@@ -266,7 +287,6 @@ for loop_i in check_list:
       Z3    = np.copy(Z2)
       Zval  = np.ma.array(Z3)
       Z3    = np.ma.masked_where(Zval < 15, Zval)
-      bm.pcolor(X2,Y2,Z3,cmap='RdPu')
       
       # ice edge contour with threshold 
       Z4          = np.copy(Z2)
@@ -274,7 +294,7 @@ for loop_i in check_list:
       Z4[Z4>=15]  = 1
       thenans     = np.isnan(Z4)
       Z4[thenans] = 0
-      cs4         = bm.contour(X2,Y2,Z4,1)
+      cs4         = bm.contour(X2,Y2,Z4,1,ax=ax)
       coll4       = cs4.collections
       nlev4       = len(coll4)
       for nl4 in range(nlev4):
@@ -284,7 +304,7 @@ for loop_i in check_list:
             v4 = p4[ns4].vertices
             x4 = v4[:,0]
             y4 = v4[:,1]
-            bm.plot(x4,y4,'m',linewidth=1.5)
+            ax.plot(x4,y4,'m',linewidth=1.5)
             
             # working on the waves threshold
             # Creating array with .5 interval from 3 meters to Max Wave Height
@@ -299,7 +319,7 @@ for loop_i in check_list:
             elif 1:
                #some waves over threshhold
                # - use basemap.contour
-               cs3         = bm.contour(X,Y,Z,Hlev)
+               cs3         = bm.contour(X,Y,Z,Hlev,ax=ax)
                coll3       = cs3.collections
                nlev3       = len(coll3)
                dist_thresh = 50.e3
@@ -387,7 +407,8 @@ for loop_i in check_list:
                   if Hs >= Hsc and dist <= thrdic[Hsc]:
                      if symdic[Hsc][0] not in sym_skip:
                         print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
-                        bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
+                        bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],\
+                                 latlon=True,ax=ax)
       ##########################################################################################
 
       ##########################################################################################
@@ -401,36 +422,35 @@ for loop_i in check_list:
          man_list = [[40.,82.5]] # list of lon/lat points
          for lonm,latm in man_list:
             print('('+str(lonm)+' E, '+str(latm)+' N)')
-            bm.plot(lonm,latm,'^g',markersize=7,latlon=True)
+            bm.plot(lonm,latm,'^g',markersize=7,\
+                     latlon=True,ax=ax)
          print('\n')
       ##########################################################################################
 
-      finish_map(bm)
+      finish_map(bm,ax=ax)
 
       # date+time to title and file name
       # label '$H_s$, m' to colorbar
-      figname  = odir+'/img/'+fnday+'.png'
+      figname  = odir+'/img/'+fnday+'_'+lut[reg]+'.png'
       if not os.path.exists(odir+'/img'):
          os.mkdir(odir+'/img')
       print('saving figure:')
       print(figname+'\n')
-      plt.savefig(figname)
+      fig.savefig(figname)
 
       if WANT2SHOW:
          # show figure to enable zooming etc
          print('Showing figure - close it to continue\n')
-         plt.show()
+         plt.show(fig)
 
-      plt.close()
-      f.clf()
-      # bmg.latlon_grid(bm,10.,10.) #TODO - get Tim's basemap_gridlines function
-      
+      ax.cla()
+      plt.close(fig)
       
       # swh to find when there are large waves (>4m) in the vicinity of the ice.
       # write and send an email to warn when this happens (so we can order some SAR images)
       
       # filename of text file to form contents of email message 
-      textfile = odir+'/lst/'+fnday+'_list.txt'
+      textfile = odir+'/lst/'+fnday+'_'+lut[reg]+'_list.txt'
       if not os.path.exists(odir+'/lst'):
          os.mkdir(odir+'/lst')
       nout=len(out_list)
@@ -473,24 +493,13 @@ for loop_i in check_list:
    #################################################################################
 
 
-################################################################
-# EMAIL SYSTEM
-print(SEND_EMAIL, SEND_EMAIL3)
-
-if SEND_EMAIL and SEND_EMAIL3:
-   print('waves_alert.sh')
-   import subprocess
-   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-   subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
-   #
-   awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
-   subprocess.check_call([awdir+'/waves_alert.sh', pday])
-elif SEND_EMAIL:
-   print('waves_pic.sh')
-   import subprocess
-   # just send pic
-   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-   #
-   awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
-   subprocess.check_call([awdir+'/waves_pic.sh', pday])
-################################################################
+   ################################################################
+   # EMAIL SYSTEM
+   if SEND_EMAIL:
+      import subprocess
+      subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
+      subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
+      #
+      awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
+      subprocess.check_call([awdir+'/waves_alert.sh', pday,lut[reg]])
+   ################################################################

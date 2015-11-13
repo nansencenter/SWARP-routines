@@ -4,13 +4,15 @@
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-if [ $# -eq 0 ]
+if [ $# -lt 2 ]
 then
    echo Usage:
    echo "./waves_alert.sh [date]"
    echo "date in YYYYMMDD format"
+   echo "region = Beaufort or Barents"
    exit
 fi
+fcday=`date --date="$1 +5days" "+%Y%m%d"`
 
 # EMAIL ADRESS
 #######################################################################################################
@@ -21,8 +23,15 @@ email=$(cat $fc_email)
 wdir=/work/timill/RealTime_Models/check_ww3arctic/$1
 echo "waves_alert.sh called by check_ww3arctic.py:"   >  tmp.txt
 echo " "                                              >> tmp.txt
-cat $wdir/lst/*.txt                                   >> tmp.txt
 
 # send email
-mutt -s "WW3a forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email < tmp.txt
+if [  -f $wdir/lst/$fcday*$2*.txt ]
+then
+   cat $wdir/lst/$fcday*$2*.txt                                                                             >> tmp.txt
+   mutt -s "WW3a forecast for $fcday - $2" -a $wdir/img/$fcday*$2.png -a $wdir/lst/$fcday*$2*.txt -- $email <  tmp.txt
+else
+   echo "No large waves close to ice"                                                                       >> tmp.txt
+   mutt -s "WW3a forecast for $fcday - $2" -a $wdir/img/$fcday*$2.png -- $email                             <  tmp.txt
+fi
+
 rm tmp.txt
