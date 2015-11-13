@@ -29,7 +29,7 @@ time_now=$(date +%H)
 tday=$(date +%Y%m%d)
 yday=`date --date="yesterday" "+%Y%m%d"`
 
-if  [ $time_now -le 5 ]
+if  [ $time_now -lt 5 ]
 then
    exit
 fi

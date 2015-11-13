@@ -170,10 +170,16 @@ print('\nWW3 Arctic file = ' + ncfil+'\n')
 nci      = Mrdg.nc_getinfo(ncfil)
 times    = nci.timevalues # hours from 1st time in file
 Ntimes   = len(times)
-irec     = Ntimes-1
-print('Time values (h):')
+
+print('Reference time:')
+print(nci.reftime)
+print(' ')
+print('Time values ('+nci.timeunits+'):')
 print(times)
 print(' ')
+
+# check forecast 4 days ahead:
+irec  = nci.timevalues.index(4.0)
 	
 # get lon/lat and restrict to relevant area
 sswh     = 'hs'
@@ -197,11 +203,9 @@ if not os.path.exists(ncfil2):
    # ncfil2 = 'ice_conc_nh_polstere-100_multi_201507061200.nc'
 
 print('OSISAF file = '+ncfil2+'\n')
-nci2        = Mrdg.nc_getinfo(ncfil2)
-clon        = 'lon'
-clat        = 'lat'
 cconc       = 'ice_conc'
 edge_level  = 15
+nci2        = Mrdg.nc_getinfo(ncfil2)
 lon2,lat2   = nci2.get_lonlat()
 X2,Y2       = bm(lon2,lat2,inverse=False)
 #in_area = np.logical_and(abs(X)<xmax,abs(Y)<ymax)
@@ -215,6 +219,13 @@ Z2[mask2]   = np.NaN
 #check_list=range(Ntimes)
 check_list  = [irec]
 for loop_i in check_list:
+
+   dt    = nci.timeval_to_datetime(nci.timevalues[loop_i])
+   fnday = dt.strftime("%Y%m%dT%H%M%SZ")
+   print('\nChecking record number: '+str(loop_i))
+   print('Date: '+fnday+'\n')
+
+   ###########################################################################
    swh = nci.get_var(sswh,time_index=loop_i)
    # swh.values is a numpy masked array
 
@@ -227,11 +238,8 @@ for loop_i in check_list:
    # make plot
    Z[mask] = np.NaN
    # if mask is 'True' (data is missing or invalid) set to NaN
-
-##############################################################################
+   ###########################################################################
 		
-		
-################################################################################
 		
    #################################################################################
    if 1:
@@ -401,8 +409,6 @@ for loop_i in check_list:
 
       # date+time to title and file name
       # label '$H_s$, m' to colorbar
-      dt       = nci.timeval_to_datetime(nci.timevalues[loop_i])
-      fnday    = dt.strftime("%Y%m%dT%H%M%SZ")
       figname  = odir+'/img/'+fnday+'.png'
       if not os.path.exists(odir+'/img'):
          os.mkdir(odir+'/img')
@@ -467,20 +473,24 @@ for loop_i in check_list:
    #################################################################################
 
 
-# ################################################################
-# # EMAIL SYSTEM
-# if SEND_EMAIL and SEND_EMAIL3:
-#    import subprocess
-#    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-#    subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
-#    #
-#    awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
-#    subprocess.check_call([awdir+'/waves_alert.sh', pday])
-# elif SEND_EMAIL:
-#    import subprocess
-#    # just send pic
-#    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-#    #
-#    awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
-#    subprocess.check_call([awdir+'/waves_pic.sh', pday])
-# ################################################################
+################################################################
+# EMAIL SYSTEM
+print(SEND_EMAIL, SEND_EMAIL3)
+
+if SEND_EMAIL and SEND_EMAIL3:
+   print('waves_alert.sh')
+   import subprocess
+   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
+   subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
+   #
+   awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
+   subprocess.check_call([awdir+'/waves_alert.sh', pday])
+elif SEND_EMAIL:
+   print('waves_pic.sh')
+   import subprocess
+   # just send pic
+   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
+   #
+   awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
+   subprocess.check_call([awdir+'/waves_pic.sh', pday])
+################################################################
