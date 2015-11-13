@@ -104,6 +104,14 @@ then
 fi
 #################################################
 
+if [ -f $ddir2/$dfil2 ]
+then
+   #update the link to the latest forecast file
+   cd $wamnsea
+   fclat=wam_nsea.fc.latest.nc
+   rm -f $fclat
+   ln -s $ddir2/$dfil2 $fclat
+fi
 
 if  [ ! -f "$wamnsea/$year/forecasts/wam_nsea.fc.$tday.nc" ]
 then
@@ -121,6 +129,7 @@ then
 else
    echo "The file wam_nsea.an.$tday.nc exists - continue"   >> $log
 fi
+
 
 
 # check year, save in correct year file

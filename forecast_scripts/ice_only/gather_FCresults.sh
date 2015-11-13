@@ -8,9 +8,10 @@ email=$(cat $address)
 # =============================================================================
 
 # defining all the dir that will be used
-DFDIR=/work/timill/RealTime_Models/TP4a0.12/expt_01.1
-WKDIR=/work/timill/RealTime_Models/results/TP4a0.12/ice_only/work
-FCDIR=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
+source $SWARP_ROUTINES/source_files/hex_vars.src
+FCDIR=$SWARP_ROUTINES/forecast_scripts
+DFDIR=$TP4_REALTIME/expt_01.1
+WKDIR=$TP4_REALTIME_RES/ice_only/work
 
 # LOG
 log=$FCDIR/logs/gather_log.txt

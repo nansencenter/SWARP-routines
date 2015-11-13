@@ -89,8 +89,9 @@ class nc_getinfo:
 
 
       # open the file
-      lonname,latname   = lonlat_names(ncfil)
-      nc = ncopen(ncfil)
+      self.lonname,self.latname  = lonlat_names(ncfil)
+      nc                         = ncopen(ncfil)
+      self.dimensions            = nc.dimensions.keys()
 
       # get global netcdf attributes
       self.ncattrs  = nc.ncattrs()
@@ -148,14 +149,16 @@ class nc_getinfo:
          self.reftime = refpoint+timedelta(seconds=reftime_u)
       elif time_info[0]=='hour':
          self.reftime = refpoint+timedelta(hours=reftime_u)
+      elif time_info[0]=='day':
+         self.reftime = refpoint+timedelta(reftime_u) #NB works for fraction of days also
 
-      if time_info[0]=='hour':
-         self.timeunits  = time_info[0]
-         self.timevalues = [time[i]-time[0] for i in range(Nt)]
-      elif time_info[0]=='second':
+      if time_info[0]=='second':
          # convert time units to hours for readability of the messages:
          self.timeunits  = 'hour'
          self.timevalues = [int((time[i]-time[0])/3600.) for i in range(Nt)]
+      else:
+         self.timeunits  = time_info[0]
+         self.timevalues = [time[i]-time[0] for i in range(Nt)]
 
       if time_index is not None:
          self.datatime   = self.timevalues[time_index]
@@ -166,16 +169,16 @@ class nc_getinfo:
 
       ########################################################
       # grid info:
-      self.lon0    = nc.variables[lonname][0,0]
-      self.lat0    = nc.variables[latname][0,0]
+      self.lon0    = nc.variables[self.lonname][0,0]
+      self.lat0    = nc.variables[self.latname][0,0]
       #
-      self.shape   = nc.variables[lonname][:,:].shape
+      self.shape   = nc.variables[self.lonname][:,:].shape
       ny,nx        = self.shape
       self.Npts_x  = nx # No of points in x dirn
       self.Npts_y  = ny # No of points in y dirn
       self.Npts    = nx*ny # Total no of points
 
-      self.shape   = nc.variables['latitude'] [:,:].shape
+      self.shape   = nc.variables[self.lonname] [:,:].shape
       ########################################################
 
       ########################################################
@@ -228,13 +231,13 @@ class nc_getinfo:
       ########################################################
       # variable list
       vlist = []
-      bkeys = [proj_name,'longitude','latitude','model_depth']
+      bkeys = [proj_name,self.lonname,self.latname,'model_depth']
       bkeys.extend(dkeys)
       for key in vkeys:
          if key not in bkeys:
             vlist.append(key)
 
-      self.variable_list = vlist
+      self.variable_list   = vlist
       ########################################################
 
       nc.close()
@@ -242,14 +245,22 @@ class nc_getinfo:
    ###########################################################
 
    ###########################################################
+   def timeval_to_datetime(self,timeval):
+      if self.timeunits=='second':
+         dt = self.reftime +timedelta(seconds=timeval)
+      elif self.timeunits=='hour':
+         dt = self.reftime +timedelta(hours=timeval)
+      elif self.timeunits=='day':
+         dt = self.reftime +timedelta(timeval) #NB works for fraction of days also
+      return dt
+   ###########################################################
+
+   ###########################################################
    def get_lonlat(self):
 
-      nc = ncopen(self.filename)
-      for vbl in nc.variables:
-         if 'lon' in vbl or 'Lon' in vbl:
-            lon   = nc.variables[vbl][:,:]
-         if 'lat' in vbl or 'Lat' in vbl:
-            lat   = nc.variables[vbl][:,:]
+      nc    = ncopen(self.filename)
+      lon   = nc.variables[self.lonname][:,:]
+      lat   = nc.variables[self.latname][:,:]
       nc.close()
 
       return lon,lat
@@ -265,7 +276,7 @@ class nc_getinfo:
 
    ###########################################################
    def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg=None,time_index=0,\
-         clim=None,show=True):
+         clim=None,show=True,test_lonlats=None):
 
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
@@ -306,11 +317,15 @@ class nc_getinfo:
       PC = bmap.pcolor(lon,lat,vbl.values,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
       fig.colorbar(PC)
 
+      if test_lonlats is not None:
+         for lont,latt in test_lonlats:
+            bmap.plot(lont,latt,'^m',markersize=5,latlon=True)
+
       Fplt.finish_map(bmap)
       if show:
          fig.show()
 
-      return fig,ax
+      return fig,ax,bmap
    ###########################################################
 
 
@@ -375,6 +390,7 @@ def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
 ##############################################################
 def get_array_from_HYCOM_binary(afile,recno,dims=None,grid_dir='.'):
    # routine to get the array from the .a (binary) file
+   # * recno=1 is 1st record 
    # * fmt_size = size in bytes of each entry)
    #   > default = 4 (real*4/single precision)
 

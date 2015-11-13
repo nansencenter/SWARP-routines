@@ -98,7 +98,8 @@ ncatted -O -h -a comment,global,c,c," "                                       $o
 ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
 ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
 ncatted -O -h -a forecast_start_date,global,c,c,"${tday_long}T00:00:00Z"      $ofil
-ncatted -O -h -a forecast_range,global,c,c,"5 day forecast"                   $ofil
+# ncatted -O -h -a forecast_range,global,c,c,"5 day forecast"                   $ofil
+ncatted -O -h -a forecast_range,global,c,c,"6 day forecast"                   $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
 ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
 ncatted -O -h -a institution_references,global,c,c,"http://www.nersc.no/"     $ofil
@@ -146,7 +147,8 @@ mv $ofil $odir
 ###########################################################################################
 # check number of records (use $Nfiles)
 # 5 day, 3-hourly forecast -> 41
-Ncorrect=41
+# 6 day, 3-hourly forecast -> 49
+Ncorrect=49
 if [ $Nfiles -ne $Ncorrect ]
 then
    efil=swarp_tmp.txt

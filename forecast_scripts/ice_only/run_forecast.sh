@@ -8,7 +8,8 @@
 
 # FORECAST DAYS
 # ================================================================================================
-fc_days=5            
+# fc_days=5
+fc_days=6 # to be consistent with WW3 forecast            
 # thour=`date "+%H"`
 # if [ $thour -le 1 ]
 # then
@@ -155,8 +156,13 @@ echo "Launching pbsjob @ $(date)"                  >> $log
 cd $xdir
 
 # want to save archive files (TP4archv*.[ab]) every 3 hours
-cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/blkdat.input.archv_3h blkdat.input
-cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/pbsjob.sh pbsjob.sh
+cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/blkdat.input.archv_3h  blkdat.input
+cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/pbsjob.sh              .
+cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/preprocess.sh          .
+
+#choose variables to extract
+cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/archv.extract data
+
 
 # clean data directory before run
 if [ -f "./data/TP4DAILY*" ]

@@ -1,4 +1,4 @@
-# script to restore forecast Build directories
+# script to restore forecast expt directories
 # if it has been cleaned
 
 if [ $# -eq 0 ]

@@ -11,12 +11,18 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DDIURNAL \
                   -DEVP \
                   -DDAILY_AVERAGE \
-                  -DARCHIVE_ICE_ONLY \
+
+# selective archiving (choose variables)
+# and archive restart
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                  -DARCHIVE_SELECT \
                   -DARCHIVE_RESTART \
 
-# ecnc2 forcing in 2015 is missing 4 records (between (not inc) 22-Aug 0600, 23-Aug 1200)
-CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-                 -DECNC2_FIXGAP \
+# # ecnc2 forcing in 2015 is missing 4 records (between (not inc) 22-Aug 0600, 23-Aug 1200)
+# # - now read smaller forecast files (-13 days to + 9 days) to avoid problem
+# # - this could make the FC crash if the restart is older than 13 days
+# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+#                  -DECNC2_FIXGAP \
 
 # TP4 specific flags:
 # - SEASONAL_PORT has the same relaxation conditions at the

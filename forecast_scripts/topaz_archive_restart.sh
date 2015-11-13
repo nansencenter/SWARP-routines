@@ -5,6 +5,8 @@
 #I thought that reading through a text file would be faster than checking the whole work folder
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
+mkdir -p /work/$USER/tmp
+cd       /work/$USER/tmp
 
 # EMAIL ADDRESS FOR THE WEEKLY UPDATE
 email_list=$FORECAST/fc_alert_email.txt
@@ -20,6 +22,18 @@ cyear=$(date +%Y)
 pyear=$(expr $cyear - 1)
 tday=$(date +%Y%m%d-%A)
 tdd=$(date +%d)
+jday=$(date +%j)
+if [ "$(date +%A)" == "Monday" ]
+then
+   #latest restart is today
+   Rlatest=TP4restart${cyear}_$((jday-1))_00
+else
+   #latest restart is last Monday
+   dt=`date --date="last Monday" "+%Y%m%d"`
+   dty=`date --date="last Monday" "+%Y"`
+   dtj=`date --date="last Monday" "+%j"`
+   Rlatest=TP4restart${dty}_$((dtj-1))_00
+fi
 
 # CREATING THE LOG DIRECTORY AND FILE
 ldir=$bdir/$cyear/log 
@@ -50,34 +64,29 @@ then
    echo ""                    >> $TP4rlog
 fi
 
-pckg=TP4restart*_mem001.a                                            # looking for restarts (just check *.a files)
-eye=`find ${rdir} -name $pckg`                                       # gathering all the restarts
-eye=( $eye )                                                         # string into array
 baselist=""                                                          # empty archive variable
-for el in "${eye[@]}"                                                # analizing one by one the restart files
+have_latest=0
+for el in $rdir/TP4restart*.a
    do
-   if [ -f $el ]                                                # checking their existence
+   afil=$(basename $el)                                 # *.a filename without full path
+   if [ $afil==${Rlatest}_mem001.a ]
    then
-      afil=$(basename $el)                                 # *.a filename without full path
-      base=${afil%%_mem001.a}                              # cutting _mem001.a
-      dcre=${base#TP4restart}                              # cutting TP4restart
-      bfil=$rdir/${base}_mem001.b
-      ufil=$rdir/${base}ICE.uf
-      ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
-      
-      if grep -Fxq "$base" $TP4rlist                       # checking their presence in the LIST
-      then
-      	echo "$base CHECKED" >> $TP4rlog             # file present -> check confirmation
-      else 
-      	echo "$base" >> $TP4rlist                    # file not present -> update the LIST                      
-                 sort $TP4rlist -o $TP4rlist                  # sort the list
-      	baselist="$baselist $base"                   # adding the file group to the transfer variable
-      fi
-   else
-      echo "MISSING RESTART FILES in $rdir" >> $TP4rlog
-         echo "Check if the restarts are still uploaded on $rdir" >> $TP4rlog
-         mail -s "WARNING - TOPAZ restart files" $email < $TP4rlog
-      exit
+      have_latest=1
+   fi
+
+   base=${afil%%_mem001.a}                              # cutting _mem001.a
+   dcre=${base#TP4restart}                              # cutting TP4restart
+   bfil=$rdir/${base}_mem001.b
+   ufil=$rdir/${base}ICE.uf
+   ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
+   
+   if grep -Fxq "$base" $TP4rlist                       # checking their presence in the list
+   then
+      echo "$base checked" >> $TP4rlog             # file present -> check confirmation
+   else 
+      echo "$base" >> $TP4rlist                    # file not present -> update the list                      
+      sort $TP4rlist -o $TP4rlist                  # sort the list
+      baselist="$baselist $base"                   # adding the file group to the transfer variable
    fi
 done
 
@@ -91,10 +100,16 @@ else
       afil=${base}_mem001.a
       bfil=${base}_mem001.b
       ufil=${base}ICE.uf
-      dcre=${base#TP4restart}                                   # cutting TP4restart
-      ryear=${dcre%%_*}                                         # keeping the year, we want to distinguish between ops year and file year
-      tfil=${bdir}/$ryear/$base.tar.gz                          # tar file to create
-      tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil              # remove /work/fanf/TOPAZ_RT from inside tar file
+      dcre=${base#TP4restart}                         # cutting TP4restart
+      ryear=${dcre%%_*}                               # keeping the year, we want to distinguish between ops year and file year
+      tfil=$base.tar.gz                               # tar file to create
+      
+      echo " "
+      echo "creating $tfil"
+      tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil    # remove /work/fanf/TOPAZ_RT from inside tar file
+      echo " "
+
+      cp $tfil ${bdir}/$ryear
       echo "$base -ADDED" >> $TP4rlog
    done
    echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
@@ -120,3 +135,40 @@ then
    rm $TP4rlog 
 fi
 
+# =======================================================================
+# WARNINGS
+# 1. latest not in Francois's dir
+if [ $have_latest -eq 0 ]
+then
+   tf=tmp.txt
+   echo "Latest restart not present in $rdir" > $tf
+   echo "$Rlatest" > $tf
+   mail -s "WARNING: Latest restart not present in $rdir" $email < $tf
+   rm $tf
+# else
+#    # test message
+#    tf=tmp.txt
+#    echo "Latest restart present in $rdir" > $tf
+#    echo "$Rlatest" > $tf
+#    mail -s "CONFIRM: Latest restart present in $rdir" $email < $tf
+#    rm $tf
+fi
+
+# 2. latest not in migrate
+if [ ! -f $bdir/$dty/$Rlatest.tar.gz ]
+then
+   tf=tmp.txt
+   echo "Latest restart not present in $bdir/$dty" > $tf
+   echo "$Rlatest" > $tf
+   mail -s "WARNING: Latest restart not on /migrate" $email < $tf
+   rm $tf
+elif [ "$(date +%A)" == "Monday" ]
+then
+   # confirmation message
+   tf=tmp.txt
+   echo "Latest restart present in $bdir/$dty" > $tf
+   echo "$Rlatest" > $tf
+   mail -s "CONFIRM: Latest restart on /migrate" $email < $tf
+   rm $tf
+fi
+# =======================================================================
