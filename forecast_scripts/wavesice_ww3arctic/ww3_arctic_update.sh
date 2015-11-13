@@ -5,7 +5,8 @@
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-fget="$FORECAST/wavesice/ww3_arctic_download.sh"
+fget="$FORECAST/wavesice_ww3arctic/ww3_arctic_download.sh"
+ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 
 # EMAIL 
 address=$FORECAST/fc_alert_email.txt
@@ -26,174 +27,136 @@ timeout_warning=08
 
 time_now=$(date +%H)
 tday=$(date +%Y%m%d)
-if  [ $time_now -le 4 ]
+yday=`date --date="yesterday" "+%Y%m%d"`
+
+if  [ $time_now -le 5 ]
 then
    exit
 fi
 
 # check year today, tomorrow, the day after tomorrow
 year=$(date +%Y)
-dayname=$(date +%A)
-yearplus1=$(expr $year + 1)
-year1d=$(date --date="1 day" +"%Y")
-year2d=$(date --date="2 day" +"%Y")
 
 # creating (if needed) all the storing directories
-mkdir -p $wamnsea/${year}/analysis
-mkdir -p $wamnsea/${year}/forecasts
-mkdir -p $wamnsea/${yearplus1}/analysis
-mkdir -p $wamnsea/${yearplus1}/forecasts
+mkdir -p $ww3a/${year}
 
 # moving to the working folder
-cd $wamnsea/$year
+cd $ww3a/$year
+log=$ww3a/$year/ww3a_log.txt
 
-log=$wamnsea/$year/wamn_log.txt
-rm $log
-touch $log
-
-echo "** Update WAMNSEA wave data from myocean.met.no **"   >> $log
-echo " Today is $tday"                                      >> $log
-echo " Check if year change next 2 days: "                  >> $log
-echo " Today year is:.........$year"                        >> $log
-echo " Next year is:..........$yearplus1"                   >> $log
-echo " Today +1 day year is:..$year1d"                      >> $log
-echo " Today +2 day year is:..$year2d"                      >> $log
-echo ""                                                     >> $log
+echo "** Update WW3_ARCTIC wave data from ftp.ifremer.fr **"   >  $log
+echo " Today is $tday $(date "+%H:%M:%S")"                     >> $log
+echo ""                                                        >> $log
 
 # Loop over previous 30 days
-# - check if (an) wave file is there already
-# - if not download it
-# If latest fc isn't present continue with the script
-# else send a warning_log
-AN_DOWNLOADS=0
-for n in `seq 0 30`
+# - check if eg wave file is there already
+# - if not download all materials for that day
+DLS=0 # no of downloads
+for n in `seq 1 3`
 do
    ddate=$(date --date="-$n days" +%Y%m%d) # download date
    dyear=${ddate:0:4}
-   ddir1=$wamnsea/${dyear}/analysis
-   cd $ddir1
-   dfil1=wam_nsea.an.$ddate.nc
+   ddir1=$ww3a/${dyear}/originals/${ddate}00
+   dfil1=SWARP_WW3_ARCTIC-12K_$ddate.nc
 
-   # an file
+   if [ $n -eq 1 ]
+   then
+      ddir2=$ww3a/${dyear}/forecast
+      dfil2=SWARP_WW3_ARCTIC-12K_${ddate}.fc.nc
+      #
+      ddir3=$ww3a/${dyear}_ef/forecast
+      dfil3=SWARP_WW3_ARCTIC-12K_${ddate}_ef.fc.nc
+   fi
+
    if [ ! -f $ddir1/$dfil1 ]
    then
-      $fget $ddate an
-      AN_DOWNLOADS=$((AN_DOWNLOADS+1))
-   # else
-   #    echo $dfil1 exists already
+      # download, sort and convert files
+      echo "Downloading WW3 Arctic files for $ddate"  >> $log
+      $fget $ddate 2
+      DLS=$((DLS+1))
+   else
+      echo "WW3 Arctic files present for $ddate"      >> $log
+   fi
+
+   if [ ! -f $ddir1/$dfil1 ]
+   then
+      echo "> WW3 Arctic files still not present for $ddate"  >> $log
+      echo " "                                                >> $log
    fi
 done
 #################################################
 
-#################################################
-# old fc files are deleted every day
-# - just look for today's
-ddate=`date +%Y%m%d`
-dyear=${ddate:0:4}
-ddir2=$wamnsea/${dyear}/forecasts
-dfil2=wam_nsea.fc.$ddate.nc
-cd $ddir2
-
-FC_DOWNLOADS=0
-if [ ! -f $ddir2/$dfil2 ]
-then
-   $fget $ddate fc
-   FC_DOWNLOADS=$((FC_DOWNLOADS+1))
-# else
-#    echo $dfil2 exists already
-fi
-#################################################
+# ===============================================
+# WARNINGS
+# ===============================================
+echo " "                         >> $log
+echo "Number of downloads: $DLS" >> $log
 
 if [ -f $ddir2/$dfil2 ]
 then
-   #update the link to the latest forecast file
-   cd $wamnsea
-   fclat=wam_nsea.fc.latest.nc
+
+   # update the link to the latest forecast file
+   # - parameters (hs etc)
+   fclat=$ww3a/SWARP_WW3_ARCTIC-12K.fc.latest.nc
    rm -f $fclat
    ln -s $ddir2/$dfil2 $fclat
-fi
 
-if  [ ! -f "$wamnsea/$year/forecasts/wam_nsea.fc.$tday.nc" ]
-then
+   echo " "                                  >> $log
+   echo "Linking latest forecast file..."    >> $log
+   echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+
+else
+
    if [ $time_now -gt $timeout_warning ]
    then
       # We want to give the script time till 0900 before sending a warning mail
-      echo " The file wam_nsea.fc.$tday.nc doesnt exist"             >> $log
-      echo " Please check either myocean ftp server status "         >> $log
-      echo " IF server is online and updated check:   "              >> $log
-      echo " ~/SWARP-routines/forecast_scripts/wamnsea_update.sh"    >> $log 
-      mail -s "WAMNSEA forecast not found for $tday" $email < $log
-   else
-      exit
+      echo " The file $dfil2 doesn't exist"                                      >> $log
+      echo " Please check either ifremer ftp server status "                     >> $log
+      echo " IF server is online and updated check:   "                          >> $log
+      echo " ~/SWARP-routines/forecast_scripts/waves_ice/ww3_arctic_update.sh"   >> $log 
+      echo " and $ww3a/$year"                                                    >> $log 
+      #
+      mail -s "WW3 Arctic forecast not found for $tday" $email < $log
    fi
-else
-   echo "The file wam_nsea.an.$tday.nc exists - continue"   >> $log
+
 fi
 
-
-
-# check year, save in correct year file
-
-# Use cdo functions to add last +1 day (.an. file)
-#  to "keep" file (wam_nsea_${tyear}.nc)
-# Remove and recreate forecast file (wam_nsea_fc_${year}.nc)
-#  that also include the +1 and +2 forecast days
-
-echo " Add data for this day (.an. file) at end of year file"     >> $log
-echo " Todays inputfile: wam_nsea.an.${tday}.nc"                  >> $log
-echo " Cat into year file: wam_nsea_${year}.nc"                   >> $log
-echo " Then rm wam_nsea_fc_${year}.nc and "                       >> $log
-echo " cdo copy wam_nsea_${year}.nc wam_nsea.fc.${tday}.nc "      >> $log
-echo " into new version of wam_nsea_fc_${year}.nc"                >> $log
-echo ""                                                           >> $log
-
-if [ $AN_DOWNLOADS -gt 0 ]
+if [ -f $ddir3/$dfil3 ]
 then
-   # TODO change this in case any other new an files appear
-   $cdo cat analysis/wam_nsea.an.${tday}.nc $wamnsea/${year}/wam_nsea_${year}.nc
-fi
 
-if [ $FC_DOWNLOADS -eq 0 ]
-then
-   # no more to do
-   exit
-fi
+   # update the link to the latest forecast file
+   # - ef type
+   fclat=$ww3a/SWARP_WW3_ARCTIC-12K_ef.fc.latest.nc
+   rm -f $fclat
+   ln -s $ddir3/$dfil3 $fclat
 
-###############################################################################################
-# if there's a new fc file then continue to combine them
-echo "Remove forecast year file wam_nsea_fc_${year}.nc if exist"  >> $log
-echo ""                                                           >> $log
-if [ -f "$wamnsea/$year/wam_nsea_fc_${year}.nc" ]
- then
-  rm $wamnsea/$year/wam_nsea_fc_${year}.nc
-fi
+   echo " "                                     >> $log
+   echo "Linking latest (Ef) forecast file..."  >> $log
+   echo "ln -s $ddir3/$dfil3 $fclat"            >> $log
 
-echo "Check for year today, today +1, today +2"                   >> $log
-if [ $year -eq $year1d -a $year -eq $year2d ]
- then
-  echo "Same year all 3 days"                                     >> $log # merge fc in the file of the year
-  $cdo copy wam_nsea_${year}.nc $wamnsea/$year/forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_${year}.nc
-elif [ $year -eq $year1d -a $yearplus1 -eq $year2d ]
- then
-  echo "Same year today and today +1 - new year today +2"         >> $log # split the fc file, day+1 in this year, day+2 in the next year
-  $cdo copy wam_nsea_${year}.nc wam_nsea_fc_${year}.nc
-  $cdo splityear forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_split_
-  $cdo cat wam_nsea_fc_split_${year}.nc wam_nsea_fc_${year}.nc
-  $cdo cat wam_nsea_fc_split_${yearplus1}.nc $wamnsea/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
-  rm wam_nsea_fc_split_*
-  echo ""                                                         >> $log
-  echo "NEW YEAR IS A MAGICAL TIME FOR BUGS! BE CAREFUL!"  >> $log
-  mail -s "WAMNSEA UPDATE - 2 day to new year" $email < $log
-elif [ $yearplus1 -eq $year1d -a  $yearplus1 -eq $year2d ]
- then
-  echo "New year today +1 and today +2"                           >> $log # the whole fc file is in the next year
-  $cdo copy forecasts/wam_nsea.fc.${tday}.nc $wamnsea/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
-  echo "Happy new year user - remember to check if the next upload is correct"   >> $log
-  echo "NEW YEAR IS A SUPER MAGICAL TIME FOR BUGS! BE EXTRA CAREFUL!"            >> $log
-  mail -s "WAMNSEA UPDATE - 1 day to new year" $email < $log
 else
-  echo " !!WARNING!! "                                                              >> $log
-  echo " Check ~/SWARP-routines/forecast_scripts/wamnsea_update.sh"                 >> $log
-  mail -s "WAMNSEA merging didn't work for $tday" $email < $log  
+
+   if [ $time_now -gt $timeout_warning ]
+   then
+      # We want to give the script time till 0900 before sending a warning mail
+      echo " The file $dfil3 doesn't exist"                                      >> $log
+      echo " Please check either ifremer ftp server status "                     >> $log
+      echo " IF server is online and updated check:   "                          >> $log
+      echo " ~/SWARP-routines/forecast_scripts/waves_ice/ww3_arctic_update.sh"   >> $log 
+      echo " and $ww3a/${year}_ef"                                               >> $log 
+      #
+      mail -s "WW3 Arctic forecast (Ef) not found for $tday" $email < $log
+   fi
+
 fi
-###############################################################################################
+
+echo " "
+echo "ww3_arctic_update.sh finished"
+echo "log in $log"
+echo " "
+
+echo " " >> $log
+cat $log
+
+echo " "
+cat $ww3a/latest_download.txt
