@@ -15,23 +15,6 @@ python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"
 cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
-# ===================================================================
-# get wamnsea waves as early as possible
-# NOTE the wamnsea products are usually uploaded just after 4 am
-00 * * * * $FORECAST/wavesice/wave_data/wamnsea_update.sh
-
-# run check_wamsea.py (alert if big waves near ice)
-10 ** * * * $FORECAST/wavesice/wave_data/check_wamnsea.sh
-# ===================================================================
-
-# ===================================================================
-# download WW3 Arctic waves
-# NB products updated 0520
-30 * * * * $FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_update.sh
-
-# run check_ww3arctic.py (alert if big waves near ice)
-# 00 * * * * $FORECAST/wavesice_ww3arctic/wave_data/check_ww3arctic.sh
-# ===================================================================
 
 # ===================================================================
 # TP4 restarts less urgent
@@ -42,18 +25,42 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 10 * * * * $FORECAST/ice_only/run_forecast.sh
 # ===================================================================
 
+
 # ===================================================================
+# get wamnsea waves as early as possible
+# NOTE the wamnsea products are usually uploaded just after 4 am
+00 * * * * $FORECAST/wavesice/wave_data/wamnsea_update.sh
+
+# run check_wamsea.py (alert if big waves near ice)
+10 ** * * * $FORECAST/wavesice/wave_data/check_wamnsea.sh
+
 # run wavesice forecast
 # internal check for ice_only restart and WAMNSEA product
 # 10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
 # ===================================================================
+
+
+# ===================================================================
+# download WW3 Arctic waves
+# NB products updated 0520
+30 * * * * $FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_update.sh
+
+# run check_ww3arctic.py (alert if big waves near ice)
+00 * * * * $FORECAST/wavesice_ww3arctic/wave_data/check_ww3arctic.sh
+
+# run wavesice forecast
+# internal check for ice_only restart and WAMNSEA product
+# 10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
+# ===================================================================
+
 
 # ===================================================================
 # get ice conc for validation and wave warning
 00 12 * * * $VALIDATION/get_osisaf_conc.sh
 # ===================================================================
 
+
 # ===================================================================
 # run check_ECMWF.sh (1: alert if forcing absent) (2: alert if present again)
-05 ** * * * $FORECAST/check_ECMWF/check_ECMWF.sh 2
+05 ** * * * $FORECAST/utility_scripts/check_ECMWF.sh 2
 # ===================================================================
