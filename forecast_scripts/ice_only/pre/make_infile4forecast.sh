@@ -9,17 +9,18 @@
 # Other infile parameters must be changed in infile.mal.outer (TP4) or infile.mal
 # ======================================================================
 
-# ======================================================================
-# EMAIL ADDRESS
-email=$(cat $FCemail)
-# ======================================================================
-
 # ===================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
 THISFC=$SWARP_ROUTINES/forecast_scripts/ice_only         # scripts
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 # ===================================================================================
+
+# ======================================================================
+# EMAIL ADDRESS
+email=$(cat $FCemail)
+# ======================================================================
+
 
 # CREATING DIRECTORIES
 xdir=$TP4_REALTIME/expt_01.$Xno
