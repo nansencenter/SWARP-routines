@@ -5,7 +5,7 @@ if [ $# -eq 0 ]
 then
    echo Usage:
    echo restore_expt.sh Xno
-   echo "where Xno = 1 (ice_only), 2 (wavesice), 3 (spare)"
+   echo "where Xno = 1 (ice_only), 2 (waves-in-ice - WAM), 3 (waves-in-ice - WW3)"
    exit
 else
    X=01.$1

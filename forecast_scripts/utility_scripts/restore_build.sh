@@ -5,7 +5,7 @@ if [ $# -eq 0 ]
 then
    echo Usage:
    echo restore_build.sh Xno
-   echo "where Xno = 1 (ice_only), 2 (wavesice), 3 (spare)"
+   echo "where Xno = 1 (ice_only), 2 (waves-in-ice - WAM), 3 (waves-in-ice - WW3)"
    exit
 else
    X=01.$1
@@ -18,7 +18,7 @@ pwd
 if [ ! -f ../expt_$X/blkdat.input ]
 then
    # need some files from expt directory
-   $SWARP_ROUTINES/forecast_scripts/inputs/restore_expt.sh $1
+   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_expt.sh $1
 fi
 
 echo cp svn_Build/* .
@@ -29,11 +29,15 @@ echo ./setup_patch.sh 133
 
 if [ $1 -eq 1 ]
 then
-   echo cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/flags .
-   cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/flags .
-else
-   echo cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/flags .
-   cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/flags .
+   THISFC=$SWARP_ROUTINES/forecast_scripts/ice_only
+elif [ $1 -eq 2 ]
+then
+   THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
+elif [ $1 -eq 3 ]
+then
+   THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
 fi
 
+echo "cp $THISFC/inputs/flags ."
 echo " "
+cp $THISFC/inputs/flags .
