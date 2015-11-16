@@ -7,6 +7,9 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 # opts="--fl_fmt=netcdf4_classic"
 opts="--fl_fmt=classic" #netcdf3 classic
 
+[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
+module load nco
+
 if [ $# -lt 2 ]
 then
    echo "Usage: ww3_arctic_download.sh [date] [cycle]"
