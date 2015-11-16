@@ -18,19 +18,19 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 # ===================================================================
 # get wamnsea waves as early as possible
 # NOTE the wamnsea products are usually uploaded just after 4 am
-00 * * * * $FORECAST/wavesice/wamnsea_update.sh
+00 * * * * $FORECAST/wavesice/wave_data/wamnsea_update.sh
 
 # run check_wamsea.py (alert if big waves near ice)
-10 ** * * * $FORECAST/alert_waves/check_wamnsea.sh
+10 ** * * * $FORECAST/wavesice/wave_data/check_wamnsea.sh
 # ===================================================================
 
 # ===================================================================
 # download WW3 Arctic waves
 # NB products updated 0520
-30 * * * * $FORECAST/wavesice_ww3arctic/ww3arctic_update.sh
+30 * * * * $FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_update.sh
 
 # run check_ww3arctic.py (alert if big waves near ice)
-00 * * * * $FORECAST/alert_waves_ww3arctic/check_ww3arctic.sh
+# 00 * * * * $FORECAST/wavesice_ww3arctic/wave_data/check_ww3arctic.sh
 # ===================================================================
 
 # ===================================================================
@@ -45,7 +45,7 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 # ===================================================================
 # run wavesice forecast
 # internal check for ice_only restart and WAMNSEA product
-10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
+# 10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
 # ===================================================================
 
 # ===================================================================
