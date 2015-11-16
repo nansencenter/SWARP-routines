@@ -4,7 +4,24 @@
 # 2) Get the restarts - topaz_get_restart.sh
 # 3) Prepare the infile.in - make_infile4forecast.sh
 # 4) Run the model - pbsjob.sh
-#  
+
+# get variables
+# ($SWARP_ROUTINES defined in crontab or .bash_profile)
+source $SWARP_ROUTINES/source_files/hex_vars.src
+THISFC=$SWARP_ROUTINES/forecast_scripts/ice_only         # scripts
+THIS_SRC=$THISFC/inputs/THISFC.src
+source $THIS_SRC
+
+test_pre=0
+print_info=0 # print info to screen (or email in crontab)
+manual=0
+if [ $# -eq 1 ]
+then
+   echo ""
+   echo "Running manually (no checks)"
+   echo ""
+   manual=1
+fi
 
 # FORECAST DAYS
 # ================================================================================================
@@ -18,27 +35,22 @@ fc_days=6 # to be consistent with WW3 forecast
 # fi
 # ================================================================================================
 
-# get variables
-# ($SWARP_ROUTINES defined in crontab or .bash_profile)
-source $SWARP_ROUTINES/source_files/hex_vars.src
-print_info=0 # print info to screen (or email in crontab)
 
 # CREATING THE LOG
-logdir=$SWARP_ROUTINES/forecast_scripts/logs
+logdir=$THISFC/logs
 mkdir -p $logdir
 log=$logdir/run_forecast_log.txt
 if [ -f "$log" ]
 then
    rm $log
 fi
-touch $log
 
 cday=$(date +%Y%m%d)
 cyear=$(date +%Y)
 jday0=$(date +%j)
 jday_today0=$(expr $jday0 - 1)            # julian day of TOPAZ (0=1st Jan)
 jday_today=$(printf '%3.3d' $jday_today0) # 3 digits
-rundir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday # where the last_restart.txt will end up
+rundir=$THISFC2/$cday                     # where the results will end up
 
 mkdir -p $rundir
 mkdir -p $rundir/info
@@ -54,7 +66,7 @@ echo $cyear             >> $datelist
 echo $(date +%m)        >> $datelist
 echo $(date +%d)        >> $datelist
 echo $jday_today        >> $datelist
-cp $datelist $FORECAST/ice_only
+cp $datelist $logdir
 
 if [ $print_info -eq 1 ]
 then
@@ -66,37 +78,39 @@ then
 fi
 
 ##############################################################
-# Checks before run:
-
-# 1. check if forecast has already run
-if [ -f $rundir/final_output/SWARP*.nc ]
+if [ $manual -eq 0 ]
 then
-   if [ $print_info -eq 1 ]
+   # Checks before run:
+   # 1. check if forecast has already run
+   if [ -f $rundir/final_output/SWARP*.nc ]
    then
-      echo "Ice-only FC has already run - stopping"
+      if [ $print_info -eq 1 ]
+      then
+         echo "Ice-only FC has already run - stopping"
+      fi
+      exit
    fi
-   exit
-fi
 
-# 2. check if forecast is already running
-msg=`$qstat | grep TP4x011fc`
-if [ ${#msg} -ne 0 ]
-then
-   if [ $print_info -eq 1 ]
+   # 2. check if forecast is already running
+   msg=`$qstat | grep TP4x011fc`
+   if [ ${#msg} -ne 0 ]
    then
-      echo "Ice-only FC is already running - stopping"
-      echo "pbs job message:"
-      echo $msg
+      if [ $print_info -eq 1 ]
+      then
+         echo "Ice-only FC is already running - stopping"
+         echo "pbs job message:"
+         echo $msg
+      fi
+      exit
    fi
-   exit
 fi
 ###################################################################
 
 # RUNNING TOPAZ_GET_RESTART
-echo "Launching topaz_get_restart @ $date"                     >> $log
-$SWARP_ROUTINES/forecast_scripts/ice_only/topaz_get_restart.sh          # get latest restart file
+echo "Launching topaz_get_restart @ $(date)"   > $log
+$THISFC/pre/topaz_get_restart.sh $THIS_SRC         # get latest restart file
 
-# GETTING INFOS FROM LAST_RESTART
+# GETTING INFO FROM LAST_RESTART
 cd $rundir  # just in case we've changed dir in script
 out_restart=info/last_restart.txt
 rname=$(cat $out_restart)
@@ -107,7 +121,7 @@ rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
 #################################################################
 
 # MAKE INFILE 
-echo "Launching make_infile4forecast @ $date"                  >> $log
+echo "Launching make_infile4forecast @ $(date)"                  >> $log
 
 # if last restart was in different year to this year:
 if [ $print_info -eq 1 ]
@@ -137,33 +151,44 @@ fi
 echo "Restart files of ${ryear}_$rday"
 echo "Forecast final day ${fc_year}_${final_day}"
 
-$SWARP_ROUTINES/forecast_scripts/ice_only/make_infile4forecast.sh $rgen $ryear $rday $jday_today $final_day
-xdir=$TP4_REALTIME/expt_01.1
+# $THISFC/pre/make_infile4forecast.sh $rgen $ryear $rday $jday_today $final_day
+echo "$THISFC/pre/make_infile4forecast.sh $rgen $ryear $rday $final_day"
+$THISFC/pre/make_infile4forecast.sh $rgen $ryear $rday $final_day
+
+xdir=$TP4_REALTIME/expt_01.$Xno
 infile=$xdir/infile.in
-if [ $rday -eq $jday_today ]
+if [ $print_info -eq 1 ]
 then
-   # delete "today" line
-   echo "restart day is from today"
-   echo "- editing infile.in"
-   sed '17d' $infile >> infile.in.replace
-   mv infile.in.replace $infile
+   cat $infile
 fi
+# if [ $rday -eq $jday_today ]
+# then
+#    # delete "today" line
+#    echo "restart day is from today"
+#    echo "- editing infile.in"
+#    sed '17d' $infile >> infile.in.replace
+#    mv infile.in.replace $infile
+# fi
 cp $infile $rundir/info
 #################################################################
 
-# Launch job
+
+#################################################################
+# Get other inputs
 echo "Launching pbsjob @ $(date)"                  >> $log
 cd $xdir
 
 # want to save archive files (TP4archv*.[ab]) every 3 hours
-cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/blkdat.input.archv_3h  blkdat.input
-cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/pbsjob.sh              .
-cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/preprocess.sh          .
+cp $THISFC/inputs/blkdat.input.archv_3h  blkdat.input
+cp $THISFC/inputs/pbsjob.sh              .
+cp $THISFC/inputs/preprocess.sh          .
 
-#choose variables to extract
-cp $SWARP_ROUTINES/forecast_scripts/inputs/ice_only/archv.extract data
+#choose variables to extract (-DARCHIVE_SELECT)
+cp $THISFC/inputs/archv.extract data
+#################################################################
 
 
+#################################################################
 # clean data directory before run
 if [ -f "./data/TP4DAILY*" ]
 then
@@ -177,8 +202,9 @@ fi
 # clean log file - else mpijob.out gets too big
 rm -f log/*
 
-# launch job
-$qsub pbsjob.sh
+if [ ! $test_pre -eq 1 ]
+then
+   # launch job
+   $qsub pbsjob.sh
+fi
 #################################################################
-
-echo "pbsjob done @ $(date)"                  >> $log
