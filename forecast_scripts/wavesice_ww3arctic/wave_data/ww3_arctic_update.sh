@@ -5,7 +5,7 @@
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-fget="$FORECAST/wavesice_ww3arctic/ww3_arctic_download.sh"
+fget="$FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_download.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 
 # EMAIL 
@@ -44,14 +44,11 @@ mkdir -p $ww3a/${year}
 cd $ww3a/$year
 log=$ww3a/$year/ww3a_log.txt
 
-echo "** Update WW3_ARCTIC wave data from ftp.ifremer.fr **"   >  $log
-echo " Today is $tday $(date "+%H:%M:%S")"                     >> $log
-echo ""                                                        >> $log
-
 # Loop over previous 30 days
 # - check if eg wave file is there already
 # - if not download all materials for that day
 DLS=0 # no of downloads
+dfirst=1
 for n in `seq 1 3`
 do
    ddate=$(date --date="-$n days" +%Y%m%d) # download date
@@ -71,11 +68,18 @@ do
    if [ ! -f $ddir1/$dfil1 ]
    then
       # download, sort and convert files
+      if [ $dfirst -eq 1 ]
+      then
+         echo "** Update WW3_ARCTIC wave data from ftp.ifremer.fr **"   >  $log
+         echo " Today is $tday $(date "+%H:%M:%S")"                     >> $log
+         echo ""                                                        >> $log
+         dfirst=0
+      fi
       echo "Downloading WW3 Arctic files for $ddate"  >> $log
       $fget $ddate 2
       DLS=$((DLS+1))
-   else
-      echo "WW3 Arctic files present for $ddate"      >> $log
+   # else
+   #    echo "WW3 Arctic files present for $ddate"      >> $log
    fi
 
    if [ ! -f $ddir1/$dfil1 ]
@@ -89,21 +93,30 @@ done
 # ===============================================
 # WARNINGS
 # ===============================================
-echo " "                         >> $log
-echo "Number of downloads: $DLS" >> $log
+if [ $DLS -gt 0 ]
+then
+   echo " "                         >> $log
+   echo "Number of downloads: $DLS" >> $log
+fi
+
 
 if [ -f $ddir2/$dfil2 ]
 then
 
-   # update the link to the latest forecast file
-   # - parameters (hs etc)
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K.fc.latest.nc
-   rm -f $fclat
-   ln -s $ddir2/$dfil2 $fclat
+   fctarg=$ddir2/$dfil2
 
-   echo " "                                  >> $log
-   echo "Linking latest forecast file..."    >> $log
-   echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+   if [ -z "`diff $fclat $fctarg`" ]
+   then
+      # update the link to the latest forecast file
+      # - parameters (hs etc)
+      rm -f $fclat
+      ln -s $fctarg $fclat
+
+      echo " "                                  >> $log
+      echo "Linking latest forecast file..."    >> $log
+      echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+   fi
 
 else
 
@@ -127,12 +140,18 @@ then
    # update the link to the latest forecast file
    # - ef type
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K_ef.fc.latest.nc
-   rm -f $fclat
-   ln -s $ddir3/$dfil3 $fclat
+   fctarg=$ddir3/$dfil3
+   if [ -z "`diff $fclat $fctarg`" ]
+   then
+      # update the link to the latest forecast file
+      # - parameters (hs etc)
+      rm -f $fclat
+      ln -s $fctarg $fclat
 
-   echo " "                                     >> $log
-   echo "Linking latest (Ef) forecast file..."  >> $log
-   echo "ln -s $ddir3/$dfil3 $fclat"            >> $log
+      echo " "                                  >> $log
+      echo "Linking latest (EF) forecast file..."    >> $log
+      echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+   fi
 
 else
 
@@ -150,13 +169,13 @@ else
 
 fi
 
-echo " "
-echo "ww3_arctic_update.sh finished"
-echo "log in $log"
-echo " "
-
-echo " " >> $log
-cat $log
-
-echo " "
-cat $ww3a/latest_download.txt
+# echo " "
+# echo "ww3_arctic_update.sh finished"
+# echo "log in $log"
+# echo " "
+# 
+# echo " " >> $log
+# cat $log
+# 
+# echo " "
+# cat $ww3a/latest_download.txt

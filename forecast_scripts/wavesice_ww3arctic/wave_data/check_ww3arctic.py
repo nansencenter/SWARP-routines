@@ -500,6 +500,6 @@ for reg in ['BaS','BeS']:
       subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
       subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
       #
-      awdir = SR+'/forecast_scripts/alert_waves_ww3arctic'
+      awdir = SR+'/forecast_scripts/wavesice_ww3arctic/wave_data'
       subprocess.check_call([awdir+'/waves_alert.sh', pday,lut[reg]])
    ################################################################
