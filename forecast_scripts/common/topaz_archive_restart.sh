@@ -141,7 +141,7 @@ cp $TP4rlog $fcldir
 
 if [ "$(date +%A)" == "Monday" ]
 then
-   weekn=$(expr $(date +%d) / 7)
+   weekn=`date +%W`
    mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
    rm $TP4rlog 
 fi
