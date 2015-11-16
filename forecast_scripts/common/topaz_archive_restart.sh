@@ -13,19 +13,27 @@ cd       /work/$USER/tmp
 email=$(cat $FCemail)
 # =========================================================================================================
 
+print_info=1
+
 # DIRECTORIES AND TIME DEFINITION
 rdir=/work/fanf/TOPAZ_RT 
 bdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts 
-fcldir=$FORECAST/logs
+fcldir=$FORECAST/common/logs
+mkdir -p $fcldir
+
 cyear=$(date +%Y) 
 pyear=$(expr $cyear - 1)
 tday=$(date +%Y%m%d-%A)
+cday=$(date +%Y%m%d)
 tdd=$(date +%d)
 jday=$(date +%j)
 if [ "$(date +%A)" == "Monday" ]
 then
    #latest restart is today
    Rlatest=TP4restart${cyear}_$((jday-1))_00
+   dt=$cday
+   dty=$cyear
+   dtj=$jday
 else
    #latest restart is last Monday
    dt=`date --date="last Monday" "+%Y%m%d"`
@@ -34,60 +42,72 @@ else
    Rlatest=TP4restart${dty}_$((dtj-1))_00
 fi
 
+if [ $print_info -eq 1 ]
+then
+   echo $Rlatest
+fi
+
 # CREATING THE LOG DIRECTORY AND FILE
 ldir=$bdir/$cyear/log 
 mkdir -p $ldir
 TP4rlog=$ldir/tp_archive_log.txt
-TP4rlist=$ldir/tp_archive_list.txt
-tmplist=$ldir/tmp_list.txt
-
-if ! [ -f "$TP4rlist" ]
-then
-   cp $bdir/$pyear/$TP4rlist $ldir/
-fi
-
 touch $TP4rlog
 
 # FETCHING OPERATION
 echo $tday  >> $TP4rlog
 echo ''     >> $TP4rlog
 
-
-if [ "$(date +%A)" == "Monday" ]
-then
-   echo ""                    >> $TP4rlog
-   echo "List used this past week:   " >> $TP4rlog
-   echo ""                    >> $TP4rlog
-   cat $TP4rlist              >> $TP4rlog                               # printing the list
-   echo ""                    >> $TP4rlog
-   echo ""                    >> $TP4rlog
-fi
-
-baselist=""                                                          # empty archive variable
+baselist=""                               # empty archive variable
 have_latest=0
 for el in $rdir/TP4restart*.a
-   do
-   afil=$(basename $el)                                 # *.a filename without full path
+do
+   afil=$(basename $el)                   # *.a filename without full path
+   if [ $print_info -eq 1 ]
+   then
+      echo $afil
+   fi
+
    if [ $afil==${Rlatest}_mem001.a ]
    then
       have_latest=1
    fi
 
-   base=${afil%%_mem001.a}                              # cutting _mem001.a
-   dcre=${base#TP4restart}                              # cutting TP4restart
+   base=${afil%%_mem001.a}                # cutting _mem001.a
+   dcre=${base#TP4restart}                # cutting TP4restart
    bfil=$rdir/${base}_mem001.b
    ufil=$rdir/${base}ICE.uf
-   ryear=${dcre%%_*}                                    # keeping the year, want to distinguish between ops year and file year
+   ryear=${dcre%%_*}                      # keeping the year, want to distinguish between ops year and file year
    
-   if grep -Fxq "$base" $TP4rlist                       # checking their presence in the list
+   echo $bdir/$ryear/$base.tar.gz
+   if [ ! -f $bdir/$ryear/$base.tar.gz ]
    then
-      echo "$base checked" >> $TP4rlog             # file present -> check confirmation
-   else 
-      echo "$base" >> $TP4rlist                    # file not present -> update the list                      
-      sort $TP4rlist -o $TP4rlist                  # sort the list
       baselist="$baselist $base"                   # adding the file group to the transfer variable
+      if [ $print_info -eq 1 ]
+      then
+         echo "$base not present on /migrate"
+         echo ""
+      fi
+   else
+      if [ $print_info -eq 1 ]
+      then
+         echo "$base already present on /migrate"
+         echo ""
+      fi
    fi
 done
+
+if [ $print_info -eq 1 ]
+then
+   echo $baselist
+   if [ $have_latest -eq 1 ]
+   then
+      echo "Latest restart present on $rdir"
+      echo "Latest restart: $Rlatest"
+   else
+      echo "Latest restart not present on $rdir"
+      echo "Latest restart: $Rlatest"
+   fi
+fi
 
 # ARCHIVING OPERATION
 if [ -z "$baselist" ]                                             # if baselist is empty there are no new restart files
@@ -108,27 +128,19 @@ else
       tar -zcvf $tfil -C ${rdir} $afil $bfil $ufil    # remove /work/fanf/TOPAZ_RT from inside tar file
       echo " "
 
+      if [ $print_info -eq 1 ]
+      then
+         echo "cp $tfil ${bdir}/$ryear"
+      fi
       cp $tfil ${bdir}/$ryear
-      echo "$base -ADDED" >> $TP4rlog
+      echo "$base ADDED" >> $TP4rlog
    done
-   echo "FILES ADDED - ARCHIVE UP TO DATE" >> $TP4rlog
 fi
 
-cp $TP4rlog $fcldir/
+cp $TP4rlog $fcldir
 
 if [ "$(date +%A)" == "Monday" ]
 then
-   nol=$(cat $TP4rlist | wc -l)
-   if [ $nol -gt 4 ]
-   then
-      tbr=$(cat $TP4rlist | sed '1!d')
-      touch $tmplist
-      echo "The following file will be removed from the list:  "  >> $TP4rlog
-      echo $tbr                                                   >> $TP4rlog
-      rm /work/timill/RealTime_Models/TP4a0.12/expt_01.1/data/${tbr}*
-      sed '1d' $TP4rlist >> $tmplist
-      mv $tmplist $TP4rlist
-   fi
    weekn=$(expr $(date +%d) / 7)
    mail -s "Week $weekn - topaz_archive LOG" $email < $TP4rlog
    rm $TP4rlog 
@@ -140,17 +152,18 @@ fi
 if [ $have_latest -eq 0 ]
 then
    tf=tmp.txt
-   echo "Latest restart not present in $rdir" > $tf
-   echo "$Rlatest" > $tf
-   mail -s "WARNING: Latest restart not present in $rdir" $email < $tf
+   echo "Latest restart not present in $rdir"                     > $tf
+   echo "$Rlatest"                                                > $tf
+   mail -s "WARNING: Latest restart not present in $rdir" $email  < $tf
    rm $tf
-# else
-#    # test message
-#    tf=tmp.txt
-#    echo "Latest restart present in $rdir" > $tf
-#    echo "$Rlatest" > $tf
-#    mail -s "CONFIRM: Latest restart present in $rdir" $email < $tf
-#    rm $tf
+elif [ $print_info -eq 1 ]
+then
+   # Confirmation message
+   tf=tmp.txt
+   echo "Latest restart present in $rdir"                      > $tf
+   echo "$Rlatest"                                             > $tf
+   mail -s "CONFIRM: Latest restart present in $rdir" $email   < $tf
+   rm $tf
 fi
 
 # 2. latest not in migrate
@@ -158,16 +171,26 @@ if [ ! -f $bdir/$dty/$Rlatest.tar.gz ]
 then
    tf=tmp.txt
    echo "Latest restart not present in $bdir/$dty" > $tf
-   echo "$Rlatest" > $tf
+   echo "Latest restart: $Rlatest"                 > $tf
+   echo " "                                        > $tf
+   echo "Contents of $bdir/$dty:"                  > $tf
+   ls -lh $bdir/$dty                               > $tf
+
+   #email
    mail -s "WARNING: Latest restart not on /migrate" $email < $tf
    rm $tf
 elif [ "$(date +%A)" == "Monday" ]
 then
    # confirmation message
    tf=tmp.txt
-   echo "Latest restart present in $bdir/$dty" > $tf
-   echo "$Rlatest" > $tf
-   mail -s "CONFIRM: Latest restart on /migrate" $email < $tf
+   echo "Latest restart present in $bdir/$dty"     > $tf
+   echo "Latest restart: $Rlatest"                 > $tf
+   echo " "                                        > $tf
+   echo "Contents of $bdir/$dty:"                  > $tf
+   ls -lh $bdir/$dty                               > $tf
+
+   #email
+   mail -s "CONFIRMATION: Latest restart on /migrate" $email < $tf
    rm $tf
 fi
 # =======================================================================

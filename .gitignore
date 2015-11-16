@@ -20,7 +20,8 @@ forecast_scripts/test_check/*
 forecast_scripts/out/*
 forecast_scripts/ice_only/logs/
 forecast_scripts/wavesice/logs/
-forecast_scripts/wavesice_ww3/logs/
+forecast_scripts/wavesice_ww3arctic/logs/
+forecast_scripts/common/logs/
 #
 python_tutorial/out
 python_tutorial/eg_TP4files
