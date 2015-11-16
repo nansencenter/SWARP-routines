@@ -131,6 +131,8 @@ else
 fi
 
 
+# don't do merging anymore
+exit
 
 # check year, save in correct year file
 
@@ -158,6 +160,7 @@ then
    # no more to do
    exit
 fi
+
 
 ###############################################################################################
 # if there's a new fc file then continue to combine them
