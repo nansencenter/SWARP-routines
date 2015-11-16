@@ -6,6 +6,15 @@
 # 4) Run the model - pbsjob.sh
 #  
 
+manual=0
+if [ $# -eq 1 ]
+then
+   manual=1
+   echo " "
+   echo "Running manually (over-riding checks)"
+   echo " "
+fi
+
 # FORECAST DAYS
 # ================================================================================================
 
@@ -79,70 +88,74 @@ cd $rundir
 
 #################################################################
 # CHECKS BEFORE RUNNING (QUIT IF THEY ARE FAILED):
-
-# 0A. check if ice_only forecast has run
-icedir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday/final_output # where the ice_only product goes
-if [ ! -f $icedir/SWARP*.nc ]
+if [ $manual -eq 0 ]
 then
+
+   # 0A. check if ice_only forecast has run
+   icedir=$TP4_REALTIME/../results/TP4a0.12/ice_only/work/$cday/final_output # where the ice_only product goes
+   if [ ! -f $icedir/SWARP*.nc ]
+   then
+      if [ $print_info -eq 1 ]
+      then
+         echo "ice-only FC hasn't run yet - stopping (no restart)"
+      fi
+      exit
+   fi
+   
+   # 0B. check if ice-only forecast is already running
+   msg=`$qstat | grep TP4x011fc`
+   if [ ${#msg} -ne 0 ]
+   then
+      if [ $print_info -eq 1 ]
+      then
+         echo "ice-only FC is still running"
+         echo "pbs job message:"
+         echo $msg
+      fi
+      exit
+   fi
+   
+   # 1. check if wave input is present
+   wavfil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
+   if [ ! -f "$wavfil" ]
+   then
+      if [ $print_info -eq 1 ]
+      then
+         echo "wave forecast file $wavfil not present - stopping"
+      fi
+      exit
+   fi
+   
+   # 2. check if wave-ice FC has already run and finished
+   if [ -f $final_dir/SWARP* ]
+   then
+      cd $final_dir
+      ofil=`echo SWARP*`
+      if [ $print_info -eq 1 ]
+      then
+         echo "$final_dir/$ofil exists already - not running"
+      fi
+      exit
+   fi
+   
+   # 3. check if wave-ice FC is already running
+   msg=`$qstat | grep TP4x012fc`
+   if [ ${#msg} -ne 0 ]
+   then
+      if [ $print_info -eq 1 ]
+      then
+         echo "forecast is already running"
+         echo "pbs job message:"
+         echo $msg
+      fi
+      exit
+   fi
+   
    if [ $print_info -eq 1 ]
    then
-      echo "ice-only FC hasn't run yet - stopping (no restart)"
+      echo "continuing"
    fi
-   exit
-fi
 
-# 0B. check if ice-only forecast is already running
-msg=`$qstat | grep TP4x011fc`
-if [ ${#msg} -ne 0 ]
-then
-   if [ $print_info -eq 1 ]
-   then
-      echo "ice-only FC is still running"
-      echo "pbs job message:"
-      echo $msg
-   fi
-   exit
-fi
-
-# 1. check if wave input is present
-wavfil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
-if [ ! -f "$wavfil" ]
-then
-   if [ $print_info -eq 1 ]
-   then
-      echo "wave forecast file $wavfil not present - stopping"
-   fi
-   exit
-fi
-
-# 2. check if wave-ice FC has already run and finished
-if [ -f $final_dir/SWARP* ]
-then
-   cd $final_dir
-   ofil=`echo SWARP*`
-   if [ $print_info -eq 1 ]
-   then
-      echo "$final_dir/$ofil exists already - not running"
-   fi
-   exit
-fi
-
-# 3. check if wave-ice FC is already running
-msg=`$qstat | grep TP4x012fc`
-if [ ${#msg} -ne 0 ]
-then
-   if [ $print_info -eq 1 ]
-   then
-      echo "forecast is already running"
-      echo "pbs job message:"
-      echo $msg
-   fi
-   exit
-fi
-
-if [ $print_info -eq 1 ]
-then
-   echo "continuing"
 fi
 #################################################################
 
@@ -179,13 +192,22 @@ then
 else
         fc_year=$cyear
 fi
-echo "Restart files of ${cyear}_${jday_today}"                  >> $log
-echo "Forecast final day ${fc_year}_${fc_final_day}"            >> $log
+# echo "Restart files of ${cyear}_${jday_today}"                  >> $log
+echo "Restart files of ${ryear}_${rday}"                    >> $log
+echo "Forecast final day ${fc_year}_${fc_final_day}"        >> $log
 
 $SWARP_ROUTINES/forecast_scripts/wavesice/make_infile4forecast_wav.sh $rgen $ryear $rday $final_day_mi4f
 xdir=$TP4_REALTIME/expt_01.2
 infile=$xdir/infile.in
 cp $infile $rundir/info
+
+# If 6-day FC, can just use infile.in from ice-only
+# Idir=$TP4_REALTIME/expt_01.1 # ice only
+# xdir=$TP4_REALTIME/expt_01.2 # current run
+# echo "Using infile.in from $Idir"
+# echo "cp $Idir/infile.in $xdir/infile.in"
+# cp $Idir/infile.in $xdir/infile.in
+
 
 ###############################################################
 
@@ -193,7 +215,7 @@ cp $infile $rundir/info
 echo "Launching pbsjob @ $(date)"                  >> $log
 cd $xdir
 
-# want to save archive files (TP4archv*.[ab]) every 3 hours
+# don't want to save archive files (TP4archv*.[ab])
 cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/blkdat.input .
 cp $SWARP_ROUTINES/forecast_scripts/inputs/wavesice/pbsjob.sh pbsjob.sh
 
