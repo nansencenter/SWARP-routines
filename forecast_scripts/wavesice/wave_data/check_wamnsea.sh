@@ -34,6 +34,6 @@ then
 fi
 
 # load python and launch check_wamnsea.py
-[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
-module load python/2.7.9-dso
-$python $FORECAST/alert_waves/check_wamnsea.py
+# [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
+# module load python/2.7.9-dso
+$python $FORECAST/wavesice/wave_data/check_wamnsea.py

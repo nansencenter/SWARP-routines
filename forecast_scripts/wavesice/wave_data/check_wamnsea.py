@@ -466,18 +466,15 @@ for loop_i in check_list:
 
 ################################################################
 # EMAIL SYSTEM
+awdir = SR+'/forecast_scripts/wavesice/wave_data'
 if SEND_EMAIL and (SEND_EMAIL2 or SEND_EMAIL3):
    import subprocess
    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
    subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
-   #
-   awdir = SR+'/forecast_scripts/alert_waves'
    subprocess.check_call([awdir+'/waves_alert.sh', cday])
 elif SEND_EMAIL:
    import subprocess
    # just send pic
    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-   #
-   awdir = SR+'/forecast_scripts/alert_waves'
    subprocess.check_call([awdir+'/waves_pic.sh', cday])
 ################################################################

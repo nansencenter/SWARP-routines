@@ -5,7 +5,7 @@
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-fget="$FORECAST/wavesice/wamnsea_download.sh"
+fget="$FORECAST/wavesice/wave_data/wamnsea_download.sh"
 
 # EMAIL 
 address=$FORECAST/fc_alert_email.txt
