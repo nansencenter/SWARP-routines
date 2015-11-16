@@ -21,8 +21,7 @@ fi
 
 # ====================================================================================
 # EMAIL ADDRESS
-address=$FORECAST/fc_alert_email.txt
-email=$(cat $address)
+email=$(cat $FCemail)
 # ====================================================================================
 
 # DIRECTORIES AND DATELIST

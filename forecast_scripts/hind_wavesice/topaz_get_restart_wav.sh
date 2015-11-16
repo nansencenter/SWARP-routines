@@ -1,11 +1,12 @@
 #!/bin/bash
 #Get latest restart from the internal repo to the working dir
 
+source $SWARP_ROUTINES/source_files/hex_vars.src
+
+# =============================================================================
 # EMAIL ADDRESS
-address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
-# ====================================================================================
-email=$(cat $address)
-# ====================================================================================
+email=$(cat $FCemail)
+# =============================================================================
 
 # DIRECTORIES AND DATELIST
 fcdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts

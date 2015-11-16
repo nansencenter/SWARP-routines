@@ -9,10 +9,9 @@
 # Other infile parameters must be changed in infile.mal.outer (TP4) or infile.mal
 # ======================================================================
 
-# EMAIL ADDRESS
-address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
 # ======================================================================
-email=$(cat $address)
+# EMAIL ADDRESS
+email=$(cat $FCemail)
 # ======================================================================
 
 # CREATING DIRECTORIES

@@ -1,10 +1,9 @@
 #!/bin/bash
 # This script will execute subscipts that will manage the products of the SWARP model
 
-# EMAIL ADDRESS
 # ===================================================================================
-address=$SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt
-email=$(cat $address)
+# EMAIL ADDRESS
+email=$(cat $FCemail)
 # ===================================================================================
 
 # ===================================================================================

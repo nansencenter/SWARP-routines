@@ -10,8 +10,7 @@ source $THIS_SRC
 
 # ==================================================================================
 # EMAIL ADDRESS
-address=$SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt
-email=$(cat $address)
+email=$(cat $FCemail)
 # ==================================================================================
 
 # In .bash_profile:

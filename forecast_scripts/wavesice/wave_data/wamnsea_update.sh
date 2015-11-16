@@ -7,10 +7,9 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
 fget="$FORECAST/wavesice/wave_data/wamnsea_download.sh"
 
-# EMAIL 
-address=$FORECAST/fc_alert_email.txt
 # ==============================================================================
-email=$(cat $address)
+# EMAIL 
+email=$(cat $FCEmail)
 # ==============================================================================
 
 # TIMEOUT OF THE SCRIPT

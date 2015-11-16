@@ -3,8 +3,7 @@
 
 # =============================================================================
 # EMAIL ADDRESS
-address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
-email=$(cat $address)
+email=$(cat $FCemail)
 # =============================================================================
 
 # ===================================================================================

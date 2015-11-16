@@ -12,10 +12,9 @@ then
    exit
 fi
 
-# EMAIL ADRESS
 #######################################################################################################
-fc_email=$SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt
-email=$(cat $fc_email)
+# EMAIL ADRESS
+email=$(cat $FCemail)
 #######################################################################################################
 
 wdir=/work/timill/RealTime_Models/check_wamnsea/$1

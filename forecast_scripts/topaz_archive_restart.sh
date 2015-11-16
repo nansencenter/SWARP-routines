@@ -8,10 +8,9 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 mkdir -p /work/$USER/tmp
 cd       /work/$USER/tmp
 
-# EMAIL ADDRESS FOR THE WEEKLY UPDATE
-email_list=$FORECAST/fc_alert_email.txt
 # =========================================================================================================
-email=$(cat $email_list)
+# EMAIL ADDRESS FOR THE WEEKLY UPDATE
+email=$(cat $FCemail)
 # =========================================================================================================
 
 # DIRECTORIES AND TIME DEFINITION

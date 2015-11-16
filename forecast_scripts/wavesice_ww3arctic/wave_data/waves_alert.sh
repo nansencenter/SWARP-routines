@@ -14,10 +14,9 @@ then
 fi
 fcday=`date --date="$1 +5days" "+%Y%m%d"`
 
-# EMAIL ADRESS
 #######################################################################################################
-fc_email=$SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt
-email=$(cat $fc_email)
+# EMAIL ADRESS
+email=$(cat $FCemail)
 #######################################################################################################
 
 wdir=/work/timill/RealTime_Models/check_ww3arctic/$1

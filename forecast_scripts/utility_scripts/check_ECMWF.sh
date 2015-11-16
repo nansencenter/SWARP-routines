@@ -1,7 +1,6 @@
 Edir=/work/shared/nersc/ECMWFR_T799/
 source $SWARP_ROUTINES/source_files/hex_vars.src
-address=$FORECAST/fc_alert_email.txt
-email=$(cat $address)
+email=$(cat $FCemail)
 
 if [ $# -eq 0 ]
 then

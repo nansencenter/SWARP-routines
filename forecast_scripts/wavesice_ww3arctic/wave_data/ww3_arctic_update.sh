@@ -8,10 +8,9 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 fget="$FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_download.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 
-# EMAIL 
-address=$FORECAST/fc_alert_email.txt
 # ==============================================================================
-email=$(cat $address)
+# EMAIL 
+email=$(cat $FCemail)
 # ==============================================================================
 
 # TIMEOUT OF THE SCRIPT

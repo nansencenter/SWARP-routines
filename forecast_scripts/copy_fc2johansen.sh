@@ -33,11 +33,11 @@ mkdir -p $tmp_dir_w
 source $wrk_dir/ssh_info.src
 
 # scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$fc_dir/fc_alert_email.txt $tmp_dir
-cp $wrk_dir/../fc_alert_email.txt $tmp_dir
+# cp $wrk_dir/../fc_alert_email.txt $tmp_dir
 
 # EMAIL ADRESS
 # ==================================================================================
-email=$(cat $tmp_dir/fc_alert_email.txt)
+email=$(cat $FCemail)
 # ==================================================================================
 
 cplog=$wrk_dir/cplog
