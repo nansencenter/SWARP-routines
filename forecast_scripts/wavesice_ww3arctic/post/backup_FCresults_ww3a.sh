@@ -5,20 +5,20 @@
 #TODO FOR FUTURE ALERTS?
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3a
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 
 tday=$1
 tday_long=`date --date=$tday +%Y-%m-%d`
-cyear=${tday::4}
+cyear=${tday:0:4}
 echo "Collecting data produced in date $tday_long"
 
 
 cd $THISFC2
 
 echo "The archive file name will be "
-tfil=${FC_OUTPUT}_forecast_$tday.tar.gz
+tfil=${FC_OUTPUT}_$tday.tar.gz
 echo " $tfil "
 touch $tfil
 tar -zcvf $tfil -C $THISFC2 $tday

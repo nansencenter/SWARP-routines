@@ -2,7 +2,7 @@
 # script to extract some variables from a netcdf file
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3a
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 
@@ -101,7 +101,7 @@ ncatted -O -h -a comment,global,c,c," "                                       $o
 ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                               $ofil
 ncatted -O -h -a field_type,global,c,c,"3-hourly"                             $ofil
 ncatted -O -h -a forecast_start_date,global,c,c,"${tday_long}T00:00:00Z"      $ofil
-ncatted -O -h -a forecast_range,global,c,c,"6 day forecast"                 $ofil
+ncatted -O -h -a forecast_range,global,c,c,"6 day forecast"                   $ofil
 # ncatted -O -h -a forecast_type,global,c,c,"forecast"                        $ofil
 ncatted -O -h -a institution,global,c,c,"NERSC"                               $ofil
 ncatted -O -h -a institution_references,global,c,c,"http://www.nersc.no/"     $ofil
@@ -166,7 +166,7 @@ then
 else
    efil=swarp_tmp.txt
    echo Confirmation: merge_TP4archv_ww3a.sh                   >  $efil
-   echo Correct number of records ($Ncorrect) in $ofil         >> $efil
+   echo "Correct number of records ($Ncorrect) in $ofil"       >> $efil
    mail -s "Waves-ice (WW3) final product OK" $email           <  $efil
    rm $efil
 fi

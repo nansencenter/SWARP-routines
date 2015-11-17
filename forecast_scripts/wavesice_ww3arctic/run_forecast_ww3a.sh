@@ -8,12 +8,12 @@
 # get variables
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3a
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 
 test_pre=0
-print_info=0 # print info to screen (or email in crontab)
+print_info=1 # print info to screen (or email in crontab)
 manual=0
 if [ $# -eq 1 ]
 then
@@ -21,6 +21,14 @@ then
    echo "Running manually (no checks)"
    echo ""
    manual=1
+fi
+
+if [ $print_info -eq 1 ]
+then
+   echo "Expt no     : $Xno"
+   echo "Results to  : $THISFC2"
+   echo "Email       : $FCemail"
+   echo ""
 fi
 
 # FORECAST DAYS
@@ -108,7 +116,7 @@ fi
 ###################################################################
 
 # RUNNING TOPAZ_GET_RESTART
-echo "Launching topaz_get_restart @ $(date)"   > $log
+echo "Launching topaz_get_restart_ww3a @ $(date)"   > $log
 $THISFC/pre/topaz_get_restart.sh $THIS_SRC         # get latest restart file
 
 # GETTING INFO FROM LAST_RESTART
@@ -176,36 +184,38 @@ cp $infile $rundir/info
 
 #################################################################
 # Get other inputs
-echo "Launching pbsjob @ $(date)"                  >> $log
-cd $xdir
 
 # Don't want to save archive files (TP4archv*.[ab])
-cp $THISFC/inputs/blkdat.input.blkdat.input  .
-cp $THISFC/inputs/pbsjob.sh                  .
-cp $THISFC/inputs/preprocess.sh              .
+cp $THISFC/inputs/blkdat.input   $xdir
+cp $THISFC/inputs/pbsjob.sh      $xdir
+cp $THISFC/inputs/preprocess.sh  $xdir
 
 #choose variables to extract (-DARCHIVE_SELECT)
-# cp $THISFC/inputs/archv.extract data
+# cp $THISFC/inputs/archv.extract $xdir/data
+
+if [ $print_info -eq 1 ]
+then
+   echo "cp $THISFC/inputs/blkdat.input   $xdir"
+   echo "cp $THISFC/inputs/pbsjob.sh      $xdir"
+   echo "cp $THISFC/inputs/preprocess.sh  $xdir"
+   # echo "cp $THISFC/inputs/archv.extract $xdir/data"
+fi
 #################################################################
 
 
 #################################################################
 # clean data directory before run
-if [ -f "./data/TP4DAILY*" ]
-then
-   rm data/TP4DAILY*
-fi
-if [ -f "./data/TP4archv*" ]
-then
-   rm data/TP4archv*
-fi
+rm -f $xdir/data/TP4DAILY*
+rm -f $xdir/data/TP4archv*
 
 # clean log file - else mpijob.out gets too big
-rm -f log/*
+rm -f $xdir/log/*
 
 if [ ! $test_pre -eq 1 ]
 then
    # launch job
+   echo "Launching pbsjob @ $(date)"   >> $log
+   cd $xdir
    $qsub pbsjob.sh
 fi
 #################################################################

@@ -3,7 +3,7 @@
 # - to be run from data
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3a
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 
@@ -97,8 +97,8 @@ then
    done
    echo "Binary files converted into .nc"       >> $log
 else
-   echo "NO archv_wav* files in $ddir"              >> $log 
-   mail -s "Convert_TP4archv_ww3a FAILED" $email < $log
+   echo "NO archv_wav* files in $ddir"             >> $log 
+   mail -s "Convert_TP4archv_ww3a FAILED" $email   <  $log
 fi
 
 echo "********************************************************"

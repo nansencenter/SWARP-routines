@@ -2,7 +2,7 @@
 # This script will execute subscipts that will manage the products of the SWARP model
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3a
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 

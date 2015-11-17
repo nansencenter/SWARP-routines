@@ -2,7 +2,7 @@
 run_gen          # (rungen)   Version number of run 
 ref_year         # Reference year for simulation  (365. for spinup)
  nd1 00      # (nday1)    First day of integration NOTE FORMAT F9.2
- nd3 00      # (nday2)    Last day of integration  NOTE FORMAT F9.2
+ nd3 12      # (nday2)    Last day of integration  NOTE FORMAT F9.2
 ecncF era40  # forcing option, month, ecmwf, ncepr, ecmo, ecnc
  200.0       # temperature relaxation time scale (F in blkdat.input)
  200.0       # salinity    relaxation time scale
@@ -14,4 +14,4 @@ F CSR F F    # Tides (true,  CSR/FES, apply currents)
 F            # lgridp     Activate storage of gridpoint information
 # Days     Assi  Diagno.  Restart            (1992 for first synoptic experiment)
    nd1.00  F     T        F
-   nd3.00  F     T        F
+   nd3.12  F     T        F
