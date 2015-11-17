@@ -214,9 +214,9 @@ class nc_getinfo:
             #convert to m
             xunits   = nc.variables['x'].units.split()
             fac      = 1.
-            if len(units)==2:
+            if len(xunits)==2:
                fac   = float(xunits[0])
-               xunits.remove(0)
+               xunits.remove(xunits[0])
 
             if xunits[0]=='km':
                fac   = fac*1.e3
