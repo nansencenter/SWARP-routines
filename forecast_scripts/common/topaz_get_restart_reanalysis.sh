@@ -61,7 +61,7 @@ rfil0=TP4restart${lastMon_y}_${lastMon_j}_00
 
 if [[ -f $ddir/$rfil0.a && -f $ddir/$rfil0.b && -f $ddir/${rfil0}ICE.uf ]]
 then
-   echo found the latest one:    $rfil0
+   echo Found the latest restart in data: $rfil0
    echo  $rfil0                > $out_restart
    cp    $out_restart            $idir
    #
@@ -86,54 +86,51 @@ then
    fi
 
    f="unassigned"
+
    if [ -f $rdir/$lastMon_y/$rfil0.tar.gz ]
    then
       # quick check for last Monday's file
       if [ $print_info -eq 1 ]
       then
-         echo "Last Monday's restart file is there"
+         echo " "
+         echo "Last Monday's restart file is on /migrate"
       fi
       f=$rfil0
 
    elif [ -d $rdir/$tyear ]
    then
       # find latest file from current year on migrate
-      if [ $print_info -eq 1 ]
+      echo "Check current year's restart files"
+      
+      mdir=$rdir/$tyear
+      cd $mdir
+
+      rlist=(`ls *.gz`)
+      nfil=`echo ${#rlist[@]}`
+      if [ $nfil -gt 0 ]
       then
-         echo "check list of current year's restart files"
-      fi
-      lfil=$rdir/$tyear/log/tp_archive_list.txt
-      if [ -f $lfil ]
-      then
-         f=`cat $lfil | grep "." | tail -1`
-         echo "latest restart: $f"                    >> $log
-         ryear=$tyear
+         f=$mdir/${rlist[ $((nfil-1)) ]}
       else
-         echo "Restart file's list NOT FOUND in $rdir/$tyear"         >> $log
-         echo "Either check topaz_archive_restart or topaz_get_restart" >> $log
+         echo "No restart files list found in $mdir"                       >> $log
+         echo "Either check topaz_archive_restart or topaz_get_restart"    >> $log
       fi
 
-   else
+   elif [ -d $rdir/$pyear ]
+   then
       # find latest file from previous year on migrate
-      if [ $print_info -eq 1 ]
-      then
-         echo "check list of previous year's restart files"
-      fi
-      echo "No restarts in current year ($tyear)"     >> $log
+      echo "check previous year's restart files"
 
-      if [ -d $rdir/$pyear ]
+      mdir=$rdir/$pyear
+      cd $mdir
+
+      rlist=(`ls *.gz`)
+      nfil=`echo ${#rlist[@]}`
+      if [ $nfil -gt 0 ]
       then
-         lfil=$rdir/$pyear/log/tp_archive_list.txt                    #list of restart files
-         if [ -f $lfil ]
-         then
-            sort $lfil -o $lfil
-            f=$(cat $lfil | tail -1)
-            echo "latest restart: $f"                 >> $log
-            ryear=$pyear
-         else
-            echo "Restart file's list NOT FOUND in $rdir/$pyear"         >> $log
-            echo "Either check topaz_archive_restart or topaz_get_restart" >> $log
-         fi
+         f=$mdir/${rlist[ $((nfil-1)) ]}
+      else
+         echo "No restart files list found in $mdir"                       >> $log
+         echo "Either check topaz_archive_restart or topaz_get_restart"    >> $log
       fi
    fi
 
@@ -143,16 +140,48 @@ then
       if [ $print_info -eq 1 ]
       then
          echo "No recent restarts"
-         echo "Couldn't find any restart's lists"
-         echo "Check ASAP topaz_archive_restart and topaz_get_restart"
+         echo "Check topaz_archive_restart and topaz_get_restart ASAP"
       fi
 
       echo "No recent restarts"                                      >> $log
-      echo "Couldn't find any restart's lists"                       >> $log
-      echo "Check ASAP topaz_archive_restart and topaz_get_restart"  >> $log
-      mail -s "WARNING - Restart list NOT FOUND" $email < $log
+      echo "Check topaz_archive_restart and topaz_get_restart ASAP"  >> $log
+      mail -s "WARNING - Restarts not found on /migrate" $email < $log
       exit
+   else
+
+      # check latest restart is not too old
+      base=${f%%.tar.gz}
+      baseday=${base#TP4restart} #YYYY_JJJ
+      byr=${baseday:0:4}
+      bdj=${baseday:5:3}
+
+      if [ $byr -eq $tyear ]
+      then
+         J2=$(( 10#$tday_j ))                # convert to decimal
+         J1=$(( 10#$bdj    ))                # convert to decimal
+         age=$((J2-J1))
+      else
+         J2=$(( 10#$tday_j ))                # convert to decimal
+         J0=`date --date="${byr}1231 +%j"`   # days in previous year
+         J2=$((tday_j+J0))
+         J1=$(( 10#$bdj    ))                # convert to decimal
+         age=$((J2-J1))
+      fi
+
+      if [ $age -gt 13 ]
+      then
+         echo "Latest restart file on /migrate:"                  >> $log
+         echo "$f"                                                >> $log
+         echo "$age days old"                                     >> $log
+         mail -s "WARNING - Restarts on /migrate too old" $email   < $log
+      elif [ $print_info -eq 1 ]
+      then
+         echo "Age of restart $f"
+         echo "$age - OK"
+         echo " "
+      fi
    fi
+
 else
    # migrate is down
    # - check if any in data and that they are not too old
@@ -162,54 +191,49 @@ else
    fi
    mail -s "WARNING - Migrate down" $email < $log
 
-   if [ -f $ddir/TP4restart*.a ]
+   cd $ddir
+   rlist=(`ls TP4restart*.a`)
+   nfil=`echo ${#rlist[@]}`
+   if [ $nfil -gt 0 ]
    then
-      for afil in $ddir/TP4restart*.a
-      do
-         n=$((n+1))
-         base=${afil%%.a}
-         baseday=${base#TPrestart} #YYYY_JJJ
-         byr=${baseday:0:4}
-         bdj=${baseday:5:3}
-         echo $afil # $base $baseday $byr $bdj
-         bdj=$((bdj+1))
-         pyr=$((byr-1))
-         basedate=`date --date='${pyr}1231' +%Y%m%d`
-         bfil=${base}.b
-         ufil=${base}ICE.uf
-
-         if [[ -f $bfil && -f $afil && -f $ufil ]]
-         then
-            # check if .b file and .uf files are also there
-            echo "Restarts already in $ddir" >> $log
-            echo $afil                       >> $log
-            echo $bfil                       >> $log
-            echo $ufil                       >> $log
-            echo " "                         >> $log
-
-            if [ $n -eq 0 ]
-            then
-               latest_date=$basedate
-               latest_file=$base
-            elif [ $rdate -gt $latest_date ]
-            then
-               latest_date=$basedate
-               latest_file=$base
-            fi
-         fi
-      done
+      f=$ddir/${rlist[ $((nfil-1)) ]}
    else
-      # no restart files in data
-      echo ""                       >> $log
-      echo "No restarts in $ddir"   >> $log
+      echo "No restart files list found in $ddir"                       >> $log
       mail -s "Migrate down & no restarts in DATA" $email < $log
       exit
    fi
 
+   # check latest restart is not too old
+   base=${f%%.a}
+   baseday=${base#TP4restart} #YYYY_JJJ
+   byr=${baseday:0:4}
+   bdj=${baseday:5:3}
+   if [ $byr -eq $tyear ]
+   then
+      J2=$(( 10#$tday_j ))                # convert to decimal
+      J1=$(( 10#$bdj    ))                # convert to decimal
+      age=$((J2-J1))
+   else
+      J2=$(( 10#$tday_j ))                # convert to decimal
+      J0=`date --date="${byr}1231 +%j"`   # days in previous year
+      J2=$((tday_j+J0))
+      J1=$(( 10#$bdj    ))                # convert to decimal
+      age=$((J2-J1))
+   fi
+
+   if [ $age -gt 13 ]
+   then
+      echo "Latest restart file in $ddir:"                     >> $log
+      echo "$f"                                                >> $log
+      echo "$age days old"                                     >> $log
+      mail -s "Migrate down & restarts in DATA too old" $email  < $log
+      exit
+   fi
+
    # if script comes here,
-   # there are some files in data
+   # there are some recent-enough files in data
    # - make last_restart.txt
-   echo  $latest_file > $out_restart
+   echo  $base > $out_restart
    cp    $out_restart $idir
    #
    if [ $print_info -eq 1 ]
@@ -226,15 +250,6 @@ else
    echo $ufil                       >> $log
    echo ""                          >> $log
 
-   # give warning if restarts too old
-   cutoff=`date -d '$tday - 13days' "+%Y%m%d"`
-   if [ $latest_date -lt $cutoff ]
-   then
-      echo "Restarts too old"                               >> $log
-      echo "Check topaz_archive_restart.sh"                 >> $log
-      echo "This WARNING is in topaz_get_restart.sh"        >> $log
-      mail -s "TP4 restarts are too old" $email < $log
-   fi
    exit
 fi
 
@@ -274,42 +289,16 @@ ufil=${f0}ICE.uf
 # - unpack restart there
 # - rename files
 
-if [ ! -f $ddir/$afil ]
-then
-   cd $ddir
-   rm -f TP4restart*
-   cp $rdir/${ryear}/$f0.tar.gz .
-   tar -zxvf $f0.tar.gz
-   rm $f0.tar.gz
-   mv $afil0 $ddir/$afil
-   mv $bfil0 $ddir/$bfil
-   mv $ufil0 $ddir/$ufil
-   echo " "                                              >> $log
-   echo mv $afil0 $ddir/$afil                            >> $log
-   echo mv $bfil0 $ddir/$bfil                            >> $log
-   echo mv $ufil0 $ddir/$ufil                            >> $log
-   echo " "                                              >> $log                                              
-else
-   if [ $print_info -eq 1 ]
-   then
-      echo "Restart files already present in $ddir:"
-   fi
-   echo "Restart files already present in $ddir:"        >> $log
-   echo $afil                                            >> $log
-   echo $bfil                                            >> $log
-   echo $ufil                                            >> $log
-   echo " "                                              >> $log
-fi
-
-# check this test
-# calculate days between current date
-# and latest restart - if too old (>2 weeks?) send warning
-dsr=$(expr $tday_j - $rday_j) #Days Since Restart
-
-if [ $dsr -gt 13 ]
-then
-   echo "Restarts too old"                               >> $log
-   echo "Check topaz_archive_restart.sh"                 >> $log
-   echo "This WARNING is in topaz_get_restart.sh"        >> $log
-   mail -s "TP4 restarts are too old" $email < $log
-fi
+cd $ddir
+rm -f TP4restart*
+cp $rdir/${ryear}/$f0.tar.gz .
+tar -zxvf $f0.tar.gz
+rm $f0.tar.gz
+mv $afil0 $ddir/$afil
+mv $bfil0 $ddir/$bfil
+# mv $ufil0 $ddir/$ufil
+echo " "                                              >> $log
+echo mv $afil0 $ddir/$afil                            >> $log
+echo mv $bfil0 $ddir/$bfil                            >> $log
+# echo mv $ufil0 $ddir/$ufil                            >> $log
+echo " "                                              >> $log                                              
