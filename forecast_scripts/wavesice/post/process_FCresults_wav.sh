@@ -19,13 +19,12 @@ if [ -f $datelist ]
 then
    # set vbl's
    tday=$(cat $datelist | sed '1!d')
-   tday_long=`date --date=$tday +%Y-%m-%d`
 
    # run scripts
    $post/gather_FCresults_wav.sh    $tday
    $post/convert_TP4archv_wav.sh    $tday
    $post/merge_TP4archv_wav.sh      $tday
-   $post/collect_FCresults_wav.sh   $tday
+   $post/backup_FCresults_wav.sh   $tday
 
    # finish up
    cp $datelist $THISFC2/$tday/info

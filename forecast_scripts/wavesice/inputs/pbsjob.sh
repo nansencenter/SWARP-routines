@@ -75,7 +75,7 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 #     /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
 # 2 - run waves-in-ice (WAM) PP:
 # 3 - run waves-in-ice (WW3) PP:
-SWARP_PP=0
+SWARP_PP=2
 if [ $SWARP_PP -eq 1 ]
 then
    # SWARP post-processing - ice only version

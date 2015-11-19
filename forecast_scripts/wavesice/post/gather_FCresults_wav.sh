@@ -55,31 +55,19 @@ else
    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
 
-#mv $DFDIR/data/TP4DAILY* $TDIR/bin
-#if [ $? -eq 0 ]
-#then
-#   echo "DAILY* files present"                           >> $log
-#else
-#   echo "DAILY* files NOT present"                       >> $log
-#   mail -s "gather_FCresults_wav FAILED" $email  < $log
-#fi
+mv $DFDIR/data/TP4DAILY* $TDIR/bin
+if [ $? -eq 0 ]
+then
+   echo "DAILY* files present"                           >> $log
+# else
+#    echo "DAILY* files NOT present"                       >> $log
+#    mail -s "gather_FCresults_wav FAILED" $email  < $log
+fi
 
 #moving the info files
 echo "Moving the info files"                             >> $log
-cp $DFDIR/log/mpijob.out $TDIR/info
-if [ $? -eq 0 ]
-then
-   echo "mpijob file present"                           >> $log
-else
-   echo "mpijob file NOT present"                       >> $log
-   mail -s "gather_FCresults_wav FAILED" $email  < $log
-fi
-cp $TP4_REALTIME/Build_V2.2.12_X01.$Xno/flags $TDIR/info
-if [ $? -eq 0 ]
-then
-   echo "flags file present"                           >> $log
-else
-   echo "flags file NOT present"                       >> $log
-   mail -s "gather_FCresults_wav FAILED" $email  < $log
-fi
+cp $DFDIR/log/mpijob.out   $TDIR/info
+cp $THISFC/inputs/flags    $TDIR/info
+cp $THISFC/logs/*log.txt   $TDIR/info
+
 echo "Transfer complete"                               >> $log

@@ -53,11 +53,16 @@ echo " "                                              >> $log
 echo "Unpacking files (ncpdq -U)..."                  >> $log
 
 Nfiles=0
-for f in TP4archv_*.nc
+for f in TP4archv_wav*.nc
 do
-   Nfiles=$((Nfiles+1))
-   echo Unpacking   $f
-   ncpdq -U $f tmp/$f
+   end=${f#*dump}
+   fdate=${end:0:8}
+   if [ $fdate -ge $tday ]
+   then
+      Nfiles=$((Nfiles+1))
+      echo Unpacking   $f
+      ncpdq -U $f tmp/$f
+   fi
 done
 
 #combine unpacked files
@@ -165,7 +170,7 @@ then
 else
    efil=swarp_tmp.txt
    echo Confirmation: merge_TP4archv_wav.sh              >  $efil
-   echo Correct number of records ($Ncorrect) in $ofil   >> $efil
+   echo "Correct number of records ($Ncorrect) in $ofil" >> $efil
    mail -s "Waves-ice final product OK" $email           <  $efil
    rm $efil
 fi
