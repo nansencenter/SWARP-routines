@@ -2,7 +2,14 @@
 # script to extract some variables from a netcdf file
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
-email=`cat $SWARP_ROUTINES/forecast_scripts/fc_alert_email.txt`
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
+THIS_SRC=$THISFC/inputs/THISFC.src
+source $THIS_SRC
+
+# ===================================================================================
+# EMAIL ADDRESS
+email=$(cat $FCemail)
+# ===================================================================================
 
 #########################################################################
 # inputs are start date of forecast
@@ -22,8 +29,8 @@ fi
 #########################################################################
 
 #########################################################################
-dir0=$TP4_REALTIME_RES/wavesice/work/$tday/netcdf
-odir=$TP4_REALTIME_RES/wavesice/work/$tday/final_output  
+dir0=$THISFC2/$tday/netcdf
+odir=$THISFC2/$tday/final_output  
 #########################################################################
 
 #extract start date/time of forecast
@@ -33,7 +40,8 @@ cd $dir0
 mkdir -p tmp
 
 # LOG
-log=$SWARP_ROUTINES/forecast_scripts/logs/$lognm
+logdir=$THISFC/logs
+log=$logdir/$lognm
 if [ -f "$log" ]
 then
    rm $log
@@ -58,7 +66,7 @@ echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
 #set name of output file
-ofil=SWARPwavesice_forecast_start${tday}T000000Z.nc
+ofil=${FC_OUTPUT}_start${tday}T000000Z.nc
 
 # make final file by repacking tmp.nc
 echo " "                                              >> $log
@@ -104,8 +112,12 @@ ncatted -O -h -a project,global,c,c,"SWARP"                                   $o
 ncatted -O -h -a project_references,global,c,c,"swarp.nersc.no"               $ofil
 ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"          $ofil
 ncatted -O -h -a operational_status,global,c,c,"test"                         $ofil
+
+# wave forcing info
+ncatted -O -h -a wave_forcing,global,c,c,"WAM North Sea Arctic (met.no)"       $ofil
+ncatted -O -h -a wave_forcing_contact,global,c,c,"bruce.hackett@met.no"        $ofil
 #
-ncatted -O -h -a title,global,o,c,"SWARP waves in ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
+ncatted -O -h -a title,global,o,c,"SWARP waves-in-ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
 # Restart file date
@@ -145,16 +157,16 @@ Ncorrect=11
 if [ $Nfiles -ne $Ncorrect ]
 then
    efil=swarp_tmp.txt
-   echo Warning: merge_TP4archv_wav.sh       >  $efil
-   echo Wrong number of records in $ofil     >> $efil
-   echo "($Nfiles -  should be $Ncorrect)"   >> $efil
+   echo Warning: merge_TP4archv_wav.sh                      >  $efil
+   echo Wrong number of records in $ofil                    >> $efil
+   echo "($Nfiles -  should be $Ncorrect)"                  >> $efil
    mail -s "WARNING: waves-ice final product faulty" $email < $efil
    rm $efil
 else
    efil=swarp_tmp.txt
    echo Confirmation: merge_TP4archv_wav.sh              >  $efil
    echo Correct number of records ($Ncorrect) in $ofil   >> $efil
-   mail -s "Waves-ice final product OK" $email < $efil
+   mail -s "Waves-ice final product OK" $email           <  $efil
    rm $efil
 fi
 ###########################################################################################

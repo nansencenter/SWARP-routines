@@ -13,7 +13,7 @@
 #
 #  We want 24 hours on 51 cpu's:
 #
-#PBS -l walltime=02:10:00,mppwidth=133
+#PBS -l walltime=05:00:00,mppwidth=133
 #
 #  The job needs 1 GB memory per cpu:
 ##PBS -l mppmem=1000mb
@@ -49,13 +49,6 @@ EXEC=hycom
 # EXEC=hycom+pat
 # EXEC=hycom+apa
 
-# SWARP post-processing option
-# 0 - do nothing after postprocess.sh
-# 1 - run ice-only PP:
-#     /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
-# 2 - run waves-in-ice PP:
-SWARP_PP=2
-
 # Enter directory from where the job was submitted
 cd $PBS_O_WORKDIR       ||  { echo "Could not go to dir $PBS_O_WORKDIR  "; exit 1; }
 
@@ -76,15 +69,25 @@ aprun -n $NMPI -m 1000M ./${EXEC}  # Run hycom
 cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 ./postprocess.sh 
 
-# extra processing for SWARP forecasts
+# SWARP post-processing option
+# 0 - do nothing after postprocess.sh
+# 1 - run ice-only PP:
+#     /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
+# 2 - run waves-in-ice (WAM) PP:
+# 3 - run waves-in-ice (WW3) PP:
+SWARP_PP=0
 if [ $SWARP_PP -eq 1 ]
 then
    # SWARP post-processing - ice only version
-   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ice_only/process_FCresults.sh
+   $SWARP_ROUTINES/forecast_scripts/ice_only/post/process_FCresults.sh
 elif [ $SWARP_PP -eq 2 ]
 then
-   # SWARP post-processing - waves version
-   /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/wavesice/process_FCresults_wav.sh
+   # SWARP post-processing - waves version (WAM)
+   $SWARP_ROUTINES/forecast_scripts/wavesice/post/process_FCresults_wav.sh
+elif [ $SWARP_PP -eq 3 ]
+then
+   # SWARP post-processing - waves version (WW3)
+   $SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic/post/process_FCresults_ww3a.sh
 fi
 
 exit $?

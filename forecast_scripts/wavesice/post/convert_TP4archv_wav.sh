@@ -2,10 +2,14 @@
 # Runs hyc2proj on all files of archv type
 # - to be run from data
 
-# EMAIL ADDRESS
-address=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/fc_alert_email.txt
+source $SWARP_ROUTINES/source_files/hex_vars.src
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
+THIS_SRC=$THISFC/inputs/THISFC.src
+source $THIS_SRC
+
 # ==================================================================================
-email=$(cat $address)
+# EMAIL ADDRESS
+email=$(cat $FCemail)
 # =================================================================================
 
 # In .bash_profile:
@@ -17,12 +21,12 @@ email=$(cat $address)
 
 # Info for hyc2proj
 # - copied from MSCPROGS/Input & edited
-h2p_in="$GIT_REPOS/SWARP-routines/netcdf_production/Input"
+h2p_in="$SWARP_ROUTINES/netcdf_production/Input"
 
 # make a "working" directory
 tday=$1
-sdir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/netcdf
-ddir=/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$tday/bin
+sdir=$THISFC2/$tday/netcdf
+ddir=$THISFC2/$tday/bin
 mkdir -p $sdir
 
 cd $sdir
@@ -93,8 +97,8 @@ then
    done
    echo "Binary files converted into .nc"       >> $log
 else
-   echo "NO archv* files in $ddir"              >> $log 
-   mail -s "Convert_TP4archv_wav FAILED" $email < $log
+   echo "NO archv_wav* files in $ddir"          >> $log 
+   mail -s "Convert_TP4archv_wav FAILED" $email <  $log
 fi
 
 echo "********************************************************"

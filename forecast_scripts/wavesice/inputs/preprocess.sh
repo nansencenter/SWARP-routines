@@ -672,7 +672,7 @@ else
         
 
    else
-      tellerror "Could not find restart file ${filename}.[ab] (for init make sur yrflag < 3)"
+      tellerror "Could not find restart file ${filename}.[ab] (for init make sure yrflag < 3)"
    fi
 
 fi

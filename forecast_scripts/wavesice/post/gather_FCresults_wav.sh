@@ -1,19 +1,21 @@
 #!/bin/bash
 # This script will collect and archive the results of the local TP4 model
 
+source $SWARP_ROUTINES/source_files/hex_vars.src
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
+THIS_SRC=$THISFC/inputs/THISFC.src
+source $THIS_SRC
+
 # =============================================================================
 # EMAIL ADDRESS
 email=$(cat $FCemail)
 # =============================================================================
 
 # defining all the dir that will be used
-RTM=/work/timill/RealTime_Models
-DFDIR=$RTM/TP4a0.12/expt_01.2
-WKDIR=$RTM/results/TP4a0.12/wavesice/work
-FCDIR=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts
+DFDIR=$TP4_REALTIME/expt_01.$Xno
 
 # LOG
-log=$FCDIR/logs/gather_log_wav.txt
+log=$THISFC/logs/gather_log_wav.txt
 if [ -f $log ]
 then
    rm $log
@@ -22,14 +24,14 @@ touch $log
 
 tday=$1
 tday_long=`date --date=$tday +%Y-%m-%d`
-cyear=${tday::4}
+cyear=${tday:0:4}
 echo "Collecting data produced in date $tday_long"
 
-TDIR=$WKDIR/$tday
-mkdir -p $WKDIR/$tday/bin
-mkdir -p $WKDIR/$tday/netcdf
-mkdir -p $WKDIR/$tday/final_output
-mkdir -p $WKDIR/$tday/info
+TDIR=$THISFC2/$tday
+mkdir -p $TDIR/bin
+mkdir -p $TDIR/netcdf
+mkdir -p $TDIR/final_output
+mkdir -p $TDIR/info
 
 #moving TP4restart
 echo "Moving the TP4restarts"                            >> $log
@@ -44,12 +46,12 @@ fi
 
 #moving TP4archv & TP4DAILY
 echo "Moving the TP4archv*.[ab] and TP4DAILY*.[ab]"      >> $log
-mv $DFDIR/data/TP4archv* $TDIR/bin
+mv $DFDIR/data/TP4archv_wav* $TDIR/bin
 if [ $? -eq 0 ]
 then
-   echo "Archv* files present"                           >> $log
+   echo "Archv_wav* files present"                           >> $log
 else
-   echo "Archv* files NOT present"                       >> $log
+   echo "Archv_wav* files NOT present"                       >> $log
    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
 
@@ -72,7 +74,7 @@ else
    echo "mpijob file NOT present"                       >> $log
    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
-cp $TP4_REALTIME/Build_V2.2.12_X01.2/flags $TDIR/info
+cp $TP4_REALTIME/Build_V2.2.12_X01.$Xno/flags $TDIR/info
 if [ $? -eq 0 ]
 then
    echo "flags file present"                           >> $log
@@ -81,4 +83,3 @@ else
    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
 echo "Transfer complete"                               >> $log
-

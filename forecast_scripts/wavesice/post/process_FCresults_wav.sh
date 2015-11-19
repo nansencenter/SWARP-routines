@@ -1,13 +1,20 @@
 #!/bin/bash
 # This script will execute subscipts that will manage the products of the SWARP model
 
-# EMAIL ADDRESS
-# email="user1@domain.com,user2@domain.com,etc..."
+source $SWARP_ROUTINES/source_files/hex_vars.src
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
+THIS_SRC=$THISFC/inputs/THISFC.src
+source $THIS_SRC
+
 # ===================================================================================
-email="gcmdnt90@gmail.com"
+# EMAIL ADDRESS
+email=$(cat $FCemail)
 # ===================================================================================
 
-datelist=$SWARP_ROUTINES/forecast_scripts/wavesice/datelist.txt
+logdir=$THISFC/logs
+post=$THISFC/post
+
+datelist=$logdir/datelist.txt
 if [ -f $datelist ]
 then
    # set vbl's
@@ -15,13 +22,13 @@ then
    tday_long=`date --date=$tday +%Y-%m-%d`
 
    # run scripts
-   $SWARP_ROUTINES/forecast_scripts/wavesice/gather_FCresults_wav.sh  $tday # $(cat $datelist | sed '2!d') #$1 $2 
-   $SWARP_ROUTINES/netcdf_production/convert_TP4archv_wav.sh $tday #$1
-   $SWARP_ROUTINES/netcdf_production/merge_TP4archv_wav.sh   $tday # $(cat $datelist | sed '2!d') #$1 $2
-   $SWARP_ROUTINES/forecast_scripts/wavesice/collect_FCresults_wav.sh $tday # $(cat $datelist | sed '2!d') #$1 $2
+   $post/gather_FCresults_wav.sh    $tday
+   $post/convert_TP4archv_wav.sh    $tday
+   $post/merge_TP4archv_wav.sh      $tday
+   $post/collect_FCresults_wav.sh   $tday
 
    # finish up
-   cp $datelist /work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/$(cat $datelist | sed '1!d')/info/
+   cp $datelist $THISFC2/$tday/info
 else
    touch log.txt
    echo "DATELIST NOT FOUND" >> log.txt
