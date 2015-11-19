@@ -8,7 +8,7 @@ export wmsc="/work/shared/nersc/msc"
 export wamnsea="$wmsc/WAMNSEA"
 export FCcommon="$FORECAST/common"
 export FCemail="$FCcommon/inputs/fc_alert_email.txt"
-export TP4restart_OPT=2
+export TP4restart_OPT=1
 
 # PATHS TO APPLICATIONS
 # queue stuff

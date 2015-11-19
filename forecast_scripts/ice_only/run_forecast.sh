@@ -13,7 +13,7 @@ THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 
 test_pre=0
-print_info=0 # print info to screen (or email in crontab)
+print_info=1 # print info to screen (or email in crontab)
 manual=0
 if [ $# -eq 1 ]
 then
@@ -23,16 +23,11 @@ then
    manual=1
 fi
 
-# FORECAST DAYS
+
 # ================================================================================================
-# fc_days=5
-fc_days=6 # to be consistent with WW3 forecast            
-# thour=`date "+%H"`
-# if [ $thour -le 1 ]
-# then
-#    # too early (winds not there)
-#    exit
-# fi
+# FORECAST DAYS
+fc_days=6         # to be consistent with WW3 forecast            
+final_hour="00"   # finishes at this hour on the final day
 # ================================================================================================
 
 
@@ -45,13 +40,21 @@ then
    rm $log
 fi
 
-cday=$(date +%Y%m%d)
-cyear=$(date +%Y)
-jday0=$(date +%j)
-jday_today0=$(expr $jday0 - 1)            # julian day of TOPAZ (0=1st Jan)
+#=======================================================================
+# DATE INFO - TODAY
+if [ 1 -eq 1 ]
+then
+   cday=$(date +%Y%m%d)
+else
+   # test last Tuesday (restart and dump day are the same)
+   cday=$(date --date="last Tuesday" +%Y%m%d)
+fi
+cyear=$(date --date=$cday +%Y)
+jday0=$(date --date=$cday +%j)
+jday_today0=$(( $jday0 - 1))              # julian day of TOPAZ (0=1st Jan)
 jday_today=$(printf '%3.3d' $jday_today0) # 3 digits
-rundir=$THISFC2/$cday                     # where the results will end up
 
+rundir=$THISFC2/$cday                     # where the results will end up
 mkdir -p $rundir
 mkdir -p $rundir/info
 
@@ -60,12 +63,12 @@ mkdir -p $rundir/info
 # ice-only and waves-ice FC's use it
 # - if they run at the same time it gets messed up
 datelist=$rundir/info/datelist.txt
-echo $cday              >  $datelist
-echo $(date +%Y-%m-%d)  >> $datelist
-echo $cyear             >> $datelist
-echo $(date +%m)        >> $datelist
-echo $(date +%d)        >> $datelist
-echo $jday_today        >> $datelist
+echo $cday                             >  $datelist
+echo $(date --date=$cday +%Y-%m-%d)    >> $datelist
+echo $cyear                            >> $datelist
+echo $(date --date=$cday +%m)          >> $datelist
+echo $(date --date=$cday +%d)          >> $datelist
+echo $jday_today                       >> $datelist
 cp $datelist $logdir
 
 if [ $print_info -eq 1 ]
@@ -76,6 +79,8 @@ then
    cat $datelist
    echo " "
 fi
+#=======================================================================
+
 
 ##############################################################
 if [ $manual -eq 0 ]
@@ -92,7 +97,7 @@ then
    fi
 
    # 2. check if forecast is already running
-   msg=`$qstat | grep TP4x011fc`
+   msg=`$qstat | grep TP4x01${Xno}fc`
    if [ ${#msg} -ne 0 ]
    then
       if [ $print_info -eq 1 ]
@@ -106,69 +111,101 @@ then
 fi
 ###################################################################
 
-# RUNNING TOPAZ_GET_RESTART
-echo "Launching topaz_get_restart @ $(date)"   > $log
-$THISFC/pre/topaz_get_restart.sh $THIS_SRC         # get latest restart file
 
-# GETTING INFO FROM LAST_RESTART
+###################################################################
+# RUNNING TOPAZ_GET_RESTART
+# get latest restart file from reanalysis
+echo "Launching topaz_get_restart_reanalysis @ $(date)"   > $log
+$FCcommon/topaz_get_restart_reanalysis.sh                   $THIS_SRC
+
+#=======================================================================
+# DATE INFO - LAST RESTART (REANALYSIS) 
 cd $rundir  # just in case we've changed dir in script
 out_restart=info/last_restart.txt
 rname=$(cat $out_restart)
 rgen=${rname:0:3}    # eg TP4
 ryear=${rname:10:4}  # year of restart file
 rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
+rdate=`date --date="$ryear-01-01 +${rday}days" +%Y%m%d`
+r_ndays=`date --date="$ryear-12-31" +%j`
+#=======================================================================
+
+restart_OPT=$TP4restart_OPT # temporary variable
+if [ $restart_OPT -eq 2 ]
+then
+   # ======================================================================
+   # DATE INFO - YESTERDAY 
+   # - need to dump restart for yesterday
+   dump_day=$(date --date="$cday -1day" +%Y%m%d)
+   dump_year=$(date --date=$dump_day +%Y)
+   dump_day_j=$(date --date=$dump_day +%j)
+   dump_day_j0=$((dump_day_j-1))
+   # ======================================================================
+
+   if [ $ryear -eq $dump_year ]
+   then
+      if [ $dump_day_j0 -eq $rday ]
+      then
+         # yesterday is also day of restart from reanalysis,
+         # so don't need to dump extra restart
+         restart_OPT=1
+      else
+         dump_day_j1=$(printf '%3.3d' $dump_day_j0) # 3 digits
+      fi
+   else
+      dump_day_j1=$((r_ndays+dump_day_j0))
+   fi
+fi
+###################################################################
+
+
+# =========================================================================
+# DATE INFO - LAST DAY OF FORECAST
+# $final_day=julian day relative to $ryear (NB 3 digits)
+fin_day=`date --date="$cday +${fc_days}days" "+%Y%m%d"`
+fin_year=$(date --date=$fin_day +%Y)
+fin_day_j=$(date --date=$fin_day +%j)
+fin_day_j0=$((fin_day_j-1))
+if [ $ryear -eq $fin_year ]
+then
+   final_day=$(printf '%3.3d' $fin_day_j0) # 3 digits
+else
+   final_day=$((r_ndays+fin_day_j0))
+fi
+# =========================================================================
+
 
 #################################################################
-
 # MAKE INFILE 
-echo "Launching make_infile4forecast @ $(date)"                  >> $log
+echo "Launching make_infile4forecast @ $(date)"          >> $log
 
-# if last restart was in different year to this year:
-if [ $print_info -eq 1 ]
+# print to screen
+echo "Restart date   : $rdate"
+echo "Current date   : $cday"
+echo "Final date     : $fin_day"
+echo "Final hour     : $final_hour"
+echo "Restart files of $rname"
+echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$final_hour (${ryear}_${final_day}_$final_hour)"
+
+if [ $restart_OPT -eq 1 ]
 then
-   echo current year: $cyear
-   echo restart year: $ryear
-   echo restart name: $rname
-fi
-
-if [ $cyear -ne $ryear ]
-then
-   jday_today=$(expr $jday_today + $rday + 1) # integer
-   jday_today=$(printf '%3.3d' $jday_today)   # 3 digits (compare to rday)
-fi
-
-final_day=$(expr $jday_today + $fc_days)
-
-# print to screen - work out if last day of forecast is in a different year to current year
-ndays=$(date --date="${cyear}-12-31" +%j)                 # days in current year
-if [ $final_day -gt $((ndays-1)) ]
-then
-   fc_final_day=`expr $final_day - $ndays`
-   fc_year=`expr $cyear + 1`
+   echo "$FCcommon/make_infile_2days.sh $THIS_SRC $rgen $ryear $rday $final_day $final_hour"
+   $FCcommon/make_infile_2days.sh       $THIS_SRC $rgen $ryear $rday $final_day $final_hour
 else
-   fc_year=$cyear
+   echo "$FCcommon/make_infile_3days.sh $THIS_SRC $rgen $ryear $rday $dump_day_j1 $final_day $final_hour"
+   $FCcommon/make_infile_3days.sh       $THIS_SRC $rgen $ryear $rday $dump_day_j1 $final_day $final_hour
 fi
-echo "Restart files of ${ryear}_$rday"
-echo "Forecast final day ${fc_year}_${final_day}"
-
-# $THISFC/pre/make_infile4forecast.sh $rgen $ryear $rday $jday_today $final_day
-echo "$THISFC/pre/make_infile4forecast.sh $rgen $ryear $rday $final_day"
-$THISFC/pre/make_infile4forecast.sh $rgen $ryear $rday $final_day
 
 xdir=$TP4_REALTIME/expt_01.$Xno
 infile=$xdir/infile.in
 if [ $print_info -eq 1 ]
 then
+   echo ""
+   echo "Infile: $infile"
+   echo ""
    cat $infile
+   echo ""
 fi
-# if [ $rday -eq $jday_today ]
-# then
-#    # delete "today" line
-#    echo "restart day is from today"
-#    echo "- editing infile.in"
-#    sed '17d' $infile >> infile.in.replace
-#    mv infile.in.replace $infile
-# fi
 cp $infile $rundir/info
 #################################################################
 
