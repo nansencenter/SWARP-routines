@@ -5,7 +5,7 @@
 #TODO FOR FUTURE ALERTS?
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 

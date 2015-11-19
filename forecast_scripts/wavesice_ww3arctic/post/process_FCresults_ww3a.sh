@@ -19,7 +19,6 @@ if [ -f $datelist ]
 then
    # set vbl's
    tday=$(cat $datelist | sed '1!d')
-   tday_long=`date --date=$tday +%Y-%m-%d`
 
    # run scripts
    $post/gather_FCresults_ww3a.sh   $tday

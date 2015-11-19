@@ -55,9 +55,14 @@ echo "Unpacking files (ncpdq -U)..."                  >> $log
 Nfiles=0
 for f in TP4archv_*.nc
 do
-   Nfiles=$((Nfiles+1))
-   echo Unpacking   $f
-   ncpdq -U $f tmp/$f
+   end=${f#*dump}
+   fdate=${end:0:8}
+   if [ $fdate -ge $tday ]
+   then
+      Nfiles=$((Nfiles+1))
+      echo Unpacking   $f
+      ncpdq -U $f tmp/$f
+   fi
 done
 
 #combine unpacked files
