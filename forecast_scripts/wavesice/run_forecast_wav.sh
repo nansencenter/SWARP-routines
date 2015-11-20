@@ -14,8 +14,28 @@ source $THIS_SRC
 xdir=$TP4_REALTIME/expt_01.$Xno
 restart_OPT=$TP4restart_OPT
 
-test_pre=0
 print_info=1 # print info to screen (or email in crontab)
+test_pre=0
+
+
+## ===========================================================
+# Initial check before run
+# (do this before datelist.txt is changed)
+# 1. check if forecast is already running
+msg=`$qstat | grep TP4x01${Xno}fc`
+if [ ${#msg} -ne 0 ]
+then
+   if [ $print_info -eq 1 ]
+   then
+      echo "Waves-ice (WAM) FC is already running - stopping"
+      echo "pbs job message:"
+      echo $msg
+   fi
+   exit
+fi
+## ===========================================================
+
+
 manual=0
 if [ $# -eq 1 ]
 then
@@ -123,7 +143,7 @@ fi
 if [ $manual -eq 0 ]
 then
    # Checks before run:
-   # 1. check if forecast has already run
+   # 2. check if forecast has already run
    if [ -f $rundir/final_output/SWARP*.nc ]
    then
       if [ $print_info -eq 1 ]
@@ -133,22 +153,22 @@ then
       exit
    fi
 
-   # 2. check if forecast is already running
-   msg=`$qstat | grep TP4x01${Xno}fc`
-   if [ ${#msg} -ne 0 ]
+   # 3. check if waves FC is there
+   fc_fil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
+   if [ ! -f $fc_fil ]
    then
       if [ $print_info -eq 1 ]
       then
-         echo "Waves-ice (WAM) FC is already running - stopping"
-         echo "pbs job message:"
-         echo $msg
+         echo "WAM input FC file is not yet present - stopping"
+         echo $fc_fil
+         date
       fi
       exit
    fi
 
    if [ $restart_OPT -eq 2 ]
    then
-      # 3. check if ice-only forecast is still running
+      # 4. check if ice-only forecast is still running
       if [ ! -f $rundir/../ice_only/final_output/SWARP*.nc ]
       then
          if [ $print_info -eq 1 ]
