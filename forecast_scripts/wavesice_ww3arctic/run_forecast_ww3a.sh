@@ -27,9 +27,7 @@ if [ ${#msg} -ne 0 ]
 then
    if [ $print_info -eq 1 ]
    then
-      echo "Waves-ice (WAM) FC is already running - stopping"
-      echo "pbs job message:"
-      echo $msg
+      echo "Waves-ice (WW3) FC is already running - stopping"
    fi
    exit
 fi

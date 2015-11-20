@@ -14,6 +14,25 @@ source $THIS_SRC
 
 test_pre=0
 print_info=1 # print info to screen (or email in crontab)
+
+
+# ================================================================================================
+# 1. First check if forecast is already running
+# NB Do this before datelist.txt is changed 
+msg=`$qstat | grep TP4x01${Xno}fc`
+if [ ${#msg} -ne 0 ]
+then
+   if [ $print_info -eq 1 ]
+   then
+      echo "Ice-only FC is already running - stopping"
+      echo "pbs job message:"
+      echo $msg
+   fi
+   exit
+fi
+# ================================================================================================
+
+
 manual=0
 if [ $# -eq 1 ]
 then
@@ -86,7 +105,7 @@ fi
 if [ $manual -eq 0 ]
 then
    # Checks before run:
-   # 1. check if forecast has already run
+   # 2. check if forecast has already run
    if [ -f $rundir/final_output/SWARP*.nc ]
    then
       if [ $print_info -eq 1 ]
@@ -96,18 +115,6 @@ then
       exit
    fi
 
-   # 2. check if forecast is already running
-   msg=`$qstat | grep TP4x01${Xno}fc`
-   if [ ${#msg} -ne 0 ]
-   then
-      if [ $print_info -eq 1 ]
-      then
-         echo "Ice-only FC is already running - stopping"
-         echo "pbs job message:"
-         echo $msg
-      fi
-      exit
-   fi
 fi
 ###################################################################
 
