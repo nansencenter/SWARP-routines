@@ -14,7 +14,7 @@ source $THIS_SRC
 xdir=$TP4_REALTIME/expt_01.$Xno
 restart_OPT=$TP4restart_OPT
 
-print_info=1 # print info to screen (or email in crontab)
+print_info=0 # print info to screen (or email in crontab)
 test_pre=0
 
 

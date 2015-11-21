@@ -14,16 +14,11 @@ source $THIS_SRC
 # ===================================================================================
 
 # defining all the dir that will be used
-source $SWARP_ROUTINES/source_files/hex_vars.src
-FCDIR=$SWARP_ROUTINES/forecast_scripts
-DFDIR=$TP4_REALTIME/expt_01.$Xno
+xdir=$TP4_REALTIME/expt_01.$Xno
 
 # LOG
-log=$FCDIR/logs/gather_log.txt
-if [ -f $log ]
-then
-   rm $log
-fi
+log=$THISFC/logs/gather_log.txt
+rm -f $log
 touch $log
 
 tday=$1
@@ -38,7 +33,7 @@ mkdir -p $THISFC2/$tday/info
 
 #moving TP4archv & TP4DAILY
 echo "Moving the TP4archv*.[ab] and TP4DAILY*.[ab]"      >> $log
-mv $DFDIR/data/TP4archv* $TDIR/bin
+mv $xdir/data/TP4archv* $TDIR/bin
 if [ $? -eq 0 ]
 then
    echo "Archv* files present"                           >> $log
@@ -46,7 +41,7 @@ else
    echo "Archv* files NOT present"                       >> $log
    mail -s "gather_FCresults FAILED" $email  < $log
 fi
-mv $DFDIR/data/TP4DAILY* $TDIR/bin
+mv $xdir/data/TP4DAILY* $TDIR/bin
 if [ $? -eq 0 ]
 then
    echo "DAILY* files present"                           >> $log
@@ -57,7 +52,7 @@ fi
 
 #moving the info files
 echo "Moving the info files"                             >> $log
-cp $DFDIR/log/mpijob.out $TDIR/info
+cp $xdir/log/mpijob.out $TDIR/info
 if [ $? -eq 0 ]
 then
    echo "mpijob file present"                           >> $log

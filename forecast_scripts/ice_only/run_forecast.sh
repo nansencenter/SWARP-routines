@@ -13,7 +13,7 @@ THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 
 test_pre=0
-print_info=1 # print info to screen (or email in crontab)
+print_info=0 # print info to screen (or email in crontab)
 
 
 # ================================================================================================
