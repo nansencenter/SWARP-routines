@@ -53,8 +53,16 @@ fi
 
 # ================================================================================================
 # FORECAST DAYS
-fc_days=2
-final_hour="12"   # finishes at this hour on the final day
+if [ 1 -eq 0 ]
+then
+   # testing with WAMNSEA waves
+   fc_days=2
+   final_hour="12"   # finishes at this hour on the final day
+else
+   # WW3_ARCTIC
+   fc_days=6
+   final_hour="00"   # finishes at this hour on the final day
+fi
 # ================================================================================================
 
 

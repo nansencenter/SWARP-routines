@@ -159,7 +159,7 @@ mv $ofil $odir
 # check number of records (use $Nfiles)
 # 6 day,   3-hourly forecast -> 49
 # 2.5 day, 6-hourly forecast -> 11
-Ncorrect=11
+Ncorrect=49
 if [ $Nfiles -ne $Ncorrect ]
 then
    efil=swarp_tmp.txt

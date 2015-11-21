@@ -18,7 +18,7 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # ===================================================================
 # TP4 restarts less urgent
-00 18 * * * $FORECAST/topaz_archive_restart.sh
+20 15 * * * $FORECAST/common/topaz_archive_restart.sh
 
 # run ice_only forecast as early as possible
 # (wind FC arrives just before 2400 previous day)
@@ -36,7 +36,7 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # run wavesice forecast
 # internal check for ice_only restart and WAMNSEA product
-# 10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
+10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
 # ===================================================================
 
 
@@ -49,8 +49,8 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 00 * * * * $FORECAST/wavesice_ww3arctic/wave_data/check_ww3arctic.sh
 
 # run wavesice forecast
-# internal check for ice_only restart and WAMNSEA product
-# 10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
+# internal check for ice_only restart and WW3_ARCTIC product
+50 * * * * $FORECAST/wavesice_ww3arctic/run_forecast_ww3a.sh
 # ===================================================================
 
 
