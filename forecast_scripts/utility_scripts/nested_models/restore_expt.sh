@@ -4,26 +4,28 @@
 if [ $# -eq 0 ]
 then
    echo Usage:
-   echo restore_build.sh reg
-   echo "where reg = BS1 or FR1"
+   echo restore_expt.sh Reg
+   echo "where Reg = BS1 or FR1"
    exit
 else
-   reg=$1
+   Reg=$1
 fi
 Xno=0
 X=01.$Xno
 E=01$Xno
 
-if [ $reg == "BS1" ]
+if [ $Reg == "BS1" ]
 then
    rtdir=$BS1_REALTIME
+   R=BS1a0.045
    nproc=112
-elif [ $reg == "FR1" ]
+elif [ $Reg == "FR1" ]
 then
    rtdir=$FR1_REALTIME
+   R=FR1a0.03
    nproc=51
 fi
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_$reg
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_$Reg
 
 echo " "
 cd $rtdir/expt_$X
@@ -37,8 +39,16 @@ do
       cp $f .
    fi
 done
-echo " "
 
+echo " "
+echo Changing REGION.src
+file=REGION.src
+cat ../bak/$file | sed \
+-e "s/NATa1.00/$R/g" \
+> ../$file
+
+
+echo " "
 echo Changing EXPT.src...
 file=EXPT.src
 cat bak/$file | sed \

@@ -11,6 +11,7 @@ else
    X=01.$1
    E=01$1
 fi
+R=TP4a0.12
 
 echo " "
 cd $TP4_REALTIME/expt_$X
@@ -25,6 +26,13 @@ do
    fi
 done
 echo " "
+
+echo " "
+echo Changing REGION.src
+file=REGION.src
+cat ../bak/$file | sed \
+-e "s/NATa1.00/$R/g" \
+> ../$file
 
 echo Changing EXPT.src...
 file=EXPT.src
