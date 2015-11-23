@@ -1,0 +1,153 @@
+20151117
+
+Most recent restart: TP4restart2015_319_00
+Unpacking...
+ 
+ 
+mv TP4restart2015_319_00_mem001.a /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00.a
+mv TP4restart2015_319_00_mem001.b /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00.b
+mv TP4restart2015_319_00ICE.uf /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00ICE.uf
+ 
+20151117
+
+20151117
+
+20151117
+
+20151117
+
+20151117
+
+20151117
+
+20151117
+
+Most recent restart: TP4restart2015_319_00
+Unpacking...
+ 
+ 
+mv TP4restart2015_319_00_mem001.a /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00.a
+mv TP4restart2015_319_00_mem001.b /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00.b
+mv TP4restart2015_319_00ICE.uf /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00ICE.uf
+ 
+20151117
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151117
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151117
+
+Most recent restart: TP4restart2015_319_00
+Unpacking...
+ 
+ 
+mv TP4restart2015_319_00_mem001.a /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00.a
+mv TP4restart2015_319_00_mem001.b /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/TP4restart2015_319_00.b
+ 
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151119
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151120
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151120
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151121
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+
+20151122
+
+Restart already in /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data
+
+
+
+

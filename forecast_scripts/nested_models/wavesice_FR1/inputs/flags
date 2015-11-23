@@ -1,0 +1,171 @@
+TYPE=mpi
+ARCH=xt4
+
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                  -DNERSC_VERSION \
+                  -DWEEKLY_AVERAGE \
+                  -DICE \
+                  -DFORCING_INLINE \
+                  -DMATS_RELAX  \
+                  -DKARA2002 \
+                  -DDIURNAL \
+                  -DEVP \
+                  -DDAILY_AVERAGE \
+#                 -DARCHIVE_ICE_ONLY \
+#                 -DARCHIVE_RESTART \
+
+# # ecnc2 forcing in 2015 is missing 4 records (between (not inc) 22-Aug 0600, 23-Aug 1200)
+# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+#                  -DECNC2_FIXGAP \
+
+# TP4 specific flags:
+# - SEASONAL_PORT has the same relaxation conditions at the
+#   ports (Bering Strait,...) every year
+# - INTERANNUAL_PORT has interannual variability in the
+#   relaxation conditions at the ports
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DSEASONAL_PORT \
+#                -DINTERANNUAL_PORT \
+#                -DNEST_OUTER \
+
+# flags specific to inner models :
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DNEST_INNER \
+
+# # flags for rheology and diagnostics;
+# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+#                 -DICE_DYN_DIAG \
+#                 -DICE_DYN_DIAG_DUMP \
+#                 -DMIZ \
+# #               -DMIZ2 \
+
+# flags for waves run 
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DWAVES \
+                 -DWAVES_WAMNSEA \
+#                -DWAVES_TEST_READWAVES \
+#                -DWAVES_TESTADV \
+#                -DWAVES_WW3 \
+#                -DWAVES_NOSAVE \
+#                -DWAVES_TIME_INTERP \
+#                -DWAVES_RESET_ICE \
+#                -DWAVES_SAMESPEED \
+#                -DWAVES_LAXADV \
+
+# # flags for standalone waves run
+# #  - fice,hice read in from daily average files
+# #  - or from observations (-DWAVES_ICEOBS)
+# #     - [default conc]        : AMSR-E conc (~12km footprint)
+# #     - IO_CONC2              : OSISAF conc (~40km footprint)
+# #     - IO_CONC3              : AMSR2  conc (~6km  footprint)
+# #     - [default thickness]   : Constant value (set in mod_waves_only.F)
+# #     - IO_THICK1             : SMOS thickness (~40km footprint?)
+# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+#                  -DWAVES_ONLY \
+#                  -DWAVES_ICEOBS \
+#                  -DWAVES_IO_THICK1 \
+# #                -DWAVES_IO_CONC3 \
+# #                -DWAVES_IO_CONC2 \
+
+# KAL - specific module setup (Cray XT4)
+LIBS := $(LIBS) $(NETCDF_POST_LINK_OPTS)
+FCFFLAGSNERSC := $(FCFFLAGSNERSC) $(NETCDF_INCLUDE_OPTS)
+
+# Files to include in NERSC version of hycom
+ifneq  (,$(findstring -DNERSC_VERSION,$(CPPFLAGSNERSC)))
+   FCFFLAGSNERSC := $(FCFFLAGSNERSC) -I../src_2.2.12/ 
+   OBJECTSNERSC  := $(OBJECTSNERSC) \
+   mod_common_ice.o           \
+   mod_year_info.o            \
+   mod_forcing_nersc.o        \
+   mod_random_forcing.o       \
+   mod_diagnostics.o          \
+   mod_average.o              \
+   mod_daily_average.o        \
+   m_limits.o                 \
+   mod_nesting.o              \
+   mod_gridp.o                \
+   mod_tides_nersc.o          \
+   mod_hycom_nersc.o          \
+   mod_restart.o              \
+   dayfor.o                   \
+   m_icemodels_step.o         \
+   m_icemodels_init.o         \
+   m_thermf_nersc.o           \
+   m_mptestdump.o             \
+   m_icemodels_advect.o 
+
+   # Files to include in NERSC version of hycom, when using WAVES
+   ifneq (,$(findstring -DWAVES,$(CPPFLAGSNERSC)))
+      OBJECTSNERSC  := $(OBJECTSNERSC) \
+                       mod_readwaves.o                \
+                       mod_wavesice.o                 \
+                       mod_common_wavesice.o          \
+                       mod_attenuation_ice.o          \
+                       mod_waves_init.o               \
+                       mod_forcing_waves.o            \
+                       mod_wim_prams.o
+
+      # If we want to run waves without ocean/ice,
+      #  use WAVES_ONLY flag
+      ifneq (,$(findstring -DWAVES_ONLY,$(CPPFLAGSNERSC)))
+         OBJECTSNERSC  := $(OBJECTSNERSC) \
+            mod_waves_only.o
+      endif
+   endif
+
+   # Files to include in NERSC version of hycom, when using EVP
+   ifneq (,$(findstring -DEVP,$(CPPFLAGSNERSC)))
+      OBJECTSNERSC  := $(OBJECTSNERSC) \
+         mod_evp.o                     \
+         m_evp_next_step.o             \
+         m_depthave.o                  \
+         hycomtoevp.o                  \
+         evptohycom.o                  \
+         evp.o                         \
+         evp_prep.o                    \
+         evp_init.o                    \
+         evp_stepu.o                   \
+         evp_finish.o                  \
+         to_ugrid.o                    \
+         evp_ice_strength.o            \
+         evp_init_from_hycom.o         \
+         mod_raw_io.o 
+
+      # Calculation of stresses:
+      ifneq (,$(findstring -DMIZ2,$(CPPFLAGSNERSC)))
+         # faux MIZ rheology: reduce shear viscosity
+         # depending on floe size (with WAVES)
+         # or conc/thickness      (no WAVES)
+         OBJECTSNERSC  := $(OBJECTSNERSC) \
+            evp_stress_miz_2.o
+      else ifneq (,$(findstring -DMIZ,$(CPPFLAGSNERSC)))
+         # Shen et al (1987) collisional rheology (for MIZ)
+         OBJECTSNERSC  := $(OBJECTSNERSC) \
+            evp_stress_miz.o
+      else
+         # usual EVP rheology
+         OBJECTSNERSC  := $(OBJECTSNERSC) \
+            evp_stress.o
+      endif
+   endif
+
+   # Files to include in NERSC version of hycom, when using ICESTATE
+   ifneq (,$(findstring -DICESTATE,$(CPPFLAGSNERSC)))
+      OBJECTSNERSC  := $(OBJECTSNERSC) \
+         mod_icestate.o                \
+         mod_icestate_init.o           \
+         mod_icestate_redist.o         \
+         mod_icestate_diag.o           \
+         mod_icestate_fluxes.o         \
+         mod_icestate_tools.o          \
+         mod_icestate_srfbudget.o      \
+         mod_icestate_hpar.o           \
+         mod_icestate_transfer.o       \
+         m_icestate_exchange.o         \
+         m_icestate_heatsolve.o        \
+         m_icestate_prec.o             \
+         m_icestate_solar.o            \
+         m_icestate_thermf.o           
+   endif
+endif
