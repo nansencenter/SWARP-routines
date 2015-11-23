@@ -40,13 +40,6 @@ do
    fi
 done
 
-echo " "
-echo Changing REGION.src
-file=REGION.src
-cat ../bak/$file | sed \
--e "s/NATa1.00/$R/g" \
-> ../$file
-
 
 echo " "
 echo Changing EXPT.src...

@@ -29,6 +29,14 @@ cd $rtdir/Build_V2.2.12_X$X
 pwd
 
 
+echo " "
+echo Changing REGION.src
+file=REGION.src
+cat ../bak/$file | sed \
+-e "s/NATa1.00/$R/g" \
+> ../$file
+
+
 if [ ! -f ../expt_$X/blkdat.input ]
 then
    # need some files from expt directory
@@ -45,3 +53,7 @@ echo ./setup_patch.sh $nproc
 echo "cp $THISFC/inputs/flags ."
 echo " "
 cp $THISFC/inputs/flags .
+
+#set up nesting
+cd ..
+nest_nersc/bin/nest_inner.sh $X

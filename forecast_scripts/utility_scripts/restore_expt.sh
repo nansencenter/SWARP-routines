@@ -25,15 +25,9 @@ do
       cp $f .
    fi
 done
-echo " "
+
 
 echo " "
-echo Changing REGION.src
-file=REGION.src
-cat ../bak/$file | sed \
--e "s/NATa1.00/$R/g" \
-> ../$file
-
 echo Changing EXPT.src...
 file=EXPT.src
 cat bak/$file | sed \
@@ -42,9 +36,9 @@ cat bak/$file | sed \
 > $file
 echo " "
 
+
 echo Changing blkdat.input...
 file=blkdat.input
 cat bak/$file | sed \
 -e "s/010/$E/g" \
 > $file
-echo " "
