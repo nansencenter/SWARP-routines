@@ -35,7 +35,11 @@ then
    #        and copy final output to correct location
    $post/merge_TP4archv.sh   $tday # $day1_long #$1 $2
 
-   # 4. save to migrate
+   # 4. make gifs
+   $post/make_gifs.sh $tday
+
+   # 5. save to migrate
+   # TODO change to norstore
    $post/backup_FCresults.sh $tday # $day1_long #$1 $2
    # ======================================================================================
 
