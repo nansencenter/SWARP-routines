@@ -27,6 +27,7 @@ print(nci.datetimes[-1])
 print('\n')
 
 # scalars
+# TODO label colorbars
 scalars  = ['icec','icetk']
 for vname in scalars:
    figdir   = outdir+'/'+vname
@@ -35,7 +36,9 @@ for vname in scalars:
    nci.make_png_all(vname,show=False,ice_mask=True,figdir=figdir)
 
 
-# vectors - TODO put directions on them
+# vectors
+# TODO put directions on them
+# TODO label colorbars
 vecs  = {'uice':'ice_speed','usurf':'surf_speed'}
 masks = {'uice':True,'usurf':False}
 
