@@ -79,7 +79,19 @@ class nc_getinfo:
    #####################################################
    def __init__(self,ncfil,time_index=None):
 
+      ##################################################
       self.filename  = ncfil
+      if ncfil[0]=='/':
+         self.basedir   = '/'
+      else:
+         self.basedir   = os.getcwd()+'/'
+
+      ss = ncfil.split('/')
+      for i in range(len(ss)-1):
+         self.basedir   = self.basedir+'/'
+
+      self.basename  = ss[-1].strip('.nc')
+      ##################################################
 
       # added here manually
       # - TODO could possibly be determined
@@ -160,10 +172,11 @@ class nc_getinfo:
          self.timeunits  = time_info[0]
          self.timevalues = [time[i]-time[0] for i in range(Nt)]
 
-      if time_index is not None:
-         self.datatime   = self.timevalues[time_index]
-
       self.number_of_time_records = Nt
+      self.datetimes              = []
+      for tval in self.timevalues:
+         self.datetimes.append(self.timeval_to_datetime(tval))
+
 
       ########################################################
 
@@ -269,14 +282,30 @@ class nc_getinfo:
    ###########################################################
    def get_var(self,vname,time_index=None):
 
+      # conc can have multiple names
+      vlist    = self.variable_list
+      cnames   = ['fice','ficem','icec']
+      if vname in cnames:
+         for vi in cnames:
+            if vi in vlist:
+               vname = vi
+
+      # thcikness can have multiple names
+      hnames   = ['hice','hicem','icetk']
+      if vname in hnames:
+         for vi in hnames:
+            if vi in vlist:
+               vname = vi
+
       vbl   = nc_get_var(self.filename,vname,time_index=time_index)
 
       return vbl
    ###########################################################
 
    ###########################################################
-   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg=None,time_index=0,\
-         clim=None,show=True,test_lonlats=None):
+   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg='TP4',time_index=0,\
+         clim=None,show=True,test_lonlats=None,\
+         vec_mag=False,conv_fac=1,ice_mask=False):
 
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
@@ -295,26 +324,34 @@ class nc_getinfo:
          vmax  = None
 
       lon,lat  = self.get_lonlat()
-      vbl      = nc_get_var(self.filename,vname,time_index=time_index)
+      vbl      = self.get_var(vname,time_index=time_index)
+
+      if ice_mask:
+         fice  = self.get_var('fice',time_index=time_index)
+         mask  = 1-np.logical_and(1-vbl.values.mask,fice[:,:]>.01) #0 if finite,non-low conc
+      else:
+         mask  = vbl.values.mask
+
+      if vec_mag:
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2     = self.get_var(vname2,time_index=time_index)
+         Marr  = np.sqrt(vbl.values.data*vbl.values.data\
+                         +vbl2.values.data*vbl2.values.data)
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
+      else:
+         Marr  = vbl.values.data
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
 
       if bmap is None:
          # make basemap
-         if HYCOMreg is not None:
-            bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-         else:
-            lonc     = np.mean(lon)
-            latc     = np.mean(lat)
-            #
-            latmin   = np.min(lat)
-            latmax   = np.max(lat)
-            width    = 1.2*111.e3*(latmax-latmin)
-            height   = width
+         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
 
-            bmap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
-                           projection='stere',resolution='i',\
-                           width=width,height=height)
-
-      PC = bmap.pcolor(lon,lat,vbl.values,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
+      PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
       fig.colorbar(PC)
 
       if test_lonlats is not None:
@@ -326,6 +363,51 @@ class nc_getinfo:
          fig.show()
 
       return fig,ax,bmap
+   ###########################################################
+
+   ###########################################################
+   def make_png(self,vname,figdir='.',time_index=0,date_label=True,**kwargs):
+
+      from matplotlib import pyplot as plt
+
+      fig,ax,bmap = self.plot_var(vname,**kwargs)
+
+      dtmo     = self.datetimes[time_index]
+      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+
+      if date_label:
+         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+         ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+
+      Fname = vname
+      if 'vec_mag' in kwargs:
+         if kwargs['vec_mag']:
+            if vname in ['u','usurf']:
+               Fname = 'ocean_speed'
+            elif 'u' in vname:
+               Fname = vname.strip('u')+'_speed'
+            elif 'taux' in vname:
+               Fname = vname.strip('taux')+'_stress_magnitude'
+
+      Fname    = Fname.strip('_')
+      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
+
+      print('Saving to '+figname) 
+      fig.savefig(figname)
+      ax.cla()
+      plt.close(fig)
+
+      return
+   ###########################################################
+
+   ###########################################################
+   def make_png_all(self,vname,figdir='.',**kwargs):
+
+      N  = len(self.timevalues)
+      for i in range(N):
+         self.make_png(vname,time_index=i,figdir=figdir,**kwargs)
+
+      return
    ###########################################################
 
 
@@ -559,10 +641,11 @@ class HYCOM_binary_info:
    #######################################################################
 
    #######################################################################
-   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg=None,\
-         clim=None,show=True):
+   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg='TP4',\
+         clim=None,show=True,vec_mag=False,conv_fac=1,ice_mask=False):
 
-      from mpl_toolkits.basemap import Basemap, cm
+      from mpl_toolkits.basemap import Basemap
+      from matplotlib import cm
       import fns_plotting as Fplt
 
       if vname not in self.variables:
@@ -578,28 +661,54 @@ class HYCOM_binary_info:
       lon,lat  = self.get_grid()[:2]
       if bmap is None:
          # make basemap
-         if HYCOMreg is not None:
-            bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-         else:
-            lonc     = np.mean(lon)
-            latc     = np.mean(lat)
-            #
-            latmin   = np.min(lat)
-            latmax   = np.max(lat)
-            width    = 1.2*111.e3*(latmax-latmin)
-            height   = width
+         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+      else:
+         lonc     = np.mean(lon)
+         latc     = np.mean(lat)
+         #
+         latmin   = np.min(lat)
+         latmax   = np.max(lat)
+         width    = 1.2*111.e3*(latmax-latmin)
+         height   = width
 
-            bmap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
-                           projection='stere',resolution='i',\
-                           width=width,height=height)
+         bmap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
+                        projection='stere',resolution='i',\
+                        width=width,height=height)
 
       recno    = self.record_numbers[vname]
       vbl      = get_array_from_HYCOM_binary(self.afile,recno,\
                      dims=self.dims)
 
-      vfin  = vbl[np.isfinite(vbl)]
-      vmin  = np.min(vfin)
-      vmax  = np.max(vfin)
+      if ice_mask:
+         recno    = self.record_numbers['ficem']
+         fice     = get_array_from_HYCOM_binary(self.afile,recno,\
+                     dims=self.dims)
+         mask     = 1-np.logical_and(np.isfinite(vbl),fice>.01)
+      else:
+         mask  = 1-np.isfinite(vbl)
+
+      ###############################################################
+      if vec_mag:
+         # vector magnitude of vel or stress
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+            recno2   = self.record_numbers[vname]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+            recno2   = self.record_numbers[vname]
+
+         vbl2  = get_array_from_HYCOM_binary(self.afile,recno2,\
+                     dims=self.dims)
+         Marr  = np.sqrt(vbl*vbl+vbl2*vbl2)
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask)
+      else:
+         Marr  = np.ma.array(conv_fac*vbl,mask=mask)
+
+      ###############################################################
+
+      vmin  = Marr.min()
+      vmax  = Marr.max()
 
       print(' ')
       print('Plotting '+vname)
@@ -611,16 +720,20 @@ class HYCOM_binary_info:
          Vmin,Vmax   = clim
          print(' ')
       else:
-         # use histogram
-         p0    = 10
-         p1    = 90
-         Vmin  = np.percentile(vfin,p0)
-         Vmax  = np.percentile(vfin,p1)
-         print(str(p0) +'-th percentile: '+str(Vmin))
-         print(str(p1) +'-th percentile: '+str(Vmax))
-         print(' ')
+         Vmin  = None
+         Vmax  = None
+      #    # use histogram
+      #    p0    = 10
+      #    p1    = 90
+      #    Vmin  = np.percentile(vfin,p0)
+      #    Vmax  = np.percentile(vfin,p1)
+      #    print(str(p0) +'-th percentile: '+str(Vmin))
+      #    print(str(p1) +'-th percentile: '+str(Vmax))
+      #    print(' ')
+      cmap    = cm.jet
+      # cmap.set_bad(color='w')
 
-      PC = bmap.pcolor(lon,lat,vbl,latlon=True,ax=ax,vmin=Vmin,vmax=Vmax)
+      PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=Vmin,vmax=Vmax,cmap=cmap)
       fig.colorbar(PC)
 
       Fplt.finish_map(bmap)
