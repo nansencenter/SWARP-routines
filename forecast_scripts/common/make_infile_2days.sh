@@ -19,6 +19,19 @@ ryear=$3
 day1=$4
 day2=$5
 hour=$6
+#
+nest_outer="F"
+if [ $# -ge 7 ]
+then
+   nest_outer="$7"
+fi
+#
+nest_inner="F"
+if [ $# -ge 8 ]
+then
+   nest_inner="$8"
+fi
+echo $nest_outer $nest_inner
 # ===================================================================================
 
 # ======================================================================
@@ -36,7 +49,7 @@ mkdir -p $logdir
 log=$logdir/mk_infile_log.txt
 touch $log
 
-if [ $# -ne 6 ]
+if [ $# -lt 6 ]
 then
   echo "Usage: $0 <4 inputs> (see script)"            >> $log
   mail -s "make_infile_2days.sh FAILED" $email <  $log
@@ -45,12 +58,7 @@ else
   echo "-------------------------------------------------------------------------"  >> $log 
   echo " make_infile_2days.sh ($reg)"                                               >> $log
   echo "-------------------------------------------------------------------------"  >> $log
-  if [ "${reg}" == "TP4" ]
-  then
-     file=${THISFC}/../common/inputs/infile.2days.outer
-  else
-     file=${THISFC}/../common/inputs/infile.2days
-  fi
+  file=${THISFC}/../common/inputs/infile.2days
   
   if [ -f $file ]
   then
@@ -70,6 +78,8 @@ else
     -e "s/nd1/$day1/g" \
     -e "s/nd2/$day2/g" \
     -e "s/HH/$hour/g" \
+    -e "s/TF/$nest_outer /g" \
+    -e "s/FT/$nest_inner /g" \
     > $xdir/infile.in
 
     echo " $xdir/infile.in created"                >> $log
