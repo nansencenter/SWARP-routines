@@ -366,11 +366,17 @@ class nc_getinfo:
    ###########################################################
 
    ###########################################################
-   def make_png(self,vname,figdir='.',time_index=0,date_label=True,**kwargs):
+   def make_png(self,vname,pobj=None,figdir='.',time_index=0,date_label=True,**kwargs):
 
       from matplotlib import pyplot as plt
 
-      fig,ax,bmap = self.plot_var(vname,**kwargs)
+      new_fig  = (pobj is None)
+      if new_fig:
+         fig   = plt.figure()
+         ax    = fig.add_subplot(1,1,1)
+         pobj  = [fig,ax]
+
+      fig,ax,bmap = self.plot_var(vname,pobj=pobj,time_index=time_index,**kwargs)
 
       dtmo     = self.datetimes[time_index]
       datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
@@ -394,8 +400,10 @@ class nc_getinfo:
 
       print('Saving to '+figname) 
       fig.savefig(figname)
-      ax.cla()
-      plt.close(fig)
+
+      if new_fig:
+         ax.cla()
+         plt.close(fig)
 
       return
    ###########################################################
@@ -403,10 +411,16 @@ class nc_getinfo:
    ###########################################################
    def make_png_all(self,vname,figdir='.',**kwargs):
 
+      from matplotlib import pyplot as plt
+      fig   = plt.figure()
+      ax    = fig.add_subplot(1,1,1)
+
       N  = len(self.timevalues)
       for i in range(N):
-         self.make_png(vname,time_index=i,figdir=figdir,**kwargs)
+         self.make_png(vname,pobj=[fig,ax],time_index=i,figdir=figdir,**kwargs)
+         ax.cla()
 
+      plt.close()
       return
    ###########################################################
 

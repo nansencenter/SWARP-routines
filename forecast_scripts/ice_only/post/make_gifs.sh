@@ -14,8 +14,16 @@ source $THIS_SRC
 email=$(cat $FCemail)
 # =============================================================================
 
-cdate=$1
-ncfil=$THISFC2/$cdate/final_output/SWARP*.nc
+if [ $# -ne 1 ]
+then
+   echo "Usage: make_gifs.sh [date]"
+   echo "-date in yyyymmdd format"
+   exit
+else
+   cdate=$1
+fi
+
+ncfil=$THISFC2/$cdate/final_output/SWARPiceonly_forecast_start${cdate}T000000Z.nc
 figdir=$THISFC2/$cdate/figures
 mkdir -p $figdir
 

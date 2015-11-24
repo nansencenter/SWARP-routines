@@ -1,6 +1,8 @@
 import os,sys
 from getopt import getopt
 import mod_reading as Mr
+import matplotlib
+matplotlib.use('Agg')
 
 ncfile   = None
 outdir   = '.'
