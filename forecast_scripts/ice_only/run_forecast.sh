@@ -194,13 +194,24 @@ echo "Final hour     : $final_hour"
 echo "Restart files of $rname"
 echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$final_hour (${ryear}_${final_day}_$final_hour)"
 
+inputs="$THIS_SRC $rgen $ryear $rday $final_day $final_hour"
+
+if [ 1 -eq 1 ]
+then
+   # set up nesting
+   echo set up nesting
+   nest_outer=T
+   nest_inner=F
+   inputs="$inputs $nest_outer $nest_inner"
+fi
+
 if [ $restart_OPT -eq 1 ]
 then
-   echo "$FCcommon/make_infile_2days.sh $THIS_SRC $rgen $ryear $rday $final_day $final_hour"
-   $FCcommon/make_infile_2days.sh       $THIS_SRC $rgen $ryear $rday $final_day $final_hour
+   echo "$FCcommon/make_infile_2days.sh $inputs"
+   $FCcommon/make_infile_2days.sh       $inputs
 else
-   echo "$FCcommon/make_infile_3days.sh $THIS_SRC $rgen $ryear $rday $dump_day_j1 $final_day $final_hour"
-   $FCcommon/make_infile_3days.sh       $THIS_SRC $rgen $ryear $rday $dump_day_j1 $final_day $final_hour
+   echo "$FCcommon/make_infile_3days.sh $inputs"
+   $FCcommon/make_infile_3days.sh       $inputs
 fi
 
 xdir=$TP4_REALTIME/expt_01.$Xno
