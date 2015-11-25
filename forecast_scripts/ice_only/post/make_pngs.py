@@ -30,23 +30,26 @@ print('\n')
 
 # scalars
 # TODO label colorbars
-scalars  = ['icec','icetk']
-for vname in scalars:
+clabs = {'icec':'Ice concentration','icetk':'Ice thickness'}
+for vname in clabs.keys():
    figdir   = outdir+'/'+vname
    if not os.path.exists(figdir):
       os.mkdir(figdir)
-   nci.make_png_all(vname,show=False,ice_mask=True,figdir=figdir)
+   nci.make_png_all(vname,ice_mask=True,figdir=figdir,clabel=clabs[vname])
 
 
 # vectors
 # TODO put directions on them
 # TODO label colorbars
-vecs  = {'uice':'ice_speed','usurf':'surf_speed'}
-masks = {'uice':True,'usurf':False}
+vecs     = {'uice':'ice_speed','usurf':'surf_speed'}
+masks    = {'uice':True,'usurf':False}
+clabs    = {'uice':'Ice speed, km/day','usurf':'Surface speed, km/day'}
+conv_fac = 24*3600/1.e3 # m/s -> km/day
 
 for vname in vecs.keys():
    figdir   = outdir+'/'+vecs[vname]
    if not os.path.exists(figdir):
       os.mkdir(figdir)
-   nci.make_png_all(vname,show=False,figdir=figdir,\
-      conv_fac=24*3600/1.e3,vec_mag=True,ice_mask=masks[vname])
+   nci.make_png_all(vname,figdir=figdir,\
+      conv_fac=conv_fac,vec_mag=True,ice_mask=masks[vname],\
+         clabel=clabs[vname])

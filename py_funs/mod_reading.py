@@ -84,6 +84,7 @@ class nc_getinfo:
       if ncfil[0]=='/':
          self.basedir   = '/'
       else:
+         import os
          self.basedir   = os.getcwd()+'/'
 
       ss = ncfil.split('/')
@@ -304,18 +305,25 @@ class nc_getinfo:
 
    ###########################################################
    def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg='TP4',time_index=0,\
-         clim=None,show=True,test_lonlats=None,\
+         clim=None,add_cbar=True,clabel=None,show=True,test_lonlats=None,\
          vec_mag=False,conv_fac=1,ice_mask=False):
 
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
 
       if pobj is not None:
-         fig,ax   = pobj
+         if len(pobj)==2:
+            fig,ax   = pobj
+            cbar     = None
+         else:
+            fig,ax,cbar = pobj
+            add_cbar    = True
       else:
          from matplotlib import pyplot as plt
          fig   = plt.figure()
          ax    = fig.add_subplot(1,1,1)
+         pobj  = [fig,ax]
+         cbar  = None
 
       if clim is not None:
          vmin,vmax   = clim
@@ -352,7 +360,17 @@ class nc_getinfo:
          bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
 
       PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
-      fig.colorbar(PC)
+
+      if add_cbar:
+
+         if cbar is None:
+            cbar  = fig.colorbar(PC)
+         else:
+            cbar  = fig.colorbar(PC,cax=cbar.ax)
+
+         pobj.append(cbar)
+         if clabel is not None:
+            cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
 
       if test_lonlats is not None:
          for lont,latt in test_lonlats:
@@ -362,11 +380,13 @@ class nc_getinfo:
       if show:
          fig.show()
 
-      return fig,ax,bmap
+      out   = pobj
+      out.append(bmap)
+      return out
    ###########################################################
 
    ###########################################################
-   def make_png(self,vname,pobj=None,figdir='.',time_index=0,date_label=True,**kwargs):
+   def make_png(self,vname,pobj=None,bmap=None,figdir='.',time_index=0,date_label=True,**kwargs):
 
       from matplotlib import pyplot as plt
 
@@ -376,7 +396,9 @@ class nc_getinfo:
          ax    = fig.add_subplot(1,1,1)
          pobj  = [fig,ax]
 
-      fig,ax,bmap = self.plot_var(vname,pobj=pobj,time_index=time_index,**kwargs)
+      out   = self.plot_var(vname,pobj=pobj,bmap=bmap,time_index=time_index,**kwargs)
+      fig   = out[0]
+      ax    = out[1]
 
       dtmo     = self.datetimes[time_index]
       datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
@@ -403,24 +425,38 @@ class nc_getinfo:
 
       if new_fig:
          ax.cla()
+         fig.clear()
          plt.close(fig)
 
-      return
+      return out
    ###########################################################
 
    ###########################################################
-   def make_png_all(self,vname,figdir='.',**kwargs):
+   def make_png_all(self,vname,HYCOMreg='TP4',figdir='.',**kwargs):
 
       from matplotlib import pyplot as plt
+      import fns_plotting as Fplt
+
       fig   = plt.figure()
       ax    = fig.add_subplot(1,1,1)
+      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
 
       N  = len(self.timevalues)
       for i in range(N):
-         self.make_png(vname,pobj=[fig,ax],time_index=i,figdir=figdir,**kwargs)
-         ax.cla()
 
-      plt.close()
+         if i==0:
+            pobj=[fig,ax]
+         else:
+            pobj=[fig,ax,cbar]
+
+         fig,ax,cbar,bmap  = self.make_png(vname,\
+            bmap=bmap,time_index=i,\
+            figdir=figdir,show=False,**kwargs)
+
+         ax.cla()
+         cbar.ax.clear()
+
+      plt.close(fig)
       return
    ###########################################################
 

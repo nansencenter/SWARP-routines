@@ -16,6 +16,10 @@ if not WANT2SHOW:
    matplotlib.use('Agg')
 ############################################################################
 
+# PLOT POINTS TO HELP WITH ORDERING
+PLOT_PTS_AUTO     = True
+PLOT_PTS_MANUAL   = False
+
 from matplotlib import pyplot as plt
 from mpl_toolkits.basemap import Basemap, cm
 from skimage import measure as msr
@@ -357,7 +361,7 @@ for loop_i in check_list:
       ##############################################################################
 			
       ##########################################################################################
-      if 1:
+      if PLOT_PTS_AUTO:
          # plot nearest points on ice edge
          nout = len(out_list)
          sym_skip = [] # skip some symbols (plots can get crowded)
@@ -380,14 +384,15 @@ for loop_i in check_list:
       ##########################################################################################
 
       ##########################################################################################
-      if 0:
+      if PLOT_PTS_MANUAL:
          # add manual test point(s) to plot
          # - to check if SAR image is ordered in the right place
          # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
          #   then use trial and error
          print('Adding manual points to plot:')
 
-         man_list = [[40.,82.5]] # list of lon/lat points
+         # man_list = [[40.,82.5]] # list of lon/lat points
+         man_list = [[-14.3441390735,73.8990696413]]
          for lonm,latm in man_list:
             print('('+str(lonm)+' E, '+str(latm)+' N)')
             bm.plot(lonm,latm,'^g',markersize=7,latlon=True)
