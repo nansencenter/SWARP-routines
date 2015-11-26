@@ -23,7 +23,7 @@ else
    cdate=$1
 fi
 
-ncfil=$THISFC2/$cdate/final_output/SWARPiceonly_forecast_start${cdate}T000000Z.nc
+ncfil=$THISFC2/$cdate/final_output/${FC_OUTPUT}_start${cdate}T000000Z.nc
 figdir=$THISFC2/$cdate/figures
 mkdir -p $figdir
 
@@ -38,6 +38,7 @@ cd $pdir
 for vdir in *
 do
    cd $vdir
+   echo $convert -delay 15 -loop 0 *.png $vdir.gif
    $convert -delay 15 -loop 0 *.png $vdir.gif
    mv $vdir.gif $gdir
    cd ..
