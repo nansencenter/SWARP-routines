@@ -306,7 +306,7 @@ class nc_getinfo:
    ###########################################################
    def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg='TP4',time_index=0,\
          clim=None,add_cbar=True,clabel=None,show=True,test_lonlats=None,\
-         vec_mag=False,conv_fac=1,ice_mask=False):
+         vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=False,dir_from=True):
 
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
@@ -325,6 +325,10 @@ class nc_getinfo:
          pobj  = [fig,ax]
          cbar  = None
 
+      if bmap is None:
+         # make basemap
+         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+
       if clim is not None:
          vmin,vmax   = clim
       else:
@@ -333,15 +337,42 @@ class nc_getinfo:
 
       lon,lat  = self.get_lonlat()
       vbl      = self.get_var(vname,time_index=time_index)
+      mask     = vbl.values.mask
 
-      if ice_mask:
+      ################################################################## 
+      # add ice or wave masks
+      if ice_mask and wave_mask:
          fice  = self.get_var('fice',time_index=time_index)
-         mask  = 1-np.logical_and(1-vbl.values.mask,fice[:,:]>.01) #0 if finite,non-low conc
-      else:
-         mask  = vbl.values.mask
+         mask1 = 1-np.logical_and(1-mask,fice[:,:]>.01) #0 if finite,non-low conc
+         #
+         Hs    = self.get_var('swh',time_index=time_index)
+         mask2 = 1-np.logical_and(1-mask,Hs[:,:]>.01) #0 if finite,non-low waves
+         #
+         mask  = np.logical_or(mask1,mask2)
 
-      if vec_mag:
+      elif ice_mask:
+         fice  = self.get_var('fice',time_index=time_index)
+         mask  = 1-np.logical_and(1-mask,fice[:,:]>.01) #0 if finite,non-low conc
 
+      elif wave_mask:
+         Hs    = self.get_var('swh',time_index=time_index)
+         mask  = 1-np.logical_and(1-mask,Hs[:,:]>.01) #0 if finite,non-low waves
+      ################################################################## 
+
+
+      ################################################################## 
+      if vec_opt==0:
+
+         # just plot scalar
+         U     = None # no quiver plot
+         Marr  = vbl.values.data
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
+
+
+      elif vec_opt==1:
+
+         # plot vector magnitude
+         U  = None # no quiver plot
          if vname[0]=='u':
             vname2   = 'v'+vname[1:]
          elif vname[:4]=='taux':
@@ -351,26 +382,134 @@ class nc_getinfo:
          Marr  = np.sqrt(vbl.values.data*vbl.values.data\
                          +vbl2.values.data*vbl2.values.data)
          Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
-      else:
-         Marr  = vbl.values.data
-         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
 
-      if bmap is None:
-         # make basemap
-         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+      elif vec_opt==2:
 
-      PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
+         # plot vector magnitude + direction (unit vectors)
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
 
-      if add_cbar:
+         vbl2  = self.get_var(vname2,time_index=time_index)
+         U     = vbl.values.data
+         V     = vbl2.values.data
 
-         if cbar is None:
-            cbar  = fig.colorbar(PC)
+         # speed
+         spd   = np.hypot(U,V)
+         Marr  = np.ma.array(conv_fac*spd,mask=mask) #masked array
+
+         # rotate vectors
+         U,V   = bmap.rotate_vector(U,V,lon,lat)
+
+         #unit vectors
+         U     = np.ma.array(U/spd,mask=mask)
+         V     = np.ma.array(V/spd,mask=mask)
+
+         # #test 1
+         # count = 0
+         # for i in range(U.shape[0]):
+         #    for j in range(U.shape[1]):
+         #       si = spd[i,j]
+         #       ui = U[i,j]
+         #       vi = V[i,j]
+         #       if not U.mask[i,j]:
+         #          print(ui,vi,np.sqrt(ui*ui+vi*vi),si,Marr[i,j])
+         #          count = count+1
+         #       if count>10:
+         #          break
+
+      elif vec_opt==3:
+
+         # plot vector direction only
+         # (no pcolor, but vector length is proportional to magnitude)
+         Marr  = None
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2  = self.get_var(vname2,time_index=time_index)
+         U     = conv_fac*vbl.values.data
+         V     = conv_fac*vbl2.values.data
+
+         # speed
+         spd   = np.hypot(U,V)
+         avg   = np.mean(np.ma.array(spd,mask=mask))
+         print('avg speed: '+str(avg))
+
+         # rotate vectors
+         U,V   = bmap.rotate_vector(U,V,lon,lat)
+
+         # scale by the average speed
+         # TODO: add key
+         U  = np.ma.array(U/avg,mask=mask)
+         V  = np.ma.array(V/avg,mask=mask)
+
+      elif vec_opt==4:
+
+         # plot direction as scalar
+         U  = None
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2  = self.get_var(vname2,time_index=time_index)
+         dir   = 180/np.pi*np.arctan2(vbl2.values.data,vbl.values.data)#dir-to in degrees (<180,>-180)
+         dir   = 90-dir #north is 0,angle clockwise
+         if dir_from:
+            # direction-from
+            dir[dir>0]  = dir[dir>0]-360
+            Marr        = np.ma.array(dir+180,mask=np.logical_or(mask,1-np.isfinite(dir)))
          else:
-            cbar  = fig.colorbar(PC,cax=cbar.ax)
+            # direction-to
+            dir[dir>180]   = dir[dir>180]-360
+            Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
 
-         pobj.append(cbar)
-         if clabel is not None:
-            cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+      elif vec_opt==5:
+         #vbl is a direction - convert to vector
+         Marr  = None
+         dir   = 90-vbl.values.data
+         if dir_from:
+            dir   = np.pi/180*(dir+180)
+         else:
+            dir   = np.pi/180*dir
+
+         # unit vectors
+         U  = np.ma.array(np.cos(dir),mask=mask)
+         V  = np.ma.array(np.sin(dir),mask=mask)
+      ################################################################## 
+
+
+      ################################################################## 
+      # pcolor plot
+      if Marr is not None:
+         PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
+
+         if add_cbar:
+
+            if cbar is None:
+               cbar  = fig.colorbar(PC)
+            else:
+               cbar  = fig.colorbar(PC,cax=cbar.ax)
+
+            pobj.append(cbar)
+            if clabel is not None:
+               cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+      ################################################################## 
+
+      ################################################################## 
+      # quiver plot
+      if U is not None:
+         dens  = 10   # density of arrows
+         scale = 50
+         QP    = bmap.quiver(lon[::dens,::dens],lat[::dens,::dens],\
+                              U[::dens,::dens],V[::dens,::dens],\
+                              latlon=True,scale=scale)
+                              # latlon=True,headlength=hlen)
 
       if test_lonlats is not None:
          for lont,latt in test_lonlats:
@@ -408,14 +547,34 @@ class nc_getinfo:
          ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
 
       Fname = vname
-      if 'vec_mag' in kwargs:
-         if kwargs['vec_mag']:
+      if 'vec_opt' in kwargs:
+         vec_opt  = kwargs['vec_opt']
+         if vec_opt==1:
+            #magnitude only
             if vname in ['u','usurf']:
-               Fname = 'ocean_speed'
+               Fname = 'surf_speed'
             elif 'u' in vname:
                Fname = vname.strip('u')+'_speed'
             elif 'taux' in vname:
                Fname = vname.strip('taux')+'_stress_magnitude'
+
+         elif vec_opt==2 or vec_opt==3:
+            #quiver plots on top of magnitude or by itself
+            if vname in ['u','usurf']:
+               Fname = 'surf_vel'
+            elif 'u' in vname:
+               Fname = vname.strip('u')+'_vel'
+            elif 'taux' in vname:
+               Fname = vname.strip('taux')+'_stress'
+
+         elif vec_opt==2 or vec_opt==3:
+            #direction as scalar
+            if vname in ['u','usurf']:
+               Fname = 'surf_vel'
+            elif 'u' in vname:
+               Fname = vname.strip('u')+'_vel'
+            elif 'taux' in vname:
+               Fname = vname.strip('taux')+'_stress'
 
       Fname    = Fname.strip('_')
       figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
@@ -692,7 +851,7 @@ class HYCOM_binary_info:
 
    #######################################################################
    def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg='TP4',\
-         clim=None,show=True,vec_mag=False,conv_fac=1,ice_mask=False):
+         clim=None,show=True,vec_opt=0,conv_fac=1,ice_mask=False):
 
       from mpl_toolkits.basemap import Basemap
       from matplotlib import cm
@@ -738,7 +897,7 @@ class HYCOM_binary_info:
          mask  = 1-np.isfinite(vbl)
 
       ###############################################################
-      if vec_mag:
+      if vec_opt==1:
          # vector magnitude of vel or stress
 
          if vname[0]=='u':
@@ -750,7 +909,7 @@ class HYCOM_binary_info:
 
          vbl2  = get_array_from_HYCOM_binary(self.afile,recno2,\
                      dims=self.dims)
-         Marr  = np.sqrt(vbl*vbl+vbl2*vbl2)
+         Marr  = np.hypot(vbl,vbl2)
          Marr  = np.ma.array(conv_fac*Marr,mask=mask)
       else:
          Marr  = np.ma.array(conv_fac*vbl,mask=mask)
