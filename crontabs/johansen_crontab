@@ -1,5 +1,4 @@
 # Crontab for SWARP project on Johansen
-# 1) Getting the final product from Hexagon - try every hour
 
 # get ice-only FC
 00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_ice_only.sh
