@@ -2,8 +2,8 @@
 # copy forecast file from hexagon to johansen
 
 thour=`date +%H`
-T0=2  # don't bother doing anything before 2am
-T1=9  # email alert after this time
+T0=6  # don't bother doing anything before 6am
+T1=11 # email alert after this time
 if [ $thour -lt 6 ]
 then
    exit
@@ -14,16 +14,17 @@ fi
 THREDDS="/mnt/10.11.12.232/Projects/SWARP/Thredds_data_dir" # final destination of forecast outputs
 SRjoh="/Data/sim/tim/Projects/SWARP/SWARP-routines"         # location of SWARP routines on johansen
 TP4rt="/work/timill/RealTime_Models/results/TP4a0.12"       # location of forecast outputs on hexagon
-hidden=$SRjoh/forecast_scripts/hidden                       # location of private info eg logs, ssh_info.src
+hidden=$SRjoh/forecast_scripts/hidden                      # location of private info eg logs, ssh_info.src
 
 # FC-specific variables
-FCtype_joh="ice_only"               # type of FC on johansen
-FCtype_hex="ice_only"               # type of FC on johansen ("wavesice" or "wavesice_ww3arctic")
-FC_OUTPUT="SWARPiceonly_forecast"   # start of netcdf file
+FCtype_joh="wavesice"
+FCtype_hex="wavesice_ww3arctic"
+FC_OUTPUT="SWARPwavesice_WW3_forecast"
 
-joh_dir=$THREDDS/$FCtype      # directory on johansen where final file should go
-tmp_dir=$THREDDS/$FCtype/tmp  # directory on johansen where final file + figures should go initially after copying
-hex_dir=$TP4rt/$FCtype_hex    # directory on hexagon where final file ends up
+joh_dir=$THREDDS/$FCtype_joh           # directory on johansen where final file should go
+tmp_dir=$joh_dir/tmp                   # directory on johansen where final file + figures go after copying
+hex_dir=$TP4rt/$FCtype_hex             # directory on hexagon where final file ends up
+hidden=$SRjoh/forecast_scripts/hidden  # location of logs, ssh_info.src
 # ==================================================================================
 
 mkdir -p $tmp_dir
@@ -96,10 +97,12 @@ do
          scp -r -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
       fi
       #################################################################
+
    else
       echo "Product already on johansen" >> $cplog
       echo " " >> $cplog
    fi
+
 done
 
 if [ "$wrn_count" -gt 0 && $thour -gt $T1 ]
