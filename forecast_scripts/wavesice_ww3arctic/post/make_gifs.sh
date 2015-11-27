@@ -3,7 +3,7 @@
 
 # ===================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/ice_only         # scripts
+THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic  # scripts
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
 # ===================================================================================
@@ -38,7 +38,6 @@ cd $pdir
 for vdir in *
 do
    cd $vdir
-   echo $convert -delay 15 -loop 0 *.png $vdir.gif
    $convert -delay 15 -loop 0 *.png $vdir.gif
    mv $vdir.gif $gdir
    cd ..

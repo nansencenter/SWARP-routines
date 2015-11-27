@@ -11,6 +11,12 @@ export FCcommon="$FORECAST/common"
 export FCemail="$FCcommon/inputs/fc_alert_email.txt"
 export TP4restart_OPT=1
 
+#nested models
+export BS1_REALTIME="/work/timill/RealTime_Models/BS1a0.045"
+export BS1_REALTIME_RES="/work/timill/RealTime_Models/results/BS1a0.045"
+export FR1_REALTIME="/work/timill/RealTime_Models/FR1a0.03"
+export FR1_REALTIME_RES="/work/timill/RealTime_Models/results/FR1a0.03"
+
 # PATHS TO APPLICATIONS
 # queue stuff
 export qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
@@ -20,3 +26,4 @@ export ncdump="/opt/cray/netcdf/4.3.0/bin/ncdump"
 # other apps
 export python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 export cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
+export convert="/usr/bin/convert"
