@@ -87,7 +87,7 @@ then
 elif [ $SWARP_PP -eq 3 ]
 then
    # SWARP post-processing - waves version (WW3)
-   $SWARP_ROUTINES/forecast_scripts/wavesice/post/process_FCresults_ww3a.sh
+   $SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic/post/process_FCresults_ww3a.sh
 fi
 
 exit $?

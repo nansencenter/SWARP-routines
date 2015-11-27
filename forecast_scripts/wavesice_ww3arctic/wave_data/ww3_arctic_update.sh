@@ -104,18 +104,39 @@ then
 
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K.fc.latest.nc
    fctarg=$ddir2/$dfil2
+   linkloc=`readlink $fclat`
 
-   if [ -z "`diff $fclat $fctarg`" ]
+   if [ ! $linkloc == $fctarg ]
    then
-      # update the link to the latest forecast file
-      # - parameters (hs etc)
-      rm -f $fclat
+      echo " "
+      echo "Link location     : $linkloc"
+      echo "Latest forecast   : $fctarg"
+      echo "Setting new link..."
+      echo ln -s $fctarg $fclat
+      rm $fclat
       ln -s $fctarg $fclat
-
-      echo " "                                  >> $log
-      echo "Linking latest forecast file..."    >> $log
-      echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+      linkloc=`readlink $fclat`
+      echo "New link location : $linkloc"
+      echo " "
+   else
+      echo " "
+      echo "Link location     : $linkloc"
+      echo "Latest forecast   : $fctarg"
+      echo "Link already points to latest forecast"
+      echo " "
    fi
+
+   # if [ -z "`diff $fclat $fctarg`" ]
+   # then
+   #    # update the link to the latest forecast file
+   #    # - parameters (hs etc)
+   #    rm -f $fclat
+   #    ln -s $fctarg $fclat
+
+   #    echo " "                                  >> $log
+   #    echo "Linking latest forecast file..."    >> $log
+   #    echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+   # fi
 
 else
 
@@ -140,17 +161,39 @@ then
    # - ef type
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K_ef.fc.latest.nc
    fctarg=$ddir3/$dfil3
-   if [ -z "`diff $fclat $fctarg`" ]
-   then
-      # update the link to the latest forecast file
-      # - parameters (hs etc)
-      rm -f $fclat
-      ln -s $fctarg $fclat
+   linkloc=`readlink $fclat`
 
-      echo " "                                  >> $log
-      echo "Linking latest (EF) forecast file..."    >> $log
-      echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+   if [ ! $linkloc == $fctarg ]
+   then
+      echo " "
+      echo "Link location     : $linkloc"
+      echo "Latest forecast   : $fctarg"
+      echo "Setting new link..."
+      echo ln -s $fctarg $fclat
+      rm $fclat
+      ln -s $fctarg $fclat
+      linkloc=`readlink $fclat`
+      echo "New link location : $linkloc"
+      echo " "
+   else
+      echo " "
+      echo "Link location     : $linkloc"
+      echo "Latest forecast   : $fctarg"
+      echo "Link already points to latest forecast"
+      echo " "
    fi
+
+   # if [ -z "`diff $fclat $fctarg`" ]
+   # then
+   #    # update the link to the latest forecast file
+   #    # - parameters (hs etc)
+   #    rm -f $fclat
+   #    ln -s $fctarg $fclat
+
+   #    echo " "                                  >> $log
+   #    echo "Linking latest (EF) forecast file..."    >> $log
+   #    echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
+   # fi
 
 else
 
