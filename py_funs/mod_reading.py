@@ -5,24 +5,32 @@ from netCDF4 import Dataset as ncopen
 ##########################################################
 class plot_object:
 
-   def __init__(self,fig=None,ax=None,cbar=None):
+   def __init__(self,fig=None,ax=None,cbar=None,axpos=None):
 
       if fig is None:
          from matplotlib import pyplot as plt
-         fig   = plt.figure()
+         self.fig   = plt.figure()
+      else:
+         self.fig   = fig
 
       if ax is None:
-         ax = fig.add_subplot(1,1,1)
+         self.ax = self.fig.add_subplot(1,1,1)
+      else:
+         self.ax  = ax
 
-      self.fig    = fig
-      self.ax     = ax
       self.cbar   = cbar
+      self.axpos  = axpos
 
       return
 
    def get(self):
       return self.fig,self.ax,self.cbar
 
+   def renew(self,axpos=None):
+      
+      pobj  = plot_object(fig=self.fig,ax=self.ax,cbar=self.cbar,axpos=axpos)
+
+      return pobj
 ##########################################################
 
 ##########################################################
@@ -543,10 +551,18 @@ class nc_getinfo:
             else:
                cbar  = fig.colorbar(PC,cax=cbar.ax)
 
-            pobj  = plot_object(fig=fig,ax=ax,cbar=cbar)
+            pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
             if clabel is not None:
                cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
       ################################################################## 
+
+
+      ################################################################## 
+      if pobj.axpos is not None:
+         # try to make sure axes don't move round
+         pobj.ax.set_position(pobj.axpos)
+      ################################################################## 
+
 
       ################################################################## 
       # quiver plot
@@ -589,17 +605,20 @@ class nc_getinfo:
 
       new_fig  = (pobj is None)
       if new_fig:
-         pobj        = plot_object()
+         pobj  = plot_object()
 
       pobj,bmap   = self.plot_var(var_opts,pobj=pobj,bmap=bmap,time_index=time_index,**kwargs)
-      fig,ax,cbar = pobj.get()
 
       dtmo     = self.datetimes[time_index]
       datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
 
       if date_label:
          tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-         ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+         pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+
+      if pobj.axpos is not None:
+         # try to make sure axes don't move round
+         pobj.ax.set_position(pobj.axpos)
 
       vname    = var_opts.name
       Fname    = vname
@@ -645,12 +664,12 @@ class nc_getinfo:
       figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
 
       print('Saving to '+figname) 
-      fig.savefig(figname)
+      pobj.fig.savefig(figname)
 
       if new_fig:
-         ax.cla()
-         fig.clear()
-         plt.close(fig)
+         pobj.ax.cla()
+         pobj.fig.clear()
+         plt.close(pobj.fig)
 
       return pobj,bmap
    ###########################################################
@@ -770,6 +789,10 @@ class nc_getinfo:
          pobj,bmap   = self.make_png_pair(var_opts1,var_opts2,\
                         pobj=pobj,bmap=bmap,time_index=i,\
                         figdir=figdir,show=False,**kwargs)
+
+         if i==0:
+            # Fix axes position to stop it moving round
+            pobj  = pobj.renew(axpos=pobj.ax.get_position())
 
          ax.cla()
          if pobj.cbar is not None:
