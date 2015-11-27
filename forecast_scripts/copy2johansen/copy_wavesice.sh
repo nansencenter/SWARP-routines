@@ -105,7 +105,7 @@ do
    fi
 done
 
-if [ "$wrn_count" -gt 0 && $thour -gt $T1 ]
+if [ "$wrn_count" -gt 0 ] && [ $thour -gt $T1 ]
 then
    echo ""                          >> $cplog
    mail -s "WARNING - Johansen Missing <<$FCtype_hex>> Product(s)" $email < $cplog
