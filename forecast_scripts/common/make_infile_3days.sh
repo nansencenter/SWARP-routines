@@ -10,7 +10,7 @@
 
 # ===================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THIS_SRC=$1
+THIS_SRC=`readlink -f $1`
 source $THIS_SRC
 
 # other inputs

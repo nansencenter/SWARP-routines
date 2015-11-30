@@ -10,7 +10,7 @@
 
 # ===================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THIS_SRC=$1
+THIS_SRC=`readlink -f $1`
 source $THIS_SRC
 
 # other inputs
@@ -58,7 +58,7 @@ else
   echo "-------------------------------------------------------------------------"  >> $log 
   echo " make_infile_2days.sh ($reg)"                                               >> $log
   echo "-------------------------------------------------------------------------"  >> $log
-  file=${THISFC}/../common/inputs/infile.2days
+  file=$FCcommon/inputs/infile.2days
   
   if [ -f $file ]
   then
