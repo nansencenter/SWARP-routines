@@ -4,8 +4,10 @@
 # ==============================================================================
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
+THIS_SRC=$1
 source $SWARP_ROUTINES/source_files/hex_vars.src
-fget="$FORECAST/wavesice/wave_data/wamnsea_download.sh"
+source $THIS_SRC
+fget="$THISFC/wave_data/wamnsea_download.sh"
 
 # ==============================================================================
 # EMAIL 
@@ -65,7 +67,8 @@ echo ""                                                     >> $log
 # If latest fc isn't present continue with the script
 # else send a warning_log
 AN_DOWNLOADS=0
-for n in `seq 0 30`
+check_days=7
+for n in `seq 0 $check_days`
 do
    ddate=$(date --date="-$n days" +%Y%m%d) # download date
    dyear=${ddate:0:4}
@@ -128,74 +131,3 @@ then
 else
    echo "The file wam_nsea.an.$tday.nc exists - continue"   >> $log
 fi
-
-
-# don't do merging anymore
-exit
-
-# check year, save in correct year file
-
-# Use cdo functions to add last +1 day (.an. file)
-#  to "keep" file (wam_nsea_${tyear}.nc)
-# Remove and recreate forecast file (wam_nsea_fc_${year}.nc)
-#  that also include the +1 and +2 forecast days
-
-echo " Add data for this day (.an. file) at end of year file"     >> $log
-echo " Todays inputfile: wam_nsea.an.${tday}.nc"                  >> $log
-echo " Cat into year file: wam_nsea_${year}.nc"                   >> $log
-echo " Then rm wam_nsea_fc_${year}.nc and "                       >> $log
-echo " cdo copy wam_nsea_${year}.nc wam_nsea.fc.${tday}.nc "      >> $log
-echo " into new version of wam_nsea_fc_${year}.nc"                >> $log
-echo ""                                                           >> $log
-
-if [ $AN_DOWNLOADS -gt 0 ]
-then
-   # TODO change this in case any other new an files appear
-   $cdo cat analysis/wam_nsea.an.${tday}.nc $wamnsea/${year}/wam_nsea_${year}.nc
-fi
-
-if [ $FC_DOWNLOADS -eq 0 ]
-then
-   # no more to do
-   exit
-fi
-
-
-###############################################################################################
-# if there's a new fc file then continue to combine them
-echo "Remove forecast year file wam_nsea_fc_${year}.nc if exist"  >> $log
-echo ""                                                           >> $log
-if [ -f "$wamnsea/$year/wam_nsea_fc_${year}.nc" ]
- then
-  rm $wamnsea/$year/wam_nsea_fc_${year}.nc
-fi
-
-echo "Check for year today, today +1, today +2"                   >> $log
-if [ $year -eq $year1d -a $year -eq $year2d ]
- then
-  echo "Same year all 3 days"                                     >> $log # merge fc in the file of the year
-  $cdo copy wam_nsea_${year}.nc $wamnsea/$year/forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_${year}.nc
-elif [ $year -eq $year1d -a $yearplus1 -eq $year2d ]
- then
-  echo "Same year today and today +1 - new year today +2"         >> $log # split the fc file, day+1 in this year, day+2 in the next year
-  $cdo copy wam_nsea_${year}.nc wam_nsea_fc_${year}.nc
-  $cdo splityear forecasts/wam_nsea.fc.${tday}.nc wam_nsea_fc_split_
-  $cdo cat wam_nsea_fc_split_${year}.nc wam_nsea_fc_${year}.nc
-  $cdo cat wam_nsea_fc_split_${yearplus1}.nc $wamnsea/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
-  rm wam_nsea_fc_split_*
-  echo ""                                                         >> $log
-  echo "NEW YEAR IS A MAGICAL TIME FOR BUGS! BE CAREFUL!"  >> $log
-  mail -s "WAMNSEA UPDATE - 2 day to new year" $email < $log
-elif [ $yearplus1 -eq $year1d -a  $yearplus1 -eq $year2d ]
- then
-  echo "New year today +1 and today +2"                           >> $log # the whole fc file is in the next year
-  $cdo copy forecasts/wam_nsea.fc.${tday}.nc $wamnsea/${yearplus1}/wam_nsea_fc_${yearplus1}.nc
-  echo "Happy new year user - remember to check if the next upload is correct"   >> $log
-  echo "NEW YEAR IS A SUPER MAGICAL TIME FOR BUGS! BE EXTRA CAREFUL!"            >> $log
-  mail -s "WAMNSEA UPDATE - 1 day to new year" $email < $log
-else
-  echo " !!WARNING!! "                                                              >> $log
-  echo " Check ~/SWARP-routines/forecast_scripts/wamnsea_update.sh"                 >> $log
-  mail -s "WAMNSEA merging didn't work for $tday" $email < $log  
-fi
-###############################################################################################

@@ -3,7 +3,11 @@
 # get other variables
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-if [ $# -eq 1 ]
+THIS_SRC=$1
+source $SWARP_ROUTINES/source_files/hex_vars.src
+source $THIS_SRC
+
+if [ $# -eq 2 ]
 then
    rerun=1
 else
@@ -11,12 +15,12 @@ else
 fi
 
 tday=`date +%Y%m%d`
-dd=$TP4_REALTIME/../check_wamnsea/$tday
+dd=$RTmods/check_wamnsea/$tday
 if [ -d $dd ]
 then
-   if [ $rerun -eq 1  ]
+   if [ $rerun -eq 1 ]
    then
-      echo Script has already run today...
+      echo "Script has already run today..."
       echo "...re-running"
    else
       # echo Script has already run today...
@@ -36,4 +40,5 @@ fi
 # load python and launch check_wamnsea.py
 [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
 module load python/2.7.9-dso
-$python $FORECAST/wavesice/wave_data/check_wamnsea.py
+opts="--outdir=$RTmods/check_wamnsea --subdir=$THISFC/wave_data"
+$python $THISFC/wave_data/check_wamnsea.py $opts

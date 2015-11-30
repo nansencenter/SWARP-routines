@@ -6,8 +6,10 @@ import sys,os
 import numpy as np
 import time
 from datetime import date, timedelta
+from getopt import getopt
 
 ############################################################################
+print_info  = 1
 WANT2SHOW   = 0 # show the figure - make sure you don't use this if you need to run inside crontab
 if not WANT2SHOW:
    # don't need to show figure
@@ -45,20 +47,26 @@ cyear = tday.strftime('%Y')
 pday  = yday.strftime('%Y%m%d')
 pday2 = yday2.strftime('%Y%m%d')
 
-# odir  = 'out' # where to put temporary outputs
-# if not os.path.exists(odir):
+# ==============================================================
+outdir      = None
+subdir      = None
+opts,args   = getopt(sys.argv[1:],"",["subdir=","outdir="])
+for opt,arg in opts:
+   if opt=='--subdir':
+      subdir   = arg
+   if opt=='--outdir':
+      outdir   = arg
 
-# not in forecast_scripts directory, go to work_py
-# odir  = '/work/timill/work_py/out' # where to put temporary outputs
-odir  = '/work/timill/RealTime_Models/check_wamnsea/'+cday # where to put outputs
+if outdir is None:
+   raise ValueError('specify "outdir" input (--outdir=)')
+if subdir is None:
+   raise ValueError('specify "subdir" input (--subdir=)')
+# ==============================================================
+
+odir  = outdir+'/'+cday # where to put outputs
 if not os.path.exists(odir):
    os.mkdir(odir)
 
-#print 'Select the contour method:   '
-#print 'Type 0 for basemap contour package'
-#print 'Type 1 for Threshold method'
-#chc = raw_input()
-chc = '1'
 
 ############################################################################
 def finish_map(bm):
@@ -77,6 +85,7 @@ def finish_map(bm):
    return
 ############################################################################
 
+
 ############################################################################
 def dist_cont2cont(xice,yice,xwav,ywav,bm):
   n1 = len(xice)
@@ -94,12 +103,14 @@ def dist_cont2cont(xice,yice,xwav,ywav,bm):
   return dist,lon,lat
 ############################################################################
 
+
 ############################################################################
 def binary_cont(data,thresh):
    Z              = np.zeros(data.shape,dtype=int)
    Z[Z>=thresh]   = 1
    return Z
 ############################################################################
+
 
 ############################################################################
 def binary_diff(data,thresh1,thresh2):
@@ -112,6 +123,7 @@ def binary_diff(data,thresh1,thresh2):
    D = Z2 - Z1
    return D,Z1,Z2
 ############################################################################
+
 
 ############################################################################
 def Hs_filter():
@@ -172,16 +184,17 @@ bm = Basemap(width=2*xmax,height=2*ymax,\
 #	yday2 = '2015-07-05'
 wmsc = '/work/shared/nersc/msc/WAMNSEA/'+ cyear + '/forecasts/'
 ncfil = wmsc + 'wam_nsea.fc.' + cday + '.nc' # should be determined from today's date use "fc"
-#	ncfil = 'wam_nsea.fc.'+cday+'.nc'
-print('WAMNSEA file = ' + ncfil+'\n')
+if print_info:
+   print('WAMNSEA file = ' + ncfil+'\n')
 	
 # get info about nc file
 nci      = Mrdg.nc_getinfo(ncfil)
 times    = nci.timevalues # hours from 1st time in file
 Ntimes   = len(times)
-print('Time values (h):')
-print(times)
-print(' ')
+if print_info:
+   print('Time values (h):')
+   print(times)
+   print(' ')
 	
 # get lon/lat and restrict to relevant area
 sswh     = 'significant_wave_height'
@@ -200,9 +213,10 @@ ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday + '1200.nc'
 # use day before yesterday's conc if yesterday's not present
 if not os.path.exists(ncfil2):
    ncfil2 = osisaf + '/ice_conc_nh_polstere-100_multi_' + pday2 + '1200.nc'
-   # ncfil2 = 'ice_conc_nh_polstere-100_multi_201507061200.nc'
 
-print('OSISAF file = '+ncfil2+'\n')
+if print_info:
+   print('OSISAF file = '+ncfil2+'\n')
+
 cconc       = 'ice_conc'
 edge_level  = 15
 nci2        = Mrdg.nc_getinfo(ncfil2)
@@ -243,9 +257,10 @@ for loop_i in check_list:
       # Plotting waves
       f  = plt.figure()
       bm.pcolor(X,Y,Z,vmin=Zmin,vmax=Zmax)
-      print('Range in '+sswh+' (m):') 
-      print(Zmin,Zmax)
-      print(' ')
+      if print_info:
+         print('Range in '+sswh+' (m):') 
+         print(Zmin,Zmax)
+         print(' ')
       
       cb = plt.colorbar()
       cb.set_label('SWH [m]',rotation=270)
@@ -367,7 +382,8 @@ for loop_i in check_list:
          sym_skip = [] # skip some symbols (plots can get crowded)
          # sym_skip = ['*'] # skip some symbols (plots can get crowded)
          if nout==0:
-            print('No large waves close to ice\n')
+            if print_info:
+               print('No large waves close to ice\n')
          else:
             for mm in range(nout):
                dist_list                  = 1*out_list[mm]
@@ -379,7 +395,8 @@ for loop_i in check_list:
                for Hsc in  thrdic.keys():
                   if Hs >= Hsc and dist <= thrdic[Hsc]:
                      if symdic[Hsc][0] not in sym_skip:
-                        print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
+                        if print_info:
+                           print('Adding test point ('+str(lon_plot)+'E,'+str(lat_plot)+'N)\n')
                         bm.plot(lon_plot,lat_plot,symdic[Hsc],markersize=ms_dic[Hsc],latlon=True)
       ##########################################################################################
 
@@ -389,14 +406,18 @@ for loop_i in check_list:
          # - to check if SAR image is ordered in the right place
          # - get initial estimate from ncview (use OSISAF file not wamnsea - lon/lat are weird in those files),
          #   then use trial and error
-         print('Adding manual points to plot:')
+         if print_info:
+            print('Adding manual points to plot:')
 
          # man_list = [[40.,82.5]] # list of lon/lat points
          man_list = [[-14.3441390735,73.8990696413]]
          for lonm,latm in man_list:
-            print('('+str(lonm)+' E, '+str(latm)+' N)')
+            if print_info:
+               print('('+str(lonm)+' E, '+str(latm)+' N)')
             bm.plot(lonm,latm,'^g',markersize=7,latlon=True)
-         print('\n')
+
+         if print_info:
+            print('\n')
       ##########################################################################################
 
       finish_map(bm)
@@ -408,8 +429,10 @@ for loop_i in check_list:
       figname  = odir+'/img/'+fnday+'.png'
       if not os.path.exists(odir+'/img'):
          os.mkdir(odir+'/img')
-      print('saving figure:')
-      print(figname+'\n')
+
+      if print_info:
+         print('saving figure:')
+         print(figname+'\n')
       plt.savefig(figname)
 
       if WANT2SHOW:
@@ -440,7 +463,9 @@ for loop_i in check_list:
          for ii in ordr:
             line  = line+blk+hdr[ii]
          tf.write(line+'\n')
-         print(line)
+
+         if print_info:
+            print(line)
          
          thrdic   = Hs_filter()[0]
          for mm in range(nout):
@@ -454,7 +479,8 @@ for loop_i in check_list:
                # just print everything
                for ii in ordr:
                   line  = line+blk+str(dist_list[ii])
-               print(line)
+               if print_info:
+                  print(line)
                tf.write(line+'\n')
             else:
                # filter some out, depending on wave height and distance to ice edge
@@ -462,7 +488,8 @@ for loop_i in check_list:
                   if Hs >= Hsc and dist <= thrdic[Hsc]:
                      for ii in ordr:
                         line  = line+blk+str(dist_list[ii])
-                     print(line)
+                     if print_info:
+                        print(line)
                      tf.write(line+'\n')
 
          tf.close()
@@ -471,15 +498,14 @@ for loop_i in check_list:
 
 ################################################################
 # EMAIL SYSTEM
-awdir = SR+'/forecast_scripts/wavesice/wave_data'
 if SEND_EMAIL and (SEND_EMAIL2 or SEND_EMAIL3):
    import subprocess
    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
    subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
-   subprocess.check_call([awdir+'/waves_alert.sh', cday])
+   subprocess.check_call([subdir+'/waves_alert.sh', cday])
 elif SEND_EMAIL:
    import subprocess
    # just send pic
    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-   subprocess.check_call([awdir+'/waves_pic.sh', cday])
+   subprocess.check_call([subdir+'/waves_pic.sh', cday])
 ################################################################

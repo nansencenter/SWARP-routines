@@ -18,7 +18,7 @@ email=$(cat $FCemail)
 #######################################################################################################
 
 # wdir=$SWARP_ROUTINES/forecast_scripts/alert_waves/out
-wdir=/work/timill/RealTime_Models/check_wamnsea/$1
+wdir=$RTmods/check_wamnsea/$1
 echo "waves_pic.sh called by check_wamnsea.py:" >  tmp.txt
 echo " "                                        >> tmp.txt
 echo "No large waves close to ice"              >> tmp.txt

@@ -8,26 +8,37 @@
 # get variables
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice
+
+if [ $# -lt 1 ]
+then
+   echo "Usage: $0 <<FCtype>>"
+   echo "FCtype = ice_only, wavesice, wavesice_arctic"
+   exit
+else
+   FCtype=$1
+fi
+
+rungen=${HYCOMreg:0:3}
+
+THISFC=$SWARP_ROUTINES/forecast_scripts/$FCtype
 THIS_SRC=$THISFC/inputs/THISFC.src
 source $THIS_SRC
-xdir=$TP4_REALTIME/expt_01.$Xno
+xdir=$RTmods/$HYCOMreg/expt_01.$Xno
 restart_OPT=$TP4restart_OPT
 
 print_info=0 # print info to screen (or email in crontab)
 test_pre=0
 
-
 ## ===========================================================
 # Initial check before run
 # (do this before datelist.txt is changed)
 # 1. check if forecast is already running
-msg=`$qstat | grep TP4x01${Xno}fc`
+msg=`$qstat | grep ${rungen}x01${Xno}fc`
 if [ ${#msg} -ne 0 ]
 then
    if [ $print_info -eq 1 ]
    then
-      echo "Waves-ice (WAM) FC is already running - stopping"
+      echo "$FCtype_long is already running - stopping"
       echo "pbs job message:"
       echo $msg
    fi
@@ -53,12 +64,6 @@ then
    echo ""
 fi
 
-# ================================================================================================
-# FORECAST DAYS
-fc_days=2
-final_hour="12"   # finishes at this hour on the final day
-# ================================================================================================
-
 
 # CREATING THE LOG
 logdir=$THISFC/logs
@@ -68,6 +73,7 @@ if [ -f "$log" ]
 then
    rm $log
 fi
+
 
 #=======================================================================
 # DATE INFO - TODAY
@@ -121,14 +127,13 @@ then
    # ======================================================================
    # DATE INFO - YESTERDAY 
    # - need to get restart for yesterday
-   rgen="TP4"
    rdate=$(date --date="$cday -1day" +%Y%m%d)
    ryear=$(date --date=$rdate +%Y)
    rwday=$(date --date=$rdate +%A)
    rday_j=$(date --date=$rdate +%j)
-   rday=$((rday_j-1))
-   rdir=$TP4_REALTIME/expt_01.1/data
-   rname=${rgen}restart${ryear}_${rday}_00
+   rday=$((rday_j-1))                        # 1 Jan = day 0
+   rdir=$RTmods/$HYCOMreg/expt_01.1/data
+   rname=${rungen}restart${ryear}_${rday}_00
    if [ $rwday == 'Monday' ]
    then
       # yesterday's restart file is topaz reanalysis file
@@ -148,18 +153,30 @@ then
    then
       if [ $print_info -eq 1 ]
       then
-         echo "Waves-ice (WAM) FC has already run - stopping"
+         echo "$FCtype_long has already run - stopping"
       fi
       exit
    fi
 
-   # 3. check if waves FC is there
-   fc_fil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
-   if [ ! -f $fc_fil ]
+   # 3. check if waves FC file is there
+   do_check=0
+   if [ $FCtype == "wavesice" ]
+   then
+      fc_fil=$wamnsea/$cyear/forecasts/wam_nsea.fc.$cday.nc
+      do_check=1
+   elif [ $FCtype == "wavesice_ww3arctic" ]
+   then
+      yday=`date --date="$cday -1day" +%Y%m%d`
+      yyear=`date --date="$yday" +%Y`
+      fc_fil=$ww3_arctic/$yyear/forecast/SWARP_WW3_ARCTIC-12K_$yday.fc.nc
+      do_check=1
+   fi
+
+   if [ ! -f $fc_fil ] && [ $do_check -eq 1 ]
    then
       if [ $print_info -eq 1 ]
       then
-         echo "WAM input FC file is not yet present - stopping"
+         echo "$FCtype_long file is not yet present - stopping"
          echo $fc_fil
          date
       fi
@@ -168,8 +185,8 @@ then
 
    if [ $restart_OPT -eq 2 ]
    then
-      # 4. check if ice-only forecast is still running
-      if [ ! -f $rundir/../ice_only/final_output/SWARP*.nc ]
+      # 4. check if ice-only forecast has run
+      if [ ! -f $RTres/ice_only/final_output/SWARP*.nc ]
       then
          if [ $print_info -eq 1 ]
          then
@@ -193,7 +210,6 @@ then
    cd $rundir  # just in case we've changed dir in script
    out_restart=info/last_restart.txt
    rname=$(cat $out_restart)
-   rgen=${rname:0:3}    # eg TP4
    ryear=${rname:10:4}  # year of restart file
    rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
    rdate=`date --date="$ryear-01-01 +${rday}days" +%Y%m%d`
@@ -227,7 +243,7 @@ fi
 # =========================================================================
 # DATE INFO - LAST DAY OF FORECAST
 # $final_day=julian day relative to $ryear (NB 3 digits)
-fin_day=`date --date="$cday +${fc_days}days" "+%Y%m%d"`
+fin_day=`date --date="$cday +${FCdays}days" "+%Y%m%d"`
 fin_year=$(date --date=$fin_day +%Y)
 fin_day_j=$(date --date=$fin_day +%j)
 fin_day_j0=$((fin_day_j-1))
@@ -248,12 +264,12 @@ echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
 echo "Restart date   : $rdate"
 echo "Current date   : $cday"
 echo "Final date     : $fin_day"
-echo "Final hour     : $final_hour"
+echo "Final hour     : $FCfinal_hour"
 echo "Restart files of $rname"
-echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$final_hour (${ryear}_${final_day}_$final_hour)"
+echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$FCfinal_hour (${ryear}_${final_day}_$FCfinal_hour)"
 
-echo "$FCcommon/make_infile_2days.sh $THIS_SRC $rgen $ryear $rday $final_day $final_hour"
-$FCcommon/make_infile_2days.sh       $THIS_SRC $rgen $ryear $rday $final_day $final_hour
+echo "$FCcommon/make_infile_2days.sh $THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour"
+$FCcommon/make_infile_2days.sh       $THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour
 
 infile=$xdir/infile.in
 if [ $print_info -eq 1 ]
@@ -271,7 +287,7 @@ cp $infile $rundir/info
 #################################################################
 # Get other inputs
 
-# Don't want to save archive files (TP4archv*.[ab])
+# Don't want to save archive files (${rungen}archv*.[ab])
 cp $THISFC/inputs/blkdat.input   $xdir
 cp $THISFC/inputs/pbsjob.sh      $xdir
 cp $THISFC/inputs/preprocess.sh  $xdir
@@ -291,8 +307,8 @@ fi
 
 #################################################################
 # clean data directory before run
-rm -f $xdir/data/TP4DAILY*
-rm -f $xdir/data/TP4archv*
+rm -f $xdir/data/${rungen}DAILY*
+rm -f $xdir/data/${rungen}archv*
 
 # clean log file - else mpijob.out gets too big
 rm -f $xdir/log/*

@@ -75,19 +75,25 @@ cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 #     /home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/process_FCresults.sh
 # 2 - run waves-in-ice (WAM) PP:
 # 3 - run waves-in-ice (WW3) PP:
-SWARP_PP=2
+$SWARP_PP=0
 if [ $SWARP_PP -eq 1 ]
 then
-   # SWARP post-processing - ice only version
-   $SWARP_ROUTINES/forecast_scripts/ice_only/post/process_FCresults.sh
-elif [ $SWARP_PP -eq 2 ]
-then
-   # SWARP post-processing - waves version (WAM)
-   $SWARP_ROUTINES/forecast_scripts/wavesice/post/process_FCresults_wav.sh
-elif [ $SWARP_PP -eq 3 ]
-then
-   # SWARP post-processing - waves version (WW3)
-   $SWARP_ROUTINES/forecast_scripts/wavesice_ww3arctic/post/process_FCresults_ww3a.sh
+
+   if [ $E == "011" ]
+   then
+      FCtype="ice_only"
+   elif [ $E == "012" ]
+   then
+      FCtype="wavesice"
+   elif [ $E == "013" ]
+   then
+      FCtype="wavesice_ww3arctic"
+   fi
+
+   FCDIR="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$R"
+   THIS_SRC=$FCDIR/$FCtype/inputs/THISFC.src
+   $FCDIR/common/post/process_FCresults.sh $THIS_SRC
+
 fi
 
 exit $?

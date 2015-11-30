@@ -17,7 +17,7 @@ fi
 email=$(cat $FCemail)
 #######################################################################################################
 
-wdir=/work/timill/RealTime_Models/check_wamnsea/$1
+wdir=$RTmods/check_wamnsea/$1
 echo "waves_alert.sh called by check_wamnsea.py:"  >  tmp.txt
 echo " "                                           >> tmp.txt
 cat $wdir/lst/*.txt                                >> tmp.txt
