@@ -6,7 +6,9 @@
 # ==============================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
 fget="$FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_download.sh"
+fsort="$FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_sort.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
+cycle=2 # get 05:20 update from ifremer server
 
 # ==============================================================================
 # EMAIL 
@@ -75,7 +77,10 @@ do
          dfirst=0
       fi
       echo "Downloading WW3 Arctic files for $ddate"  >> $log
-      $fget $ddate 2
+      $fget    $ddate $cycle
+
+      echo "Sorting WW3 Arctic files for $ddate"  >> $log
+      $fsort   $ddate $cycle
       DLS=$((DLS+1))
    # else
    #    echo "WW3 Arctic files present for $ddate"      >> $log
@@ -126,18 +131,6 @@ then
       echo " "
    fi
 
-   # if [ -z "`diff $fclat $fctarg`" ]
-   # then
-   #    # update the link to the latest forecast file
-   #    # - parameters (hs etc)
-   #    rm -f $fclat
-   #    ln -s $fctarg $fclat
-
-   #    echo " "                                  >> $log
-   #    echo "Linking latest forecast file..."    >> $log
-   #    echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
-   # fi
-
 else
 
    if [ $time_now -gt $timeout_warning ]
@@ -182,18 +175,6 @@ then
       echo "Link already points to latest forecast"
       echo " "
    fi
-
-   # if [ -z "`diff $fclat $fctarg`" ]
-   # then
-   #    # update the link to the latest forecast file
-   #    # - parameters (hs etc)
-   #    rm -f $fclat
-   #    ln -s $fctarg $fclat
-
-   #    echo " "                                  >> $log
-   #    echo "Linking latest (EF) forecast file..."    >> $log
-   #    echo "ln -s $ddir2/$dfil2 $fclat"         >> $log
-   # fi
 
 else
 

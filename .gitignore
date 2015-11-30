@@ -20,8 +20,11 @@ forecast_scripts/test_check/*
 forecast_scripts/out/*
 forecast_scripts/ice_only/logs/
 forecast_scripts/wavesice/logs/
+forecast_scripts/nested_models/wavesice_BS1/logs/
+forecast_scripts/nested_models/wavesice_FR1/logs/
 forecast_scripts/wavesice_ww3arctic/logs/
 forecast_scripts/common/logs/
+crontabs/crontab_dump
 #
 python_tutorial/out
 python_tutorial/eg_TP4files
@@ -36,3 +39,5 @@ validation/ice_charts/test_inputs2/*
 validation/data/*
 validation/outputs/*
 validation/Manual_MIZ_Maps/out/*
+#
+giacomo_stuff/jiping/tmp/*
