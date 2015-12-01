@@ -10,6 +10,16 @@
 SWARP_ROUTINES="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines"
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"
 VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
+#
+FCcommon="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/common/"
+wamfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice"
+wamfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice/inputs/THISFC.src"
+ww3fc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic"
+ww3fc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic/inputs/THISFC.src"
+IOfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/ice_only"
+IOfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/ice_only/inputs/THISFC.src"
+
+#full paths to needed applications
 qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
 python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"
@@ -18,39 +28,39 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # ===================================================================
 # TP4 restarts less urgent
-20 15 * * * $FORECAST/common/topaz_archive_restart.sh
+20 15 * * * $FORECAST/ModelSetups/common/pre/topaz_archive_restart.sh
 
 # run ice_only forecast as early as possible
 # (wind FC arrives just before 2400 previous day)
-10 * * * * $FORECAST/ice_only/run_forecast.sh
+10 * * * * $FCcommon/run_forecast.sh $IOfc_src
 # ===================================================================
 
 
 # ===================================================================
 # get wamnsea waves as early as possible
 # NOTE the wamnsea products are usually uploaded just after 4 am
-00 * * * * $FORECAST/wavesice/wave_data/wamnsea_update.sh
+00 * * * * $wamfc/wave_data/wamnsea_update.sh $wamfc_src
 
 # run check_wamsea.py (alert if big waves near ice)
-10 ** * * * $FORECAST/wavesice/wave_data/check_wamnsea.sh
+10 * * * * $wamfc/wave_data/check_wamnsea.sh $wamfc_src
 
-# run wavesice forecast
+# run wavesice (WAM) forecast
 # internal check for ice_only restart and WAMNSEA product
-10 * * * * $FORECAST/wavesice/run_forecast_wav.sh
+10 * * * * $FCcommon/run_forecast.sh $wamfc_src
 # ===================================================================
 
 
 # ===================================================================
 # download WW3 Arctic waves
 # NB products updated 0520
-30 * * * * $FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_update.sh
+30 * * * * $ww3fc/wave_data/ww3_arctic_update.sh
 
 # run check_ww3arctic.py (alert if big waves near ice)
-00 * * * * $FORECAST/wavesice_ww3arctic/wave_data/check_ww3arctic.sh
+00 * * * * $ww3fc/wave_data/check_ww3arctic.sh
 
-# run wavesice forecast
+# run wavesice (WW3) forecast
 # internal check for ice_only restart and WW3_ARCTIC product
-50 * * * * $FORECAST/wavesice_ww3arctic/run_forecast_ww3a.sh
+30 * * * * $FCcommon/run_forecast.sh $ww3fc_src
 # ===================================================================
 
 

@@ -9,7 +9,7 @@
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-print_info=1 # print info to screen (or email in crontab)
+print_info=0 # print info to screen (or email in crontab)
 test_pre=0
 
 if [ $# -lt 1 ]
@@ -197,7 +197,7 @@ then
       exit
    fi
 
-   if [ $restart_OPT -eq 2 ]
+   if [ $restart_OPT -eq 2 ] && [ ! $FCtype == "ice_only" ]
    then
       # 4. check if ice-only forecast has run
       if [ ! -f $RTres/ice_only/final_output/SWARP*.nc ]
@@ -279,7 +279,6 @@ fi
 
 #################################################################
 # MAKE INFILE 
-echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
 
 # print to screen
 echo "Restart date   : $rdate"
@@ -291,10 +290,12 @@ echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$FCfinal_hour
 
 if [ $FCtype == "ice_only" ] && [ $TP4restart_OPT -eq 2 ] && [ $day2 -ne $rday ]
 then
+   echo "Launching make_infile_3days.sh @ $(date)"                  >> $log
    inputs="$THIS_SRC $rungen $ryear $rday $day2 $final_day $FCfinal_hour $nesting_outer $nesting_inner"
    echo "$FCcommon/make_infile_3days.sh $inputs"
    $FCcommon/pre/make_infile_3days.sh $inputs
 else
+   echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
    inputs="$THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour $nesting_outer $nesting_inner"
    echo "$FCcommon/make_infile_2days.sh $inputs"
    $FCcommon/pre/make_infile_2days.sh $inputs
