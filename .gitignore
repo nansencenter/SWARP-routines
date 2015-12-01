@@ -21,12 +21,12 @@ forecast_scripts/out/*
 forecast_scripts/ice_only/logs/
 #
 forecast_scripts/ModelSetups/TP4a0.12/ice_only/logs/
+forecast_scripts/ModelSetups/BS1a0.045/ice_only/logs/
+forecast_scripts/ModelSetups/FR1a0.03/ice_only/logs/
+#
 forecast_scripts/ModelSetups/TP4a0.12/wavesice/logs/
 forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic/logs/
 #
-forecast_scripts/nested_models/wavesice_BS1/logs/
-forecast_scripts/nested_models/wavesice_FR1/logs/
-forecast_scripts/wavesice_ww3arctic/logs/
 forecast_scripts/ModelSetups/common/logs/
 crontabs/crontab_dump
 #
