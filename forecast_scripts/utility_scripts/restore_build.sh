@@ -8,12 +8,23 @@ then
    echo "where Xno = 1 (ice_only), 2 (waves-in-ice - WAM), 3 (waves-in-ice - WW3)"
    exit
 else
-   X=01.$1
+   Xno=$1
 fi
 
 echo " "
+X=01.$Xno
+R=TP4a0.12
 cd $TP4_REALTIME/Build_V2.2.12_X$X
 pwd
+
+
+echo " "
+echo Changing REGION.src
+file=REGION.src
+cat ../bak/$file | sed \
+-e "s/NATa1.00/$R/g" \
+> ../$file
+
 
 if [ ! -f ../expt_$X/blkdat.input ]
 then
@@ -41,3 +52,17 @@ fi
 echo "cp $THISFC/inputs/flags ."
 echo " "
 cp $THISFC/inputs/flags .
+
+echo " "
+
+if [ $Xno -eq 1 ]
+then
+   # set up nesting
+   cd ..
+   ndir=nest_nersc/011/outer
+   nsh=nest_nersc/bin/nest_outer.sh
+   rm -f $ndir/SCRATCH/*
+   $nsh $X $BS1_REALTIME 01.0 # BS1
+   rm -f $ndir/SCRATCH/*
+   $nsh $X $FR1_REALTIME 01.0 # FR1
+fi

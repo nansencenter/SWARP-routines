@@ -1,0 +1,21 @@
+
+ ---------------------------------
+
+Restart name: 
+Looking for: /work/timill/RealTime_Models/TP4a0.12/expt_01.3/data/
+Daily restarts NOT found, check ice_only run
+
+
+ ---------------------------------
+
+Restart name: 
+Looking for: /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/
+Daily restarts NOT found, check ice_only run
+
+
+ ---------------------------------
+
+Restart name: 
+Looking for: /work/timill/RealTime_Models/TP4a0.12/expt_01.2/data/
+Daily restarts NOT found, check ice_only run
+

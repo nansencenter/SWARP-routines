@@ -11,6 +11,7 @@ else
    X=01.$1
    E=01$1
 fi
+R=TP4a0.12
 
 echo " "
 cd $TP4_REALTIME/expt_$X
@@ -24,8 +25,9 @@ do
       cp $f .
    fi
 done
-echo " "
 
+
+echo " "
 echo Changing EXPT.src...
 file=EXPT.src
 cat bak/$file | sed \
@@ -34,9 +36,9 @@ cat bak/$file | sed \
 > $file
 echo " "
 
+
 echo Changing blkdat.input...
 file=blkdat.input
 cat bak/$file | sed \
 -e "s/010/$E/g" \
 > $file
-echo " "

@@ -3,6 +3,37 @@ from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
 
 ##########################################################
+class plot_object:
+
+   def __init__(self,fig=None,ax=None,cbar=None,axpos=None):
+
+      if fig is None:
+         from matplotlib import pyplot as plt
+         self.fig   = plt.figure()
+      else:
+         self.fig   = fig
+
+      if ax is None:
+         self.ax = self.fig.add_subplot(1,1,1)
+      else:
+         self.ax  = ax
+
+      self.cbar   = cbar
+      self.axpos  = axpos
+
+      return
+
+   def get(self):
+      return self.fig,self.ax,self.cbar
+
+   def renew(self,axpos=None):
+      
+      pobj  = plot_object(fig=self.fig,ax=self.ax,cbar=self.cbar,axpos=axpos)
+
+      return pobj
+##########################################################
+
+##########################################################
 class proj_obj:
    # projection info in this object
    def __init__(self,att_names,att_vals=None):
@@ -16,6 +47,41 @@ class proj_obj:
             setattr(self,att_names[n],0)
       return
 ##########################################################
+
+
+###########################################################
+class make_plot_options:
+
+   def __init__(self,vname,vec_opt=0,conv_fac=1,\
+      wave_mask=False,ice_mask=False,dir_from=True):
+
+      self.name      = vname
+      self.vec_opt   = vec_opt
+      self.conv_fac  = conv_fac
+      self.ice_mask  = ice_mask
+      self.wave_mask = wave_mask
+      self.dir_from  = dir_from
+
+      return
+###########################################################
+
+
+###########################################################
+def check_pair(var_opts1,var_opts2):
+   # ====================================================================
+   # check options
+   if var_opts1.vec_opt in [2,3,5]:
+      print('Variable : '+var_opts1.name)
+      print('vec_opt  : '+var_opts1.vec_opt)
+      raise ValueError('Invalid plot option for pcolor plot')
+
+   if var_opts2.vec_opt in [0,1,4]:
+      print('Variable : '+var_opts1.name)
+      print('vec_opt  : '+var_opts1.vec_opt)
+      raise ValueError('Invalid plot option for quiver plot')
+   # ====================================================================
+   return
+###########################################################
 
 ##########################################################
 def lonlat_names(ncfil):
@@ -79,7 +145,20 @@ class nc_getinfo:
    #####################################################
    def __init__(self,ncfil,time_index=None):
 
+      ##################################################
       self.filename  = ncfil
+      if ncfil[0]=='/':
+         self.basedir   = '/'
+      else:
+         import os
+         self.basedir   = os.getcwd()+'/'
+
+      ss = ncfil.split('/')
+      for i in range(len(ss)-1):
+         self.basedir   = self.basedir+'/'
+
+      self.basename  = ss[-1].strip('.nc')
+      ##################################################
 
       # added here manually
       # - TODO could possibly be determined
@@ -160,10 +239,11 @@ class nc_getinfo:
          self.timeunits  = time_info[0]
          self.timevalues = [time[i]-time[0] for i in range(Nt)]
 
-      if time_index is not None:
-         self.datatime   = self.timevalues[time_index]
-
       self.number_of_time_records = Nt
+      self.datetimes              = []
+      for tval in self.timevalues:
+         self.datetimes.append(self.timeval_to_datetime(tval))
+
 
       ########################################################
 
@@ -269,24 +349,52 @@ class nc_getinfo:
    ###########################################################
    def get_var(self,vname,time_index=None):
 
+      # conc can have multiple names
+      vlist    = self.variable_list
+      cnames   = ['fice','ficem','icec']
+      if vname in cnames:
+         for vi in cnames:
+            if vi in vlist:
+               vname = vi
+
+      # thcikness can have multiple names
+      hnames   = ['hice','hicem','icetk']
+      if vname in hnames:
+         for vi in hnames:
+            if vi in vlist:
+               vname = vi
+
       vbl   = nc_get_var(self.filename,vname,time_index=time_index)
 
       return vbl
    ###########################################################
 
+
    ###########################################################
-   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg=None,time_index=0,\
-         clim=None,show=True,test_lonlats=None):
+   def plot_var(self,var_opts,time_index=0,\
+         pobj=None,bmap=None,HYCOMreg='TP4',\
+         clim=None,add_cbar=True,clabel=None,show=True,\
+         test_lonlats=None):
 
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
 
-      if pobj is not None:
-         fig,ax   = pobj
-      else:
+      vname       = var_opts.name
+      vec_opt     = var_opts.vec_opt
+      conv_fac    = var_opts.conv_fac
+      ice_mask    = var_opts.ice_mask
+      wave_mask   = var_opts.wave_mask
+      dir_from    = var_opts.dir_from
+
+      if pobj is None:
          from matplotlib import pyplot as plt
-         fig   = plt.figure()
-         ax    = fig.add_subplot(1,1,1)
+         pobj  = plot_object()
+
+      fig,ax,cbar = pobj.get()
+
+      if bmap is None:
+         # make basemap
+         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
 
       if clim is not None:
          vmin,vmax   = clim
@@ -295,39 +403,404 @@ class nc_getinfo:
          vmax  = None
 
       lon,lat  = self.get_lonlat()
-      vbl      = nc_get_var(self.filename,vname,time_index=time_index)
+      vbl      = self.get_var(vname,time_index=time_index)
+      mask     = vbl.values.mask
 
-      if bmap is None:
-         # make basemap
-         if HYCOMreg is not None:
-            bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+      ################################################################## 
+      # add ice or wave masks
+      if ice_mask and wave_mask:
+         fice  = self.get_var('fice',time_index=time_index)
+         mask1 = 1-np.logical_and(1-mask,fice[:,:]>.01) #0 if finite,non-low conc
+         #
+         Hs    = self.get_var('swh',time_index=time_index)
+         mask2 = 1-np.logical_and(1-mask,Hs[:,:]>.01) #0 if finite,non-low waves
+         #
+         mask  = np.logical_or(mask1,mask2)
+
+      elif ice_mask:
+         fice  = self.get_var('fice',time_index=time_index)
+         mask  = 1-np.logical_and(1-mask,fice[:,:]>.01) #0 if finite,non-low conc
+
+      elif wave_mask:
+         Hs    = self.get_var('swh',time_index=time_index)
+         mask  = 1-np.logical_and(1-mask,Hs[:,:]>.01) #0 if finite,non-low waves
+      ################################################################## 
+
+
+      ################################################################## 
+      if vec_opt==0:
+
+         # just plot scalar
+         U     = None # no quiver plot
+         Marr  = vbl.values.data
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
+
+
+      elif vec_opt==1:
+
+         # plot vector magnitude
+         U  = None # no quiver plot
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2     = self.get_var(vname2,time_index=time_index)
+         Marr  = np.sqrt(vbl.values.data*vbl.values.data\
+                         +vbl2.values.data*vbl2.values.data)
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
+
+      elif vec_opt==2:
+
+         # plot vector magnitude + direction (unit vectors)
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2  = self.get_var(vname2,time_index=time_index)
+         U     = vbl.values.data
+         V     = vbl2.values.data
+
+         # speed
+         spd   = np.hypot(U,V)
+         Marr  = np.ma.array(conv_fac*spd,mask=mask) #masked array
+
+         # rotate vectors
+         U,V   = bmap.rotate_vector(U,V,lon,lat)
+
+         #unit vectors
+         U     = np.ma.array(U/spd,mask=mask)
+         V     = np.ma.array(V/spd,mask=mask)
+
+      elif vec_opt==3:
+
+         # plot vector direction only
+         # (no pcolor, but vector length is proportional to magnitude)
+         Marr  = None
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2  = self.get_var(vname2,time_index=time_index)
+         U     = conv_fac*vbl.values.data
+         V     = conv_fac*vbl2.values.data
+
+         # speed
+         spd   = np.hypot(U,V)
+         avg   = np.mean(np.ma.array(spd,mask=mask))
+         print('avg speed: '+str(avg))
+
+         # rotate vectors
+         U,V   = bmap.rotate_vector(U,V,lon,lat)
+
+         # scale by the average speed
+         # TODO: add key
+         U  = np.ma.array(U/avg,mask=mask)
+         V  = np.ma.array(V/avg,mask=mask)
+
+      elif vec_opt==4:
+
+         # plot direction as scalar
+         U  = None
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+
+         vbl2  = self.get_var(vname2,time_index=time_index)
+         dir   = 180/np.pi*np.arctan2(vbl2.values.data,vbl.values.data)#dir-to in degrees (<180,>-180)
+         dir   = 90-dir #north is 0,angle clockwise
+         if dir_from:
+            # direction-from
+            dir[dir>0]  = dir[dir>0]-360
+            Marr        = np.ma.array(dir+180,mask=np.logical_or(mask,1-np.isfinite(dir)))
          else:
-            lonc     = np.mean(lon)
-            latc     = np.mean(lat)
-            #
-            latmin   = np.min(lat)
-            latmax   = np.max(lat)
-            width    = 1.2*111.e3*(latmax-latmin)
-            height   = width
+            # direction-to
+            dir[dir>180]   = dir[dir>180]-360
+            Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
 
-            bmap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
-                           projection='stere',resolution='i',\
-                           width=width,height=height)
+      elif vec_opt==5:
+         #vbl is a direction - convert to vector
+         Marr  = None
+         dir   = 90-vbl.values.data
+         if dir_from:
+            dir   = np.pi/180*(dir+180)
+         else:
+            dir   = np.pi/180*dir
 
-      PC = bmap.pcolor(lon,lat,vbl.values,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
-      fig.colorbar(PC)
+         # rotate unit vectors
+         U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
+         U     = np.ma.array(U,mask=mask)
+         V     = np.ma.array(V,mask=mask)
+      ################################################################## 
+
+
+      ################################################################## 
+      # pcolor plot
+      if Marr is not None:
+         PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
+
+         if add_cbar:
+
+            if cbar is None:
+               cbar  = fig.colorbar(PC)
+            else:
+               cbar  = fig.colorbar(PC,cax=cbar.ax)
+
+            pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
+            if clabel is not None:
+               cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+      ################################################################## 
+
+
+      ################################################################## 
+      if pobj.axpos is not None:
+         # try to make sure axes don't move round
+         pobj.ax.set_position(pobj.axpos)
+      ################################################################## 
+
+
+      ################################################################## 
+      # quiver plot
+      if U is not None:
+         dens  = 10   # density of arrows
+         scale = 50
+         QP    = bmap.quiver(lon[::dens,::dens],lat[::dens,::dens],\
+                              U[::dens,::dens],V[::dens,::dens],\
+                              latlon=True,scale=scale,ax=ax)
 
       if test_lonlats is not None:
          for lont,latt in test_lonlats:
-            bmap.plot(lont,latt,'^m',markersize=5,latlon=True)
+            bmap.plot(lont,latt,'^m',markersize=5,latlon=True,ax=ax)
 
-      Fplt.finish_map(bmap)
+      Fplt.finish_map(bmap,ax=ax)
       if show:
          fig.show()
 
-      return fig,ax,bmap
+      return pobj,bmap
    ###########################################################
 
+   ###########################################################
+   def plot_var_pair(self,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
+
+      # ====================================================================
+      # check options
+      check_pair(var_opts1,var_opts2)
+      # ====================================================================
+
+      pobj,bmap   = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,**kwargs)
+      self.plot_var(var_opts2,pobj=pobj,bmap=bmap,**kwargs)
+
+      return pobj,bmap
+   ###########################################################
+
+   ###########################################################
+   def make_png(self,var_opts,pobj=None,bmap=None,figdir='.',time_index=0,date_label=True,**kwargs):
+
+      from matplotlib import pyplot as plt
+
+      new_fig  = (pobj is None)
+      if new_fig:
+         pobj  = plot_object()
+
+      pobj,bmap   = self.plot_var(var_opts,pobj=pobj,bmap=bmap,time_index=time_index,**kwargs)
+
+      dtmo     = self.datetimes[time_index]
+      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+
+      if date_label:
+         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+         pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+
+      if pobj.axpos is not None:
+         # try to make sure axes don't move round
+         pobj.ax.set_position(pobj.axpos)
+
+      vname    = var_opts.name
+      Fname    = vname
+      vec_opt  = var_opts.vec_opt
+
+      if vec_opt==1:
+         #magnitude only
+         if vname in ['u','usurf']:
+            Fname = 'surf_speed'
+         elif 'u' in vname:
+            Fname = vname.strip('u')+'_speed'
+         elif 'taux' in vname:
+            Fname = vname.strip('taux')+'_stress_magnitude'
+
+      elif vec_opt==2 or vec_opt==3:
+         #quiver plots on top of magnitude or by itself
+         if vname in ['u','usurf']:
+            Fname = 'surf_vel'
+         elif 'u' in vname:
+            Fname = vname.strip('u')+'_vel'
+         elif 'taux' in vname:
+            Fname = vname.strip('taux')+'_stress'
+
+      elif vec_opt==4:
+         #direction as scalar
+         if vname in ['u','usurf']:
+            Fname = 'surf_current_dirn'
+         elif 'u' in vname:
+            Fname = vname.strip('u')+'_vel_dirn'
+         elif 'taux' in vname:
+            Fname = vname.strip('taux')+'_stress_dirn'
+
+      elif vec_opt==5:
+         #direction -> vector
+         if vname in ['u','usurf']:
+            Fname = 'surf_current_dirn'
+         elif 'u' in vname:
+            Fname = vname.strip('u')+'_vel_dirn'
+         elif 'taux' in vname:
+            Fname = vname.strip('taux')+'_stress_dirn'
+
+      Fname    = Fname.strip('_')
+      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
+
+      print('Saving to '+figname) 
+      pobj.fig.savefig(figname)
+
+      if new_fig:
+         pobj.ax.cla()
+         pobj.fig.clear()
+         plt.close(pobj.fig)
+
+      return pobj,bmap
+   ###########################################################
+
+
+   ###########################################################
+   def make_png_pair(self,var_opts1,var_opts2,time_index=0,\
+         pobj=None,bmap=None,figdir='.',date_label=True,**kwargs):
+
+      from matplotlib import pyplot as plt
+
+      # ====================================================================
+      # check options
+      check_pair(var_opts1,var_opts2)
+      # ====================================================================
+
+      new_fig  = (pobj is None)
+      if new_fig:
+         pobj  = plot_object()
+
+      pobj,bmap   = self.plot_var_pair(var_opts1,var_opts2,time_index=time_index,\
+                     pobj=pobj,bmap=bmap,**kwargs)
+      fig,ax,cbar = pobj.get()
+
+      dtmo     = self.datetimes[time_index]
+      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+
+      if date_label:
+         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+         ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+
+      # set name with 1st variable only
+      Fname    = var_opts1.name
+      vec_opt  = var_opts1.vec_opt
+      if vec_opt==1:
+         #magnitude only
+         if vname in ['u','usurf']:
+            Fname = 'surf_speed'
+         elif 'u' in vname:
+            Fname = vname.strip('u')+'_speed'
+         elif 'taux' in vname:
+            Fname = vname.strip('taux')+'_stress_magnitude'
+
+      elif vec_opt==4:
+         #direction as scalar
+         if vname in ['u','usurf']:
+            Fname = 'surf_current_dirn'
+         elif 'u' in vname:
+            Fname = vname.strip('u')+'_vel_dirn'
+         elif 'taux' in vname:
+            Fname = vname.strip('taux')+'_stress_dirn'
+
+      Fname    = Fname.strip('_')
+      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
+
+      print('Saving to '+figname) 
+      fig.savefig(figname)
+
+      if new_fig:
+         ax.cla()
+         fig.clear()
+         plt.close(fig)
+
+      return pobj,bmap
+   ###########################################################
+
+
+   ###########################################################
+   def make_png_all(self,var_opts,HYCOMreg='TP4',figdir='.',**kwargs):
+
+      from matplotlib import pyplot as plt
+      import fns_plotting as Fplt
+
+      pobj        = plot_object()
+      fig,ax,cbar = pobj.get()
+
+      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+
+      N  = len(self.timevalues)
+      for i in range(N):
+
+         print('\n'+str(i)+' records done out of '+str(N))
+
+         pobj,bmap   = self.make_png(var_opts,\
+                           bmap=bmap,time_index=i,\
+                           figdir=figdir,show=False,**kwargs)
+
+         ax.cla()
+         if pobj.cbar is not None:
+            pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      plt.close(fig)
+      return
+   ###########################################################
+
+
+   ###########################################################
+   def make_png_pair_all(self,var_opts1,var_opts2,HYCOMreg='TP4',figdir='.',**kwargs):
+
+      from matplotlib import pyplot as plt
+      import fns_plotting as Fplt
+
+      # ====================================================================
+      # check options
+      check_pair(var_opts1,var_opts2)
+      # ====================================================================
+
+      pobj        = plot_object()
+      fig,ax,cbar = pobj.get()
+      bmap        = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+
+      N  = len(self.timevalues)
+      for i in range(N):
+
+         print('\n'+str(i)+' records done out of '+str(N))
+
+         pobj,bmap   = self.make_png_pair(var_opts1,var_opts2,\
+                        pobj=pobj,bmap=bmap,time_index=i,\
+                        figdir=figdir,show=False,**kwargs)
+
+         if i==0:
+            # Fix axes position to stop it moving round
+            pobj  = pobj.renew(axpos=pobj.ax.get_position())
+
+         ax.cla()
+         if pobj.cbar is not None:
+            pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      plt.close(fig)
+      return
+   ###########################################################
 
 ###########################################################
 
@@ -559,10 +1032,11 @@ class HYCOM_binary_info:
    #######################################################################
 
    #######################################################################
-   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg=None,\
-         clim=None,show=True):
+   def plot_var(self,vname,pobj=None,bmap=None,HYCOMreg='TP4',\
+         clim=None,show=True,vec_opt=0,conv_fac=1,ice_mask=False):
 
-      from mpl_toolkits.basemap import Basemap, cm
+      from mpl_toolkits.basemap import Basemap
+      from matplotlib import cm
       import fns_plotting as Fplt
 
       if vname not in self.variables:
@@ -578,28 +1052,54 @@ class HYCOM_binary_info:
       lon,lat  = self.get_grid()[:2]
       if bmap is None:
          # make basemap
-         if HYCOMreg is not None:
-            bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-         else:
-            lonc     = np.mean(lon)
-            latc     = np.mean(lat)
-            #
-            latmin   = np.min(lat)
-            latmax   = np.max(lat)
-            width    = 1.2*111.e3*(latmax-latmin)
-            height   = width
+         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+      else:
+         lonc     = np.mean(lon)
+         latc     = np.mean(lat)
+         #
+         latmin   = np.min(lat)
+         latmax   = np.max(lat)
+         width    = 1.2*111.e3*(latmax-latmin)
+         height   = width
 
-            bmap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
-                           projection='stere',resolution='i',\
-                           width=width,height=height)
+         bmap = Basemap(lon_0=lonc,lat_0=latc,lat_ts=latc,\
+                        projection='stere',resolution='i',\
+                        width=width,height=height)
 
       recno    = self.record_numbers[vname]
       vbl      = get_array_from_HYCOM_binary(self.afile,recno,\
                      dims=self.dims)
 
-      vfin  = vbl[np.isfinite(vbl)]
-      vmin  = np.min(vfin)
-      vmax  = np.max(vfin)
+      if ice_mask:
+         recno    = self.record_numbers['ficem']
+         fice     = get_array_from_HYCOM_binary(self.afile,recno,\
+                     dims=self.dims)
+         mask     = 1-np.logical_and(np.isfinite(vbl),fice>.01)
+      else:
+         mask  = 1-np.isfinite(vbl)
+
+      ###############################################################
+      if vec_opt==1:
+         # vector magnitude of vel or stress
+
+         if vname[0]=='u':
+            vname2   = 'v'+vname[1:]
+            recno2   = self.record_numbers[vname]
+         elif vname[:4]=='taux':
+            vname2   = 'tauy'+vname[4:]
+            recno2   = self.record_numbers[vname]
+
+         vbl2  = get_array_from_HYCOM_binary(self.afile,recno2,\
+                     dims=self.dims)
+         Marr  = np.hypot(vbl,vbl2)
+         Marr  = np.ma.array(conv_fac*Marr,mask=mask)
+      else:
+         Marr  = np.ma.array(conv_fac*vbl,mask=mask)
+
+      ###############################################################
+
+      vmin  = Marr.min()
+      vmax  = Marr.max()
 
       print(' ')
       print('Plotting '+vname)
@@ -611,16 +1111,20 @@ class HYCOM_binary_info:
          Vmin,Vmax   = clim
          print(' ')
       else:
-         # use histogram
-         p0    = 10
-         p1    = 90
-         Vmin  = np.percentile(vfin,p0)
-         Vmax  = np.percentile(vfin,p1)
-         print(str(p0) +'-th percentile: '+str(Vmin))
-         print(str(p1) +'-th percentile: '+str(Vmax))
-         print(' ')
+         Vmin  = None
+         Vmax  = None
+      #    # use histogram
+      #    p0    = 10
+      #    p1    = 90
+      #    Vmin  = np.percentile(vfin,p0)
+      #    Vmax  = np.percentile(vfin,p1)
+      #    print(str(p0) +'-th percentile: '+str(Vmin))
+      #    print(str(p1) +'-th percentile: '+str(Vmax))
+      #    print(' ')
+      cmap    = cm.jet
+      # cmap.set_bad(color='w')
 
-      PC = bmap.pcolor(lon,lat,vbl,latlon=True,ax=ax,vmin=Vmin,vmax=Vmax)
+      PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=Vmin,vmax=Vmax,cmap=cmap)
       fig.colorbar(PC)
 
       Fplt.finish_map(bmap)

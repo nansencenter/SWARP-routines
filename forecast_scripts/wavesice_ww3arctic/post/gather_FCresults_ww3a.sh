@@ -12,7 +12,7 @@ email=$(cat $FCemail)
 # =============================================================================
 
 # defining all the dir that will be used
-DFDIR=$TP4_REALTIME/expt_01.$Xno
+xdir=$TP4_REALTIME/expt_01.$Xno
 
 # LOG
 log=$THISFC/logs/gather_log_ww3a.txt
@@ -35,7 +35,7 @@ mkdir -p $TDIR/info
 
 # #moving TP4restart
 # echo "Moving the TP4restarts"                            >> $log
-# cp $DFDIR/data/TP4restart* $TDIR/bin
+# cp $xdir/data/TP4restart* $TDIR/bin
 # if [ $? -eq 0 ]
 # then
 #    echo "Restart* files present"                           >> $log
@@ -46,7 +46,7 @@ mkdir -p $TDIR/info
 
 #moving TP4archv & TP4DAILY
 echo "Moving the TP4archv*.[ab] and TP4DAILY*.[ab]"      >> $log
-mv $DFDIR/data/TP4archv_wav* $TDIR/bin
+mv $xdir/data/TP4archv_wav* $TDIR/bin
 if [ $? -eq 0 ]
 then
    echo "Archv_wav* files present"                           >> $log
@@ -55,31 +55,19 @@ else
    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
 
-mv $DFDIR/data/TP4DAILY* $TDIR/bin
+mv $xdir/data/TP4DAILY* $TDIR/bin
 if [ $? -eq 0 ]
 then
    echo "DAILY* files present"                           >> $log
-#else
-#   echo "DAILY* files NOT present"                       >> $log
-#   mail -s "gather_FCresults_wav FAILED" $email  < $log
+# else
+#    echo "DAILY* files NOT present"                       >> $log
+#    mail -s "gather_FCresults_wav FAILED" $email  < $log
 fi
 
 #moving the info files
 echo "Moving the info files"                             >> $log
-cp $DFDIR/log/mpijob.out $TDIR/info
-if [ $? -eq 0 ]
-then
-   echo "mpijob file present"                           >> $log
-else
-   echo "mpijob file NOT present"                       >> $log
-   mail -s "gather_FCresults_wav FAILED" $email  < $log
-fi
-cp $TP4_REALTIME/Build_V2.2.12_X01.$Xno/flags $TDIR/info
-if [ $? -eq 0 ]
-then
-   echo "flags file present"                           >> $log
-else
-   echo "flags file NOT present"                       >> $log
-   mail -s "gather_FCresults_ww3a FAILED" $email  < $log
-fi
+cp $xdir/log/mpijob.out   $TDIR/info
+cp $THISFC/inputs/flags    $TDIR/info
+cp $THISFC/logs/*log.txt   $TDIR/info
+
 echo "Transfer complete"                               >> $log

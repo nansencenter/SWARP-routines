@@ -16,9 +16,9 @@ echo "Collecting data produced in date $tday_long"
 
 
 cd $THISFC2
+tfil=${FC_OUTPUT}_$tday.tar.gz
 
 echo "The archive file name will be "
-tfil=${FC_OUTPUT}_$tday.tar.gz
 echo " $tfil "
 touch $tfil
 tar -zcvf $tfil -C $THISFC2 $tday
@@ -27,4 +27,3 @@ mkdir -p $THISFC3/$cyear
 mv $tfil $THISFC3/$cyear/
 echo "SWARP products of $tday"
 echo "stored in $THISFC3/$cyear"
-

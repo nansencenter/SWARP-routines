@@ -48,8 +48,8 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 # flags for waves run 
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DWAVES \
-                 -DWAVES_WAMNSEA \
-#                -DWAVES_WW3_ARCTIC \
+                 -DWAVES_WW3_ARCTIC \
+#                -DWAVES_WAMNSEA \
 #                -DWAVES_WW3 \
 #                -DWAVES_NOSAVE \
 #                -DWAVES_TIME_INTERP \

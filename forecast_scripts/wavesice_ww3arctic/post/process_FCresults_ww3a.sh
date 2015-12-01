@@ -17,19 +17,34 @@ post=$THISFC/post
 datelist=$logdir/datelist.txt
 if [ -f $datelist ]
 then
-   # set vbl's
-   tday=$(cat $datelist | sed '1!d')
-   tday_long=`date --date=$tday +%Y-%m-%d`
+   # set var's
+   tday=$(cat $datelist | sed '1!d')      # first day in YYYYMMDD format
 
-   # run scripts
+   # ======================================================================================
+   # 1. get all TP4archv_wav.*.[ab] and TP4DAILY*.[ab]
    $post/gather_FCresults_ww3a.sh   $tday
-   $post/convert_TP4archv_ww3a.sh   $tday
-   $post/merge_TP4archv_ww3a.sh     $tday
-   $post/backup_FCresults_ww3a.sh   $tday
 
-   # finish up
+   # 2. convert all the TP4archv.*.[ab] to netcdf
+   $post/convert_TP4archv_ww3a.sh   $tday
+
+   # 3. merge some of the netcdf files into one
+   #     (only those later than today),
+   #       add necessary attributes,
+   #        and copy final output to correct location
+   $post/merge_TP4archv_ww3a.sh     $tday
+
+   # 4. make gifs
+   $post/make_gifs.sh $tday
+
+   # 5. save to migrate
+   # TODO change to norstore
+   $post/backup_FCresults_ww3a.sh   $tday
+   # ======================================================================================
+
+   # finish up - add datelist.txt to info
    cp $datelist $THISFC2/$tday/info
 else
+   # send alert email
    touch log.txt
    echo "DATELIST NOT FOUND" >> log.txt
    mail -s "Process forecast problems" $email < log.txt

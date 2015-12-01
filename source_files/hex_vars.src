@@ -5,8 +5,17 @@ export VALIDATION="$SWARP_ROUTINES/validation"
 export TP4_REALTIME="/work/timill/RealTime_Models/TP4a0.12"
 export TP4_REALTIME_RES="/work/timill/RealTime_Models/results/TP4a0.12"
 export wmsc="/work/shared/nersc/msc"
-export wamnsea="$wmsc/WAMNSEA"
-export FCemail="$FORECAST/inputs/fc_alert_email.txt"
+export wamnsea="$wmsc/WAVES_INPUT/WAMNSEA"
+export ww3_arctic="$wmsc/WAVES_INPUT/WW3_ARCTIC"
+export FCcommon="$FORECAST/common"
+export FCemail="$FCcommon/inputs/fc_alert_email.txt"
+export TP4restart_OPT=1
+
+#nested models
+export BS1_REALTIME="/work/timill/RealTime_Models/BS1a0.045"
+export BS1_REALTIME_RES="/work/timill/RealTime_Models/results/BS1a0.045"
+export FR1_REALTIME="/work/timill/RealTime_Models/FR1a0.03"
+export FR1_REALTIME_RES="/work/timill/RealTime_Models/results/FR1a0.03"
 
 # PATHS TO APPLICATIONS
 # queue stuff
@@ -17,3 +26,4 @@ export ncdump="/opt/cray/netcdf/4.3.0/bin/ncdump"
 # other apps
 export python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 export cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
+export convert="/usr/bin/convert"
