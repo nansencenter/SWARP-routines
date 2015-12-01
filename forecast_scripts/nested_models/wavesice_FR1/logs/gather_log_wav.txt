@@ -1,5 +1,0 @@
-Moving the TP4archv*.[ab] and TP4DAILY*.[ab]
-Archv_wav* files present
-DAILY* files present
-Moving the info files
-Transfer complete

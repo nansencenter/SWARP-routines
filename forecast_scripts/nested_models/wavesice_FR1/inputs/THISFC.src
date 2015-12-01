@@ -1,6 +1,0 @@
-source $SWARP_ROUTINES/source_files/hex_vars.src
-Xno=2                                                                # expt number
-THISFC=$SWARP_ROUTINES/forecast_scripts/wavesice                     # scripts
-THISFC2=$TP4_REALTIME/../results/TP4a0.12/wavesice                   # outputs go here
-THISFC3=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/wavesice    # backup location
-FC_OUTPUT=SWARPwavesice_forecast                                     # base name of outfile
