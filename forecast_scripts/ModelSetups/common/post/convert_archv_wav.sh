@@ -39,7 +39,7 @@ mkdir -p tmp
 cd tmp
 
 # Info for hyc2proj TODO get correct info for $HYCOMreg
-ln -s $h2p_in/proj.in .
+ln -s $h2p_in/proj.in.polar_stereographic.$HYCOMreg proj.in
 ln -s $h2p_in/extract.archv_wav .
 ln -s $h2p_in/extract.daily
 ln -s $h2p_in/depthlevels.in .
