@@ -6,6 +6,7 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
 # opts="--fl_fmt=netcdf4_classic"
 opts="--fl_fmt=classic" #netcdf3 classic
+print_info=0
 
 [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
 module load nco

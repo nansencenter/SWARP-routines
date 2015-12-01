@@ -50,11 +50,12 @@ echo ""                                                        >> $log
 
 #subfolders
 ww3dir0=$ww3dir/originals
-mkdir -p $ww3dir0
+mkdir -p $ww3dir0/$fdir0
 
 #Ef subfolders
 ww3dirEF0=$ww3dirEF/originals
 mkdir -p $ww3dirEF0
+mkdir -p $ww3dirEF0/$fdir0
 
 if [ $cycle -eq 1 ]
 then
@@ -78,7 +79,7 @@ do
    f2=SWARP_WW3_ARCTIC-12K_${dd}_ef.nc
 
    # ==============================
-   cd $ww3dir0
+   cd $ww3dir0/$fdir0
    echo "wget $fdir/$f1"
    wget $fdir/$f1
    if [ -f $f1 ]
@@ -88,7 +89,7 @@ do
       echo "$f1 MISSING" >> $log
    fi
 
-   cd $ww3dirEF0
+   cd $ww3dirEF0/$fdir0
    echo "wget $fdir/$f2"
    wget $fdir/$f2
    if [ -f $f2 ]

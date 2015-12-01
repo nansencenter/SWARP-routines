@@ -9,6 +9,7 @@ fget="$FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_download.sh"
 fsort="$FORECAST/wavesice_ww3arctic/wave_data/ww3_arctic_sort.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 cycle=2 # get 05:20 update from ifremer server
+print_info=0
 
 # ==============================================================================
 # EMAIL 
@@ -109,6 +110,12 @@ then
 
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K.fc.latest.nc
    fctarg=$ddir2/$dfil2
+
+   if [ ! -L $fclat ]
+   then
+      echo ln -s $fctarg $fclat
+      ln -s $fctarg $fclat
+   fi
    linkloc=`readlink $fclat`
 
    if [ ! $linkloc == $fctarg ]
@@ -123,7 +130,10 @@ then
       linkloc=`readlink $fclat`
       echo "New link location : $linkloc"
       echo " "
-   else
+
+   elif [ $print_info -eq 1 ]
+   then
+
       echo " "
       echo "Link location     : $linkloc"
       echo "Latest forecast   : $fctarg"
@@ -136,11 +146,11 @@ else
    if [ $time_now -gt $timeout_warning ]
    then
       # We want to give the script time till 0900 before sending a warning mail
-      echo " The file $dfil2 doesn't exist"                                      >> $log
-      echo " Please check either ifremer ftp server status "                     >> $log
-      echo " IF server is online and updated check:   "                          >> $log
-      echo " ~/SWARP-routines/forecast_scripts/waves_ice/ww3_arctic_update.sh"   >> $log 
-      echo " and $ww3a/$year"                                                    >> $log 
+      echo " The file $dfil2 doesn't exist"                       >> $log
+      echo " Please check either ifremer ftp server status "      >> $log
+      echo " IF server is online and updated check:   "           >> $log
+      echo " `readlink -f $0`"                                    >> $log 
+      echo " and $ww3a/$year"                                     >> $log 
       #
       mail -s "WW3 Arctic forecast not found for $tday" $email < $log
    fi
@@ -154,10 +164,18 @@ then
    # - ef type
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K_ef.fc.latest.nc
    fctarg=$ddir3/$dfil3
+
+   if [ ! -L $fclat ]
+   then
+      echo ln -s $fctarg $fclat
+      ln -s $fctarg $fclat
+   fi
    linkloc=`readlink $fclat`
+
 
    if [ ! $linkloc == $fctarg ]
    then
+
       echo " "
       echo "Link location     : $linkloc"
       echo "Latest forecast   : $fctarg"
@@ -168,12 +186,16 @@ then
       linkloc=`readlink $fclat`
       echo "New link location : $linkloc"
       echo " "
-   else
+
+   elif [ $print_info -eq 1 ]
+   then
+
       echo " "
       echo "Link location     : $linkloc"
       echo "Latest forecast   : $fctarg"
       echo "Link already points to latest forecast"
       echo " "
+
    fi
 
 else
@@ -181,11 +203,11 @@ else
    if [ $time_now -gt $timeout_warning ]
    then
       # We want to give the script time till 0900 before sending a warning mail
-      echo " The file $dfil3 doesn't exist"                                      >> $log
-      echo " Please check either ifremer ftp server status "                     >> $log
-      echo " IF server is online and updated check:   "                          >> $log
-      echo " ~/SWARP-routines/forecast_scripts/waves_ice/ww3_arctic_update.sh"   >> $log 
-      echo " and $ww3a/${year}_ef"                                               >> $log 
+      echo " The file $dfil3 doesn't exist"                    >> $log
+      echo " Please check either ifremer ftp server status "   >> $log
+      echo " IF server is online and updated check:   "        >> $log
+      echo " `readlink -f $0`"                                 >> $log 
+      echo " and $ww3a/${year}_ef"                             >> $log 
       #
       mail -s "WW3 Arctic forecast (Ef) not found for $tday" $email < $log
    fi
