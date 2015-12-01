@@ -1,56 +1,55 @@
 #!/bin/bash
 # copy forecast file from hexagon to johansen
+# NB use either this one OR copy_wavesice_ww3a.sh!!
 
-# don't bother doing anything before 2am
+# don't bother doing anything before 6am
 thour=`date +%H`
-if [ $thour -lt 2 ]
+T0=6
+T1=11
+if [ $thour -lt $T0 ]
 then
    exit
 fi
 
-# final destination of forecast outputs
-THREDDS="/mnt/10.11.12.232/Projects/SWARP/Thredds_data_dir"
-# location of SWARP routines on johansen
-SRjoh="/Data/sim/tim/Projects/SWARP/SWARP-routines"
-# location of SWARP routines on hexagon
-SRhex="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines"
-# location of forecast outputs on hexagon
-TP4rt="/work/timill/RealTime_Models/results/TP4a0.12"
+# ==================================================================================
+# general variables
+THREDDS="/mnt/10.11.12.232/Projects/SWARP/Thredds_data_dir" # final destination of forecast outputs
+SRjoh="/Data/sim/tim/Projects/SWARP/SWARP-routines"         # location of SWARP routines on johansen
+TP4rt="/work/timill/RealTime_Models/results/TP4a0.12"       # location of forecast outputs on hexagon
+hidden=$SRjoh/forecast_scripts/hidden                       # location of private info eg logs, ssh_info.src
 
-joh_dir=$THREDDS/ice_only #directory on johansen where final file should go
-joh_dir_w=$THREDDS/wavesice #directory on johansen where final file should go
-tmp_dir=$THREDDS/ice_only/tmp #directory on johansen where final file should go
-tmp_dir_w=$THREDDS/wavesice/tmp #directory on johansen where final file should go
-hex_dir=$TP4rt/ice_only/work # dir on hexagon where final file ends up
-hex_dir_w=$TP4rt/wavesice/work # dir on hexagon where final file ends up
-wrk_dir=$SRjoh/forecast_scripts/hidden # location of logs, ssh_info.src
-# fc_dir=$SRhex/forecast_scripts
+# FC-specific variables
+FCtype_joh="wavesice"               # type of FC on johansen
+FCtype_hex="wavesice"               # type of FC on johansen ("wavesice" or "wavesice_ww3arctic")
+FC_OUTPUT="SWARPwavesice_forecast"  # start of netcdf file
+
+joh_dir=$THREDDS/$FCtype_joh  #directory on johansen where final file should go
+tmp_dir=$joh_dir/tmp          #directory on johansen where final file + figures should go initially after copying
+hex_dir=$TP4rt/$FCtype_hex    #directory on hexagon where final file ends up
+# ==================================================================================
 
 mkdir -p $tmp_dir
-mkdir -p $tmp_dir_w
 
 # get $keyname, $user
-source $wrk_dir/ssh_info.src
+source $hidden/ssh_info.src
 
-# scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$fc_dir/fc_alert_email.txt $tmp_dir
-# cp $wrk_dir/../fc_alert_email.txt $tmp_dir
 
-# EMAIL ADRESS
 # ==================================================================================
+# EMAIL ADRESS
 email=$(cat $FCemail)
 # ==================================================================================
 
-cplog=$wrk_dir/cplog
+cplog=$hidden/cplog
 tday=$(date +%Y%m%d)
 
 if [ -f $cplog ] && [ $tday != $(cat $cplog | sed '1!d') ]
 then
-   mv $cplog $wrk_dir/old_logs/$(cat $cplog | sed '1!d')
+   mv $cplog $hidden/old_logs/$(cat $cplog | sed '1!d')
 fi
 
 if [ $(date +%A) == "Monday" ]
 then
-   rm -f $wrk_dir/old_logs/*
+   rm -f $hidden/old_logs/*
 fi
 
 if [ ! -f "$cplog" ]
@@ -59,16 +58,16 @@ then
    echo $tday >> $cplog
 fi
 
-# finding the latest final product - ICE_ONLY
+# finding the latest final product
 # - check last $Nback days
-Nback=4
+Nback=0
 wrn_count=0
 for n in `seq 0 $Nback`
 do
-   echo "$(date +%H:%M) - looking for ICE_ONLY latest file" >> $cplog
+   echo "$(date +%H:%M) - looking for <<$FCtype_hex>> latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
    echo "Looking for product $hdate" >> $cplog
-   hex_fil=SWARPiceonly_forecast_start${hdate}*  # final file
+   hex_fil=${FC_output}_start${hdate}*  # final file
 
    # only do scp if file not present
    if [ ! -f $joh_dir/$hex_fil ]
@@ -79,10 +78,22 @@ do
       if [ -f $tmp_dir/$hex_fil ]
       then
          # if scp worked move it to THREDDS dir
-         mv $tmp_dir/* $joh_dir/
+         mv $tmp_dir/$hex_fil $joh_dir/
          chmod o+r $joh_dir/$hex_fil
          echo "Product found on $hdate!" >> $cplog
          echo "" >> $cplog
+
+         # # =============================================================
+         # # NB THIS ISN'T SET UP YET
+         # if [ $n -eq 0 ]
+         # then
+         #    # copy gifs from latest forecast
+         #    # TODO: mv to /Webdata and link to website
+         #    echo scp -r -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
+         #    scp -r -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
+         # fi
+         # # =============================================================
+
       else
          # if scp didn't work, give warning
          echo "No product on $hdate" >> $cplog
@@ -94,56 +105,10 @@ do
    fi
 done
 
-if [ "$wrn_count" -gt 0 ]
+if [ "$wrn_count" -gt 0 && $thour -gt $T1 ]
 then
    echo ""                          >> $cplog
-   mail -s "WARNING - Johansen Missing ice_only Product(s)" $email < $cplog
-fi
-
-thour=`date +%H`
-if [ $thour -lt 6 ]
-then
-   exit
-fi
-# finding the latest final product - WAVESICE
-# - check last $Nback days
-# TODO add check to see if file exists already, before downloading
-wrn_count=0
-for n in `seq 0 $Nback`
-do
-   echo "$(date +%H:%M) - looking for WAVESICE latest file" >> $cplog
-   hdate=$(date --date="$n days ago" '+%Y%m%d')
-   echo "Looking for product $hdate" >> $cplog
-   hex_fil=SWARPwavesice_forecast_start${hdate}*  # final file
-
-   # only do scp if final product is not present
-   if [ ! -f $joh_dir_w/$hex_fil ]
-   then
-      echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
-      scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir_w/$hdate/final_output/$hex_fil $tmp_dir_w
-
-      if [ -f $tmp_dir_w/$hex_fil ]
-      then
-         # if scp worked move it to THREDDS dir
-         mv $tmp_dir_w/* $joh_dir_w/
-         chmod o+r $joh_dir_w/$hex_fil
-         echo "Product found on $hdate!" >> $cplog
-         echo "" >> $cplog
-      else
-         # if scp didn't work, give warning
-         echo "No product on $hdate" >> $cplog
-         wrn_count=$(expr $wrn_count + 1)
-      fi
-   else
-      echo "Product already on johansen" >> $cplog
-      echo " " >> $cplog
-   fi
-done
-
-if [ "$wrn_count" -gt 0 ]
-then
-   echo ""                          >> $cplog
-   mail -s "WARNING - Johansen Missing waves_ice Product(s)" $email < $cplog
+   mail -s "WARNING - Johansen Missing <<$FCtype_hex>> Product(s)" $email < $cplog
 fi
 
 # make key with:

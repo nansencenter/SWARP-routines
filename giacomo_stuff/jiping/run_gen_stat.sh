@@ -9,11 +9,12 @@
 
 mdldir=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/wavesice
 osidir=/work/shared/nersc/msc/OSI-SAF
-wrkdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/data
+#wrkdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/data
+wrkdir=/home/charlie/Documents/SWARP-routines/giacomo_stuff/jiping
 results=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/outputs
 
-startdate='20150501'
-enddate='20150731'
+startdate='20150601'
+enddate='20150630'
 sdj=$(date --date="$startdate" +%j)
 edj=$(date --date="$enddate" +%j)
 ndays=$(expr $edj - $sdj)

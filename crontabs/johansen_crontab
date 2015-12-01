@@ -1,4 +1,11 @@
 # Crontab for SWARP project on Johansen
 # 1) Getting the final product from Hexagon - try every hour
 
-00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy_fc2johansen.sh
+# get ice-only FC
+00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_ice_only.sh
+
+# get waves-ice FC (WAM) - NB don't do both WAM & WW3 (both go to same place)
+# 00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_wavesice.sh
+
+# get waves-ice FC (WW3) - NB don't do both WAM & WW3 (both go to same place)
+00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_wavesice_ww3a.sh
