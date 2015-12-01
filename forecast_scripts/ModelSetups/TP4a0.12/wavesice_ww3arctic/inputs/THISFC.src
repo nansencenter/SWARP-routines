@@ -20,7 +20,7 @@ FCrecords=49
 
 THISFC="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/$FCtype"    # inputs,logs
 HREGcommon="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/common" # scripts common to region
-THISFC2="$RTres/$HYCOMreg/$FCtype"                                      # outputs go here
-THISFC3="/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/$FCtype"      # backup location
+THISFC2="$RTres/$HYCOMreg/$FCtype"                                         # outputs go here
+THISFC3="/migrate/timill/RESULTS/$HYCOMreg/SWARP_forecasts/$FCtype"        # backup location
 rungen=${HYCOMreg:0:3}
 JOBNAME=${rungen}x01${Xno}fc
