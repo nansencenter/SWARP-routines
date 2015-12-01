@@ -4,7 +4,7 @@ export FORECAST="$SWARP_ROUTINES/forecast_scripts"
 export VALIDATION="$SWARP_ROUTINES/validation"
 export RTmods="/work/timill/RealTime_Models"
 export RTres="/work/timill/RealTime_Models/results"
-export FCcommon="$FORECAST/common"
+export FCcommon="$FORECAST/ModelSetups/common"
 export FCemail="$FCcommon/inputs/fc_alert_email.txt"
 export TP4restart_OPT=1
 
