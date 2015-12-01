@@ -9,6 +9,8 @@ FCtype_long="waves-ice FC (WAM)"    # description for internal printouts
 FC_OUTPUT="SWARPwavesice_forecast"  # base name of outfile
 archv_opt=0                         # process archv files
 archv_wav_opt=1                     # process archv_wav files
+nesting_outer=F
+nesting_inner=F
 
 # forecast stops $FCdays from current day,
 #  at $FCfinal_hour

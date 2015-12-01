@@ -23,7 +23,7 @@ forecast_scripts/ModelSetups/TP4a0.12/wavesice/logs/
 forecast_scripts/nested_models/wavesice_BS1/logs/
 forecast_scripts/nested_models/wavesice_FR1/logs/
 forecast_scripts/wavesice_ww3arctic/logs/
-forecast_scripts/common/logs/
+forecast_scripts/ModelSetups/common/logs/
 crontabs/crontab_dump
 #
 python_tutorial/out
