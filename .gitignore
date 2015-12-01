@@ -36,3 +36,5 @@ validation/ice_charts/test_inputs2/*
 validation/data/*
 validation/outputs/*
 validation/Manual_MIZ_Maps/out/*
+#
+giacomo_stuff/floes_analysis/*
