@@ -19,7 +19,10 @@ forecast_scripts/test/*
 forecast_scripts/test_check/*
 forecast_scripts/out/*
 forecast_scripts/ice_only/logs/
+#
 forecast_scripts/ModelSetups/TP4a0.12/wavesice/logs/
+forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic/logs/
+#
 forecast_scripts/nested_models/wavesice_BS1/logs/
 forecast_scripts/nested_models/wavesice_FR1/logs/
 forecast_scripts/wavesice_ww3arctic/logs/

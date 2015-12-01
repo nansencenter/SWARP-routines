@@ -10,7 +10,7 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
 print_info=1 # print info to screen (or email in crontab)
-test_pre=1
+test_pre=0
 
 if [ $# -lt 1 ]
 then
@@ -316,13 +316,16 @@ cp $infile $rundir/info
 #################################################################
 # Get other inputs
 cp $THISFC/inputs/blkdat.input      $xdir
-cp $FCcommon/inputs/pbsjob.sh       $xdir
 cp $FCcommon/inputs/preprocess.sh   $xdir
 
 if [ $print_info -eq 1 ]
 then
    echo "cp $THISFC/inputs/blkdat.input      $xdir"
-   echo "cp $FCcommon/inputs/pbsjob.sh       $xdir"
+   echo "cp        $xdir"
+
+   cat $FCcommon/inputs/pbsjob.sh | sed \
+    -e "s/JOBNAME/$JOBNAME/g" \
+    > $xdir/pbsjob.sh
    echo "cp $FCcommon/inputs/preprocess.sh   $xdir"
 fi
 

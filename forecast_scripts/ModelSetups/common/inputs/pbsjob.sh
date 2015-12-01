@@ -5,7 +5,7 @@
 #PBS -S /bin/bash
 #
 # give the job a name
-#PBS -N "TP4x012fc"
+#PBS -N "JOBNAME"
 #
 #  Specify the project the job belongs to
 #
