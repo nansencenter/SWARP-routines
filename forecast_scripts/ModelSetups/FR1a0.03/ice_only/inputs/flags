@@ -17,6 +17,7 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DARCHIVE_SELECT \
                   -DARCHIVE_RESTART \
+#                 -DARCHIVE_ICE_ONLY \
 
 # # ecnc2 forcing in 2015 is missing 4 records (between (not inc) 22-Aug 0600, 23-Aug 1200)
 # # - now read smaller forecast files (-13 days to + 9 days) to avoid problem
@@ -25,18 +26,18 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #                  -DECNC2_FIXGAP \
 
 # TP4 specific flags:
-# - SEASONAL_PORT has the same relaxation conditions at the
-#   ports (Bering Strait,...) every year
-# - INTERANNUAL_PORT has interannual variability in the
-#   relaxation conditions at the ports
-CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-                 -DSEASONAL_PORT \
-                 -DNEST_OUTER \
-# #                -DINTERANNUAL_PORT \
-
-# # flags specific to inner models :
+# # - SEASONAL_PORT has the same relaxation conditions at the
+# #   ports (Bering Strait,...) every year
+# # - INTERANNUAL_PORT has interannual variability in the
+# #   relaxation conditions at the ports
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-#                  -DNEST_INNER \
+#                  -DSEASONAL_PORT \
+# #                -DINTERANNUAL_PORT \
+# #                -DNEST_OUTER \
+
+# flags specific to inner models :
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DNEST_INNER \
 
 # # flags for rheology and diagnostics;
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
@@ -48,10 +49,10 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 # # flags for waves run 
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #                  -DWAVES \
-#                  -DWAVES_TEST_READWAVES \
-#                  -DWAVES_TESTADV \
-#                  -DWAVES_WW3 \
-# #                -DWAVES_WAMNSEA \
+#                  -DWAVES_WAMNSEA \
+# #                -DWAVES_TEST_READWAVES \
+# #                -DWAVES_TESTADV \
+# #                -DWAVES_WW3 \
 # #                -DWAVES_NOSAVE \
 # #                -DWAVES_TIME_INTERP \
 # #                -DWAVES_RESET_ICE \
