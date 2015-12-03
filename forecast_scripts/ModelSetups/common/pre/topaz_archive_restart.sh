@@ -18,7 +18,7 @@ print_info=1
 # DIRECTORIES AND TIME DEFINITION
 rdir=/work/fanf/TOPAZ_RT 
 bdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts 
-fcldir=$FORECAST/common/logs
+fcldir=$FCcommon/logs
 mkdir -p $fcldir
 
 cyear=$(date +%Y) 
