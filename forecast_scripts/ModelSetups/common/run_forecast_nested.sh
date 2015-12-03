@@ -9,9 +9,9 @@
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-print_info=0 # print info to screen (or email in crontab)
+print_info=1 # print info to screen (or email in crontab)
 test_pre=0
-SWARP_PP=1
+SWARP_PP=0
 
 if [ $# -lt 1 ]
 then
@@ -20,6 +20,13 @@ then
 else
    THIS_SRC=`readlink -f $1` #get absolute path
    source $THIS_SRC
+fi
+
+if [ $print_info -eq 1 ]
+then
+   echo "Source file    : $THIS_SRC"
+   echo "HYCOM region   : $HYCOMreg"
+   echo "FC type        : $FCtype"
 fi
 
 xdir=$RTmods/$HYCOMreg/expt_01.$Xno
@@ -52,7 +59,7 @@ fi
 # (do this before datelist.txt is changed)
 # 1. check if forecast is already running
 msg=`$qstat | grep ${rungen}x01${Xno}fc`
-if [ ${#msg} -ne 0 ]
+if [ ${#msg} -ne 0 ] && [ $manual -eq 0 ]
 then
    if [ $print_info -eq 1 ]
    then
@@ -214,8 +221,8 @@ fi
 if [ $restart_OPT -eq 1 ]
 then
    # get reanalysis restart
-   echo "Launching topaz_get_restart_reanalysis.sh @ $(date)"   > $log
-   $FCcommon/pre/topaz_get_restart_reanalysis.sh $THIS_SRC            # get latest restart file
+   echo "Launching topaz_curviint_restart_reanalysis.sh @ $(date)"   > $log
+   $FCcommon/pre/topaz_curviint_restart_reanalysis.sh $THIS_SRC            # get latest restart file
 
    # GETTING INFO FROM LAST_RESTART
    cd $rundir  # just in case we've changed dir in script
@@ -277,6 +284,20 @@ fi
 # =========================================================================
 # MAKE INFILE 
 
+# =========================================================================
+# want to save next Monday's restart
+Nday=`date --date="next Monday" +%Y%m%d`
+Nyear=$(date --date=$Nday +%Y)
+Nday_j=$(date --date=$Nday +%j)
+Nday_j=$((Nday_j-1))
+if [ $ryear -eq $Nyear ]
+then
+   Rday=$(printf '%3.3d' $Nday_j) # 3 digits
+else
+   Rday=$((r_ndays+Nday_j))
+fi
+# =========================================================================
+
 # print to screen
 echo "Restart date   : $rdate"
 echo "Current date   : $cday"
@@ -287,16 +308,46 @@ echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$FCfinal_hour
 
 if [ $FCtype == "ice_only" ] && [ $TP4restart_OPT -eq 2 ] && [ $day2 -ne $rday ]
 then
-   echo "Launching make_infile_3days.sh @ $(date)"                  >> $log
-   inputs="$THIS_SRC $rungen $ryear $rday $day2 $final_day $FCfinal_hour $nesting_outer $nesting_inner"
-   echo "$FCcommon/make_infile_3days.sh $inputs"
-   $FCcommon/pre/make_infile_3days.sh $inputs
+   if [ $Rday -ge $final_day ]
+   then
+      days="$rday $day2 $final_day"
+      Ropts="F T F"
+   else
+      days="$rday $day2 $Rday $final_day"
+      Ropts="F F T F"
+   fi
 else
-   echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
-   inputs="$THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour $nesting_outer $nesting_inner"
-   echo "$FCcommon/make_infile_2days.sh $inputs"
-   $FCcommon/pre/make_infile_2days.sh $inputs
+   if [ $Rday -ge $final_day ]
+   then
+      days="$rday $final_day"
+      Ropts="F F"
+   else
+      days="$rday $Rday $final_day"
+      Ropts="F T F"
+   fi
 fi
+
+ftmp='tmp.txt'
+echo "rungen         $rungen"             >> $ftmp
+echo "expt_dir       $xdir"               >> $ftmp
+echo "refyear        $ryear"              >> $ftmp
+echo "days           $days"               >> $ftmp
+echo "restart_opts   $Ropts"              >> $ftmp
+echo "final_hour     $FCfinal_hour"       >> $ftmp
+echo "nest_outer     $nesting_outer"      >> $ftmp
+echo "nest_inner     $nesting_inner"      >> $ftmp
+
+
+echo "Launching make_infile.py @ $(date)" >> $log
+echo ""                                   >> $log
+cat $ftmp                                 >> $log
+echo ""                                   >> $log
+
+# load python and launch make_infile.py
+[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
+module load python/2.7.9-dso
+$python $FCcommon/pre/make_infile.py --infile=$ftmp
+rm $ftmp
 
 infile=$xdir/infile.in
 if [ $print_info -eq 1 ]
@@ -317,7 +368,13 @@ cp $THISFC/inputs/blkdat.input      $xdir
 cp $FCcommon/inputs/preprocess.sh   $xdir
 
 JF=$xdir/pbsjob.sh
-Nproc=133 # no of CPUs
+if [ $rungen == "BS1" ]
+then
+   Nproc=112 # no of CPUs
+elif [ $rungen == "FR1" ]
+then
+   Nproc=51 # no of CPUs
+fi
 
 if [ $SWARP_PP -eq 1 ]
 then

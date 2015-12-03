@@ -1,7 +1,7 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
 HYCOMreg="FR1a0.03"  # expt HYCOM region
-Xno=1                # expt number
+Xno=0                # expt number
 
 FCtype="ice_only"                   # should correspond to directory where inputs are
 FCtype_long="ice-only FC"           # description for internal printouts

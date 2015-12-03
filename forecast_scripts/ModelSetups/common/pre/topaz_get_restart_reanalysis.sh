@@ -5,18 +5,14 @@ print_info=1 # print info for debugging
 
 # ====================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THIS_SRC=$1
+THIS_SRC=`readlink -f $1`
 source $THIS_SRC
-if [ $print_info -eq 1 ]
-then
-   echo ""
-   cat $THIS_SRC
-   echo ""
-fi
-# gets:
-# $THISFC   - scripts location
-# $THISFC2  - outputs go here
-# $Xno      - experiment number for running model
+# if [ $print_info -eq 1 ]
+# then
+#    echo ""
+#    cat $THIS_SRC
+#    echo ""
+# fi
 # ====================================================================================
 
 # ====================================================================================
@@ -25,15 +21,16 @@ email=$(cat $FCemail)
 # ====================================================================================
 
 # DIRECTORIES AND DATELIST
-datelist=$FORECAST/ice_only/logs/datelist.txt
+datelist=$THISFC/logs/datelist.txt
 rdir=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts      # directory with restarts
 ddir=$TP4_REALTIME/expt_01.$Xno/data # location of TP4a0.12 directory (where forecast will be done)
 
 # info dir
 tday=$(cat $datelist | sed '1!d')
 tyear=`date --date=$tday "+%Y"`
-pyear=$(expr $tyear - 1)		              	# previous year
-tday_j=$(cat $datelist | sed '6!d')                     # current day julian (1 Jan = 0)
+pyear=$(expr $tyear - 1)            # previous year
+tday_j=`date --date=$tday "+%j"`
+tday_j=$((tday_j-1))                # current day julian (1 Jan = 0)
 idir=$THISFC2/$tday/info
 mkdir -p $idir
 

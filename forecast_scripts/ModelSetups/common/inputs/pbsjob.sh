@@ -13,7 +13,7 @@
 #
 #  We want 24 hours on 51 cpu's:
 #
-#PBS -l walltime=05:00:00,mppwidth=133
+#PBS -l walltime=05:00:00,mppwidth=MPPWIDTH
 #
 #  The job needs 1 GB memory per cpu:
 ##PBS -l mppmem=1000mb
@@ -68,34 +68,5 @@ aprun -n $NMPI -m 1000M ./${EXEC}  # Run hycom
 # Cleanup and move data files to data directory - must be in "expt_XXX" dir for this script
 cd $P     ||  { echo "Could not go to dir $P  "; exit 1; }
 ./postprocess.sh 
-
-# SWARP post-processing option
-# 0 - do nothing after postprocess.sh
-# 1 - do it depending on expt number
-SWARP_PP=1
-if [ $SWARP_PP -eq 1 ]
-then
-
-   if [ $E == "011" ]
-   then
-      FCtype="ice_only"
-
-   elif [ $E == "012" ]
-   then
-      FCtype="wavesice"
-
-   elif [ $E == "013" ]
-   then
-      FCtype="wavesice_ww3arctic"
-
-   fi
-
-   FCDIR="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$R"
-   post="$SWARP_ROUTINES/forecast_scripts/ModelSetups/common/post"
-   THIS_SRC=$FCDIR/$FCtype/inputs/THISFC.src
-   echo $post/process_FCresults.sh $THIS_SRC
-   $post/process_FCresults.sh $THIS_SRC
-
-fi
 
 exit $?

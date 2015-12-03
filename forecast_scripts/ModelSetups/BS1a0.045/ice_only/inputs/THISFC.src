@@ -1,15 +1,15 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
 HYCOMreg="BS1a0.045" # expt HYCOM region
-Xno=1                # expt number
+Xno=0                # expt number
 
 FCtype="ice_only"                   # should correspond to directory where inputs are
 FCtype_long="ice-only FC"           # description for internal printouts
 FC_OUTPUT="SWARPiceonly_forecast"   # base name of outfile
 archv_opt=1                         # process archv files
 archv_wav_opt=0                     # process archv_wav files
-nesting_outer=T
-nesting_inner=F
+nesting_outer=F
+nesting_inner=T
 
 # forecast stops $FCdays from current day,
 #  at $FCfinal_hour

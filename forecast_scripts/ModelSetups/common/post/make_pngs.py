@@ -4,6 +4,8 @@ import mod_reading as Mr
 import matplotlib
 matplotlib.use('Agg')
 
+# ==========================================================================
+# options
 ncfile   = None
 outdir   = '.'
 FCtype   = None
@@ -22,6 +24,7 @@ if ncfile is None:
 
 if FCtype is None:
    raise ValueError('forecast type not specified (use --FCtype==)')
+# ==========================================================================
 
 print(' ')
 print('Using netcdf file: '+ncfile)
@@ -34,6 +37,13 @@ print(nci.datetimes[0])
 print('\nEnd of forecast:')
 print(nci.datetimes[-1])
 print('\n')
+
+if 'area' in nci.ncattrs.list():
+   HYCOMreg = nci.ncattrs.area[:3]
+elif 'area_name' in nci.ncattrs.list():
+   HYCOMreg = nci.ncattrs.area_name[:3]
+else:
+   HYCOMreg = 'TP4'
 
 if FCtype!="ice_only":
    # =============================================================
@@ -54,7 +64,7 @@ if FCtype!="ice_only":
       figdir   = outdir+'/'+vname
       if not os.path.exists(figdir):
          os.mkdir(figdir)
-      nci.make_png_all(V,figdir=figdir,\
+      nci.make_png_all(V,figdir=figdir,HYCOMreg=HYCOMreg,\
             clabel=clabs[vname],clim=clims[vname])
 
    # pairs
@@ -77,7 +87,7 @@ if FCtype!="ice_only":
       figdir   = outdir+'/'+v1.name
       if not os.path.exists(figdir):
          os.mkdir(figdir)
-      nci.make_png_pair_all(v1,v2,figdir=figdir,\
+      nci.make_png_pair_all(v1,v2,figdir=figdir,HYCOMreg=HYCOMreg,\
             clabel=clabs[vname],clim=clims[vname])
    # =============================================================
 
@@ -98,7 +108,11 @@ else:
 
    vname = 'icetk'
    clabs.update({vname:'Ice thickness, m'})
-   clims.update({vname:[0,5]})
+   if HYCOMreg=='FR1' or HYCOMreg=='BS1':
+      clims.update({vname:[0,2]})
+   else:
+      clims.update({vname:[0,5]})
+
    scalars.append(Mr.make_plot_options(vname,ice_mask=True))
 
    for V in scalars:
@@ -106,7 +120,7 @@ else:
       figdir   = outdir+'/'+vname
       if not os.path.exists(figdir):
          os.mkdir(figdir)
-      nci.make_png_all(V,figdir=figdir,\
+      nci.make_png_all(V,figdir=figdir,HYCOMreg=HYCOMreg,\
             clabel=clabs[vname],clim=clims[vname])
 
    # vectors
@@ -135,6 +149,6 @@ else:
       figdir   = outdir+'/'+vname
       if not os.path.exists(figdir):
          os.mkdir(figdir)
-      nci.make_png_all(V,figdir=figdir,\
+      nci.make_png_all(V,figdir=figdir,HYCOMreg=HYCOMreg,\
             clabel=clabs[vname],clim=clims[vname])
    # =============================================================

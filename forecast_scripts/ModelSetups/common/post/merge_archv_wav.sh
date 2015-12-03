@@ -105,16 +105,19 @@ ncatted -O -h -a comment,global,c,c," "                                       $o
 
 if [ $rungen == "TP4" ]
 then
-   ncatted -O -h -a area,global,c,c,"TP4 (12.5km)"                            $ofil
-   ncatted -O -h -a area,global,c,c,"Arctic and North Atlantic Oceans"        $ofil
+   ncatted -O -h -a area_name,global,c,c,"TP4a0.12"                                 $ofil
+   ncatted -O -h -a area_resolution,global,c,c,"12.5km"                             $ofil
+   ncatted -O -h -a area_description,global,c,c,"Arctic and North Atlantic Oceans"  $ofil
 elif [ $rungen == "BS1" ]
 then
-   ncatted -O -h -a area,global,c,c,"BS1 (4.5km)"                             $ofil
-   ncatted -O -h -a area_name,global,c,c,"Barents and Kara Sea"               $ofil
+   ncatted -O -h -a area_name,global,c,c,"BS1a0.045"                    $ofil
+   ncatted -O -h -a area_resolution,global,c,c,"4.5km"                  $ofil
+   ncatted -O -h -a area_description,global,c,c,"Barents and Kara Sea"  $ofil
 elif [ $rungen == "FR1" ]
 then
-   ncatted -O -h -a area,global,c,c,"FR1 (3km)"                               $ofil
-   ncatted -O -h -a area_name,global,c,c,"Fram Strait"                        $ofil
+   ncatted -O -h -a area_name,global,c,c,"FR1a0.03"            $ofil
+   ncatted -O -h -a area_resolution,global,c,c,"3.5km"         $ofil
+   ncatted -O -h -a area_description,global,c,c,"Fram Strait"  $ofil
 fi
 
 if [ $FCtype == "wavesice" ]
