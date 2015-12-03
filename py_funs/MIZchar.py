@@ -351,14 +351,14 @@ class pca_mapper:
          y_       = y[subset]
          self.x0  = np.mean(x_)
          self.y0  = np.mean(y_)
+         xy_rel   = np.array([x_-self.x0,y_-self.y0]) # 2xN matrix
       else:
          self.x0  = np.mean(x)
          self.y0  = np.mean(y)
+         xy_rel   = np.array([x-self.x0,y-self.y0]) # 2xN matrix
 
-      self.x  = x
-      self.y  = y
-      #
-      xy_rel   = np.array([x_-self.x0,y_-self.y0]) # 2xN matrix
+      self.x   = x
+      self.y   = y
       cov      = xy_rel.dot(xy_rel.transpose()) # covariance (2x2 matrix)
 
       # reorder so 1st eig is bigger (so X represents the major axis)
@@ -660,6 +660,14 @@ def single_file(filename,bmap,pobj=None,cdate=None,METH=4):
     * 3 > dilation to get less complicated shape (in between original and convex hull)
    4     : Use PCA to determine direction to get the width in,
             then just take straight lines across (in stereographic projection space)
+   5     : Use PCA to determine direction to get the width in,
+            oriented wrt the ice edge
+            then just take straight lines across (in stereographic projection space)
+
+   *Read in text file "filename":
+   each line is:
+   polygon number, lon, lat, [function value]
+
    """
 
    import fns_Stefan_Maps as FSM
@@ -744,6 +752,7 @@ def single_file(filename,bmap,pobj=None,cdate=None,METH=4):
 
          subset   = (Poly.func_vals==0)
          # TODO add selector function as extra input?
+
          PCA      = pca_mapper(Poly.xy_coords,subset=subset)
          MIZinfo  = PCA.get_MIZ_lines(bmap)
          Psolns.append(MIZinfo)
