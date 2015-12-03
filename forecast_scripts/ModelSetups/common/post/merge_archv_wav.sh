@@ -207,13 +207,13 @@ then
    echo Warning: merge_archv_wav.sh                            >  $efil
    echo Wrong number of records in $ofil                       >> $efil
    echo "($Nfiles -  should be $Ncorrect)"                     >> $efil
-   mail -s "WARNING: $FCtype_long final product faulty" $email <  $efil
+   mail -s "WARNING: $rungen $FCtype_long final product faulty" $email <  $efil
    rm $efil
 else
    efil=swarp_tmp.txt
    echo Confirmation: merge_archv_wav.sh                       >  $efil
    echo "Correct number of records ($Ncorrect) in $ofil"       >> $efil
-   mail -s "$FCtype_long final product OK" $email              <  $efil
+   mail -s "$rungen $FCtype_long final product OK" $email              <  $efil
    rm $efil
 fi
 ###########################################################################################

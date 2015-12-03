@@ -11,7 +11,7 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 
 print_info=1 # print info to screen (or email in crontab)
 test_pre=0
-SWARP_PP=0
+SWARP_PP=1
 
 if [ $# -lt 1 ]
 then
@@ -66,6 +66,17 @@ then
       echo "$FCtype_long is already running - stopping"
       echo "pbs job message:"
       echo $msg
+   fi
+   exit
+fi
+
+# 2. check if TP4 ice-only forecast has run
+#    - needed for nesting
+if [ ! -f $RTres/TP4a0.12/ice_only/final_output/SWARP*.nc ]
+then
+   if [ $print_info -eq 1 ]
+   then
+      echo "TP4 ice-only FC has not yet run - stopping"
    fi
    exit
 fi
@@ -168,7 +179,7 @@ fi
 if [ $manual -eq 0 ]
 then
    # Checks before run:
-   # 2. check if forecast has already run
+   # 3. check if forecast has already run
    if [ -f $rundir/final_output/SWARP*.nc ]
    then
       if [ $print_info -eq 1 ]
@@ -178,7 +189,18 @@ then
       exit
    fi
 
-   # 3. check if waves FC file is there
+   # 4. check if ice-only forecast has run
+   #    - needed for nesting
+   if [ ! -f $RTres/TP4a0.12/ice_only/final_output/SWARP*.nc ]
+   then
+      if [ $print_info -eq 1 ]
+      then
+         echo "TP4 Ice-only FC has not yet run - stopping"
+      fi
+      exit
+   fi
+
+   # 5. check if waves FC file is there
    do_check=0
    if [ $FCtype == "wavesice" ]
    then
@@ -203,8 +225,8 @@ then
 
    if [ $restart_OPT -eq 2 ] && [ ! $FCtype == "ice_only" ]
    then
-      # 4. check if ice-only forecast has run
-      if [ ! -f $RTres/ice_only/final_output/SWARP*.nc ]
+      # 6. check if local ice-only forecast has run
+      if [ ! -f $RTres/$HYCOMreg/ice_only/final_output/SWARP*.nc ]
       then
          if [ $print_info -eq 1 ]
          then

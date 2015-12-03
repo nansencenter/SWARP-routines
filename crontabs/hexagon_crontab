@@ -10,14 +10,26 @@
 SWARP_ROUTINES="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines"
 FORECAST="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts"
 VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
-#
+
+# ice-only FC's
 FCcommon="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/common/"
-wamfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice"
 wamfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice/inputs/THISFC.src"
-ww3fc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic"
+wamfc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/wavesice/inputs/THISFC.src"
+wamfc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/wavesice/inputs/THISFC.src"
+
+# wave-ice FC's (WAM)
 ww3fc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic/inputs/THISFC.src"
-IOfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/ice_only"
+ww3fc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/wavesice_ww3arctic/inputs/THISFC.src"
+ww3fc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/wavesice_ww3arctic/inputs/THISFC.src"
+
+# wave-ice FC's (WW3)
 IOfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/ice_only/inputs/THISFC.src"
+IOfc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/ice_only/inputs/THISFC.src"
+IOfc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/ice_only/inputs/THISFC.src"
+
+# download/check wave data
+wamfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice"
+ww3fc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic"
 
 #full paths to needed applications
 qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
@@ -32,7 +44,9 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # run ice_only forecast as early as possible
 # (wind FC arrives just before 2400 previous day)
-10 * * * * $FCcommon/run_forecast.sh $IOfc_src
+10 * * * * $FCcommon/run_forecast.sh         $IOfc_src
+10 * * * * $FCcommon/run_forecast_nested.sh  $IOfc_srcB
+10 * * * * $FCcommon/run_forecast_nested.sh  $IOfc_srcF
 # ===================================================================
 
 
@@ -46,7 +60,9 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # run wavesice (WAM) forecast
 # internal check for ice_only restart and WAMNSEA product
-10 * * * * $FCcommon/run_forecast.sh $wamfc_src
+10 * * * * $FCcommon/run_forecast.sh         $wamfc_src
+# 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcB
+# 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcF
 # ===================================================================
 
 
@@ -60,7 +76,9 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # run wavesice (WW3) forecast
 # internal check for ice_only restart and WW3_ARCTIC product
-30 * * * * $FCcommon/run_forecast.sh $ww3fc_src
+30 * * * * $FCcommon/run_forecast.sh         $ww3fc_src
+# 30 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcB
+# 30 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcF
 # ===================================================================
 
 

@@ -197,7 +197,7 @@ then
    if [ $restart_OPT -eq 2 ] && [ ! $FCtype == "ice_only" ]
    then
       # 4. check if ice-only forecast has run
-      if [ ! -f $RTres/ice_only/final_output/SWARP*.nc ]
+      if [ ! -f $RTres/$HYCOMreg/ice_only/final_output/SWARP*.nc ]
       then
          if [ $print_info -eq 1 ]
          then
