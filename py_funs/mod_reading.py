@@ -173,7 +173,16 @@ class nc_getinfo:
       self.dimensions            = nc.dimensions.keys()
 
       # get global netcdf attributes
-      self.ncattrs  = nc.ncattrs()
+      class ncatts:
+         def __init__(self,nc):
+            for att in nc.ncattrs():
+               attval   = getattr(nc,att)
+               setattr(self,att,attval)
+            return
+         def list(self):
+            return vars(self).keys()
+
+      self.ncattrs   = ncatts(nc)
 
       dkeys = nc.dimensions.keys()
       vkeys = nc.variables.keys()
