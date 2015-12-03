@@ -341,17 +341,24 @@ def covering_polygon(poly):
 class pca_mapper:
 
    #############################################################################################
-   def __init__(self,xy_coords):
+   def __init__(self,xy_coords,subset=None):
       import numpy as np
       #
       x,y   = np.array(xy_coords).transpose()
-      #
-      self.x0 = np.mean(x)
-      self.y0 = np.mean(y)
+
+      if subset is not None:
+         x_       = x[subset]
+         y_       = y[subset]
+         self.x0  = np.mean(x_)
+         self.y0  = np.mean(y_)
+      else:
+         self.x0  = np.mean(x)
+         self.y0  = np.mean(y)
+
       self.x  = x
       self.y  = y
       #
-      xy_rel   = np.array([x-self.x0,y-self.y0]) # 2xN matrix
+      xy_rel   = np.array([x_-self.x0,y_-self.y0]) # 2xN matrix
       cov      = xy_rel.dot(xy_rel.transpose()) # covariance (2x2 matrix)
 
       # reorder so 1st eig is bigger (so X represents the major axis)
@@ -720,6 +727,24 @@ def single_file(filename,bmap,pobj=None,cdate=None,METH=4):
          print('\nUsing PCA without Laplacian solution\n')
          
          PCA      = pca_mapper(Poly.xy_coords)
+         MIZinfo  = PCA.get_MIZ_lines(bmap)
+         Psolns.append(MIZinfo)
+
+         if MK_PLOT:
+            x,y   = np.array(Poly.xy_coords).transpose()
+            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
+            MIZinfo.plot_soln(bmap,ax=ax1,color='c')
+
+      elif METH==5:
+         print('\nUsing PCA without Laplacian solution')
+         print('\n - oriented wrt ice edge\n')
+
+         if Poly.func_vals is None:
+            raise ValueError("Need 'func_vals' input to use 'METH' = "+METH)
+
+         subset   = (Poly.func_vals==0)
+         # TODO add selector function as extra input?
+         PCA      = pca_mapper(Poly.xy_coords,subset=subset)
          MIZinfo  = PCA.get_MIZ_lines(bmap)
          Psolns.append(MIZinfo)
 
