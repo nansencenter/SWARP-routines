@@ -6,6 +6,7 @@ import os,sys
 import numpy as np
 import time
 from datetime import date, timedelta
+from getopt import getopt
 
 ############################################################################
 WANT2SHOW   = 0 # show the figure - make sure you don't use this if you need to run inside crontab
@@ -42,20 +43,28 @@ pday  = yday.strftime('%Y%m%d')
 yday2 = date.today() - timedelta(2)
 pday2 = yday2.strftime('%Y%m%d')
 
+# ==============================================================
+outdir      = None
+subdir      = None
+opts,args   = getopt(sys.argv[1:],"",["subdir=","outdir="])
+for opt,arg in opts:
+   if opt=='--subdir':
+      subdir   = arg
+   if opt=='--outdir':
+      outdir   = arg
+
+if outdir is None:
+   raise ValueError('specify "outdir" input (--outdir=)')
+if subdir is None:
+   raise ValueError('specify "subdir" input (--subdir=)')
+# ==============================================================
+
 # where to put outputs
-odir  = '/work/timill/RealTime_Models/check_ww3arctic/'
-if not os.path.exists(odir):
-   os.mkdir(odir)
-# daily sub-dir
-odir  = odir+pday
+# - daily sub-dir
+odir  = outdir+'/'+pday
 if not os.path.exists(odir):
    os.mkdir(odir)
 
-#print 'Select the contour method:   '
-#print 'Type 0 for basemap contour package'
-#print 'Type 1 for Threshold method'
-#chc = raw_input()
-chc = '1'
 
 ############################################################################
 def finish_map(bm,**kwargs):
@@ -499,7 +508,5 @@ for reg in ['BaS','BeS']:
       import subprocess
       subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
       subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
-      #
-      awdir = SR+'/forecast_scripts/wavesice_ww3arctic/wave_data'
-      subprocess.check_call([awdir+'/waves_alert.sh', pday,lut[reg]])
+      subprocess.check_call([subdir+'/waves_alert.sh', pday,lut[reg]])
    ################################################################

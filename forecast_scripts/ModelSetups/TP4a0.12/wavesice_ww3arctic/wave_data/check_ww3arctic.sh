@@ -35,7 +35,11 @@ then
    exit
 fi
 
+subdir=$THISFC/wave_data
+outdir=$RTmods/check_ww3arctic
+mkdir -p $outdir
+
 # load python and launch check_ww3arctic.py
 [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
 module load python/2.7.9-dso
-$python $THISFC/wave_data/check_ww3arctic.py
+$python $subdir/check_ww3arctic.py --subdir=$subdir --outdir=$outdir
