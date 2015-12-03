@@ -197,6 +197,11 @@ def read_txt_file(fname):
 
 #########################################################
 def read_txt_file_polys(fname):
+
+   # read in text file:
+   # each line is:
+   # polygon number, lon, lat, [function value]
+
    fid   = open(fname,'r')
    lins  = fid.readlines()    # 1 line
    fid.close()
