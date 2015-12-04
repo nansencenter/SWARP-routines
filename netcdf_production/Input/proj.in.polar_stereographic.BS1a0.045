@@ -1,0 +1,11 @@
+polar_stereographic
+-1300.              # Left  edge of projection area (km)
+ 1300.              # Right edge of projection area (km)
+  4.5               # Projection grid increment (left->right)
+-1300.              # Bottom edge of projection area (km)
+ 1300.              # Top    edge of projection area (km)
+  4.5               # Projection grid increment (bottom->top)
+ 47.0               # Central longitude of projection 
+ 75.0               # Central latitude  of projection 
+ 0.01               # Conversion factor 
+ F                  # Rotate vectors to output grid (F=use East/North components)

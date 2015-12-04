@@ -1,0 +1,26 @@
+# get global variables
+source $SWARP_ROUTINES/source_files/hex_vars.src
+
+HYCOMreg="TP4a0.12"  # expt HYCOM region
+Xno=3                # expt number
+
+FCtype="wavesice_ww3arctic"            # should correspond to directory where inputs are
+FCtype_long="waves-ice FC (WW3)"       # description for internal printouts
+FC_OUTPUT="SWARPwavesice_WW3_forecast" # base name of outfile
+archv_opt=0                            # process archv files
+archv_wav_opt=1                        # process archv_wav files
+nesting_outer=F
+nesting_inner=F
+
+# forecast stops $FCdays from current day,
+#  at $FCfinal_hour
+FCdays=6
+FCfinal_hour=00
+FCrecords=49
+
+THISFC="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/$FCtype"    # inputs,logs
+HREGcommon="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/common" # scripts common to region
+THISFC2="$RTres/$HYCOMreg/$FCtype"                                         # outputs go here
+THISFC3="/migrate/timill/RESULTS/$HYCOMreg/SWARP_forecasts/$FCtype"        # backup location
+rungen=${HYCOMreg:0:3}
+JOBNAME=${rungen}x01${Xno}fc
