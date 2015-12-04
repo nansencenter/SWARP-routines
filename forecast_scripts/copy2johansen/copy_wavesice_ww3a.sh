@@ -17,9 +17,11 @@ TP4rt="/work/timill/RealTime_Models/results/TP4a0.12"       # location of foreca
 hidden=$SRjoh/forecast_scripts/hidden                      # location of private info eg logs, ssh_info.src
 
 # FC-specific variables
-FCtype_joh="wavesice"
 FCtype_hex="wavesice_ww3arctic"
 FC_OUTPUT="SWARPwavesice_WW3_forecast"
+# rename to wavesice
+FCtype_joh="wavesice"
+FC_OUTPUT2="SWARPwavesice_forecast"
 
 joh_dir=$THREDDS/$FCtype_joh           # directory on johansen where final file should go
 tmp_dir=$joh_dir/tmp                   # directory on johansen where final file + figures go after copying
@@ -66,18 +68,19 @@ do
    echo "$(date +%H:%M) - looking for <<$FCtype_hex>> latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
    echo "Looking for product $hdate" >> $cplog
-   hex_fil=${FC_OUTPUT}_start${hdate}*  # final file
+   hex_fil=${FC_OUTPUT}_start${hdate}*  # final file on hexagon
+   joh_fil=${FC_OUTPUT2}_start${hdate}*  # final file on johansen
 
    # only do scp if file not present
-   if [ ! -f $joh_dir/$hex_fil ]
+   if [ ! -f $joh_dir/$joh_fil ]
    then
-      echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+      echo "scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir"
       scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
 
       if [ -f $tmp_dir/$hex_fil ]
       then
          # if scp worked move it to THREDDS dir
-         mv $tmp_dir/$hex_fil $joh_dir/
+         mv $tmp_dir/$hex_fil $joh_dir/$joh_fil
          chmod o+r $joh_dir/$hex_fil
          echo "Product found on $hdate!" >> $cplog
          echo "" >> $cplog

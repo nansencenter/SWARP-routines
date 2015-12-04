@@ -21,9 +21,9 @@ FCtype_joh="ice_only"               # type of FC on johansen
 FCtype_hex="ice_only"               # type of FC on johansen ("wavesice" or "wavesice_ww3arctic")
 FC_OUTPUT="SWARPiceonly_forecast"   # start of netcdf file
 
-joh_dir=$THREDDS/$FCtype      # directory on johansen where final file should go
-tmp_dir=$THREDDS/$FCtype/tmp  # directory on johansen where final file + figures should go initially after copying
-hex_dir=$TP4rt/$FCtype_hex    # directory on hexagon where final file ends up
+joh_dir=$THREDDS/$FCtype_joh     # directory on johansen where final file should go
+tmp_dir=$THREDDS/$FCtype_joh/tmp # directory on johansen where final file + figures should go initially after copying
+hex_dir=$TP4rt/$FCtype_hex       # directory on hexagon where final file ends up
 # ==================================================================================
 
 mkdir -p $tmp_dir
