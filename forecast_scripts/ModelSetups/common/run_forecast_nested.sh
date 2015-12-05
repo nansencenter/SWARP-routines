@@ -170,7 +170,6 @@ then
    # 2. check if TP4 ice-only forecast has run
    #    - needed for nesting
    oTP4=$RTres/TP4a0.12/ice_only/$cday/final_output/SWARPiceonly_forecast_start${cday}T000000Z.nc
-   ls $oTP4
    if [ ! -f $oTP4 ]
    then
       echo hi
