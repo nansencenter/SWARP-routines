@@ -7,7 +7,7 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 if [ $# -lt 2 ]
 then
    echo Usage:
-   echo "./waves_alert.sh [date]"
+   echo "./waves_alert.sh [date] [region]"
    echo "date in YYYYMMDD format"
    echo "region = Beaufort or Barents"
    exit
@@ -17,6 +17,11 @@ fcday=`date --date="$1 +5days" "+%Y%m%d"`
 #######################################################################################################
 # EMAIL ADRESS
 email=$(cat $FCemail)
+if [ 1 -eq 1 ]
+then
+   # add Giacomo for his interest
+   email=$email,gcmdnt90@gmail.com
+fi
 #######################################################################################################
 
 wdir=/work/timill/RealTime_Models/check_ww3arctic/$1

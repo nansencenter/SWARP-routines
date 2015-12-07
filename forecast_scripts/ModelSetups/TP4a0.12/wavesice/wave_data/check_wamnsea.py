@@ -498,14 +498,9 @@ for loop_i in check_list:
 
 ################################################################
 # EMAIL SYSTEM
-if SEND_EMAIL and (SEND_EMAIL2 or SEND_EMAIL3):
+if SEND_EMAIL:
    import subprocess
    subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
    subprocess.call(["chmod",'-R',"+rw",odir+"/lst"])
    subprocess.check_call([subdir+'/waves_alert.sh', cday])
-elif SEND_EMAIL:
-   import subprocess
-   # just send pic
-   subprocess.call(["chmod",'-R',"+rw",odir+"/img"])
-   subprocess.check_call([subdir+'/waves_pic.sh', cday])
 ################################################################

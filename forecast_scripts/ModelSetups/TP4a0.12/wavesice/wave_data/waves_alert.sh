@@ -11,10 +11,16 @@ then
    echo "date in YYYYMMDD format"
    exit
 fi
+fcday=`date --date="$1 +2days" "+%Y%m%d"`
 
 #######################################################################################################
 # EMAIL ADRESS
 email=$(cat $FCemail)
+if [ 1 -eq 1 ]
+then
+   # add Giacomo for his interest
+   email=$email,gcmdnt90@gmail.com
+fi
 #######################################################################################################
 
 wdir=$RTmods/check_wamnsea/$1
@@ -22,12 +28,13 @@ echo "waves_alert.sh called by check_wamnsea.py:"  >  tmp.txt
 echo " "                                           >> tmp.txt
 cat $wdir/lst/*.txt                                >> tmp.txt
 
-if [ 1 -eq 0 ]
+if [  -f $wdir/lst/$fcday*.txt ]
 then
-   # just email person from file
-   mutt -s "WAM forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email < tmp.txt
+   cat $wdir/lst/$fcday*.txt                                                                       >> tmp.txt
+   mutt -s "WAM forecast for $fcday" -a $wdir/img/$fcday*.png -a $wdir/lst/$fcday*.txt -- $email  <  tmp.txt
 else
-   # add Giacomo for his interest
-   mutt -s "WAM forecast for $1" -a $wdir/img/*.png -a $wdir/lst/*.txt -- $email,gcmdnt90@gmail.com < tmp.txt
+   echo "No large waves close to ice"                                                              >> tmp.txt
+   mutt -s "WAM forecast for $fcday" -a $wdir/img/$fcday*.png -- $email                           <  tmp.txt
 fi
+
 rm tmp.txt
