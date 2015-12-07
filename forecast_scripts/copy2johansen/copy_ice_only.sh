@@ -65,19 +65,20 @@ do
    echo "$(date +%H:%M) - looking for <<$FCtype_hex>> latest file" >> $cplog
    hdate=$(date --date="$n days ago" '+%Y%m%d')
    echo "Looking for product $hdate" >> $cplog
-   hex_fil=${FC_OUTPUT}_start${hdate}*  # final file
+   hex_fil=${FC_OUTPUT}_start${hdate}T000000Z.nc  # final file
+   joh_fil=$hex_fil
 
    # only do scp if file not present
    if [ ! -f $joh_dir/$hex_fil ]
    then
-      echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
-      scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+      echo scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir/$joh_fil
+      scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir/$joh_fil
 
-      if [ -f $tmp_dir/$hex_fil ]
+      if [ -f $tmp_dir/$joh_fil ]
       then
          # if scp worked move it to THREDDS dir
-         mv $tmp_dir/$hex_fil $joh_dir/
-         chmod o+r $joh_dir/$hex_fil
+         mv $tmp_dir/$joh_fil $joh_dir/
+         chmod o+r $joh_dir/$joh_fil
          echo "Product found on $hdate!" >> $cplog
          echo "" >> $cplog
       else
