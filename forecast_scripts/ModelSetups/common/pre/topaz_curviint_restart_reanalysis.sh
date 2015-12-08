@@ -103,13 +103,16 @@ then
    X=01.$Xno
    E=01$Xno
    cd $xdir/..
-   pwd
+
+   # clean curviint directory
+   cdir=`readlink -f curviint/$E`
+   rm -f $cdir/SCRATCH/*
+
    inputs="$X 01.1 $TP4_REALTIME $Ddir/$Rfil0.a"
    echo "other_nersc/bin/curviint.sh $inputs"
    other_nersc/bin/curviint.sh $inputs
 
    # get results, rename and move:
-   cdir=`readlink -f curviint/$E`
    cp $cdir/$Rfil0.a $ddir/$rfil0.a
    cp $cdir/$Rfil0.b $ddir/$rfil0.b
    cp $cdir/${Rfil0}ICE.uf $ddir/${rfil0}ICE.uf

@@ -9,8 +9,8 @@
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-print_info=0 # print info to screen (or email in crontab)
-test_pre=0
+print_info=1 # print info to screen (or email in crontab)
+test_pre=1
 SWARP_PP=1
 
 if [ $# -lt 1 ]
@@ -320,19 +320,27 @@ echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$FCfinal_hour
 
 if [ $FCtype == "ice_only" ] && [ $TP4restart_OPT -eq 2 ] && [ $day2 -ne $rday ]
 then
-   if [ $Rday -ge $final_day ]
+   if [ $Rday -gt $final_day ]
    then
       days="$rday $day2 $final_day"
       Ropts="F T F"
+   elif [ $Rday -eq $final_day ]
+   then
+      days="$rday $day2 $final_day"
+      Ropts="F T T"
    else
       days="$rday $day2 $Rday $final_day"
       Ropts="F F T F"
    fi
 else
-   if [ $Rday -ge $final_day ]
+   if [ $Rday -gt $final_day ]
    then
       days="$rday $final_day"
       Ropts="F F"
+   elif [ $Rday -eq $final_day ]
+   then
+      days="$rday $final_day"
+      Ropts="F T"
    else
       days="$rday $Rday $final_day"
       Ropts="F T F"
