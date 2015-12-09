@@ -1,10 +1,12 @@
 # Crontab for SWARP project on Johansen
+CP_SCRIPT=/Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy2johansen.sh
 
 # get ice-only FC
-00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_ice_only.sh
-
-# get waves-ice FC (WAM) - NB don't do both WAM & WW3 (both go to same place)
-# 00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_wavesice.sh
+00 * * * * $CP_SCRIPT ice_only TP4
+00 * * * * $CP_SCRIPT ice_only FR1
+00 * * * * $CP_SCRIPT ice_only BS1
 
 # get waves-ice FC (WW3) - NB don't do both WAM & WW3 (both go to same place)
-00 * * * * /Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2johansen/copy_wavesice_ww3a.sh
+00 * * * * $CP_SCRIPT wavesice_ww3arctic TP4
+00 * * * * $CP_SCRIPT wavesice_ww3arctic FR1
+00 * * * * $CP_SCRIPT wavesice_ww3arctic BS1
