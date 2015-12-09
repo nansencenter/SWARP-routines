@@ -61,7 +61,7 @@ then
    Reg=FR1a0.03
 fi
 
-print_info=1
+print_info=0
 if [ $print_info -eq 1 ]
 then
    echo $reg $Reg
@@ -88,8 +88,6 @@ mkdir -p $tmp_dir
 
 # get $keyname, $user
 source $hidden/ssh_info.src
-echo ho
-
 
 # ==================================================================================
 # EMAIL ADRESS
@@ -171,8 +169,8 @@ done
 
 if [ "$wrn_count" -gt 0 ] && [ $thour -gt $T1 ]
 then
-   echo ""                          >> $cplog
-   mail -s "WARNING - Johansen Missing <<$FCtype_hex>> Product(s)" $email < $cplog
+   echo ""                                                                       >> $cplog
+   mail -s "WARNING - Johansen Missing <<$FCtype_hex/$reg>> Product(s)" $email   <  $cplog
 fi
 
 # make key with:

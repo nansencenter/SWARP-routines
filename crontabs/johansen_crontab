@@ -8,5 +8,5 @@ CP_SCRIPT=/Data/sim/tim/Projects/SWARP/SWARP-routines/forecast_scripts/copy2joha
 
 # get waves-ice FC (WW3) - NB don't do both WAM & WW3 (both go to same place)
 00 * * * * $CP_SCRIPT wavesice_ww3arctic TP4
-00 * * * * $CP_SCRIPT  FR1
-00 * * * * $CP_SCRIPT  BS1
+00 * * * * $CP_SCRIPT wavesice_ww3arctic FR1
+00 * * * * $CP_SCRIPT wavesice_ww3arctic BS1
