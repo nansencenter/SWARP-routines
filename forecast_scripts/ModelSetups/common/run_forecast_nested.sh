@@ -9,8 +9,8 @@
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-print_info=1 # print info to screen (or email in crontab)
-test_pre=1
+print_info=0 # print info to screen (or email in crontab)
+test_pre=0
 SWARP_PP=1
 
 if [ $# -lt 1 ]
