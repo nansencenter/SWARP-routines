@@ -11,10 +11,8 @@ import numpy as np
 import subprocess
 import shutil
 import matplotlib
-
 #NOTE to be used only on servers (i.e. Hexagon)
-matplotlib.use('Agg')
-
+#matplotlib.use('Agg')
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -28,7 +26,7 @@ from skimage import morphology as morph
 from scipy.interpolate import griddata as grd
 from operator import itemgetter as itg
 
-sys.path.append('../py_funs')
+sys.path.append('../../py_funs')
 import mod_reading as Mrdg
 
 # Muting error coming from invalid values of binary_mod and binary_diff
@@ -414,65 +412,114 @@ bias = np.nansum(DN)/len(DN)
 rmsd = np.sqrt(np.nansum(np.power(DN,2)))/len(DN)
 mdl_extent = len(ZM[ZM>.15])*100
 obs_extent = len(ZO[ZO>.15])*100
+mdl_iarea = np.copy(ZM)*100
+osi_iarea = np.copy(ZO)*100
 
 # Regional Stats
-bar_vals = []
-les_vals = []
-ncb_vals = []
-lab_vals = []
-gre_vals = []
+bar_mvals = []
+les_mvals = []
+ncb_mvals = []
+lab_mvals = []
+gre_mvals = []
+
+bar_ovals = []
+les_ovals = []
+ncb_ovals = []
+lab_ovals = []
+gre_ovals = []
+
+bar_diff = []
+les_diff = []
+ncb_diff = []
+lab_diff = []
+gre_diff = []
+
 for i in range(len(DN[:,0])):
     for j in range(len(DN[0,:])):
         if regions[i,j] == 1:
-            bar_vals.append(DN[i,j])
+            bar_mvals.append(ZM[i,j])
+            bar_ovals.append(ZO[i,j])
+            bar_diff.append(DN[i,j])
         elif regions[i,j] == 2:
-            les_vals.append(DN[i,j])
+            les_mvals.append(ZM[i,j])
+            les_ovals.append(ZO[i,j])
+            les_diff.append(DN[i,j])
         elif regions[i,j] == 3:
-            ncb_vals.append(DN[i,j])
+            ncb_mvals.append(ZM[i,j])
+            ncb_ovals.append(ZO[i,j])
+            ncb_diff.append(DN[i,j])
         elif regions[i,j] == 4:
-            lab_vals.append(DN[i,j])
+            lab_mvals.append(ZM[i,j])
+            lab_ovals.append(ZO[i,j])
+            lab_diff.append(DN[i,j])
         elif regions[i,j] == 5:
-            gre_vals.append(DN[i,j])
+            gre_mvals.append(ZM[i,j])
+            gre_ovals.append(ZO[i,j])
+            gre_diff.append(DN[i,j])
 
-bar_bias = np.nansum(bar_vals)/len(bar_vals)
-les_bias = np.nansum(les_vals)/len(les_vals)
-ncb_bias = np.nansum(ncb_vals)/len(ncb_vals)
-lab_bias = np.nansum(lab_vals)/len(lab_vals)
-gre_bias = np.nansum(gre_vals)/len(gre_vals)
-bar_rmsd = np.sqrt(np.nansum(np.power(bar_vals,2)))/len(bar_vals)
-les_rmsd = np.sqrt(np.nansum(np.power(les_vals,2)))/len(les_vals)
-ncb_rmsd = np.sqrt(np.nansum(np.power(ncb_vals,2)))/len(ncb_vals)
-lab_rmsd = np.sqrt(np.nansum(np.power(lab_vals,2)))/len(lab_vals)
-gre_rmsd = np.sqrt(np.nansum(np.power(gre_vals,2)))/len(gre_vals)
+bar_bias = np.nansum(bar_diff)/len(bar_diff)
+les_bias = np.nansum(les_diff)/len(les_diff)
+ncb_bias = np.nansum(ncb_diff)/len(ncb_diff)
+lab_bias = np.nansum(lab_diff)/len(lab_diff)
+gre_bias = np.nansum(gre_diff)/len(gre_diff)
+bar_rmsd = np.sqrt(np.nansum(np.power(bar_diff,2)))/len(bar_diff)
+les_rmsd = np.sqrt(np.nansum(np.power(les_diff,2)))/len(les_diff)
+ncb_rmsd = np.sqrt(np.nansum(np.power(ncb_diff,2)))/len(ncb_diff)
+lab_rmsd = np.sqrt(np.nansum(np.power(lab_diff,2)))/len(lab_diff)
+gre_rmsd = np.sqrt(np.nansum(np.power(gre_diff,2)))/len(gre_diff)
 
+bar_mextent = len(bar_mvals[bar_mvals>.15])*100
+les_mextent = len(les_mvals[les_mvals>.15])*100
+ncb_mextent = len(ncb_mvals[ncb_mvals>.15])*100
+lab_mextent = len(lab_mvals[lab_mvals>.15])*100
+gre_mextent = len(gre_mvals[gre_mvals>.15])*100
+bar_marea = np.copy(bar_mvals)*100
+les_marea = np.copy(les_mvals)*100
+ncb_marea = np.copy(ncb_mvals)*100
+lab_marea = np.copy(lab_mvals)*100
+gre_marea = np.copy(gre_mvals)*100
+
+bar_oextent = len(bar_ovals[bar_ovals>.15])*100
+les_oextent = len(les_ovals[les_ovals>.15])*100
+ncb_oextent = len(ncb_ovals[ncb_ovals>.15])*100
+lab_oextent = len(lab_ovals[lab_ovals>.15])*100
+gre_oextent = len(gre_ovals[gre_ovals>.15])*100
+bar_oarea = np.copy(bar_ovals)*100
+les_oarea = np.copy(les_ovals)*100
+ncb_oarea = np.copy(ncb_ovals)*100
+lab_oarea = np.copy(lab_ovals)*100
+gre_oarea = np.copy(gre_ovals)*100
 
 outdir = str(out_dir)
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
+# BIAS FILE
 filname = str(outdir)+'/bias.txt'
 with open(filname,'a') as f:
-    row1 = [bias,bar_bias,les_bias,ncb_bias,lab_bias,gre_bias]
+    row1 = [dadate,bias,bar_bias,les_bias,ncb_bias,lab_bias,gre_bias,'artbarlesncblabgre']
     str1 = ' '.join(map(str,row1))
     f.write(str1)
     f.write('\n')
     f.close()
 
-outdir = str(out_dir)
-if not os.path.exists(outdir):
-    os.mkdir(outdir)
-
+# RMSD FILE
 filname = str(outdir)+'/rmsd.txt'
 with open(filname,'a') as f:
-    row2 = [rmsd,bar_rmsd,les_rmsd,ncb_rmsd,lab_rmsd,gre_rmsd]
-    str2 = ' '.join(map(str,row2))
-    f.write(str2)
+    row1 = [dadate,rmsd,bar_rmsd,les_rmsd,ncb_rmsd,lab_rmsd,gre_rmsd,'artbarlesncblabgre']
+    str1 = ' '.join(map(str,row1))
+    f.write(str1)
     f.write('\n')
     f.close()
 
-
-
-
+# SEA ICE EXTENT and AREA FILE
+filname = str(outdir)+'/sea_ice_extent_area.txt'
+with open(filname,'a') as f:
+    row1 = [dadate,mdl_extent,osi_extent,mdl_iarea,osi_iarea,'mdlext,osiext,mdlarea,osiarea']
+    str1 = ' '.join(map(str,row1))
+    f.write(str1)
+    f.write('\n')
+    f.close()
 
 #       
 #if run == 'arctic':
