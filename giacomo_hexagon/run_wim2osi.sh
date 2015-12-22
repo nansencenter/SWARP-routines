@@ -10,12 +10,12 @@
 
 mdldir=/migrate/timill/RESULTS/TP4a0.12/SWARP_forecasts/wavesice
 osidir=/work/shared/nersc/msc/OSI-SAF
-#wrkdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/data
-wrkdir=/home/charlie/Documents/SWARP-routines/giacomo_stuff/jiping
+wrkdir=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/giacomo_hexagon/tmp
+#wrkdir=/home/charlie/Documents/SWARP-routines/giacomo_stuff/jiping
 results=/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation/outputs
 
-startdate='20150601'
-enddate='20150630'
+startdate='20150401'
+enddate='20150930'
 sdj=$(date --date="$startdate" +%j)
 edj=$(date --date="$enddate" +%j)
 ndays=$(expr $edj - $sdj)
@@ -36,17 +36,17 @@ do
    m_obj=${mdldir}/${year}/SWARP_wavesice_forecast_${hdate}.tar.gz 
    if [ -f ${o_obj} ]
    then
-      echo "Found --> ${hdate}"
+      echo "OSISAF Found --> ${hdate}"
       cp ${o_obj} ${wrkdir}/OSI/
    else   
-      echo "NOT found --> ${hdate}"
+      echo "OSISAF NOT found --> ${hdate}"
    fi
    echo ""
    echo "Osisaf ${hdate} COMPLETE"
    echo ""
    if [ -f ${m_obj} ]
    then
-      echo "Found --> ${hdate}"
+      echo "MODEL Found --> ${hdate}"
       echo ""
       # NetCDF extraction
       steve=${hdate}/netcdf/TP4archv_wav_start${hdate}_000000Z_dump${hdate}_120000Z.nc
@@ -57,14 +57,14 @@ do
       mv ${wrkdir}/MDL/${hdate}/netcdf/* ${wrkdir}/MDL
       rm -rf ${wrkdir}/MDL/${hdate}
    else   
-      echo "NOT found --> ${hdate}"
+      echo "MODEL NOT found --> ${hdate}"
    fi
    echo ""
    echo "Model ${hdate} COMPLETE"
    echo ""
-   if [ -f ${wrkdir}/OSI/* ] && ([ -f ${wrkdir}/MDL/*.a ] || [ -f ${wrkdir}/MDL/*.nc ])
+   if [ -f ${wrkdir}/OSI/* ] && [ -f ${wrkdir}/MDL/*.nc ]
    then
-      python wim2osi.py "${hdate}" "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/giacomo_stuff/WIM2OSI/results"
+      python wim2osi.py "${hdate}" "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/giacomo_hexagon/outputs"
    else
       echo "Data not available"
    fi

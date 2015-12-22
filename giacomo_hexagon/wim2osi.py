@@ -11,8 +11,10 @@ import numpy as np
 import subprocess
 import shutil
 import matplotlib
+
 #NOTE to be used only on servers (i.e. Hexagon)
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
+
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -26,7 +28,7 @@ from skimage import morphology as morph
 from scipy.interpolate import griddata as grd
 from operator import itemgetter as itg
 
-sys.path.append('../../py_funs')
+sys.path.append('../py_funs')
 import mod_reading as Mrdg
 
 # Muting error coming from invalid values of binary_mod and binary_diff
