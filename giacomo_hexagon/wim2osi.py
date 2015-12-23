@@ -12,7 +12,7 @@ import subprocess
 import shutil
 import matplotlib
 #NOTE to be used only on servers (i.e. Hexagon)
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -468,27 +468,28 @@ ncb_rmsd = np.sqrt(np.nansum(np.power(ncb_diff,2)))/len(ncb_diff)
 lab_rmsd = np.sqrt(np.nansum(np.power(lab_diff,2)))/len(lab_diff)
 gre_rmsd = np.sqrt(np.nansum(np.power(gre_diff,2)))/len(gre_diff)
 
-bar_mextent = len(bar_mvals[bar_mvals>.15])*100
-les_mextent = len(les_mvals[les_mvals>.15])*100
-ncb_mextent = len(ncb_mvals[ncb_mvals>.15])*100
-lab_mextent = len(lab_mvals[lab_mvals>.15])*100
-gre_mextent = len(gre_mvals[gre_mvals>.15])*100
-bar_marea = np.copy(bar_mvals)*100
-les_marea = np.copy(les_mvals)*100
-ncb_marea = np.copy(ncb_mvals)*100
-lab_marea = np.copy(lab_mvals)*100
-gre_marea = np.copy(gre_mvals)*100
-
-bar_oextent = len(bar_ovals[bar_ovals>.15])*100
-les_oextent = len(les_ovals[les_ovals>.15])*100
-ncb_oextent = len(ncb_ovals[ncb_ovals>.15])*100
-lab_oextent = len(lab_ovals[lab_ovals>.15])*100
-gre_oextent = len(gre_ovals[gre_ovals>.15])*100
-bar_oarea = np.copy(bar_ovals)*100
-les_oarea = np.copy(les_ovals)*100
-ncb_oarea = np.copy(ncb_ovals)*100
-lab_oarea = np.copy(lab_ovals)*100
-gre_oarea = np.copy(gre_ovals)*100
+# TODO gives problem with nans 
+#bar_mextent = len(bar_mvals[bar_mvals>.15])*100
+#les_mextent = len(les_mvals[les_mvals>.15])*100
+#ncb_mextent = len(ncb_mvals[ncb_mvals>.15])*100
+#lab_mextent = len(lab_mvals[lab_mvals>.15])*100
+#gre_mextent = len(gre_mvals[gre_mvals>.15])*100
+#bar_marea = np.copy(bar_mvals)*100
+#les_marea = np.copy(les_mvals)*100
+#ncb_marea = np.copy(ncb_mvals)*100
+#lab_marea = np.copy(lab_mvals)*100
+#gre_marea = np.copy(gre_mvals)*100
+#
+#bar_oextent = len(bar_ovals[bar_ovals>.15])*100
+#les_oextent = len(les_ovals[les_ovals>.15])*100
+#ncb_oextent = len(ncb_ovals[ncb_ovals>.15])*100
+#lab_oextent = len(lab_ovals[lab_ovals>.15])*100
+#gre_oextent = len(gre_ovals[gre_ovals>.15])*100
+#bar_oarea = np.copy(bar_ovals)*100
+#les_oarea = np.copy(les_ovals)*100
+#ncb_oarea = np.copy(ncb_ovals)*100
+#lab_oarea = np.copy(lab_ovals)*100
+#gre_oarea = np.copy(gre_ovals)*100
 
 outdir = str(out_dir)
 if not os.path.exists(outdir):
