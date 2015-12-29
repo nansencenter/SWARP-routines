@@ -31,8 +31,8 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #   relaxation conditions at the ports
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DSEASONAL_PORT \
-# #                -DINTERANNUAL_PORT \
-# #                -DNEST_OUTER \
+#                -DNEST_OUTER \
+#                -DINTERANNUAL_PORT \
 
 # # flags specific to inner models :
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
@@ -49,6 +49,8 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DWAVES \
                  -DWAVES_WW3_ARCTIC \
+                 -DWAVES_THERM \
+                 -DWAVES_TEST_SUBR \
 #                -DWAVES_WAMNSEA \
 #                -DWAVES_WW3 \
 #                -DWAVES_NOSAVE \
