@@ -224,6 +224,7 @@ then
    ryear=${rname:10:4}  # year of restart file
    rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
    rdate=`date --date="$ryear-01-01 +${rday}days" +%Y%m%d`
+   r_ndays=`date --date="$ryear-12-31" +%j`
 else
    afil=$rdir/$rname.a
    bfil=$rdir/$rname.b
