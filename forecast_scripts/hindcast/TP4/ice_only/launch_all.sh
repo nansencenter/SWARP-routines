@@ -60,9 +60,11 @@ do
    ryear=${tfil:10:4}
    rday=${tfil:15:3}
    rday2=10#$rday #base 10
+   rday2=$((rday2+0))
    fday2=$((rday2+7))
    fday=`printf %3.3d $fday2`
-   echo $tfil $ryear $rday $fday expt_$X
+   rdate=`date --date="${ryear}0101 +${rday2}days" "+%Y%m%d"`
+   echo $tfil $rdate $rday $fday expt_$X
    # echo $X; exit # ????
 
    # ECMWF files in 2015 skip between
@@ -76,12 +78,14 @@ do
 
       echo "can't run week ${ryear}_${rday}"
       echo "- no ECMWF forcing for $ecmwf_missing (${ryear}_${jday_missing})"
+      echo " "
       launch=0
 
    elif [ $rday -eq 151 ]
    then
 
-      echo "Possible problem with restart file $tfil"
+      echo "possible problem with restart file $tfil"
+      echo " "
       launch=0
 
    elif [ -f $mpj ]
