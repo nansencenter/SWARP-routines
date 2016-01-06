@@ -315,6 +315,7 @@ cp $infile $rundir/info
 # Get other inputs
 cp $THISFC/inputs/blkdat.input      $xdir
 cp $FCcommon/inputs/preprocess.sh   $xdir
+cp $FCcommon/inputs/postprocess.sh  $xdir
 
 JF=$xdir/pbsjob.sh
 Nproc=133 # no of CPUs
@@ -347,8 +348,8 @@ fi
 if [ $print_info -eq 1 ]
 then
    echo "cp $THISFC/inputs/blkdat.input      $xdir"
-   echo "cp        $xdir"
    echo "cp $FCcommon/inputs/preprocess.sh   $xdir"
+   echo "cp $FCcommon/inputs/postprocess.sh  $xdir"
 fi
 
 #choose variables to extract (-DARCHIVE_SELECT)

@@ -63,7 +63,7 @@ f.write(ss[:4-len(day)]+day+' 00      # (nday1)    First day of integration NOTE
 lin0  = ss2[:6-len(day)]+day+'.00     F     T        '+info.restart_opts[0]+'\n'
 
 day   = info.days[-1]
-f.write(ss[:4-len(day)]+day+' '+info.final_hour+'      # (nday1)    Last day of integration NOTE FORMAT F9.2\n')
+f.write(ss[:4-len(day)]+day+' '+info.final_hour+'      # (nday2)    Last day of integration NOTE FORMAT F9.2\n')
 lin1  = ss2[:6-len(day)]+day+'.00     F     T        '+info.restart_opts[-1]
 
 # forcing etc

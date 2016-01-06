@@ -9,7 +9,7 @@
 # ($SWARP_ROUTINES defined in crontab or .bash_profile)
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-print_info=1 # print info to screen (or email in crontab)
+print_info=0 # print info to screen (or email in crontab)
 test_pre=0
 SWARP_PP=1
 
@@ -20,6 +20,15 @@ then
 else
    THIS_SRC=`readlink -f $1` #get absolute path
    source $THIS_SRC
+fi
+
+manual=0
+if [ $# -eq 2 ]
+then
+   echo ""
+   echo "Running manually (over-riding checks)"
+   echo ""
+   manual=1
 fi
 
 if [ $print_info -eq 1 ]
@@ -59,7 +68,7 @@ fi
 # (do this before datelist.txt is changed)
 # 1. check if forecast is already running
 msg=`$qstat | grep ${rungen}x01${Xno}fc`
-if [ ${#msg} -ne 0 ] && [ $manual -eq 0 ]
+if [ ! -z "${msg}" ] && [ $manual -eq 0 ]
 then
    if [ $print_info -eq 1 ]
    then
@@ -69,28 +78,7 @@ then
    fi
    exit
 fi
-
-# 2. check if TP4 ice-only forecast has run
-#    - needed for nesting
-if [ ! -f $RTres/TP4a0.12/ice_only/final_output/SWARP*.nc ]
-then
-   if [ $print_info -eq 1 ]
-   then
-      echo "TP4 ice-only FC has not yet run - stopping"
-   fi
-   exit
-fi
 ## ===========================================================
-
-
-manual=0
-if [ $# -eq 2 ]
-then
-   echo ""
-   echo "Running manually (over-riding checks)"
-   echo ""
-   manual=1
-fi
 
 
 # CREATING THE LOG
@@ -179,6 +167,19 @@ fi
 if [ $manual -eq 0 ]
 then
    # Checks before run:
+   # 2. check if TP4 ice-only forecast has run
+   #    - needed for nesting
+   oTP4=$RTres/TP4a0.12/ice_only/$cday/final_output/SWARPiceonly_forecast_start${cday}T000000Z.nc
+   if [ ! -f $oTP4 ]
+   then
+      echo hi
+      if [ $print_info -eq 1 ]
+      then
+         echo "TP4 ice-only FC has not yet run - stopping"
+      fi
+      exit
+   fi
+
    # 3. check if forecast has already run
    if [ -f $rundir/final_output/SWARP*.nc ]
    then
@@ -189,18 +190,7 @@ then
       exit
    fi
 
-   # 4. check if ice-only forecast has run
-   #    - needed for nesting
-   if [ ! -f $RTres/TP4a0.12/ice_only/final_output/SWARP*.nc ]
-   then
-      if [ $print_info -eq 1 ]
-      then
-         echo "TP4 Ice-only FC has not yet run - stopping"
-      fi
-      exit
-   fi
-
-   # 5. check if waves FC file is there
+   # 4. check if waves FC file is there
    do_check=0
    if [ $FCtype == "wavesice" ]
    then
@@ -225,7 +215,7 @@ then
 
    if [ $restart_OPT -eq 2 ] && [ ! $FCtype == "ice_only" ]
    then
-      # 6. check if local ice-only forecast has run
+      # 5. check if local ice-only forecast has run
       if [ ! -f $RTres/$HYCOMreg/ice_only/final_output/SWARP*.nc ]
       then
          if [ $print_info -eq 1 ]
@@ -330,19 +320,27 @@ echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$FCfinal_hour
 
 if [ $FCtype == "ice_only" ] && [ $TP4restart_OPT -eq 2 ] && [ $day2 -ne $rday ]
 then
-   if [ $Rday -ge $final_day ]
+   if [ $Rday -gt $final_day ]
    then
       days="$rday $day2 $final_day"
       Ropts="F T F"
+   elif [ $Rday -eq $final_day ]
+   then
+      days="$rday $day2 $final_day"
+      Ropts="F T T"
    else
       days="$rday $day2 $Rday $final_day"
       Ropts="F F T F"
    fi
 else
-   if [ $Rday -ge $final_day ]
+   if [ $Rday -gt $final_day ]
    then
       days="$rday $final_day"
       Ropts="F F"
+   elif [ $Rday -eq $final_day ]
+   then
+      days="$rday $final_day"
+      Ropts="F T"
    else
       days="$rday $Rday $final_day"
       Ropts="F T F"
@@ -388,6 +386,7 @@ cp $infile $rundir/info
 # Get other inputs
 cp $THISFC/inputs/blkdat.input      $xdir
 cp $FCcommon/inputs/preprocess.sh   $xdir
+cp $FCcommon/inputs/postprocess.sh  $xdir
 
 JF=$xdir/pbsjob.sh
 if [ $rungen == "BS1" ]
@@ -426,8 +425,8 @@ fi
 if [ $print_info -eq 1 ]
 then
    echo "cp $THISFC/inputs/blkdat.input      $xdir"
-   echo "cp        $xdir"
    echo "cp $FCcommon/inputs/preprocess.sh   $xdir"
+   echo "cp $FCcommon/inputs/postprocess.sh  $xdir"
 fi
 
 #choose variables to extract (-DARCHIVE_SELECT)
