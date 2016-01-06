@@ -79,6 +79,9 @@ class diag_info:
       Sdir        = Sdir.reshape(ndir,nfreq,order='fortran')
       self.Sdir   = Sdir
 
+      # wave stress (magnitude)
+      self.tau_wav  = np.sqrt(self.taux_wav**2+self.tauy_wav**2)
+
       self.get_prams()
       self.do_ints()
 
@@ -115,7 +118,23 @@ class diag_info:
       wt_theta = dtheta+0*self.wavdir
 
       # get rotated version directly
-      mth   = (self.wavdir*wt_theta).transpose().dot(self.Sdir).dot(wt_omega)
+      mth   = (self.wavdir*wt_theta).dot(self.Sdir).dot(wt_omega)
+
+      # tau_wav (mag of wave stress)
+      # - these are relative to a lon-lat grid
+      # - model outputs are on native grid
+      # - model outputs are also for the previous time step
+      adv_dir  = -radian*(90.+self.wavdir)
+      cos      = np.cos(adv_dir)
+      sin      = np.sin(adv_dir)
+      cp       = self.prams.gravity/self.omega           # phase vel: om/k=om/(om^2/g)=g/om
+      cg       = cp/2.                                   # group vel: dom/dk=1/(2*om/g)=g/2/om=cp/2
+      fac      = self.prams.gravity*self.prams.rho_wtr   # m/s^2*kg/m^3=N/m^3=Pa/m
+      source   = self.Sdir.dot(np.diag(-fac*self.atten)) # m^2s/m*Pa/m=Pa.s
+
+      taux_wav = -(cos*wt_theta).dot(source).dot(wt_omega*cg/cp) # (W-E)
+      tauy_wav = -(sin*wt_theta).dot(source).dot(wt_omega*cg/cp) # (S-N)
+      tau_wav  = np.sqrt(taux_wav**2+tauy_wav**2)
 
       Sfreq = wt_theta.transpose().dot(self.Sdir)
       m0    = Sfreq.dot(wt_omega)
@@ -129,6 +148,9 @@ class diag_info:
       lut.update({'m0':m0})
       lut.update({'m2':m2})
       lut.update({'mth':mth})
+      lut.update({'taux_wav':taux_wav})
+      lut.update({'tauy_wav':tauy_wav})
+      lut.update({'tau_wav':tau_wav})
 
       self.test      = struct(lut)
       self.wt_omega  = wt_omega
@@ -146,7 +168,7 @@ class diag_info:
       for name in vv.keys():
          v1 = vv[name]
          v0 = getattr(self,name)
-         print(name+' : '+str(v0)+' | '+str(v1))
+         print(name+' (here/HYCOM): '+str(v0)+' | '+str(v1))
 
       print(' ')
       return
