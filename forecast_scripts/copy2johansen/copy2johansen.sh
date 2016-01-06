@@ -133,7 +133,7 @@ fi
 
 # finding the latest final product
 # - check last $Nback days
-if [ $thour -eq 12 ]
+if [ $thour -eq 23 ]
 then
    # only check previous days once a day
    # (plus cleaning of old FC's to save space)
