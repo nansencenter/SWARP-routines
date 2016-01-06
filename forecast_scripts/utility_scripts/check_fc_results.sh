@@ -10,8 +10,8 @@ do
       then
          echo " "
          echo "**************************************"
-         echo "Latest $fctype forecast"
-         echo `readlink -f $fil`
+         echo "Latest TP4 $fctype forecast"
+         echo $fcdate
          echo "**************************************"
          echo " "
          break
@@ -31,8 +31,8 @@ do
       then
          echo " "
          echo "**************************************"
-         echo "Latest $fctype forecast"
-         echo `readlink -f $fil`
+         echo "Latest BS1 $fctype forecast"
+         echo $fcdate
          echo "**************************************"
          echo " "
          break
@@ -52,8 +52,8 @@ do
       then
          echo " "
          echo "**************************************"
-         echo "Latest $fctype forecast"
-         echo `readlink -f $fil`
+         echo "Latest FR1 $fctype forecast"
+         echo $fcdate
          echo "**************************************"
          echo " "
          break
