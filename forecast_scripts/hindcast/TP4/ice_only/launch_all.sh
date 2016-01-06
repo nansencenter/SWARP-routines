@@ -52,9 +52,7 @@ do
    Eno=0$E0
    X=0${E0:0:1}.${E0:1:1}
    xdir=$P/expt_$X            # reference expt directory  (has restarts)
-
-   cd $xdir
-   mpj=log/mpijob.out
+   mpj=$xdir/log/mpijob.out
 
    tfil=`basename $tfil0`
    ryear=${tfil:10:4}
@@ -121,6 +119,7 @@ do
 
    if [ $launch -eq 1 ]
    then
+      cd $xdir
       echo "$tfil $ryear $rday $fday"  >> $log
       echo "Launching job from `pwd`"  >> $log
       echo " "                         >> $log
@@ -130,6 +129,7 @@ do
          echo "Launching job from `pwd`"
          echo " "                       
       fi
+
       rm -f log/*
       $qsub pbsjob.sh
       exit
