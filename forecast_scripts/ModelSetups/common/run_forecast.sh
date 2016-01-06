@@ -52,15 +52,20 @@ fi
 # (do this before datelist.txt is changed)
 # 1. check if forecast is already running
 msg=`$qstat | grep ${rungen}x01${Xno}fc`
-if [ ${#msg} -ne 0 ]
+if [ 1 -eq 1 ]
 then
-   if [ $print_info -eq 1 ]
+   if [ ${#msg} -ne 0 ]
    then
-      echo "$FCtype_long is already running - stopping"
-      echo "pbs job message:"
-      echo $msg
+      if [ $print_info -eq 1 ]
+      then
+         echo "$FCtype_long is already running - stopping"
+         echo "pbs job message:"
+         echo $msg
+      fi
+      exit
    fi
-   exit
+else
+   echo "WARNING: already-running check disabled in script"
 fi
 ## ===========================================================
 
@@ -257,7 +262,7 @@ fi
 # $final_day=julian day relative to $ryear (NB 3 digits)
 fin_day=`date --date="$cday +${FCdays}days" "+%Y%m%d"`
 fin_year=$(date --date=$fin_day +%Y)
-fin_day_j=$(date --date=$fin_day +%j)
+fin_day_j=10#$(date --date=$fin_day +%j) # 3 digits already - need to convert to base 10
 fin_day_j0=$((fin_day_j-1))
 if [ $ryear -eq $fin_year ]
 then

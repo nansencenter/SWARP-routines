@@ -1,7 +1,7 @@
 #!/bin/bash
 #Get latest restart from the internal repo to the working dir
 
-print_info=1 # print info for debugging
+print_info=0 # print info for debugging
 
 # ====================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
@@ -93,6 +93,7 @@ then
          echo "Last Monday's restart file is on /migrate"
       fi
       f=$rfil0
+      F=$rdir/$lastMon_y/$f
 
    elif [ -d $rdir/$tyear ]
    then
@@ -106,7 +107,8 @@ then
       nfil=`echo ${#rlist[@]}`
       if [ $nfil -gt 0 ]
       then
-         f=$mdir/${rlist[ $((nfil-1)) ]}
+         f=${rlist[ $((nfil-1)) ]}
+         F=$mdir/$f
       else
          echo "No restart files list found in $mdir"                       >> $log
          echo "Either check topaz_archive_restart or topaz_get_restart"    >> $log
@@ -124,7 +126,8 @@ then
       nfil=`echo ${#rlist[@]}`
       if [ $nfil -gt 0 ]
       then
-         f=$mdir/${rlist[ $((nfil-1)) ]}
+         f=${rlist[ $((nfil-1)) ]}
+         F=$mdir/$f
       else
          echo "No restart files list found in $mdir"                       >> $log
          echo "Either check topaz_archive_restart or topaz_get_restart"    >> $log
@@ -148,7 +151,7 @@ then
 
       # check latest restart is not too old
       base=${f%%.tar.gz}
-      baseday=${base#TP4restart} #YYYY_JJJ
+      baseday=${base#*TP4restart} #YYYY_JJJ_HH
       byr=${baseday:0:4}
       bdj=${baseday:5:3}
 
@@ -173,7 +176,7 @@ then
          mail -s "WARNING - Restarts on /migrate too old" $email   < $log
       elif [ $print_info -eq 1 ]
       then
-         echo "Age of restart $f"
+         echo "Age of restart $F"
          echo "$age - OK"
          echo " "
       fi
