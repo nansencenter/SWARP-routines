@@ -67,16 +67,21 @@ fi
 # Initial check before run
 # (do this before datelist.txt is changed)
 # 1. check if forecast is already running
-msg=`$qstat | grep ${rungen}x01${Xno}fc`
-if [ ! -z "${msg}" ] && [ $manual -eq 0 ]
-then
-   if [ $print_info -eq 1 ]
+if [ 1 -eq 1 ]
    then
-      echo "$FCtype_long is already running - stopping"
-      echo "pbs job message:"
-      echo $msg
+   msg=`$qstat | grep ${rungen}x01${Xno}fc`
+   if [ "${#msg}" -ne 0 ]
+   then
+      if [ $print_info -eq 1 ]
+      then
+         echo "$FCtype_long is already running - stopping"
+         echo "pbs job message:"
+         echo $msg
+      fi
+      exit
    fi
-   exit
+else
+   echo "WARNING: already-running check disabled in script"
 fi
 ## ===========================================================
 
@@ -172,7 +177,6 @@ then
    oTP4=$RTres/TP4a0.12/ice_only/$cday/final_output/SWARPiceonly_forecast_start${cday}T000000Z.nc
    if [ ! -f $oTP4 ]
    then
-      echo hi
       if [ $print_info -eq 1 ]
       then
          echo "TP4 ice-only FC has not yet run - stopping"
@@ -243,6 +247,7 @@ then
    ryear=${rname:10:4}  # year of restart file
    rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
    rdate=`date --date="$ryear-01-01 +${rday}days" +%Y%m%d`
+   r_ndays=`date --date="$ryear-12-31" +%j`
 else
    afil=$rdir/$rname.a
    bfil=$rdir/$rname.b
@@ -275,7 +280,7 @@ fi
 # $final_day=julian day relative to $ryear (NB 3 digits)
 fin_day=`date --date="$cday +${FCdays}days" "+%Y%m%d"`
 fin_year=$(date --date=$fin_day +%Y)
-fin_day_j=$(date --date=$fin_day +%j)
+fin_day_j=10#$(date --date=$fin_day +%j) # 3 digits already - need to convert to base 10
 fin_day_j0=$((fin_day_j-1))
 if [ $ryear -eq $fin_year ]
 then
@@ -300,7 +305,7 @@ fi
 # want to save next Monday's restart
 Nday=`date --date="next Monday" +%Y%m%d`
 Nyear=$(date --date=$Nday +%Y)
-Nday_j=$(date --date=$Nday +%j)
+Nday_j=10#$(date --date=$Nday +%j) # 3 digits already - need to convert to base 10
 Nday_j=$((Nday_j-1))
 if [ $ryear -eq $Nyear ]
 then
@@ -309,6 +314,8 @@ else
    Rday=$((r_ndays+Nday_j))
 fi
 # =========================================================================
+
+echo $Rday
 
 # print to screen
 echo "Restart date   : $rdate"
@@ -348,7 +355,7 @@ else
 fi
 
 ftmp='tmp.txt'
-echo "rungen         $rungen"             >> $ftmp
+echo "rungen         $rungen"             >  $ftmp
 echo "expt_dir       $xdir"               >> $ftmp
 echo "refyear        $ryear"              >> $ftmp
 echo "days           $days"               >> $ftmp

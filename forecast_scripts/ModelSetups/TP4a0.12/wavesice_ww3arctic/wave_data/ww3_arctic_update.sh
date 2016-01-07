@@ -59,6 +59,11 @@ do
    ddir1=$ww3a/${dyear}/originals/${ddate}00
    dfil1=SWARP_WW3_ARCTIC-12K_$ddate.nc
 
+   if [ $print_info -eq 1 ]
+   then
+      echo "Checking $ddate"
+   fi
+
    if [ $n -eq 1 ]
    then
       ddir2=$ww3a/${dyear}/forecast
@@ -136,6 +141,7 @@ then
    then
 
       echo " "
+      echo "Link name         : $fclat"
       echo "Link location     : $linkloc"
       echo "Latest forecast   : $fctarg"
       echo "Link already points to latest forecast"
@@ -192,6 +198,7 @@ then
    then
 
       echo " "
+      echo "Link name         : $fclat"
       echo "Link location     : $linkloc"
       echo "Latest forecast   : $fctarg"
       echo "Link already points to latest forecast"

@@ -12,7 +12,7 @@ if [ $# -ne 2 ] ; then
    echo "   $(basename $0) old_experiment_number new_experiment_number"
    echo
    echo "Example:"
-   echo "   $(basename $0) 0 1"
+   echo "   $(basename $0) 010 011"
    echo "   makes expt_01.1 from expt_01.0"
    echo
    exit 1
@@ -20,14 +20,19 @@ fi
 
 
 P=`pwd`
-eold=$P/expt_01.$1
-X=01.$2
-E=01$2
+in1=$1
+Xold=${in1:0:2}.${in1:2:1}
+eold=$P/expt_$Xold
+E=$2
+X=${E:0:2}.${E:2:1}
 enew=$P/expt_$X
 
 if [ ! -d $eold ]
 then
-   echo "Launch from root model directory eg 'TP4a0.12'"
+   echo " "
+   echo "Directory $eold does not exist"
+   echo "- launch from root model directory eg 'TP4a0.12'"
+   echo " "
    exit
 fi
 
@@ -80,31 +85,31 @@ if [ $lnk -eq 1 ]
 then
    # make links
    cd $P/force/rivers
-   ln -sf 01$1 01$2
+   ln -sf $1 $E
    pwd
    ls -lh
    echo " "
 
    cd $P/force/nersc_era40
-   ln -sf 01$1 01$2
+   ln -sf $1 $E
    pwd
    ls -lh
    echo " "
 
    cd $P/relax
-   ln -sf 01$1 01$2
+   ln -sf $1 $E
    pwd
    ls -lh
    echo " "
 
    cd $P/nest_nersc
-   ln -sf 01$1 01$2
+   ln -sf $1 $E
    pwd
    ls -lh
    echo " "
 
    cd $P/tides_nersc
-   ln -sf 01$1 01$2
+   ln -sf $1 $E
    pwd
    ls -lh
    echo " "
@@ -117,8 +122,8 @@ then
    source REGION.src       # need R variable
    source $enew/EXPT.src   # need V variable
 
-   B1=`readlink -f Build_V${V}_X01.$1`
-   B2=`readlink -f Build_V${V}_X01.$2`
+   B1=`readlink -f Build_V${V}_X$Xold`
+   B2=`readlink -f Build_V${V}_X$X`
    mkdir -p $B2
    cd $B2
 

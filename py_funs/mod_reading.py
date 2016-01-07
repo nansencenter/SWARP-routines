@@ -388,6 +388,16 @@ class nc_getinfo:
       from mpl_toolkits.basemap import Basemap, cm
       import fns_plotting as Fplt
 
+      if type(var_opts)==type('hi'):
+         # if only a string is passed in
+         print("Converting string '"+var_opts+"' to mod_reading.make_plot_options object")
+         print("- create and pass in such an object directly")
+         print("to specify more complicated plot options:")
+         print("ie")
+         print("var_opts=mod_reading.make_plot_options('"+var_opts+"',")
+         print("   vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=False,dir_from=True)")
+         var_opts = make_plot_options(var_opts)
+
       vname       = var_opts.name
       vec_opt     = var_opts.vec_opt
       conv_fac    = var_opts.conv_fac

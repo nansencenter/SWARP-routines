@@ -26,11 +26,13 @@ pyear=$(expr $cyear - 1)
 tday=$(date +%Y%m%d-%A)
 cday=$(date +%Y%m%d)
 tdd=$(date +%d)
-jday=$(date +%j)
+jday=10#$(date +%j)
 if [ "$(date +%A)" == "Monday" ]
 then
    #latest restart is today
-   Rlatest=TP4restart${cyear}_$((jday-1))_00
+   JDAY=$((jday-1))
+   JDAY=`printf %3.3d $JDAY`
+   Rlatest=TP4restart${cyear}_${JDAY}_00
    dt=$cday
    dty=$cyear
    dtj=$jday
@@ -38,8 +40,10 @@ else
    #latest restart is last Monday
    dt=`date --date="last Monday" "+%Y%m%d"`
    dty=`date --date="last Monday" "+%Y"`
-   dtj=`date --date="last Monday" "+%j"`
-   Rlatest=TP4restart${dty}_$((dtj-1))_00
+   dtj=10#`date --date="last Monday" "+%j"`
+   JDAY=$((dtj-1))
+   JDAY=`printf %3.3d $JDAY`
+   Rlatest=TP4restart${dty}_${JDAY}_00
 fi
 
 if [ $print_info -eq 1 ]

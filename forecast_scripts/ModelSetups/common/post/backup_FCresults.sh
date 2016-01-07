@@ -32,7 +32,16 @@ chmod 777 $tfil
 
 # TODO change to scp & Norstore
 # ncftp protocol?
-mkdir -p $THISFC3/$cyear
-mv $tfil $THISFC3/$cyear/
-echo "SWARP products of $tday"
-echo "stored in $THISFC3/$cyear"
+if [ 1 -eq 1 ]
+then
+   # migrate
+   mkdir -p $THISFC3/$cyear
+   mv $tfil $THISFC3/$cyear/
+   echo "SWARP products of $tday"
+   echo "stored in $THISFC3/$cyear"
+else
+   # Norstore
+   source $hidden/ssh_info_Nor.src
+   dest=/scratch/$huser/SWARP_FC
+   scp -i $keyname $tfil $huser@login3.norstore.uio.no:$dest
+fi

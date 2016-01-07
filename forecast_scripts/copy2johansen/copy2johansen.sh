@@ -2,12 +2,6 @@
 # copy forecast file from hexagon to johansen
 
 thour=`date +%H`
-T0=2  # don't bother doing anything before 2am
-T1=9  # email alert after this time
-if [ $thour -lt $T0 ]
-then
-   exit
-fi
 
 if [ $# -eq 2 ]
 then
@@ -30,6 +24,13 @@ then
    # can rename here
    FC_OUTPUT2="SWARPiceonly_forecast"
 
+   T0=2  # don't bother doing anything before 2am
+   T1=9  # email alert after this time
+   if [ $thour -lt $T0 ]
+   then
+      exit
+   fi
+
 elif [ $FCtype_hex == wavesice ]
 then
    FCtype_joh="wavesice"               # type of FC on johansen
@@ -38,13 +39,27 @@ then
    # can rename here
    FC_OUTPUT2="SWARPwavesice_forecast"
 
+   T0=6  # don't bother doing anything before 6am
+   T1=11 # email alert after this time
+   if [ $thour -lt $T0 ]
+   then
+      exit
+   fi
+
 elif [ $FCtype_hex == wavesice_ww3arctic ]
 then
-   FCtype_joh="wavesice"               # type of FC on johansen
-   FC_OUTPUT="SWARPwavesice_WW3_forecast"   # start of netcdf file
+   FCtype_joh="wavesice"                     # type of FC on johansen
+   FC_OUTPUT="SWARPwavesice_WW3_forecast"    # start of netcdf file
 
    # can rename here
    FC_OUTPUT2="SWARPwavesice_forecast"
+
+   T0=6  # don't bother doing anything before 6am
+   T1=11 # email alert after this time
+   if [ $thour -lt $T0 ]
+   then
+      exit
+   fi
 
 fi
 
@@ -118,7 +133,14 @@ fi
 
 # finding the latest final product
 # - check last $Nback days
-Nback=0
+if [ $thour -eq 23 ]
+then
+   # only check previous days once a day
+   # (plus cleaning of old FC's to save space)
+   Nback=30
+else
+   Nback=0
+fi
 wrn_count=0
 for n in `seq 0 $Nback`
 do
@@ -127,6 +149,13 @@ do
    echo "Looking for product $hdate" >> $cplog
    hex_fil=${FC_OUTPUT}_start${hdate}T000000Z.nc   # final file on hexagon
    joh_fil=${FC_OUTPUT2}_start${hdate}T000000Z.nc  # final file on johansen
+
+   if [ $n -gt 7 ]
+   then
+      # clean older files to save space
+      rm -f $joh_dir/$joh_fil
+      continue
+   fi
 
    # only do scp if file not present
    if [ ! -f $joh_dir/$joh_fil ]

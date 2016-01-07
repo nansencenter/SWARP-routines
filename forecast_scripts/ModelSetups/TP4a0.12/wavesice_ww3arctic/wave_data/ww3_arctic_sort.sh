@@ -13,7 +13,7 @@ module load nco
 
 if [ $# -lt 2 ]
 then
-   echo "Usage: ww3_arctic_download.sh [date] [cycle]"
+   echo "Usage: ww3_arctic_sort.sh [date] [cycle]"
    echo "*date in yyyymmdd format"
    echo "*cycle = 1 (1200 cycle) or 2 (0000 cycle)"
    exit

@@ -34,7 +34,7 @@ Ddir=$TP4_REALTIME/expt_01.1/data # location of TP4a0.12 directory (where foreca
 tday=$(cat $datelist | sed '1!d')
 tyear=`date --date=$tday "+%Y"`
 pyear=$(expr $tyear - 1)            # previous year
-tday_j=`date --date=$tday "+%j"`
+tday_j=10#`date --date=$tday "+%j"`
 tday_j=$((tday_j-1))                # current day julian (1 Jan = 0)
 idir=$THISFC2/$tday/info
 mkdir -p $idir
@@ -57,17 +57,36 @@ then
    lastMon=`date --date="$lastMon -7days" "+%Y%m%d"`
 fi
 lastMon_y=`date --date="$lastMon" "+%Y"`
-lastMon_j=`date --date="$lastMon" "+%j"`
+lastMon_j=10#`date --date="$lastMon" "+%j"`
 lastMon_j=$((lastMon_j-1))
+lastMon_j=`printf %3.3d $lastMon_j`
 rfil0=${rungen}restart${lastMon_y}_${lastMon_j}_00
 
 if [[ -f $ddir/$rfil0.a && -f $ddir/$rfil0.b && -f $ddir/${rfil0}ICE.uf ]]
 then
-   echo Found the latest restart in data: $rfil0
-   echo  $rfil0                > $out_restart
-   cp    $out_restart            $idir
+   echo "Found the latest restart in data: $rfil0"
+   echo  $rfil0         > $out_restart
+   cp    $out_restart   $idir
    #
    echo "Restart already in $ddir"  >> $log
+   echo $rfil.a                     >> $log
+   echo $rfil.b                     >> $log
+   echo ${rfil}ICE.uf               >> $log
+   echo ""                          >> $log
+   exit
+fi
+
+#then check ice-only dir
+DDIR=`readlink -f $ddir/../../expt_01.0/data`
+if [[ -f $DDIR/$rfil0.a && -f $DDIR/$rfil0.b && -f $DDIR/${rfil0}ICE.uf ]]
+then
+   cp $DDIR/$rfil0* $ddir
+
+   echo "Found the latest restart in $DDIR: $rfil0"
+   echo  $rfil0         > $out_restart
+   cp    $out_restart   $idir
+   #
+   echo "Restart already in $DDIR"  >> $log
    echo $rfil.a                     >> $log
    echo $rfil.b                     >> $log
    echo ${rfil}ICE.uf               >> $log
@@ -86,8 +105,9 @@ then
    lastMon=`date --date="$lastMon -7days" "+%Y%m%d"`
 fi
 lastMon_y=`date --date="$lastMon" "+%Y"`
-lastMon_j=`date --date="$lastMon" "+%j"`
+lastMon_j=10#`date --date="$lastMon" "+%j"`
 lastMon_j=$((lastMon_j-1))
+lastMon_j=`printf %3.3d $lastMon_j`
 Rfil0=TP4restart${lastMon_y}_${lastMon_j}_00
 
 if [[ -f $Ddir/$Rfil0.a && -f $Ddir/$Rfil0.b && -f $Ddir/${Rfil0}ICE.uf ]]
