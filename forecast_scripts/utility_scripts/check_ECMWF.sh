@@ -34,13 +34,13 @@ do
    echo "Number of records          : $nrec"    >> txt
 
    # desired number
-   FCdays=10
+   FCdays=8
    Nfc=$((FCdays*4+3))
    jday=10#`date +%j`
    nrec0=$(($Nfc+4*$jday))
    echo "Expected number of records : $nrec0"   >> txt
 
-   if [ $nrec -eq $nrec0 ]
+   if [ $nrec -ge $nrec0 ]
    then
       correct=$((correct+1))
    fi
