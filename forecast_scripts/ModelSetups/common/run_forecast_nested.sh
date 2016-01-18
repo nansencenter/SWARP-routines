@@ -112,7 +112,7 @@ else
    echo " "
 fi
 cyear=$(date --date=$cday +%Y)
-jday0=$(date --date=$cday +%j)
+jday0=10#$(date --date=$cday +%j)
 jday_today0=$(( $jday0 - 1))              # julian day of TOPAZ (0=1st Jan)
 jday_today=$(printf '%3.3d' $jday_today0) # 3 digits
 

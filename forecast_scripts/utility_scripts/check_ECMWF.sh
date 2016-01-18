@@ -2,6 +2,13 @@ Edir=/work/shared/nersc/ECMWFR_T799/
 source $SWARP_ROUTINES/source_files/hex_vars.src
 email=$(cat $FCemail)
 
+hr=`date +%H`
+if [ $hr -eq 23 ] || [ "$hr" == "00" ]
+then
+   # rsync time
+   exit
+fi
+
 if [ $# -eq 0 ]
 then
    alert=0
@@ -27,8 +34,9 @@ do
    echo "Number of records          : $nrec"    >> txt
 
    # desired number
-   Nfc=$((8*4+3))
-   jday=`date +%j`
+   FCdays=10
+   Nfc=$((FCdays*4+3))
+   jday=10#`date +%j`
    nrec0=$(($Nfc+4*$jday))
    echo "Expected number of records : $nrec0"   >> txt
 
