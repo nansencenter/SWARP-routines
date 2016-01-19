@@ -40,8 +40,28 @@ log=$logdir/hc_proc.log
 rm -f $log
 echo `date` >> $log
 
+if [ 1 -eq 0 ]
+then
+   # DO ALL
+   its0=1
+   STOP_AFTER=2000
+else
+   # DO SOME
+   its0=2 # 1st file to do
+   STOP_AFTER=2000
+fi
+its=0
+DONE=0
 for tfil0 in $list
 do
+
+   its=$((its+1))
+   if [ $its -lt $its0 ]
+   then
+      echo "Skipping `basename $tfil0`..."
+      continue
+   fi
+
    Eno=0$E0
    X=0${E0:0:1}.${E0:1:1}
    xdir=$P/expt_$X            # reference expt directory  (has restarts)
@@ -86,6 +106,11 @@ do
       echo "Can't run week ${ryear}_${rday}"
       echo "- no ECMWF forcing for $ecmwf_missing (${ryear}_${jday_missing})"
       continue
+   elif [ $rday -eq 151 ]
+   then
+      echo "possible problem with restart file $tfil"
+      echo " "
+      continue
    fi
    ##############################################################################
 
@@ -110,14 +135,16 @@ do
 
    dinf=$OUTDIR/info
    mkdir -p $dinf
-   cp $xdir/log/mpijob.out $dinf
    cp $hd2/inputs/flags    $dinf
+
+   OP="cp"
+   # OP="mv"
+   $OP $xdir/log/mpijob.out $dinf
 
    if [ 1 -eq 1 ]
    then
       #############################################################
       # run hyc2proj & move files to output location
-      OP=cp
       for afil in ${rungen}DAILY*.a
       do
          hyc2proj $afil
@@ -169,7 +196,6 @@ do
    # Unpack nc files so merge is done correctly
    cd $ADIR
    mkdir -p tmp
-   DONE=0
    for f in *.nc
    do
       echo "Unpacking $f"
@@ -177,16 +203,10 @@ do
       cd tmp
 
       # set missing value to be -32767
-      ncatted -O -a _FillValue   ,,o,f,-32767 $f
+      ncatted -O -a _FillValue,,o,f,-32767 $f
       ncatted -O -a missing_value,,o,f,-32767 $f
 
       cd $ADIR
-      # DONE=$((DONE+1))
-      # if [ $DONE -eq 4 ]
-      # then
-      #    # stop earlier to test merge
-      #    break
-      # fi
    done
 
    # do merge
@@ -318,5 +338,10 @@ do
    ncatted -a history,global,d,,                         $ofil
    ###########################################################################################
 
-   exit
+   DONE=$((DONE+1))
+   if [ $DONE -eq $STOP_AFTER ]
+   then
+      exit
+   fi
+
 done

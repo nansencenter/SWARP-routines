@@ -95,7 +95,7 @@ do
       then
          # didn't crash
          # - check if model output has the THERM_DIAG outputs
-         stat=`cat $xdir/data/TP4archv.${ryear}_${rday}_000000Z.b |grep flx_ild`
+         stat=`cat $xdir/data/TP4archv.${ryear}_${rday}_000000Z.b |grep flx_cool`
          if [ ${#stat} -eq 0 ]
          then
             launch=1
@@ -131,6 +131,9 @@ do
       fi
 
       rm -f log/*
+      cp $hd/ice_only/inputs/archv.extract data
+      cp $hd/ice_only/inputs/extract.archv data
+
       $qsub pbsjob.sh
       exit
    fi
