@@ -142,7 +142,7 @@ fi
 # sts need yesterday's info as well
 yday=`date --date="$cday -1day" +%Y%m%d`
 yyear=`date --date="$yday" +%Y`
-ydj=`date --date="$yday" +%j`
+ydj=10#`date --date="$yday" +%j`
 ydj=$((ydj-1))
 #=======================================================================
 
@@ -154,7 +154,7 @@ then
    rdate=$(date --date="$cday -1day" +%Y%m%d)
    ryear=$(date --date=$rdate +%Y)
    rwday=$(date --date=$rdate +%A)
-   rday_j=$(date --date=$rdate +%j)
+   rday_j=10#$(date --date=$rdate +%j)
    rday=$((rday_j-1))                        # 1 Jan = day 0
    rdir=$RTmods/$HYCOMreg/expt_01.1/data
    rname=${rungen}restart${ryear}_${rday}_00
@@ -247,7 +247,7 @@ then
    ryear=${rname:10:4}  # year of restart file
    rday=${rname:15:3}   # julian day of restart file (1 Jan = 0)
    rdate=`date --date="$ryear-01-01 +${rday}days" +%Y%m%d`
-   r_ndays=`date --date="$ryear-12-31" +%j`
+   r_ndays=10#`date --date="$ryear-12-31" +%j`
 else
    afil=$rdir/$rname.a
    bfil=$rdir/$rname.b
