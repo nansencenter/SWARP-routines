@@ -60,11 +60,11 @@ ss    = 4*' '
 ss2   = 6*' '
 day   = info.days[0]
 f.write(ss[:4-len(day)]+day+' 00      # (nday1)    First day of integration NOTE FORMAT F9.2\n')
-lin0  = ss2[:6-len(day)]+day+'.00     F     T        '+info.restart_opts[0]+'\n'
+lin0  = ss2[:6-len(day)]+day+'.00  F     T        '+info.restart_opts[0]+'\n'
 
 day   = info.days[-1]
 f.write(ss[:4-len(day)]+day+' '+info.final_hour+'      # (nday2)    Last day of integration NOTE FORMAT F9.2\n')
-lin1  = ss2[:6-len(day)]+day+'.00     F     T        '+info.restart_opts[-1]
+lin1  = ss2[:6-len(day)]+day+'.00  F     T        '+info.restart_opts[-1]
 
 # forcing etc
 f.write('ecncF era40  # forcing option, month, ecmwf, ncepr, ecmo, ecnc\n')
@@ -86,7 +86,7 @@ f.write(lin0)
 
 for n,day in enumerate(info.days[1:-1]):
    ss=6*' '
-   f.write(ss[:6-len(day)]+day+'.00     F     T        '+info.restart_opts[n+1]+'\n')
+   f.write(ss[:6-len(day)]+day+'.00  F     T        '+info.restart_opts[n+1]+'\n')
 
 f.write(lin1)
 f.close()

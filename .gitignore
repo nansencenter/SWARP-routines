@@ -49,4 +49,6 @@ validation/outputs/*
 validation/Manual_MIZ_Maps/out/*
 #
 giacomo_stuff/*
-forecast_scripts/hindcast/TP4/ice_only/logs
+forecast_scripts/hindcast/TP4a0.12/ice_only/logs
+forecast_scripts/hindcast/FR1a0.03/ice_only/logs
+forecast_scripts/hindcast/BS1a0.045/ice_only/logs
