@@ -3,7 +3,7 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
 NE=$SWARP_ROUTINES/forecast_scripts/utility_scripts/NewExp.sh
 hd=$SWARP_ROUTINES/forecast_scripts/hindcast/TP4a0.12
-HCtype=ice_only
+HCtype=wavesice
 Done=0
 FULL_RESET=0
 
@@ -58,7 +58,7 @@ Nbad=${#bad_dates[@]}
 if [ 1 -eq 1 ]
 then
    # DO ALL
-   E0_start=14
+   E0_start=15
    E0_stop=2000
 else
    # DO SOME
@@ -69,7 +69,7 @@ else
 fi
 
 
-for rno in `seq 1 $Nlist`
+for rno in `seq 2 $Nlist`
 do
    tfil0=${list[$((rno-1))]}
    E0=$((E0+1))
@@ -165,7 +165,7 @@ do
    days="$rday $fday"
    Ropts="F F"
    FCfinal_hour="00"
-   nesting_outer="T"
+   nesting_outer="F"
    nesting_inner="F"
 
    ftmp='tmp.txt'
@@ -194,19 +194,20 @@ do
    ###################################################################
 
 
-   ###################################################################
-   #setup nesting
-   rm -f nesting.in
-   cd $P
-   # use non-interactive version of nest_nersc/bin/nest_outer.sh
-   rm -f nest_nersc/$Eno/outer/SCRATCH/*
+   ## ###################################################################
+   ## NO NESTING
+   ## #setup nesting
+   ## rm -f nesting.in
+   ## cd $P
+   ## # use non-interactive version of nest_nersc/bin/nest_outer.sh
+   ## rm -f nest_nersc/$Eno/outer/SCRATCH/*
 
-   $hd/$HCtype/nest_outer.sh $X $FR1_REALTIME 01.0
-   rm -f nest_nersc/$Eno/outer/SCRATCH/*
+   ## $hd/$HCtype/nest_outer.sh $X $FR1_REALTIME 01.0
+   ## rm -f nest_nersc/$Eno/outer/SCRATCH/*
 
-   $hd/$HCtype/nest_outer.sh $X $BS1_REALTIME 01.0
-   rm -f nest_nersc/$Eno/outer/SCRATCH/*
-   ###################################################################
+   ## $hd/ice_only/nest_outer.sh $X $BS1_REALTIME 01.0
+   ## rm -f nest_nersc/$Eno/outer/SCRATCH/*
+   ## ###################################################################
 
    Done=$((Done+1))
 done
