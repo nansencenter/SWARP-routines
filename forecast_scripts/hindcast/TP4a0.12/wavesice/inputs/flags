@@ -49,10 +49,11 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DWAVES \
                  -DWAVES_THERM \
+                 -DWAVES_TEST_SUBR \
                  -DWAVES_WAMNSEA \
-                 -DWAVES_CHECK_FINAL \
-                 -DWAVES_TEST_READWAVES \
-                 -DWAVES_TESTADV \
+#                -DWAVES_CHECK_FINAL \
+#                -DWAVES_TEST_READWAVES \
+#                -DWAVES_TESTADV \
 #                -DWAVES_WW3_ARCTIC \
 #                -DWAVES_WW3 \
 #                -DWAVES_NOSAVE \

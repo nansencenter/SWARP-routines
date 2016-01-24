@@ -1,11 +1,16 @@
-# script to copy all restart files to $TP4_REALTIME/expt_01.4/data
-# - other expt's will link to them
+# script to set up weeks after 2015_060 based on expt 1.4
+# - links to executable from that expt
+# - links to restarts from that expt
+# - makes pbsjob.sh
+# - makes blkdat.input
+# - makes infile.in
+# - DOESN'T GET archv.extract - USE archv FILES FROM ice_only
 source $SWARP_ROUTINES/source_files/hex_vars.src
 NE=$SWARP_ROUTINES/forecast_scripts/utility_scripts/NewExp.sh
 hd=$SWARP_ROUTINES/forecast_scripts/hindcast/TP4a0.12
 HCtype=wavesice
 Done=0
-FULL_RESET=0
+FULL_RESET=1
 
 P=$TP4_REALTIME
 cd $P
@@ -58,7 +63,7 @@ Nbad=${#bad_dates[@]}
 if [ 1 -eq 1 ]
 then
    # DO ALL
-   E0_start=15
+   E0_start=15 # do 1st (14) manually
    E0_stop=2000
 else
    # DO SOME
@@ -69,7 +74,7 @@ else
 fi
 
 
-for rno in `seq 2 $Nlist`
+for rno in `seq 1 $Nlist`
 do
    tfil0=${list[$((rno-1))]}
    E0=$((E0+1))
@@ -134,19 +139,22 @@ do
       continue
    fi
 
+   # use same executable as expt 1.4
    cd $bdir
-   echo ln -s $bref/hycom .
+   echo "rm hycom; ln -s $bref/hycom ."
+   rm hycom
    ln -s $bref/hycom .
 
    cd $xdir/data
    mkdir -p log
-   echo ln -s $xref/data/TP4restart${ryear}_${rday}* .  # link to restart 
+   echo "rm TP4restart*; ln -s $xref/data/TP4restart${ryear}_${rday}* ."  # link to restart 
+   rm TP4restart*
    ln -s $xref/data/TP4restart${ryear}_${rday}* .  # link to restart 
    cd $xdir
 
-   # archv.extract
    id=$hd/$HCtype/inputs
-   cp $id/archv.extract data
+   # # archv.extract
+   # cp $id/archv.extract data
 
    # blkdat.input
    cat $id/blkdat.input  | sed \
@@ -181,6 +189,7 @@ do
    # load python and launch make_infile.py
    [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
    module load python/2.7.9-dso
+   echo "$python $FCcommon/pre/make_infile.py --infile=$ftmp"
    $python $FCcommon/pre/make_infile.py --infile=$ftmp
    rm $ftmp
 

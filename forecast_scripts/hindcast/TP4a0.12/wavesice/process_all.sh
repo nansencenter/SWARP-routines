@@ -61,6 +61,19 @@ bad_error[1]="Last Monday"
 bad_dates[2]=20150601
 bad_error[2]="Possible problem with restart"
 
+# no WAM waves: 20150111 - no restart for then
+# no WAM waves: 20150406
+bad_dates[3]=20150406
+bad_error[3]="No WAM waves on 20150406"
+
+# no WAM waves: 20150612
+bad_dates[4]=20150608
+bad_error[4]="No WAM waves on 20150612"
+
+# no WAM waves: 20151114
+bad_dates[5]=20151109
+bad_error[5]="No WAM waves on 20151114"
+
 Nbad=${#bad_dates[@]}
 # for loop_i in `seq 1 $Nbad`
 # do
@@ -174,6 +187,7 @@ do
    mkdir -p $NDIR/archv_wav
    #############################################################
 
+   # echo CONTINUE;continue
    dinf=$OUTDIR/info
    mkdir -p $dinf
    echo cp $hd2/inputs/flags    $dinf
@@ -284,15 +298,15 @@ do
       # change time:units
       ncatted -O -h -a units,time,m,c,"seconds since 1970-01-01T00:00:00Z"  $ofil
 
-      ###########################################################################################
+      #####################################################################################
       # most variable attributes set in hyc2proj:
       # - just add shape of earth to "int stereographic"
       #   (radius from hyc2proj - mod_toproj.F90)
       ncatted -O -a "semi_major_axis",stereographic,c,f,6378273.     $ofil
       ncatted -O -a "semi_minor_axis",stereographic,c,f,6378273.     $ofil
-      ###########################################################################################
+      #####################################################################################
 
-      ###########################################################################################
+      #####################################################################################
       # Global attributes for  files
       # (o or c = overwrite/create)
       ncatted -O -h -a software_version,global,c,c,"NERSC-HYCOM (TOPAZ)"            $ofil
@@ -357,7 +371,7 @@ do
       ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"          $ofil
       ncatted -O -h -a operational_status,global,c,c,"test"                         $ofil
       #
-      ncatted -O -h -a title,global,o,c,"SWARP sea ice hindcast"               $ofil # o=overwrite/create, c=format (also f=float)
+      ncatted -O -h -a title,global,o,c,"SWARP waves-in-ice hindcast"               $ofil # o=overwrite/create, c=format (also f=float)
       # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
       # Restart file date
@@ -382,7 +396,7 @@ do
       # delete old attribute(s)
       ncatted -a field_date,global,d,,                      $ofil
       ncatted -a history,global,d,,                         $ofil
-      ###########################################################################################
+      #####################################################################################
    fi # NCMERGE
 
    DONE=$((DONE+1))

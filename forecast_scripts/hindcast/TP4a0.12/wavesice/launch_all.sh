@@ -8,7 +8,8 @@ HCtype=wavesice
 print_info=0
 user=timill #TODO source hidden
 
-if [ 1 -eq 0 ]
+ONEBYONE=0
+if [ $ONEBYONE -eq 1 ]
    # check if another job is running
    # - should be OK in this case (no dump of nesting files)
    then
@@ -78,6 +79,19 @@ bad_error[1]="Last Monday"
 bad_dates[2]=20150601
 bad_error[2]="Possible problem with restart"
 
+# no WAM waves: 20150111 - no restart for then
+# no WAM waves: 20150406
+bad_dates[3]=20150406
+bad_error[3]="No WAM waves on 20150406"
+
+# no WAM waves: 20150612
+bad_dates[4]=20150608
+bad_error[4]="No WAM waves on 20150612"
+
+# no WAM waves: 20151114
+bad_dates[5]=20151109
+bad_error[5]="No WAM waves on 20151114"
+
 Nbad=${#bad_dates[@]}
 # for loop_i in `seq 1 $Nbad`
 # do
@@ -86,7 +100,7 @@ Nbad=${#bad_dates[@]}
 #########################################################
 
 
-if [ 1 -eq 1 ]
+if [ 1 -eq 0 ]
 then
    # DO ALL
    E0_start=14
@@ -95,7 +109,7 @@ else
    # DO SOME
    # E0_start=36
    # E0_stop=56
-   E0_start=57
+   E0_start=18
    E0_stop=2000
 fi
 
@@ -159,7 +173,7 @@ do
       then
          # didn't crash
          # - check if model output has the THERM_DIAG outputs
-         stat=`cat $xdir/data/TP4archv.${ryear}_${rday}_000000Z.b |grep flx_cool`
+         stat=`cat $xdir/data/TP4archv_wav.${ryear}_${rday}_000000Z.b |grep taux_wav`
          if [ ${#stat} -eq 0 ]
          then
             launch=1
@@ -200,7 +214,10 @@ do
 
       echo $qsub pbsjob.sh
       $qsub pbsjob.sh
-      exit
+      if [ $ONEBYONE -eq 1 ]
+      then
+         exit
+      fi
    fi
 
 done
