@@ -58,11 +58,11 @@ def check_names(vname,variables,filename):
    lists = []
 
    # ice conc alt names
-   lists.append(['ficem','fice','ice_conc',\
+   lists.append(['ficem','fice','ice_conc','icec,'\
                   'concentration','sea_ice_concentration'])
 
    # ice thick alt names
-   lists.append(['hicem','hice','ice_thick',\
+   lists.append(['hicem','hice','ice_thick','icetk'\
                   'thickness','sea_ice_concentration'])
 
    for names in lists:
@@ -103,8 +103,21 @@ def check_var_opts(var_opts,variables,filename):
       print("to specify more complicated plot options:")
       print("ie")
       print("var_opts=mod_reading.make_plot_options('"+var_opts+"',")
-      print("   vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=False,dir_from=True)")
+      print("   vec_opt=0,layer=0,conv_fac=1,wave_mask=False"\
+               +",ice_mask=False,dir_from=True)")
       var_opts = make_plot_options(var_opts)
+   elif type(var_opts)==type([]):
+      # if only a list [vname,layer] is passed in
+      vname,layer = var_opts
+      print("Converting string '"+vname+"'(layer="+str(layer)+\
+            ") to mod_reading.make_plot_options object")
+      print("- create and pass in such an object directly")
+      print("to specify more complicated plot options:")
+      print("ie")
+      print("var_opts=mod_reading.make_plot_options('"+vname+"',")
+      print("   vec_opt=0,layer="+str(layer)+",conv_fac=1,wave_mask=False"\
+               +",ice_mask=False,dir_from=True)")
+      var_opts = make_plot_options(vname,layer=layer)
 
    vname       = check_names(var_opts.name,variables,filename)
    var_opts2   = new_var_opts(var_opts,vname)
@@ -116,10 +129,11 @@ def check_var_opts(var_opts,variables,filename):
 ###########################################################
 class make_plot_options:
 
-   def __init__(self,vname,vec_opt=0,conv_fac=1,\
+   def __init__(self,vname,layer=0,vec_opt=0,conv_fac=1,\
       wave_mask=False,ice_mask=False,dir_from=True):
 
       self.name      = vname
+      self.layer     = layer
       self.vec_opt   = vec_opt
       self.conv_fac  = conv_fac
       self.ice_mask  = ice_mask
@@ -1023,12 +1037,24 @@ def get_record_numbers_HYCOM(bfile):
    # have found table title
    n     = 0
    lut   = {}
+   lut3d = {}
    lin   = bid.readline()
    EOF   = (lin=='')
    while not EOF:
       n     = n+1
       word  = lin.split()[0] # 1st word in line 
-      lut.update({word:n})
+      layer = int(lin.split()[4]) # layer number (5th entry)
+
+      if layer==0:
+         # surface/2D var
+         lut.update({word:n})
+      else:
+         # 3D var
+         LUT   = {layer:n}
+         if word not in lut3d.keys():
+            lut3d.update({word:LUT})
+         else:
+            lut3d[word].update(LUT)
       #
       lin   = bid.readline()
       EOF   = (lin=='')
@@ -1041,12 +1067,12 @@ def get_record_numbers_HYCOM(bfile):
    if 'hicem' in lut.keys():
       lut.update({'hice':lut['hicem']})
 
-   return lut
+   return lut,lut3d
    ######################################################################
 
 ######################################################################
 class HYCOM_binary_info:
-   def __init__(self,fname,gridpath='.'):
+   def __init__(self,fname,gridpath=None):
       from datetime import datetime,timedelta
 
       ss = fname.split('.')
@@ -1059,18 +1085,30 @@ class HYCOM_binary_info:
       else:
          raise ValueError('HYCOM binaries should have extensions .a or .b')
 
-      basename             = fname.split('/')[-1]
-      self.basename        = basename[:-2]
-      self.HYCOM_region    = basename[:3]
-      self.record_numbers  = get_record_numbers_HYCOM(self.bfile)
-      self.variables       = self.record_numbers.keys()
+      basename                = fname.split('/')[-1]
+      self.basename           = basename[:-2]
+      self.HYCOM_region       = basename[:3]
+      lut2d,lut3d             = get_record_numbers_HYCOM(self.bfile)
+      self.record_numbers     = lut2d
+      self.record_numbers3d   = lut3d
+      self.variables          = self.record_numbers.keys()
+      self.variables3d        = self.record_numbers3d.keys() 
+      self.all_variables      = 1*self.variables
+      self.all_variables.extend(1*self.variables3d)
 
       #######################################################################
       #path to regional.grid.[ab] files
-      self.gridpath = gridpath
+      if gridpath is not None:
+         self.gridpath = gridpath
+      else:
+         wsn            = '/work/shared/nersc/msc/ModelInput'
+         gridpath_lut   = {'FR1':wsn+'/FramStrait_Hyc2.2.12/FR1a0.03-clean//topo',\
+                           'BS1':wsn+'/BS1a0.045-clean/topo',\
+                           'TP4':wsn+'/REANALYSIS/topo'}
+         self.gridpath = gridpath_lut[self.HYCOM_region]
 
       # get grid size
-      bid   = open(gridpath+'/regional.grid.b','r')
+      bid   = open(self.gridpath+'/regional.grid.b','r')
       line  = bid.readline()
       while 'idm' not in line:
          line  = bid.readline()
@@ -1136,10 +1174,19 @@ class HYCOM_binary_info:
    #######################################################################
    def get_var(self,vname):
 
-      vname = check_names(vname,self.variables,self.afile)
-      recno = self.record_numbers[vname]
-      vbl   = get_array_from_HYCOM_binary(self.afile,recno,\
-                  dims=self.dims)
+      if type(vname)!=type([]):
+         # 2d var
+         vname = check_names(vname,self.variables,self.afile)
+         recno = self.record_numbers[vname]
+         vbl   = get_array_from_HYCOM_binary(self.afile,recno,\
+                     dims=self.dims)
+      else:
+         # 3d var
+         vname,layer = vname
+         vname       = check_names(vname,self.variables3d,self.afile)
+         recno       = self.record_numbers3d[vname][layer]
+         vbl         = get_array_from_HYCOM_binary(self.afile,recno,\
+                           dims=self.dims)
 
       return vbl
    #######################################################################
@@ -1154,14 +1201,15 @@ class HYCOM_binary_info:
       from matplotlib import cm
       import fns_plotting as Fplt
 
-      var_opts    = check_var_opts(var_opts,self.variables,self.afile)
+      var_opts    = check_var_opts(var_opts,self.all_variables,self.afile)
       vname       = var_opts.name
+      layer       = var_opts.layer
       vec_opt     = var_opts.vec_opt
       conv_fac    = var_opts.conv_fac
       ice_mask    = var_opts.ice_mask
       wave_mask   = var_opts.wave_mask
       dir_from    = var_opts.dir_from
-      if vname not in self.variables:
+      if vname not in self.all_variables:
          raise ValueError('Variable '+vname+'not in '+self.afile)
 
       if pobj is None:
@@ -1182,7 +1230,10 @@ class HYCOM_binary_info:
          vmin  = None
          vmax  = None
 
-      vbl   = self.get_var(vname)
+      if layer==0:
+         vbl   = self.get_var(vname)
+      else:
+         vbl   = self.get_var([vname,layer])
       mask  = 1-np.isfinite(vbl)
 
       ################################################################## 
@@ -1222,7 +1273,10 @@ class HYCOM_binary_info:
          elif vname[:4]=='taux':
             vname2   = 'tauy'+vname[4:]
 
-         vbl2  = self.get_var(vname2)
+         if layer==0:
+            vbl2  = self.get_var(vname2)
+         else:
+            vbl2  = self.get_var([vname2,layer])
          Marr  = np.hypot(vbl,vbl2)
          Marr  = np.ma.array(conv_fac*Marr,mask=mask)
 
@@ -1234,7 +1288,10 @@ class HYCOM_binary_info:
          elif vname[:4]=='taux':
             vname2   = 'tauy'+vname[4:]
 
-         vbl2  = self.get_var(vname2)
+         if layer==0:
+            vbl2  = self.get_var(vname2)
+         else:
+            vbl2  = self.get_var([vname2,layer])
          U     = vbl
          V     = vbl2
 
@@ -1261,7 +1318,10 @@ class HYCOM_binary_info:
          elif vname[:4]=='taux':
             vname2   = 'tauy'+vname[4:]
 
-         vbl2  = self.get_var(vname2)
+         if layer==0:
+            vbl2  = self.get_var(vname2)
+         else:
+            vbl2  = self.get_var([vname2,layer])
          U     = conv_fac*vbl
          V     = conv_fac*vbl2
 
@@ -1287,7 +1347,10 @@ class HYCOM_binary_info:
          elif vname[:4]=='taux':
             vname2   = 'tauy'+vname[4:]
 
-         vbl2  = self.get_var(vname2)
+         if layer==0:
+            vbl2  = self.get_var(vname2)
+         else:
+            vbl2  = self.get_var([vname2,layer])
          dir   = 180/np.pi*np.arctan2(vbl2,vbl)#dir-to in degrees (<180,>-180)
          dir   = 90-dir #north is 0,angle clockwise
          if dir_from:
@@ -1418,8 +1481,8 @@ class HYCOM_binary_info:
 
       # ====================================================================
       # check options
-      var_opts1   = check_var_opts(var_opts1,self.variables,self.afile)
-      var_opts2   = check_var_opts(var_opts2,self.variables,self.afile)
+      var_opts1   = check_var_opts(var_opts1,self.all_variables,self.afile)
+      var_opts2   = check_var_opts(var_opts2,self.all_variables,self.afile)
       check_pair(var_opts1,var_opts2)
       # ====================================================================
 
@@ -1435,7 +1498,7 @@ class HYCOM_binary_info:
 
       from matplotlib import pyplot as plt
 
-      var_opts = check_var_opts(var_opts,self.variables,self.afile)
+      var_opts = check_var_opts(var_opts,self.all_variables,self.afile)
 
       new_fig  = (pobj is None)
       if new_fig:
@@ -1531,8 +1594,8 @@ class HYCOM_binary_info:
 
       # ====================================================================
       # check options
-      var_opts1   = check_var_opts(var_opts1,self.variables,self.afile)
-      var_opts2   = check_var_opts(var_opts2,self.variables,self.afile)
+      var_opts1   = check_var_opts(var_opts1,self.all_variables,self.afile)
+      var_opts2   = check_var_opts(var_opts2,self.all_variables,self.afile)
       check_pair(var_opts1,var_opts2)
       # ====================================================================
 
@@ -1567,6 +1630,7 @@ class HYCOM_binary_info:
          pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
 
       # set name with 1st variable only
+      vname    = var_opts1.name
       Fname    = var_opts1.name
       vec_opt  = var_opts1.vec_opt
       if vec_opt==1:
@@ -1621,12 +1685,21 @@ class file_list:
          if (fext==extension) and (pattern in fname):
             self.file_list.append(fil)
 
+      wsn            = '/work/shared/nersc/msc/ModelInput'
+      gridpath_lut   = {'FR1':wsn+'/FramStrait_Hyc2.2.12/FR1a0.03-clean//topo',\
+                        'BS1':wsn+'/BS1a0.045-clean/topo',\
+                        'TP4':wsn+'/REANALYSIS/topo'}
       HB = False
       if extension=='.a':
-         self.getinfo   = HYCOM_binary_info
-         HB             = True
+         self.getinfo      = HYCOM_binary_info
+         HB                = True
+         self.HYCOM_region = self.file_list[0][:3]
+         if 'gridpath' not in kwargs:
+            kwargs.update({'gridpath':gridpath_lut[self.HYCOM_region]})
+         
       elif extension=='.nc':
-         self.getinfo   = nc_getinfo
+         self.getinfo      = nc_getinfo
+         self.HYCOM_region = 'TP4' #TODO pass in HYCOMreg?
 
       # get main objects
       self.objects   = []
@@ -1640,9 +1713,6 @@ class file_list:
       self.get_lonlat   = self.objects[0].get_lonlat
       if HB:
          self.get_depths   = self.objects[0].get_depths
-         self.HYCOM_region = self.objects[0].basename[:3]
-      else:
-         self.HYCOM_region = 'TP4'
 
       return
    ###########################################################
