@@ -7,15 +7,15 @@ then
 else
    batch=$1
 fi
-R=FR1a0.03
-T=01
+R=BS1a0.045
+T=04
 HCtype=ice_only
 rungen=${R:0:3}
 hd=$SWARP_ROUTINES/forecast_scripts/hindcast/$R/$HCtype
 
-ddir=$FR1_REALTIME/expt_01.2/data
-ndir=$FR1_REALTIME/expt_01.2/nest_out_${R}_${T}
-rdir0="$FR1_REALTIME/../results_hindcasts/$R/"
+ddir=$BS1_REALTIME/expt_01.2/data
+ndir=$BS1_REALTIME/expt_01.2/nest_out_${R}_${T}
+rdir0="$BS1_REALTIME/../results_hindcasts/$R/"
 rdir="$rdir0/$HCtype"
 mkdir -p $rdir0
 mkdir -p $rdir
@@ -69,9 +69,10 @@ idir=$Rdir0/info
 mkdir -p $idir
 cp $hd/inputs/flags                 $idir
 cp $hd/inputs/blkdat.input          $idir
-cp $hd/inputs/infile.in.batch$batch $idir
+cp $hd/inputs/infile.in.batch$batch $idir/infile.in
 # cp $ddir/../log/mpijob.out          $idir
 # exit
+
 
 DAILY=1 # copy DAILY files
 RESTS=1 # copy restarts
@@ -79,7 +80,7 @@ ARCHV=1 # copy archive files
 NESTS=1 # copy nesting
 PLOTS=1 # plots for rough qual control
 
-if [ 1 -eq 0 ]
+if [ $DAILY -eq 1 ]
 then
    # cp DAILY avg's
    for afil in $ddir/${rungen}DAILY*.a
