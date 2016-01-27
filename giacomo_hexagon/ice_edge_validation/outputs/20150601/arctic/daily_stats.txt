@@ -1,0 +1,2 @@
+Tot.Points IceHits Over Under SeaHits Unknown Avg.OverWidths Avg.UnderWidths
+851200 159916 1980 3416 82455 603433 46741.1758135 59059.4515674
