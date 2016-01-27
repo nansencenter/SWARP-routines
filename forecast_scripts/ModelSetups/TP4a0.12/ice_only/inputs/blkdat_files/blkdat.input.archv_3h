@@ -61,7 +61,7 @@ S-Z(15-11): dp00/f/x/i=3m/1.125/12m/1m; ds=1m/1.125/4m; src_2.2.12;
 9999.0   'diagfq' = number of days between model diagnostics
    0.0	  'tilefq' = number of days between model diagnostics on selected tiles
    0.0	  'meanfq' = number of days between model diagnostics (time averaged)
-9999.0	  'rstrfq' = number of days between model restart output
+1000.0	  'rstrfq' = number of days between model restart output
  0.000	  'bnstfq' = number of days between baro nesting archive input
  0.000	  'nestfq' = number of days between 3-d  nesting archive input
    0.125  'cplifq' = number of days (or time steps) between sea ice coupling

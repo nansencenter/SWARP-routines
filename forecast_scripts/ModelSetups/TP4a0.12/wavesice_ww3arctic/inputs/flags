@@ -38,12 +38,13 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #                  -DNEST_INNER \
 
-# # flags for rheology and diagnostics;
-# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-#                 -DICE_DYN_DIAG \
-#                 -DICE_DYN_DIAG_DUMP \
-#                 -DMIZ \
-# #               -DMIZ2 \
+# flags for rheology and diagnostics;
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                -DTHERM_BUGFIX \
+#               -DICE_DYN_DIAG \
+#               -DICE_DYN_DIAG_DUMP \
+#               -DMIZ \
+#               -DMIZ2 \
 
 # flags for waves run 
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \

@@ -16,7 +16,6 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 # and archive restart
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DARCHIVE_SELECT \
-                  -DARCHIVE_RESTART \
 
 # # ecnc2 forcing in 2015 is missing 4 records (between (not inc) 22-Aug 0600, 23-Aug 1200)
 # # - now read smaller forecast files (-13 days to + 9 days) to avoid problem
@@ -38,12 +37,13 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #                  -DNEST_INNER \
 
-# # flags for rheology and diagnostics;
-# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-#                 -DICE_DYN_DIAG \
-#                 -DICE_DYN_DIAG_DUMP \
-#                 -DMIZ \
-# #               -DMIZ2 \
+# flags for rheology and diagnostics;
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                -DTHERM_BUGFIX \
+#               -DICE_DYN_DIAG \
+#               -DICE_DYN_DIAG_DUMP \
+#               -DMIZ \
+#               -DMIZ2 \
 
 # # flags for waves run 
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
