@@ -201,6 +201,7 @@ def read_txt_file_polys(fname):
    # read in text file:
    # each line is:
    # polygon number, lon, lat, [function value]
+   # 1st line should be a header line
 
    fid   = open(fname,'r')
    lins  = fid.readlines()    # 1 line
