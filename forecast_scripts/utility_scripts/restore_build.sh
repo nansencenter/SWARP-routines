@@ -46,7 +46,7 @@ then
    then
       Xno=3
    else
-      Xno=2
+      Xno=1
    fi
 elif [ $FCtype == "wavesice" ]
 then
