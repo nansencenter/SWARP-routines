@@ -37,8 +37,11 @@ $python $post/make_pngs.py --ncfile=$ncfil --outdir=$pdir --FCtype=$FCtype
 cd $pdir
 for vdir in *
 do
+   echo " "
+   echo "Making $vdir.gif"
    cd $vdir
    $convert -delay 15 -loop 0 *.png $vdir.gif
    mv $vdir.gif $gdir
    cd ..
 done
+echo " "

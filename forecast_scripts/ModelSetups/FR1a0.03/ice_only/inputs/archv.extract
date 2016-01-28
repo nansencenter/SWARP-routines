@@ -30,6 +30,7 @@ usurf    00 00   T
 vsurf    00 00   T
 srftmp   00 00   T
 srfhgt   00 00   T
+srfsal   00 00   T
 uice     00 00   T
 vice     00 00   T
 stressp  00 00   F
