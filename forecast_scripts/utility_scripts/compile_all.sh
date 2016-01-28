@@ -15,8 +15,7 @@ then
 fi
 
 
-# for Xno in 1 3
-for Xno in 3
+for Xno in 1 3
 do
    cd $TP4_REALTIME/Build_V2.2.12_X01.$Xno
    pwd
