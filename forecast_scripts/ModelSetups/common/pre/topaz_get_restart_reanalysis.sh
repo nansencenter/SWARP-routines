@@ -281,7 +281,6 @@ ufil0=${f0}ICE.uf
 # final names
 afil=${f0}.a
 bfil=${f0}.b
-ufil=${f0}ICE.uf
 
 
 # go to the data in $xdir
@@ -290,15 +289,22 @@ ufil=${f0}ICE.uf
 # - rename files
 
 cd $ddir
-rm -f TP4restart*
+if [ 1 -eq 0 ]
+then
+   # don't delete old restarts
+   # - they'll be deleted eventually
+   # but will need them for previous week's hindcast
+   rm -f TP4restart*
+fi
 cp $rdir/${ryear}/$f0.tar.gz .
 tar -zxvf $f0.tar.gz
 rm $f0.tar.gz
-mv $afil0 $ddir/$afil
-mv $bfil0 $ddir/$bfil
-# mv $ufil0 $ddir/$ufil
-echo " "                                              >> $log
-echo mv $afil0 $ddir/$afil                            >> $log
-echo mv $bfil0 $ddir/$bfil                            >> $log
-# echo mv $ufil0 $ddir/$ufil                            >> $log
-echo " "                                              >> $log                                              
+mv $afil0 $afil
+mv $bfil0 $bfil
+
+echo " "                      >> $log
+echo "in $ddir:"              >> $log
+echo mv $afil0 $afil          >> $log
+echo mv $bfil0 $bfil          >> $log
+echo "Don't rename $ufil0"    >> $log
+echo " "                      >> $log                                              
