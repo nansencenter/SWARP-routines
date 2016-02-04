@@ -295,16 +295,43 @@ echo "Forecast final day ${fin_year}_$(printf '%3.3d' $fin_day_j0)_$FCfinal_hour
 
 if [ $FCtype == "ice_only" ] && [ $TP4restart_OPT -eq 2 ] && [ $day2 -ne $rday ]
 then
-   echo "Launching make_infile_3days.sh @ $(date)"                  >> $log
-   inputs="$THIS_SRC $rungen $ryear $rday $day2 $final_day $FCfinal_hour $nesting_outer $nesting_inner"
-   echo "$FCcommon/make_infile_3days.sh $inputs"
-   $FCcommon/pre/make_infile_3days.sh $inputs
+   # echo "Launching make_infile_3days.sh @ $(date)"                  >> $log
+   # inputs="$THIS_SRC $rungen $ryear $rday $day2 $final_day $FCfinal_hour $nesting_outer $nesting_inner"
+   # echo "$FCcommon/make_infile_3days.sh $inputs"
+   # $FCcommon/pre/make_infile_3days.sh $inputs
+   days="$rday $day2 $final_day"
+   Ropts="F T F"
 else
-   echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
-   inputs="$THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour $nesting_outer $nesting_inner"
-   echo "$FCcommon/make_infile_2days.sh $inputs"
-   $FCcommon/pre/make_infile_2days.sh $inputs
+   # echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
+   # inputs="$THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour $nesting_outer $nesting_inner"
+   # echo "$FCcommon/make_infile_2days.sh $inputs"
+   # $FCcommon/pre/make_infile_2days.sh $inputs
+   days="$rday $final_day"
+   Ropts="F F"
 fi
+
+ftmp='tmp.txt'
+echo "rungen         $rungen"             >  $ftmp
+echo "expt_dir       $xdir"               >> $ftmp
+echo "refyear        $ryear"              >> $ftmp
+echo "days           $days"               >> $ftmp
+echo "restart_opts   $Ropts"              >> $ftmp
+echo "final_hour     $FCfinal_hour"       >> $ftmp
+echo "nest_outer     $nesting_outer"      >> $ftmp
+echo "nest_inner     $nesting_inner"      >> $ftmp
+
+
+echo "Launching make_infile.py @ $(date)" >> $log
+echo ""                                   >> $log
+cat $ftmp                                 >> $log
+echo ""                                   >> $log
+
+# load python and launch make_infile.py
+[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
+module load python/2.7.9-dso
+$python $FCcommon/pre/make_infile.py --infile=$ftmp
+rm $ftmp
+# =========================================================================
 
 infile=$xdir/infile.in
 if [ $print_info -eq 1 ]
