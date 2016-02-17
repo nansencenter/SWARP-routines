@@ -515,19 +515,19 @@ class therm_HYCOM:
 ###################################################################
 class fsd_info_smooth:
    # fsd with continuous PDF (unlike RG method)
-   # * PDF function is A*D^{-(1+alpha)}/(D_min^{-alpha}-D_max^{-alpha}) if D\in[Dmin,Dmax] else 0
+   # * PDF function is A*D^{-(1+alpha)} if D\in[Dmin,Dmax] else 0
    # * cumulative probability function is P(d>D) = (D^{-alpha}-D_max^{-alpha})/(D_min^{-alpha}-D_max^{-alpha})
    def __init__(self,Dmax,Dmin=20,fragility=.9,xi=2):
       self.Dmax      = Dmax
       self.Dmin      = Dmin
       self.fragility = fragility
       self.xi        = xi
+      self.alpha     = np.log(xi*xi*f)/np.log(xi) #Exponent from Toyota
       A              = self.alpha/(pow(self.Dmin,-self.alpha)-pow(self.Dmax,-self.alpha))
 
-      self.alpha                    = np.log(xi*xi*f)/np.log(xi)
       self.normalisation_constant   = A
       self.Dmean                    = self.moment(1)
-      self.Dsq_mean                 = self.moment(1)
+      self.Dsq_mean                 = self.moment(2)
 
       return
 
