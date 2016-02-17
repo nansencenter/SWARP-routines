@@ -1,6 +1,6 @@
 #!/bin/bash
 # each day this script gets yesterday's AMSR2 concentration
-# - last update is around 2000
+# - last update is around 2000, so we run at 2100
 
 # get yesterday's date
 yyear=`date -d "yesterday" '+%Y'`
@@ -13,6 +13,8 @@ ftpdir="ftp://ftp-projects.zmaw.de/seaice/AMSR2/3.125km/"
 # where the conc files are stored
 hex_dir=/work/shared/nersc/msc/AMSR2_3125
 cd $hex_dir
+mkdir -p Arc_$yyear
+cd $yyear
 
 mkdir -p tmp
 cd tmp
