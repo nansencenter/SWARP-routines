@@ -3,7 +3,19 @@ def start_HYCOM_map(region,cres='i'):
 
    from mpl_toolkits.basemap import Basemap
 
-   if region=='TP4':
+   if region=='Arctic':
+      lonc     = -45.
+      latc     = 90.
+      lat_ts   = latc
+      rad      = 33 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='TP4':
       lonc     = -45.
       latc     = 85.
       lat_ts   = latc
@@ -15,7 +27,8 @@ def start_HYCOM_map(region,cres='i'):
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
-   elif region=='BS1':
+   elif region=='BS1' or region=='bar':
+      # Barents Sea model
       lonc     = 48.
       latc     = 74.
       lat_ts   = latc
@@ -28,6 +41,7 @@ def start_HYCOM_map(region,cres='i'):
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='FR1':
+      # Fram Strait model
       lonc     = 0.5
       latc     = 78.75
       lat_ts   = latc
@@ -38,6 +52,100 @@ def start_HYCOM_map(region,cres='i'):
       bm = Basemap(width=width,height=height,\
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='gre':
+      # Greenland Sea - bit further south than FR1
+      lonc     = -2.
+      latc     = 74.
+      lat_ts   = latc
+      rad      = 13.5 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='les':
+      # Laptev/East Siberian Seas
+      lonc     = 100.
+      latc     = 74.
+      lat_ts   = latc
+      rad      = 10.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='beau':
+      # Beaufort Sea
+      lonc     = -175.
+      latc     = 77.
+      lat_ts   = latc
+      rad      = 23.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='ncb':
+      # North Canada & Beaufort Seas
+      lonc     = -120.
+      latc     = 74.
+      lat_ts   = latc
+      rad      = 40.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='lab':
+      # Labrador Sea
+      lonc     = -60.
+      latc     = 65.
+      lat_ts   = latc
+      rad      = 20.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='can':
+      # Labrador Sea
+      lonc     = -80.
+      latc     = 65.
+      lat_ts   = latc
+      rad      = 20.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='nor':
+      # Norway fjord
+      lonc     = 22.
+      latc     = 64.
+      lat_ts   = latc
+      rad      = 2.0 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   else:
+      raise ValueError('Unknown region: '+region)
 
    return bm
 ############################################################################
