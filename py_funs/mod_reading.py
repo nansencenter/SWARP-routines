@@ -89,7 +89,7 @@ class proj_obj:
 
 
 ###########################################################
-def check_names(vname,variables,filename):
+def check_names(vname,variables):
 
    if vname in variables:
       return vname
@@ -101,8 +101,8 @@ def check_names(vname,variables,filename):
                   'concentration','sea_ice_concentration'])
 
    # ice thick alt names
-   lists.append(['hicem','hice','ice_thick','icetk'\
-                  'thickness','sea_ice_concentration'])
+   lists.append(['hicem','hice','ice_thick','icetk',\
+                  'sea_ice_thickness','thickness','sea_ice_concentration'])
 
    # floe size alt names
    lists.append(['dfloe','dmax'])
@@ -113,13 +113,13 @@ def check_names(vname,variables,filename):
             if vbl in variables:
                return vbl
 
-   raise ValueError(vname+'not in variable list for '+filename)
+   raise ValueError(vname+'not in variable list')
    return
 ###########################################################
 
 
 ###########################################################
-def check_var_opts(var_opts,variables,filename):
+def check_var_opts(var_opts,variables):
 
    ###########################################################
    class new_var_opts:
@@ -155,7 +155,7 @@ def check_var_opts(var_opts,variables,filename):
                +",ice_mask=False,dir_from=True)")
       var_opts = make_plot_options(vname,layer=layer)
 
-   vname       = check_names(var_opts.name,variables,filename)
+   vname       = check_names(var_opts.name,variables)
    var_opts2   = new_var_opts(var_opts,vname)
 
    return var_opts2
@@ -311,7 +311,7 @@ def nc_get_var(ncfil,vblname,time_index=None):
 class nc_getinfo:
 
    #####################################################
-   def __init__(self,ncfil,time_index=None):
+   def __init__(self,ncfil,time_index=None,lonlat_file=None):
 
       ##################################################
       self.filename  = ncfil
@@ -336,9 +336,16 @@ class nc_getinfo:
 
 
       # open the file
-      self.lonname,self.latname  = lonlat_names(ncfil)
-      nc                         = ncopen(ncfil)
-      self.dimensions            = nc.dimensions.keys()
+      if lonlat_file is None:
+         lonlat_file = ncfil
+
+      self.lonlat_file  = lonlat_file
+      if lonlat_file is not None:
+         self.lonname,self.latname  = lonlat_names(lonlat_file)
+
+      nc    = ncopen(ncfil)
+      # nc2   = ncopen(lonlat_file)
+      self.dimensions   = nc.dimensions.keys()
 
       # is time a dimension?
       self.time_dim     = ('time' in self.dimensions)
@@ -518,6 +525,7 @@ class nc_getinfo:
             vlist.append(key)
 
       self.variable_list   = vlist
+      self.variables       = vlist
       ########################################################
 
       nc.close()
@@ -813,6 +821,10 @@ class nc_getinfo:
    def plot_var_pair(self,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
 
       # ====================================================================
+      # check names
+      var_opts1   = check_var_opts(var_opts1,self.variable_list)
+      var_opts2   = check_var_opts(var_opts2,self.variable_list)
+
       # check options
       check_pair(var_opts1,var_opts2)
       # ====================================================================
@@ -825,6 +837,8 @@ class nc_getinfo:
 
    ###########################################################
    def make_png(self,var_opts,pobj=None,bmap=None,figdir='.',time_index=0,date_label=True,**kwargs):
+
+      var_opts    = check_var_opts(var_opts,self.variable_list)
 
       new_fig  = (pobj is None)
       if new_fig:
@@ -903,6 +917,10 @@ class nc_getinfo:
          pobj=None,bmap=None,figdir='.',date_label=True,**kwargs):
 
       # ====================================================================
+      # check names
+      var_opts1   = check_var_opts(var_opts1,self.variable_list)
+      var_opts2   = check_var_opts(var_opts2,self.variable_list)
+
       # check options
       check_pair(var_opts1,var_opts2)
       # ====================================================================
@@ -961,6 +979,8 @@ class nc_getinfo:
    ###########################################################
    def make_png_all(self,var_opts,HYCOMreg='TP4',figdir='.',**kwargs):
 
+      # check names
+      var_opts    = check_var_opts(var_opts,self.variable_list)
       pobj        = plot_object()
       fig,ax,cbar = pobj.get()
 
@@ -988,6 +1008,10 @@ class nc_getinfo:
    def make_png_pair_all(self,var_opts1,var_opts2,HYCOMreg='TP4',figdir='.',**kwargs):
 
       # ====================================================================
+      # check names
+      var_opts1   = check_var_opts(var_opts1,self.variable_list)
+      var_opts2   = check_var_opts(var_opts2,self.variable_list)
+
       # check options
       check_pair(var_opts1,var_opts2)
       # ====================================================================
@@ -1351,7 +1375,7 @@ class HYCOM_binary_info:
       if type(vname)!=type([]):
          # 2d var
          layer = 0
-         vname = check_names(vname,self.variables,self.afile)
+         vname = check_names(vname,self.variables)
          recno = self.record_numbers[vname]
          xmin  = self.minvals2d[vname]
          xmax  = self.maxvals2d[vname]
@@ -1362,7 +1386,7 @@ class HYCOM_binary_info:
       else:
          # 3d var
          vname,layer = vname
-         vname       = check_names(vname,self.variables3d,self.afile)
+         vname       = check_names(vname,self.variables3d)
          recno       = self.record_numbers3d[vname][layer]
          xmin        = self.minvals3d       [vname][layer]
          xmax        = self.maxvals3d       [vname][layer]
@@ -1416,7 +1440,7 @@ class HYCOM_binary_info:
       from mpl_toolkits.basemap import Basemap
       from matplotlib import cm
 
-      var_opts    = check_var_opts(var_opts,self.all_variables,self.afile)
+      var_opts    = check_var_opts(var_opts,self.all_variables)
       vname       = var_opts.name
       layer       = var_opts.layer
       vec_opt     = var_opts.vec_opt
@@ -1988,7 +2012,7 @@ class HYCOM_binary_info:
 
       var_opts1   = make_plot_options('ficem',\
          vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
-      var_opts1   = check_var_opts(var_opts1,self.variables,self.afile)
+      var_opts1   = check_var_opts(var_opts1,self.variables)
 
       if 'show' in kwargs:
          show           = kwargs['show']
@@ -2044,8 +2068,8 @@ class HYCOM_binary_info:
 
       # ====================================================================
       # check options
-      var_opts1   = check_var_opts(var_opts1,self.all_variables,self.afile)
-      var_opts2   = check_var_opts(var_opts2,self.all_variables,self.afile)
+      var_opts1   = check_var_opts(var_opts1,self.all_variables)
+      var_opts2   = check_var_opts(var_opts2,self.all_variables)
       check_pair(var_opts1,var_opts2)
       # ====================================================================
 
@@ -2059,7 +2083,7 @@ class HYCOM_binary_info:
    ###########################################################
    def make_png(self,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs):
 
-      var_opts = check_var_opts(var_opts,self.all_variables,self.afile)
+      var_opts = check_var_opts(var_opts,self.all_variables)
 
       new_fig  = (pobj is None)
       if new_fig:
@@ -2153,8 +2177,8 @@ class HYCOM_binary_info:
 
       # ====================================================================
       # check options
-      var_opts1   = check_var_opts(var_opts1,self.all_variables,self.afile)
-      var_opts2   = check_var_opts(var_opts2,self.all_variables,self.afile)
+      var_opts1   = check_var_opts(var_opts1,self.all_variables)
+      var_opts2   = check_var_opts(var_opts2,self.all_variables)
       check_pair(var_opts1,var_opts2)
       # ====================================================================
 
