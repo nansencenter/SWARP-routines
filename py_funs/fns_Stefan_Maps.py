@@ -200,33 +200,33 @@ def read_txt_file_polys(fname):
 
    # read in text file:
    # each line is:
-   # polygon number, lon, lat, [function value]
+   # [polygon number]  lon  lat  [function value]
    # 1st line should be a header line
 
    fid   = open(fname,'r')
-   lins  = fid.readlines()    # 1 line
+   lins  = fid.readlines()
    fid.close()
    
-   Polys    = []
-   llc      = []
-   fvals    = []
-   Pn0      = int(lins[1].split()[0])
+   Polys = []
+   llc   = []
+   fvals = []
+   Pn0   = int(lins[1].split()[0])
 
    for lin in lins[1:]:
-       ss   = lin.split()
-       Pno  = int(ss[0])
-       lon  = float(ss[1])
-       lat  = float(ss[2])
-       fval = int(ss[3])
+      ss   = lin.split()
+      Pno  = int(ss[0])
+      lon  = float(ss[1])
+      lat  = float(ss[2])
+      fval = int(ss[3])
 
-       if Pno==Pn0:
-          llc  .append((lon,lat))
-          fvals.append(fval)
-       else:
-          Polys.append([llc,fvals])
-          llc     = [(lon,lat)]
-          fvals   = [fval]
-          Pn0     = Pno
+      if Pno==Pn0:
+         llc  .append((lon,lat))
+         fvals.append(fval)
+      else:
+         Polys.append([llc,fvals])
+         llc     = [(lon,lat)]
+         fvals   = [fval]
+         Pn0     = Pno
 
    Polys.append([llc,fvals])
    return Polys
