@@ -801,10 +801,12 @@ class MIZ_poly:
          A     = GP.area_polygon_euclidean(i,j) # area of polygon in pixels (can be <0)
          if A<0:
             # anticlockwise: external boundary
-            self.MIZcont.append(cont)
+            # reverse order so these have positive areas
+            self.MIZcont.append(cont[::-1])
          else:
             # clockwise: internal boundary
-            self.MIZholes.append(cont)
+            # reverse order so these have negative areas
+            self.MIZholes.append(cont[::-1])
 
       # determine which poly each hole is inside
       self.MIZhole_indices = []
