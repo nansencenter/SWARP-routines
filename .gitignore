@@ -5,6 +5,7 @@ latex/*.toc
 latex/*.synctex.gz
 *.nc
 *.swp
+*.swo
 *.DS_Store
 *.npz
 *.pyc
@@ -34,8 +35,9 @@ forecast_scripts/ModelSetups/FR1a0.03/wavesice_ww3arctic/logs/
 forecast_scripts/ModelSetups/common/logs/
 crontabs/crontab_dump
 #
-python_tutorial/out
-python_tutorial/eg_TP4files
+py_funs/out/*
+PythonTutorial/out
+PythonTutorial/eg_TP4files
 validation/SWARP*
 #
 validation/ice_charts/test_outputs/*
