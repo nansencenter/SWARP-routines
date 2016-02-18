@@ -14,6 +14,58 @@ def basemap_OSISAF():
 ##########################################################
 
 
+##########################################################
+class read_MIZpoly_summary:
+
+   #######################################################
+   def __init__(self,tfil,cdate=None,ctime=None):
+      
+
+      self.filename     = tfil
+      self.datetime     = None
+      self.time_in_days = None
+      self.datetime_ref = datetime(1901,1,1)
+
+      if (date is not None) and (time is not None):
+         self.datetime  = datetime.strptime(cdate+ctime,'%Y%m%d%H%M%S')
+      elif (date is not None):
+         self.datetime  = datetime.strptime(cdate,'%Y%m%d')
+
+      fid   = open(tfil,'r')
+      lins  = fid.readlines()
+      fid.close()
+
+      for lin in lins:
+         sp    = lin.split(':')
+         att   = sp[0].strip()
+         if att=='Date':
+            val   = sp[1].strip()
+            if len(val)==8:
+               dtm   = datetime.strptime(val,'%Y%m%d')
+            elif len(val)==16:
+               dtm   = datetime.strptime(val,'%Y%m%dT%H%M%SZ')
+            else:
+               raise ValueError('date in '+tfil+' has wrong format')
+
+            if self.datetime is not None:
+               if self.datetime != dtm:
+                  raise ValueError('date in '+tfil+' not consistent with inputs cdate,ctime')
+            else:
+               self.datetime  = dtm
+         else:
+            val   = float(sp[1].strip())
+            setattr(self,att,val)
+
+      if self.datetime is not None:
+         dt                = self.datetime-self.datetime_ref
+         self.time_in_days = dt.total_seconds()/float(24*60*60)
+
+      return
+   #######################################################
+
+##########################################################
+
+
 ############################################################################
 # Function that reprojects model into observational grid
 def reproj_mod2obs(X1,Y1,Z1,X2,Y2,mask=None):
@@ -398,22 +450,11 @@ class nc_getinfo:
 
 
       # open the file
-      if lonlat_file is None:
-         lonlat_file = ncfil
-
-      self.lonlat_file  = lonlat_file
-      if lonlat_file is not None:
-         self.lonname,self.latname  = lonlat_names(lonlat_file)
-
-      nc    = ncopen(ncfil)
-      # nc2   = ncopen(lonlat_file)
+      nc                = ncopen(ncfil)
       self.dimensions   = nc.dimensions.keys()
 
       # is time a dimension?
       self.time_dim     = ('time' in self.dimensions)
-
-      # are lon,lat dimensions?
-      self.lonlat_dim   = (self.lonname in self.dimensions)
 
       # get global netcdf attributes
       class ncatts:
@@ -439,11 +480,11 @@ class nc_getinfo:
          Nt          = len(time[:])
          reftime_u   = time[0] # hours since refpoint
          time_info   = time.units.split()
-         #
+
          time_info[0]   = time_info[0].strip('s') # 1st word gives units
          if time_info[0]=='econd':
             time_info[0]   = 'second'
-         #
+
          tu    = time.units
          if ('T' in tu) and ('Z' in tu):
             # using the T...Z format for time
@@ -465,6 +506,8 @@ class nc_getinfo:
                if (split2[loop_i])==1:
                   split2[loop_i] = '0'+split2[loop_i]
             cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
+         if len(cdate)<8:
+            cdate = (8-len(cdate))*'0'+cdate
 
          if ':' in ctime:
             # remove ':'
@@ -475,8 +518,13 @@ class nc_getinfo:
                   split2[loop_i] = '0'+split2[loop_i]
             ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
 
-         time_fmt = '%Y%m%d %H%M%S' # eg 19500101 120000
-         refpoint = datetime.strptime(cdate+' '+ctime,time_fmt)
+         year0    = int(cdate[:4])
+         mon0     = int(cdate[4:6])
+         day0     = int(cdate[6:8])
+         hr0      = int(ctime[:2])
+         min0     = int(ctime[2:4])
+         sec0     = int(ctime[4:6])
+         refpoint = datetime(year0,mon0,day0,hr0,min0,sec0)
          #
          if time_info[0]=='second':
             self.reftime = refpoint+timedelta(seconds=reftime_u)
@@ -502,9 +550,19 @@ class nc_getinfo:
 
       ########################################################
       # grid info:
-      lon   = nc.variables[self.lonname]
-      lat   = nc.variables[self.latname]
-      
+      if lonlat_file is None:
+         lonlat_file = ncfil
+      self.lonlat_file  = lonlat_file
+
+      # are lon,lat dimensions?
+      self.lonname,self.latname  = lonlat_names(self.lonlat_file)
+      self.lonlat_dim            = (self.lonname in self.dimensions)
+
+      ##############################################################
+      # basic lon-lat info
+      nc2   = ncopen(self.lonlat_file)
+      lon   = nc2.variables[self.lonname]
+      lat   = nc2.variables[self.latname]
       if self.lonlat_dim:
          self.lon0    = lon[0]
          self.lat0    = lat[0]
@@ -517,11 +575,13 @@ class nc_getinfo:
                self.lon_first = False
                self.shape     = (len(lat),len(lon))
                break
-      
       else:
          self.lon0    = lon[0,0]
          self.lat0    = lat[0,0]
          self.shape   = lon.shape
+      nc2.close()
+      ##############################################################
+      
 
       ny,nx        = self.shape
       self.Npts_x  = nx    # No of points in x dirn
@@ -594,6 +654,7 @@ class nc_getinfo:
       return
    ###########################################################
 
+
    ###########################################################
    def timeval_to_datetime(self,timeval):
       if self.timeunits=='second':
@@ -608,7 +669,7 @@ class nc_getinfo:
    ###########################################################
    def get_lonlat(self,vec2mat=True):
 
-      nc    = ncopen(self.filename)
+      nc    = ncopen(self.lonlat_file)
       if not self.lonlat_dim:
          lon   = nc.variables[self.lonname][:,:]
          lat   = nc.variables[self.latname][:,:]
@@ -1122,7 +1183,7 @@ class nc_getinfo:
 
 
    ###########################################################
-   def MIZmap(self,var_name='dmax',time_index=None,do_sort=False,EastOnly=True,\
+   def MIZmap(self,var_name='dmax',time_index=0,do_sort=False,EastOnly=True,\
          plotting=True,HYCOM_region='Arctic',**kwargs):
       """
       Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
@@ -1266,6 +1327,187 @@ class nc_getinfo:
       if PLOTTING:
          plt.close(fig)
       return mp,Pdict,tfiles
+   ###########################################################
+
+
+   ###########################################################
+   def areas_of_disagreement(self,obs_type='OSISAF',time_index=0,do_sort=True,EastOnly=True,plotting=True,**kwargs):
+      # kwargs: outdir='.',do_sort=True
+
+      import MIZchar as mc
+
+      if obs_type == 'OSISAF':
+         var_name    = 'fice'
+         lower_limit = .15
+         bmap        = basemap_OSISAF()
+         #
+         cyear = self.datetimes[time_index].strftime('%Y')
+         cdate = self.datetimes[time_index].strftime('%Y%m%d')
+         obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+cyear+\
+                     '_nh_polstere/ice_conc_nh_polstere-100_multi_'+\
+                     cdate+'1200.nc'
+      else:
+         raise ValueError('Wrong selection variable for areas_of_disagreement')
+
+      vname = check_names(var_name,self.variables)
+
+      # observation grid & compared quantity
+      nci         = nc_getinfo(obsfil)
+      lon2,lat2   = nci.get_lonlat()
+      Xobs,Yobs   = bmap(lon2,lat2)
+
+      vname2   = check_names(var_name,nci.variables)
+      Zobs     = nci.get_var(vname2)
+
+      # model grid & compared quantity
+      Zmod        = self.get_var(vname,time_index=time_index)
+      lon,lat     = self.get_lonlat()
+      Xmod,Ymod   = bmap(lon,lat)
+
+      if 1:
+         #Zref,Zint should be np.ma.array
+         lon_ref,lat_ref   = lon2,lat2
+         Xref,Yref,Zref    = Xobs,Yobs,Zobs.values  # obs grid is reference;                 
+         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values  # to be interped from model grid onto obs grid;  Zint is np.ma.array
+
+      # add the mask for the ref to Arr
+      Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
+
+      # add the mask for Arr to Zref
+      Zref  = np.ma.array(Zref.data,mask=Arr.mask)
+
+      MPdict   = {'Over':{},'Under':{}}
+      tfiles   = {'Over':{},'Under':{}}
+
+      if 0:
+         # test interpolation and matching of masks
+         fig   = plt.figure()
+         ax1   = fig.add_subplot(1,2,1)
+         ax1.imshow(Arr)
+         ax2   = fig.add_subplot(1,2,2)
+         ax2.imshow(Zref)
+         plt.show(fig)
+         return
+
+      if do_sort:
+         # possible regions are:
+         regions  = ['gre','bar','beau','lab','balt','les','can']
+
+         if EastOnly:
+            # concentrate on the eastern Arctic
+            # (and forget Baltic Sea)
+            regions.remove('balt' )
+            regions.remove('les' )
+            regions.remove('can' )
+            regions.remove('beau')
+
+         # for reg in ['bar']:
+         for reg in regions:
+
+            # Arr,Zref are np.ma.array objects
+            Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
+            MPdict['Over'] .update({reg:Over})
+            MPdict['Under'].update({reg:Under})
+
+            for OU in ['Over','Under']:
+
+               fname0   = self.basename+'_v'+obs_type +'_'+OU+'_'+reg
+               tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+               if 'all' in tfile.keys():
+                  tfiles[OU].update({reg:tfile['all']})
+
+         if 0:
+            MPdict['Over'] [reg].show_maps()
+            MPdict['Under'][reg].show_maps()
+            return MPdict
+      else:
+         reg         = 'all'
+         Over,Under  = mc.get_AOD_polys(Arr.values,Zref.values,lon_ref,lat_ref)
+         MPdict['Over'] .update({reg:Over})
+         MPdict['Under'].update({reg:Under})
+
+         for OU in ['Over','Under']:
+
+            fname0   = self.basename+'_v'+obs_type+'_'+OU+'_'+reg
+            tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+            if 'all' in tfile.keys():
+               tfiles[OU].update({reg:tfile['all']})
+
+      print(tfiles)
+      print(MPdict)
+      Pdict = {'Over':{},'Under':{}}
+      for OU in ['Over','Under']:
+         PLOTTING = False
+         for reg in tfiles[OU].keys():
+
+            ##########################################################
+            # filenames
+            tfil     = tfiles[OU][reg]                          # text file with polygon outlines characterized
+            figname  = tfil.replace('.txt','.png')          # plot of polygons
+            shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
+            sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
+            ##########################################################
+
+
+            ##########################################################
+            if do_sort:
+               mapreg   = reg
+            else:
+               mapreg   = self.HYCOM_region
+            ##########################################################
+
+
+            ##########################################################
+            # process each text file to get MIZ width etc
+            print("MIZchar.single_file: "+tfil+"\n")
+            bmap     = Fplt.start_HYCOM_map(mapreg)
+            Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
+            Pdict[OU].update({reg:Psolns})
+            
+            # Save summary & shapefile
+            mc.save_summary  (Psolns,sumname)
+            mc.save_shapefile(Psolns,filename=shpname)
+            ##########################################################
+
+            
+            if plotting:
+               ##########################################################
+               # Make plot
+               var_opts = make_plot_options(vname,lower_limit=lower_limit)
+               pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=[0,1])[0]
+               fig      = pobj.fig
+               ax       = pobj.ax
+               PLOTTING = True
+
+               for MIZi in Psolns:
+                  # plot outlines of polygons
+                  lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
+                  bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
+
+                  Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
+                  if Wavg>26:
+                     MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
+
+                     # add text with mean width
+                     xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
+                     xav                  = (xmin+xmax)/2.
+                     ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
+                        color='k',fontsize=16,horizontalalignment='right',\
+                        verticalalignment='top')
+
+               Fplt.finish_map(bmap)
+               print('Saving '+figname)
+               fig.savefig(figname)
+               # plt.show(fig)
+               ax.cla()
+               fig.clear()
+               # finished region
+               ##########################################################
+
+         if PLOTTING:
+            plt.close(fig)
+
+      return MPdict,tfiles,Pdict
    ###########################################################
 
 ###########################################################
