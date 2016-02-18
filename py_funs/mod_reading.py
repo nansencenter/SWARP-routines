@@ -1873,11 +1873,10 @@ class HYCOM_binary_info:
       ################################################################## 
       # pcolor plot
       if Marr is not None:
-         PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
 
          #########################################################################
          # add additional masking
-         if (var_opts.lower_limit is not None) or (upper_limit is not None):
+         if (var_opts.lower_limit is not None) or (var_opts.upper_limit is not None):
             mask  = 1*Marr.mask
             data  = Marr.data
             good  = np.logical_not(mask)
@@ -1890,6 +1889,7 @@ class HYCOM_binary_info:
             Marr  = np.ma.array(data,mask=mask)
          #########################################################################
 
+         PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
          if add_cbar:
 
             if cbar is None:
