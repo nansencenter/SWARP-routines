@@ -670,12 +670,15 @@ class nc_getinfo:
    def get_lonlat(self,vec2mat=True):
 
       nc    = ncopen(self.lonlat_file)
-      if not self.lonlat_dim:
-         lon   = nc.variables[self.lonname][:,:]
-         lat   = nc.variables[self.latname][:,:]
+      lono  = nc.variables[self.lonname]
+      lato  = nc.variables[self.latname]
+
+      if lono.ndim==2:
+         lon   = lono[:,:]
+         lat   = lato[:,:]
       else:
-         lon      = nc.variables[self.lonname][:]
-         lat      = nc.variables[self.latname][:]
+         lon   = lono[:]
+         lat   = lato[:]
          if vec2mat:
             if self.lon_first:
                # lon in cols, lat in rows
@@ -717,7 +720,7 @@ class nc_getinfo:
    def plot_var(self,var_opts,time_index=0,\
          pobj=None,bmap=None,HYCOMreg='TP4',\
          clim=None,add_cbar=True,clabel=None,show=True,\
-         test_lonlats=None):
+         test_lonlats=None,date_label=0):
 
       from mpl_toolkits.basemap import Basemap, cm
 
@@ -901,7 +904,7 @@ class nc_getinfo:
 
          #########################################################################
          # add additional masking (too low or too high)
-         if (var_opts.lower_limit is not None) or (upper_limit is not None):
+         if (var_opts.lower_limit is not None) or (var_opts.upper_limit is not None):
             mask  = 1*Marr.mask
             data  = Marr.data
             good  = np.logical_not(mask)
@@ -914,8 +917,23 @@ class nc_getinfo:
             Marr  = np.ma.array(data,mask=mask)
          #########################################################################
 
-         PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
+         PC    = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
 
+         # date label
+         dtmo  = self.datetimes[time_index]
+         if HYCOMreg=='TP4':
+            xyann = (0.05,.925)
+         else:
+            xyann = (0.4,.925)
+
+         if date_label==1:
+            tlabel   = dtmo.strftime('%d %b %Y')
+            pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+         elif date_label==2:
+            tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+            pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+
+         # colorbar
          if add_cbar:
 
             if cbar is None:
@@ -1839,7 +1857,13 @@ class HYCOM_binary_info:
 
 
    #######################################################################
-   def get_var(self,vname):
+   def get_var(self,vname,time_index=None):
+      """
+      vbl=get_var(vname,time_index=None) - vname is a string of 2d variable name (surface variable name,layer=0)
+      vbl=get_var([vname,layer],time_index=None) - vname is a string of 2d or 3d variable name (layer=0 is surface, layer=1 to kdm are ocean layers)
+      *time_index is not used - only a place-holder for some routines which handle netcdf as well
+      *vbl is a mod_reading.var_opt class (vbl.values is type np.ma.array - eg land is masked)
+      """
 
       if type(vname)!=type([]):
          # 2d var
@@ -2176,7 +2200,7 @@ class HYCOM_binary_info:
    ###########################################################
    def MIZmap(self,var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
       """
-      Call  : self.MIZmap(var_name='dmax',**kwargs):
+      Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
       Inputs:
          var_name is variable to find MIZ from
          **kwargs to be passed onto MIZchar.get_MIZ_poly:
@@ -2189,17 +2213,17 @@ class HYCOM_binary_info:
       vname = check_names(var_name,self.variables)
       if var_name == 'dmax':
          # FSD MIZarray(1-
-         Arr         = self.get_var(vname,time_index=time_index)
+         Arr         = self.get_var(vname)
          clim        = [0,300]# for plotting
          lower_limit = .1     # for plotting
       elif var_name == 'fice':
          # conc MIZ
-         Arr         = self.get_var(vname,time_index=time_index)
+         Arr         = self.get_var(vname)
          clim        = [0,1]  # for plotting
          lower_limit = .15    # for plotting
       elif var_name == 'hice':
          # thin ice areas
-         Arr         = self.get_var(vname,time_index=time_index)
+         Arr         = self.get_var(vname)
          clim        = [0,2.] # for plotting
          lower_limit = .01    # for plotting
       else:
