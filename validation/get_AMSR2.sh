@@ -14,7 +14,7 @@ ftpdir="ftp://ftp-projects.zmaw.de/seaice/AMSR2/3.125km/"
 hex_dir=/work/shared/nersc/msc/AMSR2_3125
 cd $hex_dir
 mkdir -p Arc_$yyear
-cd $yyear
+cd Arc_$yyear
 
 mkdir -p tmp
 cd tmp
