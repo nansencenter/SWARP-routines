@@ -22,11 +22,11 @@ for opt,arg in opts:
    if opt=='--outdir':
       outdir   = arg
    if opt=='--plotting':
-      # from distutils.util import strtobool
-      # plotting = strtobool(arg)
-      if arg not in ['True','False']:
-         raise ValueError('Use --plotting=True or --plotting=False only')
-         plotting = (arg=='True')
+      from distutils.util import strtobool
+      plotting = strtobool(arg)
+      # if arg not in ['True','False']:
+      #    raise ValueError('Use --plotting=True or --plotting=False only')
+      #    plotting = (arg=='True')
 
 if infile is None:
    raise ValueError('specify infile with --infile="..."')
