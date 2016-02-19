@@ -26,9 +26,9 @@ class read_MIZpoly_summary:
       self.time_in_days = None
       self.datetime_ref = datetime(1901,1,1)
 
-      if (date is not None) and (time is not None):
-         self.datetime  = datetime.strptime(cdate+ctime,'%Y%m%d%H%M%S')
-      elif (date is not None):
+      if (cdate is not None) and (ctime is not None):
+         self.datetime  = datetime.strptime(cdate+' '+ctime,'%Y%m%d %H%M%S')
+      elif (cdate is not None):
          self.datetime  = datetime.strptime(cdate,'%Y%m%d')
 
       fid   = open(tfil,'r')
