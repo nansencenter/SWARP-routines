@@ -30,7 +30,6 @@ def get_region_v2(llc=None):
    """
 
    #########################################
-   # NB if changing these, copy them to plot_regions_v2 as well
    lat1  = 68.
    lat2  = 79.5
    lat7  = 66.
