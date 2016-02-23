@@ -73,8 +73,6 @@ do
       dfil3=SWARP_WW3_ARCTIC-12K_${ddate}_ef.fc.nc
    fi
 
-   echo $ddir1/$dfil1
-   ls $ddir1/$dfil1
    if [ ! -f $ddir1/$dfil1 ]
    then
       # download, sort and convert files
