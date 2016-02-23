@@ -12,7 +12,7 @@ import subprocess
 import shutil
 import matplotlib
 #NOTE to be used only on servers (i.e. Hexagon)
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -26,7 +26,7 @@ from skimage import morphology as morph
 from scipy.interpolate import griddata as grd
 from operator import itemgetter as itg
 
-sys.path.append('./py_funs')
+#sys.path.append('./py_funs')
 import mod_reading as Mrdg
 import Laplace_eqn_solution_2tw as Leqs
 
@@ -40,10 +40,11 @@ np.seterr(invalid='ignore')
 ############################################################################
 # This Class will read in and prepare every file for polygon detection
 class reader:
-    def __init__(self,name,dadate,basemap):
+    def __init__(self,name,dadate,basemap,jday):
         self.year = dadate[:4]
         self.month = dadate[4:6]
         self.day = dadate[6:8]
+        self.jday = jday
         gigio = datetime.datetime(int(float(self.year)),int(float(self.month)),int(float(self.day)),0,0)
         gigio = gigio.strftime('%j')
         gigio = int(float(gigio))
@@ -53,7 +54,8 @@ class reader:
             self.lonO,self.latO,self.X,self.Y,self.Z = self._read_osi_(dadate,basemap) 
             return
         elif name == 'Model':
-            self.lonM,self.latM,self.X,self.Y,self.ZC,self.ZD = self._read_mdl_(dadate,basemap)
+            #self.lonM,self.latM,self.X,self.Y,self.ZC,self.ZD = self._read_mdl_(dadate,basemap)
+            self.lonM,self.latM,self.X,self.Y,self.ZC = self._read_mdl_(dadate,basemap)
             return
         elif name == 'Aari':
             self.ad = self._read_aari_(dadate,basemap)
@@ -64,8 +66,8 @@ class reader:
         year = self.year
         # Read in OSI_SAF file
         #outdir = '/work/shared/nersc/msc/OSI-SAF/'+str(year)+'_nh_polstere/'
-        outdir = './tmp/OSI'
-        ncfil = outdir+'/ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
+        outdir = '../osisaf_repo'
+        ncfil = outdir+'/ice_conc_nh_polstere-100_reproc_'+dadate+'1200.nc'
         clon = 'lon'
         clat = 'lat'
         cconc = 'ice_conc'
@@ -92,27 +94,27 @@ class reader:
         day = self.day
         month = self.month
         year = self.year
+        jday = self.jday
         # Read TP4arch_wav
-        #outdir = '/work/timill/RealTime_Models/results/TP4a0.12/wavesice/work/'+dadate+'/netcdf/'
-        outdir = './tmp/MDL'
-        ncfil = outdir+'/TP4archv_wav_start'+str(dadate)+'_000000Z_dump'+str(dadate)+'_120000Z.nc'
+        outdir = '../dailync'
+        ncfil = outdir+'/TP4DAILY_'+year+'_'+jday+'.nc'
         slon = 'longitude'
         slat = 'latitude'
-        sconc = 'fice'
-        sdmax = 'dmax'
+        sconc = 'fice00'
+        #sdmax = 'dmax'
         lonM = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
         latM = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
         conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
-        dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
+        #dmax = Mrdg.nc_get_var(ncfil,sdmax,time_index=0)
         X,Y = basemap(lonM[:,:],latM[:,:],inverse=False)
-        ZD = dmax[:,:].data
-        mask = dmax[:,:].mask
-        ZD[mask] = np.NaN
+        #ZD = dmax[:,:].data
+        #mask = dmax[:,:].mask
+        #ZD[mask] = np.NaN
         ZC = conc[:,:].data
         mask = conc[:,:].mask
         ZC[mask] = np.NaN
         
-        return(lonM,latM,X,Y,ZC,ZD)
+        return(lonM,latM,X,Y,ZC) #,ZD)
 
 ############################################################################
 # This Class will find MIZ contours
@@ -1128,8 +1130,8 @@ def regional_daily(X,Y,Z,basemap=None,run=None):
     # daily regional gen_stats
     # Widhts, lons and lats lists
     widths = [avg_width_bar,avg_width_les,avg_width_ncb,avg_width_lab,avg_width_gre]
-    lons = [avg_width_bar,avg_width_les,avg_width_ncb,avg_width_lab,avg_width_gre]
-    lats = [avg_width_bar,avg_width_les,avg_width_ncb,avg_width_lab,avg_width_gre]
+    lons = [mean_lon_bar,mean_lon_les,mean_lon_ncb,mean_lon_lab,mean_lon_gre]
+    lats = [mean_lat_bar,mean_lat_les,mean_lat_ncb,mean_lon_lat,mean_lat_gre]
     
     regional_stats(Z,widths,lons,lats,mode)
 
@@ -1146,6 +1148,7 @@ def regional_daily(X,Y,Z,basemap=None,run=None):
 run = sys.argv[1]
 dadate = sys.argv[2] 
 out_dir = sys.argv[3]
+jday = sys.argv[4]
 
 if not os.path.exists(out_dir):
     os.mkdir(out_dir)
@@ -1166,11 +1169,12 @@ YO = np.load('./geo_info/Y_OSI.npy')
 
 # Read in the data
 if run == 'OSI':
-    osisaf = reader('Osisaf',dadate,iqm)
+    osisaf = reader('Osisaf',dadate,iqm,jday)
     lonO,latO,X,Y,Z = osisaf.lonO,osisaf.latO,osisaf.X,osisaf.Y,osisaf.Z
 elif run == 'MIC':
-    model = reader('Model',dadate,iqm)
-    lonM,latM,XMC,YMC,ZMM,ZMD = model.lonM,model.latM,model.X,model.Y,model.ZC,model.ZD
+    model = reader('Model',dadate,iqm,jday)
+    #lonM,latM,XMC,YMC,ZMM,ZMD = model.lonM,model.latM,model.X,model.Y,model.ZC,model.ZD
+    lonM,latM,XMC,YMC,ZMM = model.lonM,model.latM,model.X,model.Y,model.ZC
     # Reproject model data
     Z = reproj(XMC,YMC,ZMM,XO,YO)
     X = np.copy(XO)
