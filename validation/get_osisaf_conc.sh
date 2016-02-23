@@ -2,29 +2,34 @@
 # each day this script gets yesterday's OSISAF concentration from myocean
 
 # get yesterday's date
-yyear=`date -d "yesterday" '+%Y'`
-ymon=`date -d "yesterday" '+%m'`
-yday=`date -d "yesterday" '+%d'`
-ydate=$yyear$ymon$yday
+ydate=`date -d "yesterday" '+%Y%m%d'`
 
 # where the conc files are stored
 hex_dir=/work/shared/nersc/msc/OSI-SAF
-cd $hex_dir
-dir0=${yyear}_nh_polstere
-if [ ! -d dir0 ]
-then
-   mkdir -p $dir0
-   chmod -R g+r $dir0
-   chmod -R g+w $dir0
-fi
-cd $dir0
 
 # where the files are stored in the myocean portal 
-mo_dir='SIW-TAC/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/conc/'
-mo_dir=$mo_dir/$yyear/$ymon
-for nday in `seq -w 01 $yday`
+mo_dir0='SIW-TAC/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/conc/'
+
+# check the last 5 days
+for day in `seq 0 5`
 do
-   fname=ice_conc_nh_polstere-100_multi_$yyear$ymon${nday}1200.nc
+   cdate=`date -d "$ydate -${day}days" +%Y%m%d`
+   cyear=`date -d "$cdate" '+%Y'`
+   cmon=`date -d "$cdate" '+%m'`
+   cday=`date -d "$cdate" '+%d'`
+
+   # make yearly dir for file to go into
+   dir0=$hex_dir/${cyear}_nh_polstere
+   if [ ! -d dir0 ]
+   then
+      mkdir -p $dir0
+      chmod -R g+r $dir0
+      chmod -R g+w $dir0
+   fi
+   cd $dir0
+
+   mo_dir=$mo_dir0/$cyear/$cmon
+   fname=ice_conc_nh_polstere-100_multi_$cyear$cmon${cday}1200.nc
    if [ ! -f $fname ]
    then
       # if file isn't there, get from myocean portal
@@ -40,7 +45,7 @@ get $LIST
 set confirm-close no
 bye
 EOF
-         ncftp < ncftp.in # text file passd into ncftp
+         ncftp < ncftp.in # text file passed into ncftp
          rm ncftp.in
 #########################################################################
 

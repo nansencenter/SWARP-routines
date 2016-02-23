@@ -3,23 +3,34 @@
 # - last update is around 2000, so we run at 2100
 
 # get yesterday's date
-yyear=`date -d "yesterday" '+%Y'`
-ymon=`date -d "yesterday" '+%m'`
-yday=`date -d "yesterday" '+%d'`
-ydate=$yyear$ymon$yday
-gfil=Arc_${ydate}_res3.125_pyres.nc.gz
-ftpdir="ftp://ftp-projects.zmaw.de/seaice/AMSR2/3.125km/"
+ydate=`date -d "yesterday" '+%Y%m%d'`
 
-# where the conc files are stored
-hex_dir=/work/shared/nersc/msc/AMSR2_3125
-cd $hex_dir
-mkdir -p Arc_$yyear
-cd Arc_$yyear
+# check the last 5 days
+for day in `seq 0 5`
+do
+   cdate=`date -d "$ydate -${day}days" +%Y%m%d`
+   cyear=`date -d "$cdate" '+%Y'`
+   cmon=`date -d "$cdate" '+%m'`
+   cday=`date -d "$cdate" '+%d'`
+   gfil=Arc_${cdate}_res3.125_pyres.nc
+   zfil=$gfil.gz
+   ftpdir="ftp://ftp-projects.zmaw.de/seaice/AMSR2/3.125km/"
 
-mkdir -p tmp
-cd tmp
-wget $ftpdir/$gfil
-gunzip $gfil
-mv *.nc ..
-cd ..
-rm -r tmp
+   # where the conc files are stored
+   hex_dir=/work/shared/nersc/msc/AMSR2_3125
+   cd $hex_dir
+   mkdir -p Arc_$cyear
+   cd Arc_$cyear
+
+   # if file not present, download
+   if [ ! -f $gfil ]
+   then
+      mkdir -p tmp
+      cd tmp
+      wget $ftpdir/$zfil
+      gunzip $zfil
+      mv *.nc ..
+      cd ..
+      rm -r tmp
+   fi
+done
