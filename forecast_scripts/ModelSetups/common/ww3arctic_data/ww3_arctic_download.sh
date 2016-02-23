@@ -23,14 +23,14 @@ fyear=${fdate:0:4}
 fdir0=${fdate}00
 
 cycle=$2
-idir="ftp://ftp.ifremer.fr/ifremer/cersat/products/gridded/wavewatch3"
 if [ $cycle -eq 3 ]
 then
    # hindcasts
+   idir="ftp://ftp.ifremer.fr/ifremer/cersat/products/gridded/wavewatch3"
    ftpsite="$idir/HINDCAST/ARCTIC"
 else
    # forecasts (cleaned each month)
-   ftpsite="$idir/iowaga/HINDCAST/ARCTIC"
+   ftpsite="ftp://ftp.ifremer.fr/ifremer/ww3/HINDCAST/ARCTIC_REALTIME/"
 fi
 fdir="$ftpsite/$fyear/$fdir0"
 

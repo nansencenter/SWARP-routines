@@ -5,9 +5,9 @@
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC="$FORECAST/ModelSetups/TP4a0.12/wavesice_ww3arctic"
-fget="$THISFC/wave_data/ww3_arctic_download.sh"
-fsort="$THISFC/wave_data/ww3_arctic_sort.sh"
+THISFC="$FORECAST/ModelSetups/common/ww3arctic_data"
+fget="$THISFC/ww3_arctic_download.sh"
+fsort="$THISFC//ww3_arctic_sort.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 cycle=2 # get 05:20 update from ifremer server
 print_info=0
@@ -73,6 +73,8 @@ do
       dfil3=SWARP_WW3_ARCTIC-12K_${ddate}_ef.fc.nc
    fi
 
+   echo $ddir1/$dfil1
+   ls $ddir1/$dfil1
    if [ ! -f $ddir1/$dfil1 ]
    then
       # download, sort and convert files

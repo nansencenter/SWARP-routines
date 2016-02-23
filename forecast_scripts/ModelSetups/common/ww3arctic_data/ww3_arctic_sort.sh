@@ -19,6 +19,8 @@ then
    exit
 fi
 
+Vlist="ice,hs,fp,dir"
+
 fdate=$1
 fyear=${fdate:0:4}
 fdir0=${fdate}00
@@ -104,7 +106,8 @@ then
       then
          echo "ncpdq -U $f1 -o $g"
       fi
-      ncpdq -U $f1 -o $g
+      # ncpdq -U $f1 -o $g
+      ncpdq -U -v $Vlist $f1 -o $g
       ncatted -O -a _FillValue,,o,f,-32767 $g
             
       # repack, reformat
@@ -112,6 +115,7 @@ then
       then
          echo "ncpdq $opts -o $f $g"
       fi
+      # ncpdq $opts -o $f $g
       ncpdq $opts -o $f $g
       rm $g
    done
@@ -147,7 +151,7 @@ then
       then
          echo "ncpdq -U $f1 -o $g"
       fi
-      ncpdq -U $f1 -o $g
+      ncpdq -U -v $Vlist $f1 -o $g
       ncatted -O -a _FillValue,,o,f,-32767 $g
             
       # repack, reformat
@@ -193,7 +197,8 @@ do
       then
          echo "ncpdq -U $f1 -o $g"
       fi
-      ncpdq -U $f1 -o $g
+      # ncpdq -U $f1 -o $g
+      ncpdq -U -v $Vlist $f1 -o $g
       ncatted -O -a _FillValue,,o,f,-32767 $g
 
       if [ $n -eq $n2 ]

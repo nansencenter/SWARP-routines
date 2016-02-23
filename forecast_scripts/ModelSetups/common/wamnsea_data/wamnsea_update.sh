@@ -4,10 +4,9 @@
 # ==============================================================================
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
-THIS_SRC=$1
 source $SWARP_ROUTINES/source_files/hex_vars.src
-source $THIS_SRC
-fget="$THISFC/wave_data/wamnsea_download.sh"
+THISFC=$SWARP_ROUTINES/forecast_scripts/ModelSetups/common/wamnsea_data
+fget="$THISFC/wamnsea_download.sh"
 
 # ==============================================================================
 # EMAIL 
@@ -35,15 +34,10 @@ fi
 # check year today, tomorrow, the day after tomorrow
 year=$(date +%Y)
 dayname=$(date +%A)
-yearplus1=$(expr $year + 1)
-year1d=$(date --date="1 day" +"%Y")
-year2d=$(date --date="2 day" +"%Y")
 
 # creating (if needed) all the storing directories
 mkdir -p $wamnsea/${year}/analysis
 mkdir -p $wamnsea/${year}/forecasts
-mkdir -p $wamnsea/${yearplus1}/analysis
-mkdir -p $wamnsea/${yearplus1}/forecasts
 
 # moving to the working folder
 cd $wamnsea/$year
@@ -54,11 +48,7 @@ touch $log
 
 echo "** Update WAMNSEA wave data from myocean.met.no **"   >> $log
 echo " Today is $tday"                                      >> $log
-echo " Check if year change next 2 days: "                  >> $log
 echo " Today year is:.........$year"                        >> $log
-echo " Next year is:..........$yearplus1"                   >> $log
-echo " Today +1 day year is:..$year1d"                      >> $log
-echo " Today +2 day year is:..$year2d"                      >> $log
 echo ""                                                     >> $log
 
 # Loop over previous 30 days
