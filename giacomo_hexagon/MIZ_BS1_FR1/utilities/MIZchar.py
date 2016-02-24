@@ -30,7 +30,6 @@ def get_region_v2(llc=None):
    """
 
    #########################################
-   # NB if changing these, copy them to plot_regions_v2 as well
    lat1  = 68.
    lat2  = 79.5
    lat7  = 66.
@@ -1769,6 +1768,8 @@ class pca_mapper:
       shp   = shg.Polygon(xyc).buffer(0)
       #
       P,resolution,spacings,th_vec  = GP.curve_info(xyc)
+
+
       #
       ny = np.max([2,2*int((Y1-Y0)/resolution)])
       nx = np.max([2,2*int((X1-X0)/resolution)])

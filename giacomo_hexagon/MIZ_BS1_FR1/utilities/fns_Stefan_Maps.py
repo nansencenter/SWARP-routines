@@ -4,6 +4,8 @@ import rtree.index	as Rindex
 from datetime import datetime
 import shapely.geometry as SHgeom
 
+SR = os.getenv('SWARP_ROUTINES')
+sys.path.append(SR+'/py_funs')
 import fns_plotting as Fplt
 import geometry_planar as GP
 
@@ -229,6 +231,7 @@ def read_txt_file_polys(fname):
    Polys.append([llc,fvals])
    return Polys
 #########################################################
+
 
 #######################################################################
 def shapely2poly(shp,Lino,Lino_ref):

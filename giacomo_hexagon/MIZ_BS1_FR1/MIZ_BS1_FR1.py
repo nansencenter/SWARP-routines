@@ -18,7 +18,7 @@ import subprocess
 import shutil
 import matplotlib
 #NOTE to be used only on servers (i.e. Hexagon)
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -57,103 +57,150 @@ class reader:
         gigio = int(float(gigio))
         self.day_j = gigio
         self.jday_start(gigio)
-        #self.WIM_timeframes = self.time_frame(gigio)
+        self.tidx_i,self.tidx_w = self.time_frame(gigio)
 
         #Reading the datasets
         self._read_osi_(dadate,bmo)
         #self._read_osi_2(dadate,bmo)
-        self._read_mdl_ice_only(dadate,bmm)
-        self._read_mdl_waves_ice(dadate,bmm)
+        self._read_mdl_DAILY(self.data_date,dadate,bmm)
+        self._read_mdl_ice_only(self.data_date,bmm)
+        self._read_mdl_waves_ice(self.data_date,bmm)
 
     def jday_start(self,jday):
         if jday < 60 or jday > 274:
             print 'ERROR: dataset not in the melting season'
         elif jday > 60 and jday < 68:
             jdaystart = 60
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 67 and jday < 75:
             jdaystart = 67
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 74 and jday < 82:
             jdaystart = 74
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 81 and jday < 89:
             jdaystart = 81
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 88 and jday < 96:
             jdaystart = 88
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 95 and jday < 103:
             jdaystart = 95
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 102 and jday < 110:
             jdaystart = 102
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 109 and jday < 117:
             jdaystart = 109
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 116 and jday < 124:
             jdaystart = 116
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 123 and jday < 131:
             jdaystart = 123
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 130 and jday < 138:
             jdaystart = 130
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 137 and jday < 145:
             jdaystart = 137
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 144 and jday < 159:
             jdaystart = 144
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 158 and jday < 166:
             jdaystart = 158
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 165 and jday < 173:
             jdaystart = 165
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 172 and jday < 180:
             jdaystart = 172
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 179 and jday < 187:
             jdaystart = 179
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 186 and jday < 194:
             jdaystart = 186
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 193 and jday < 201:
             jdaystart = 193
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 200 and jday < 208:
             jdaystart = 200
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 207 and jday < 215:
             jdaystart = 207
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 214 and jday < 222:
             jdaystart = 214
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 221 and jday < 236:
             jdaystart = 221
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 235 and jday < 243:
             jdaystart = 235
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 242 and jday < 250:
             jdaystart = 242
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 249 and jday < 257:
             jdaystart = 249
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 256 and jday < 264:
             jdaystart = 256
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 263 and jday < 271:
             jdaystart = 263
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         elif jday > 270 and jday < 275:
             jdaystart = 270
+            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
+            data_date = data_date.strftime('%Y%m%d')
         self.jdaystart = jdaystart
+        self.data_date = data_date
         return()
 
     def time_frame(self,jday):
-        # Time frames for SWARP.nc files
         dd = jday - self.jdaystart
-        tf_12 = 4 + ((dd -1)*8)
-        if tf_12 == 52:
-            self.jdaystart2 = int(self.jdaystart) + 7
-            tf_18 = 54
-            tf_24 = 0
-            tf_30 = 2
-            tf_36 = 4
-        else:
-            self.jdaystart2 = 0
-            tf_18 = tf_12 + 2
-            tf_24 = tf_12 + 4
-            tf_30 = tf_12 + 6
-            tf_36 = tf_12 + 8
-        return(tf_12,tf_18,tf_24,tf_30,tf_36)
+        tf_i = 4 + ((dd -1)*8)
+        tf_w = 2 + ((dd -1)*4)
+        return(tf_i,tf_w)
 
     def _read_osi_(self,dadate,basemap):
         day = self.day
         month = self.month
         year = self.year
         # Read in OSI_SAF file
-        #outdir = '/work/timill/giacomo/osisaf_repo'
-        outdir = '/home/charlie/Documents/ncdata'
+        outdir = '/work/timill/giacomo/osisaf_repo'
         ncfil = outdir+'/ice_conc_nh_polstere-100_multi_'+dadate+'1200.nc'
         clon = 'lon'
         clat = 'lat'
@@ -189,8 +236,7 @@ class reader:
         dadate2 = datetime.date(int(year),int(month),int(day))+datetime.timedelta(1)
         dadate2 = dadate2.strftime('%Y%m%d')
         # Read in OSI_SAF file
-        #outdir = '/work/timill/giacomo/osisaf_repo'
-        outdir = '/home/charlie/Documents/ncdata'
+        outdir = '/work/timill/giacomo/osisaf_repo'
         ncfil = outdir+'/ice_conc_nh_polstere-100_multi_'+dadate2+'1200.nc'
         clon = 'lon'
         clat = 'lat'
@@ -216,9 +262,47 @@ class reader:
 
         print('OSI-SAF plus 1 day: lonO2,latO2,XO2,YO2,ZCO2')
         
-        return() 
+        return()
 
-    def _read_mdl_ice_only(self,dadate,basemap):
+    def _read_mdl_DAILY(self,data_date,dadate,basemap):
+        
+        # NetCDF reader 
+        day = self.day
+        month = self.month
+        year = self.year
+        jdaystart = self.jdaystart
+
+        if jdaystart < 100:
+           outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
+                 'wavesice/2015_GOOD/2015_0'+str(jdaystart)+'/netcdf/DAILY/'
+        else:
+           outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
+                 'wavesice/2015_GOOD/2015_'+str(jdaystart)+'/netcdf/DAILY/'
+
+        ncfil = outdir+'/TP4DAILY_start'+data_date+'_dump'+dadate+'.nc'
+        slon = 'longitude'
+        slat = 'latitude'
+        sconc = 'fice'
+        sthic = 'hice'
+        lonM = Mrdg.nc_get_var(ncfil,slon) # lon[:,:] is a numpy array
+        lonM = lonM[:,:]
+        latM = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
+        latM = latM[:,:]
+        X,Y = basemap(lonM[:,:],latM[:,:],inverse=False)
+        self.lonM,self.latM,self.X,self.Y = lonM,latM,X,Y
+        conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
+        conc = conc[:,:]
+        thic = Mrdg.nc_get_var(ncfil,sthic,time_index=0)
+        thic = thic[:,:]
+
+        self.ZM,self.ZT = conc,thic
+        
+        print('DAILY: lonM,latM,X,Y,ZC,ZT')
+
+        return()
+
+
+    def _read_mdl_ice_only(self,data_date,basemap):
         
         # NetCDF reader 
         day = self.day
@@ -227,13 +311,16 @@ class reader:
         jdaystart = self.jdaystart
 
         # TIME INDEX
-        tidx = 0
+        tidx = self.tidx_i
 
         # Read TP4arch
-        outdir = '/work/timill/RealTime_Models/results_hindicast/TP4a0.12/'+\
-                'ice_only/2015_GOOD/2015_'+str(jdaystart)+'/final_output'
-        outdir = '/home/charlie/Documents/ncdata'
-        ncfil = outdir+'/SWARP_hindcast_ice_only_start'+dadate+'T000000Z.nc'
+        if jdaystart < 100:
+           outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
+                   'ice_only/2015_GOOD/2015_0'+str(jdaystart)+'/final_output'
+        else:
+           outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
+                   'ice_only/2015_GOOD/2015_'+str(jdaystart)+'/final_output'
+        ncfil = outdir+'/SWARP_hindcast_ice_only_start'+data_date+'T000000Z.nc'
         slon = 'longitude'
         slat = 'latitude'
         sconc = 'icec'
@@ -288,7 +375,7 @@ class reader:
         tauy = Mrdg.nc_get_var(ncfil,stauy,time_index=tidx)
         tauy = tauy[:,:]
 
-        self.ZM,self.ZTI,self.HSI,self.QT,self.QC,self.QO,self.QA,self.FOI,\
+        self.ZMi,self.ZTI,self.HSI,self.QT,self.QC,self.QO,self.QA,self.FOI,\
                 self.TOI,self.HSO,self.HSD,self.FDI,self.TDI,self.TXI,self.TYI =\
                 conc,thic,shsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,\
                 hsnow_diff,conc_diff,thic_diff,taux,tauy
@@ -298,25 +385,26 @@ class reader:
 
         return()
 
-    def _read_mdl_waves_ice(self,dadate,basemap):
+    def _read_mdl_waves_ice(self,data_date,basemap):
     
         # NetCDF reader 
         day = self.day
         month = self.month
         year = self.year
         jdaystart = self.jdaystart
-        jday = jdaystart + 1
-        gigio = datetime.datetime.strptime( str(year)+str(jday), '%Y%j')
-        stdate = gigio.strftime('%Y%m%d')
 
         # TIME INDEX
-        tidx = 0
+        tidx = self.tidx_w
 
         # Read TP4arch_wav
-        outdir = '/work/timill/RealTime_Models/results_hindicast/TP4a0.12/\
-                waves_ice/2015_GOOD/2015_'+str(jdaystart)+'/final_output'
-        outdir = '/home/charlie/Documents/ncdata'
-        ncfil = outdir+'/SWARP_hindcast_wavesice_start'+dadate+'T000000Z.nc'
+        if jdaystart < 100:
+           outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
+                   'wavesice/2015_GOOD/2015_0'+str(jdaystart)+'/final_output'
+        else:
+           outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
+                   'wavesice/2015_GOOD/2015_'+str(jdaystart)+'/final_output'
+
+        ncfil = outdir+'/SWARP_hindcast_wavesice_start'+data_date+'T000000Z.nc'
         slon = 'longitude'
         slat = 'latitude'
         sconc = 'icec'
@@ -1236,7 +1324,7 @@ class AODwidth:
             und_clonlat.append(clonlat)
         self.ovr_list = ovr_list
         self.und_list = und_list
-        #self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+        self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
         return
     
     def poly_ovr_und(self,conc_m,conc_o):
@@ -1539,7 +1627,7 @@ class AODwidth:
                     for item in string:
                         f.write(item)
                     f.write('\n')
-                f.close()
+            f.close()
     
         # Width calculation for UNDERESTIMATION
         und_widths = widths.single_file(filname,basemap)
@@ -1576,8 +1664,8 @@ class AODwidth:
    
         filname = str(reg_repo)+'/AOD_stats.txt'
         with open(filname,'a') as f:
-            row1 = [total,total_hits,total_ovr,total_und,total_neg_hits,total_unk,\
-                    oavg,uavg,mean_ovr_lon,mean_ovr_lat,mean_und_lon,mean_und_lat]
+            row1 = [total,tot_hits,tot_ovr,tot_und,tot_neg_hits,tot_unk,\
+                    avg_ovr,avg_und,mean_ovr_lon,mean_ovr_lat,mean_und_lon,mean_und_lat]
             str1 = ' '.join(map(str,row1))
             f.write(str1)
             f.write('\n')
@@ -1711,6 +1799,7 @@ def closing(data):
 
 # MISSION and DATE
 dadate = sys.argv[1] 
+region = sys.argv[2] 
 
 # Start the count and analyse the datasets
 time0 = time.time()
@@ -1720,8 +1809,12 @@ time1 = time.time()
 print('Basemap creation...')
 bmm = basemap_creator('TP4')
 bmo = basemap_creator('OSI')
-bmb = basemap_creator('BS1')
-bmf = basemap_creator('FR1')
+if region == 'bar':
+   bmb = basemap_creator('BS1')
+   print('Barents!')
+elif region == 'gre':
+   bmf = basemap_creator('FR1')
+   print('Greenland!')
 elapsedtime = time.time() - time1
 print 'Basemap created in ',elapsedtime
 print('')
@@ -1736,64 +1829,76 @@ data = reader(dadate,bmm,bmo)
 print('DONE')
 print('')
 
-# Barents
-print('Studying the BARENTS region...')
-print('')
+if region == 'bar':
+   # Barents
+   print('Studying the BARENTS region...')
+   print('')
+   
+   XM,YM,latM,lonM,XO,YO,latO,lonO = data.XM,data.YM,data.latM,data.lonM,\
+           data.XO,data.YO,data.latO,data.lonO
+   
+   XMo,YMo = bmo(lonM[:,:],latM[:,:])
+           
+   ZM,ZO,TXI,TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD = \
+           data.ZM,data.ZO,data.TXI,data.TYI,data.TXW,data.TYW,\
+           data.FOI,data.TOI,data.ZDW,data.QA,data.QC,data.QO,\
+           data.TDI,data.FDI,data.HSD
+   
+   print('Analysing WIM (stresses and growths)...')
+   bar_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
+           TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'bar')
+   print('DONE')
+   print('')
+   
+   print('Analysing model MIZ (widths)...')
+   bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+   print('DONE')
+   print('')
+   
+   print('Analysing osisaf MIZ (widths)...')
+   bar_osi_MIZ = MIZwidth(XO,YO,ZO,bmo,'bar')
+   print('DONE')
+   print('')
+   
+   #print('Analysing AOD...')
+   #bar_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'bar')
+   #print('DONE')
+   #print('')
 
-XM,YM,latM,lonM,XO,YO,latO,lonO = data.XM,data.YM,data.latM,data.lonM,\
-        data.XO,data.YO,data.latO,data.lonO
-
-XMo,YMo = bmo(lonM[:,:],latM[:,:])
-        
-ZM,ZO,TXI,TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD = \
-        data.ZM,data.ZO,data.TXI,data.TYI,data.TXW,data.TYW,\
-        data.FOI,data.TOI,data.ZDW,data.QA,data.QC,data.QO,\
-        data.TDI,data.FDI,data.HSD
-
-print('Analysing WIM (stresses and growths)...')
-bar_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
-        TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'bar')
-print('DONE')
-print('')
-
-print('Analysing model MIZ (widths)...')
-bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
-print('DONE')
-print('')
-
-print('Analysing osisaf MIZ (widths)...')
-bar_osi_MIZ = MIZwidth(XO,YO,ZO,bmo,'bar')
-print('DONE')
-print('')
-
-#print('Analysing AOD...')
-#bar_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'bar')
-#print('DONE')
-#print('')
-
-print('Studying the GREENLAND region...')
-print('')
-
-print('Analysing WIM (stresses and growths)...')
-gre_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
-        TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'gre')
-print('DONE')
-print('')
-
-print('Analysing model MIZ (widths)...')
-gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
-print('DONE')
-print('')
-
-print('Analysing osisaf MIZ (widths)...')
-gre_osi_MIZ = MIZwidth(XO,YO,ZO,bmo,'gre')
-print('DONE')
-print('')
-
-#print('Analysing AOD...')
-#gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
-#print('DONE')
-#print('')
+elif region == 'gre':
+   print('Studying the GREENLAND region...')
+   print('')
+   
+   XM,YM,latM,lonM,XO,YO,latO,lonO = data.XM,data.YM,data.latM,data.lonM,\
+           data.XO,data.YO,data.latO,data.lonO
+   
+   XMo,YMo = bmo(lonM[:,:],latM[:,:])
+           
+   ZM,ZO,TXI,TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD = \
+           data.ZM,data.ZO,data.TXI,data.TYI,data.TXW,data.TYW,\
+           data.FOI,data.TOI,data.ZDW,data.QA,data.QC,data.QO,\
+           data.TDI,data.FDI,data.HSD
+   
+   print('Analysing WIM (stresses and growths)...')
+   gre_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
+           TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'gre')
+   print('DONE')
+   print('')
+   
+   print('Analysing model MIZ (widths)...')
+   gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+   print('DONE')
+   print('')
+   
+   print('Analysing osisaf MIZ (widths)...')
+   gre_osi_MIZ = MIZwidth(XO,YO,ZO,bmo,'gre')
+   print('DONE')
+   print('')
+   
+   #print('Analysing AOD...')
+   #gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+   #print('DONE')
+   #print('')
 
 elapsedtime = time.time() - time0
 print str(dadate)+' done in ',elapsedtime

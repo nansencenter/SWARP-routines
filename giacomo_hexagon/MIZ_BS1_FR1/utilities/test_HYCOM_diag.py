@@ -521,7 +521,6 @@ class fsd_info_smooth:
       self.Dmax      = Dmax
       self.Dmin      = Dmin
       self.fragility = fragility
-      f              = fragility
       self.xi        = xi
       self.alpha     = np.log(xi*xi*f)/np.log(xi) #Exponent from Toyota
       A              = self.alpha/(pow(self.Dmin,-self.alpha)-pow(self.Dmax,-self.alpha))
