@@ -19,6 +19,7 @@ then
    exit
 fi
 
+# only for "normal" files (not ef)
 Vlist="ice,hs,fp,dir"
 
 fdate=$1
@@ -102,12 +103,23 @@ then
 
       f=`basename $f1`
       g=U$f
-      if [ $print_info -eq 1 ]
+
+      if [ $m -eq 1 ]
       then
-         echo "ncpdq -U $f1 -o $g"
+         # ef
+         if [ $print_info -eq 1 ]
+         then
+            echo "ncpdq -U $f1 -o $g"
+         fi
+         ncpdq -U $f1 -o $g
+      else
+         # normal - don't extract all var's
+         if [ $print_info -eq 1 ]
+         then
+            echo "ncpdq -U -v $Vlist $f1 -o $g"
+         fi
+         ncpdq -U -v $Vlist $f1 -o $g
       fi
-      # ncpdq -U $f1 -o $g
-      ncpdq -U -v $Vlist $f1 -o $g
       ncatted -O -a _FillValue,,o,f,-32767 $g
             
       # repack, reformat
@@ -147,11 +159,23 @@ then
 
       f=`basename $f1`
       g=U$f
-      if [ $print_info -eq 1 ]
+
+      if [ $m -eq 1 ]
       then
-         echo "ncpdq -U $f1 -o $g"
+         # ef
+         if [ $print_info -eq 1 ]
+         then
+            echo "ncpdq -U $f1 -o $g"
+         fi
+         ncpdq -U $f1 -o $g
+      else
+         # normal - don't extract all var's
+         if [ $print_info -eq 1 ]
+         then
+            echo "ncpdq -U -v $Vlist $f1 -o $g"
+         fi
+         ncpdq -U -v $Vlist $f1 -o $g
       fi
-      ncpdq -U -v $Vlist $f1 -o $g
       ncatted -O -a _FillValue,,o,f,-32767 $g
             
       # repack, reformat
@@ -193,12 +217,25 @@ do
 
       f=`basename $f1`
       g=U$f
-      if [ $print_info -eq 1 ]
+
+      if [ $m -eq 1 ]
       then
-         echo "ncpdq -U $f1 -o $g"
+         # ef files
+         if [ $print_info -eq 1 ]
+         then
+            echo "ncpdq -U $f1 -o $g"
+         fi
+         ncpdq -U $f1 -o $g
+
+      else
+         # "normal" files - just extract certain variables
+         if [ $print_info -eq 1 ]
+         then
+            echo "ncpdq -U -v $Vlist $f1 -o $g"
+         fi
+         ncpdq -U -v $Vlist $f1 -o $g
+
       fi
-      # ncpdq -U $f1 -o $g
-      ncpdq -U -v $Vlist $f1 -o $g
       ncatted -O -a _FillValue,,o,f,-32767 $g
 
       if [ $n -eq $n2 ]

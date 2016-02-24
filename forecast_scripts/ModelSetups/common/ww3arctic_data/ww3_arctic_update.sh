@@ -17,16 +17,15 @@ print_info=0
 email=$(cat $FCemail)
 # ==============================================================================
 
-# TIMEOUT OF THE SCRIPT
-# We want this script to run everyhour except from 00 to 04 in the morning since
-# wam_nsea files are uploaded around 4am
-
-# THE PREVIOUS ASSUMPTION IS BASED ON A VISUAL CHECK MADE ON DATE 22/04/2015
-# NB IF YOU SUSPECT THAT THE UPLOAD DATE HAS CHANGED PLEASE MODIFY THE FOLLOWING
 
 # ==============================================================================
+# TIMEOUT OF THE SCRIPT
+# We want this script to run everyhour except from 00 to 05 in the morning since
+# ww3arctic files are uploaded around 5.20am
+# - after 8am if files are still not there, send email
 timeout_warning=08
 # ==============================================================================
+
 
 time_now=$(date +%H)
 tday=$(date +%Y%m%d)
@@ -163,6 +162,7 @@ else
    fi
 
 fi
+
 
 if [ -f $ddir3/$dfil3 ]
 then
