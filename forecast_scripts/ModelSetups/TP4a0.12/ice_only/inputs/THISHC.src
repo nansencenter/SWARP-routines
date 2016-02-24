@@ -1,0 +1,25 @@
+source $SWARP_ROUTINES/source_files/hex_vars.src
+
+HYCOMreg="TP4a0.12"  # expt HYCOM region
+Xno=2                # expt number
+
+FCtype="ice_only"                   # should correspond to directory where inputs are
+FCtype_long="ice-only HC"           # description for internal printouts
+FC_OUTPUT="SWARPiceonly_hindcast"   # base name of outfile
+archv_opt=1                         # process archv files
+archv_wav_opt=0                     # process archv_wav files
+nesting_outer=T
+nesting_inner=F
+
+# forecast stops $FCdays from current day,
+#  at $FCfinal_hour
+FCdays=7
+FCfinal_hour=00
+FCrecords=57      #for checking after run
+
+THISFC="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/$FCtype"    # directory with inputs,logs
+HREGcommon="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/common" # scripts common to all regions
+THISFC2="$RTHCres/$HYCOMreg/$FCtype"                                         # outputs go here
+THISFC3="/migrate/timill/RESULTS/$HYCOMreg/SWARP_forecasts/$FCtype"        # backup location
+rungen=${HYCOMreg:0:3}
+JOBNAME=${rungen}x01${Xno}hc

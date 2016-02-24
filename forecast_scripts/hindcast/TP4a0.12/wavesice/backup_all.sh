@@ -44,6 +44,8 @@ do
 
    chmod -R g+r $fp
    chmod -R o+r $fp
+   chmod    g+x $fp
+   chmod    o+x $fp
    Tfil=${fp}.tar.gz
    tar -zcvf $Tfil $fp
 done

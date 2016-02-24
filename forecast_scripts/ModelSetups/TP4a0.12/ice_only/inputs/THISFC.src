@@ -15,10 +15,10 @@ nesting_inner=F
 #  at $FCfinal_hour
 FCdays=6
 FCfinal_hour=00
-FCrecords=49
+FCrecords=49      #for checking after run
 
-THISFC="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/$FCtype"    # inputs,logs
-HREGcommon="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/common" # scripts common to region
+THISFC="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/$FCtype"    # directory with inputs,logs
+HREGcommon="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/common" # scripts common to all regions
 THISFC2="$RTres/$HYCOMreg/$FCtype"                                         # outputs go here
 THISFC3="/migrate/timill/RESULTS/$HYCOMreg/SWARP_forecasts/$FCtype"        # backup location
 rungen=${HYCOMreg:0:3}

@@ -300,14 +300,14 @@ then
    # echo "$FCcommon/make_infile_3days.sh $inputs"
    # $FCcommon/pre/make_infile_3days.sh $inputs
    days="$rday $day2 $final_day"
-   Ropts="F T F"
+   Ropts="F    T     F"
 else
    # echo "Launching make_infile_2days.sh @ $(date)"                  >> $log
    # inputs="$THIS_SRC $rungen $ryear $rday $final_day $FCfinal_hour $nesting_outer $nesting_inner"
    # echo "$FCcommon/make_infile_2days.sh $inputs"
    # $FCcommon/pre/make_infile_2days.sh $inputs
    days="$rday $final_day"
-   Ropts="F F"
+   Ropts="F    F"
 fi
 
 ftmp='tmp.txt'

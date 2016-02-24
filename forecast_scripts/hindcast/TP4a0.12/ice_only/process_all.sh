@@ -1,6 +1,4 @@
-# script to set-up all experiments
-# needs to be run from crontab since nesting is done to same folder
-# -> can be crashes if files are opened by 2 expts at the same time
+# script to process all experiments
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
 R=TP4a0.12

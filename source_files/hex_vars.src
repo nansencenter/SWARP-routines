@@ -4,6 +4,7 @@ export FORECAST="$SWARP_ROUTINES/forecast_scripts"
 export VALIDATION="$SWARP_ROUTINES/validation"
 export RTmods="/work/timill/RealTime_Models"
 export RTres="/work/timill/RealTime_Models/results"
+export RTHCres="/work/timill/RealTime_Models/results_realtime_hindcast"
 export FCcommon="$FORECAST/ModelSetups/common"
 export FCemail="$FCcommon/inputs/fc_alert_email.txt"
 export TP4restart_OPT=1
@@ -23,8 +24,10 @@ export FR1_REALTIME_RES="$RTres/FR1a0.03"
 
 # PATHS TO APPLICATIONS
 # queue stuff
-export qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
-export qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"
+torque=/opt/torque/6.0.0-1_ec6d5de8/bin
+# torque=/opt/torque/5.1.1-1_fba25d92/bin
+export qsub="$torque/qsub"
+export qstat="$torque/qstat"
 export ncdump="/opt/cray/netcdf/4.3.0/bin/ncdump"
 
 # other apps
