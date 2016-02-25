@@ -1768,6 +1768,8 @@ class pca_mapper:
       shp   = shg.Polygon(xyc).buffer(0)
       #
       P,resolution,spacings,th_vec  = GP.curve_info(xyc)
+
+
       #
       ny = np.max([2,2*int((Y1-Y0)/resolution)])
       nx = np.max([2,2*int((X1-X0)/resolution)])
@@ -2058,7 +2060,7 @@ def save_summary(MIZpolys,filename):
 
 
 #########################################################
-def single_file(filename,bmap,MK_PLOT=True,pobj=None,cdate=None,METH=5):
+def single_file(filename,bmap,MK_PLOT=False,pobj=None,cdate=None,METH=5):
 
    """
    0     : direct Laplacian with specified boundary flags
@@ -2159,8 +2161,8 @@ def single_file(filename,bmap,MK_PLOT=True,pobj=None,cdate=None,METH=5):
             MIZinfo.plot_soln(bmap,ax=ax1,color='c')
 
       elif METH==5:
-         print('\nUsing PCA without Laplacian solution')
-         print('\n - oriented wrt ice edge\n')
+         #print('\nUsing PCA without Laplacian solution')
+         #print('\n - oriented wrt ice edge\n')
 
          if Poly.func_vals is None:
             raise ValueError("Need 'func_vals' input to use 'METH' = "+METH)

@@ -55,3 +55,4 @@ forecast_scripts/hindcast/TP4a0.12/ice_only/logs
 forecast_scripts/hindcast/TP4a0.12/wavesice/logs
 forecast_scripts/hindcast/FR1a0.03/ice_only/logs
 forecast_scripts/hindcast/BS1a0.045/ice_only/logs
+giacomo_hexagon/MIZ_BS1_FR1/outputs/*
