@@ -69,123 +69,18 @@ class reader:
     def jday_start(self,jday):
         if jday < 60 or jday > 274:
             print 'ERROR: dataset not in the melting season'
-        elif jday > 60 and jday < 68:
-            jdaystart = 60
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 67 and jday < 75:
-            jdaystart = 67
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 74 and jday < 82:
-            jdaystart = 74
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 81 and jday < 89:
-            jdaystart = 81
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 88 and jday < 96:
-            jdaystart = 88
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 95 and jday < 103:
-            jdaystart = 95
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 102 and jday < 110:
-            jdaystart = 102
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 109 and jday < 117:
-            jdaystart = 109
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 116 and jday < 124:
-            jdaystart = 116
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 123 and jday < 131:
-            jdaystart = 123
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 130 and jday < 138:
-            jdaystart = 130
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 137 and jday < 145:
-            jdaystart = 137
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 144 and jday < 159:
-            jdaystart = 144
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 158 and jday < 166:
-            jdaystart = 158
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 165 and jday < 173:
-            jdaystart = 165
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 172 and jday < 180:
-            jdaystart = 172
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 179 and jday < 187:
-            jdaystart = 179
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 186 and jday < 194:
-            jdaystart = 186
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 193 and jday < 201:
-            jdaystart = 193
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 200 and jday < 208:
-            jdaystart = 200
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 207 and jday < 215:
-            jdaystart = 207
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 214 and jday < 222:
-            jdaystart = 214
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 221 and jday < 236:
-            jdaystart = 221
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 235 and jday < 243:
-            jdaystart = 235
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 242 and jday < 250:
-            jdaystart = 242
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 249 and jday < 257:
-            jdaystart = 249
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 256 and jday < 264:
-            jdaystart = 256
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 263 and jday < 271:
-            jdaystart = 263
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        elif jday > 270 and jday < 275:
-            jdaystart = 270
-            data_date = datetime.datetime(2015,1,1)+datetime.timedelta(jdaystart)
-            data_date = data_date.strftime('%Y%m%d')
-        self.jdaystart = jdaystart
+        else:
+            std = 60
+            check = 0
+            while (check < 1):
+               if jday < (std+8):
+                  sjd = std
+                  check = 5
+               else:
+                  std += 7
+        data_date = datetime.datetime(2015,1,1)+datetime.timedelta(sjd)
+        data_date = data_date.strftime('%Y%m%d')
+        self.jdaystart = sjd
         self.data_date = data_date
         return()
 
@@ -279,6 +174,7 @@ class reader:
            outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
                  'wavesice/2015_GOOD/2015_'+str(jdaystart)+'/netcdf/DAILY/'
 
+        outdir = '/work/timill/giacomo/DAILY_WIM_2015_melting'
         ncfil = outdir+'/TP4DAILY_start'+data_date+'_dump'+dadate+'.nc'
         slon = 'longitude'
         slat = 'latitude'
@@ -940,119 +836,123 @@ class MIZwidth:
 
     def poly_stat(self,cont,pack,ext,miz,X,Y,num,region,basemap):
 
-            # this function find the different polygons
+        # this function find the different polygons
 
-            # (NOTE i and j are inverted -> i = [:,1], j = [:,0])
+        # (NOTE i and j are inverted -> i = [:,1], j = [:,0])
 
-            # NOTE if a point has non integer i coordinate is going to be a vertical edge,
-            # if has non integer j coordinate is going to be a horizontal edge hence the use
-            # of different arounds depending on the indexes of the point
+        # NOTE if a point has non integer i coordinate is going to be a vertical edge,
+        # if has non integer j coordinate is going to be a horizontal edge hence the use
+        # of different arounds depending on the indexes of the point
 
-            ext = ext
-            pack = pack
-            in_cont = []
-            out_cont = []
-            unk_cont = []
-            func_vals= []
-            func_mod = 0 # value of func_vals at model ice edge
-            func_osi = 1 # value of func_vals at OSISAF ice edge
-            func_unk = 2 # value of func_vals at other parts of contour
-            
-            for n,el in enumerate(cont):
-                #getting all the neighbours
-                around1 = ((el[0],el[1]+.5),(el[0],el[1]-.5)) 
-                around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1]))
-                check_cont = 0
-                if el[0]/int(el[0]) == 1:
-                    for h,v in around1:
-                        if pack[h][v] == ext[h][v] == 1:
-                        #if pack[h][v] == ext[h][v] == 0:
-                            in_cont.append(el)
-                            func_val=func_mod
-                            check_cont = 1
-                        elif pack[h][v] == ext[h][v] == 0:
-                        #elif pack[h][v] == ext[h][v] == 1:
-                            out_cont.append(el)
-                            func_val=func_osi
-                            check_cont = 1
-                    if check_cont == 0:
-                        unk_cont.append(el)
-                        func_val=func_unk
-                    func_vals.append(func_val)
-                else:
-                    for h,v in around2:
-                        if pack[h][v] == ext[h][v] == 1:
-                        #if pack[h][v] == ext[h][v] == 0:
-                            in_cont.append(el)
-                            func_val=func_mod
-                            check_cont = 1
-                        elif pack[h][v] == ext[h][v] == 0:
-                        #elif pack[h][v] == ext[h][v] == 1:
-                            out_cont.append(el)
-                            func_val=func_osi
-                            check_cont = 1
-                    if check_cont == 0:
-                        unk_cont.append(el)
-                        func_val=func_unk
-                    func_vals.append(func_val)
-            
-            in_cont = np.array(in_cont)
-            out_cont = np.array(out_cont)
-            unk_cont = np.array(unk_cont)
-            f_vals = np.array(func_vals)
-
-            # changes indexes to x and y 
-            x = np.ma.copy(cont)
-            y = np.ma.copy(cont)
-            xvec = range(len(cont[:,0]))
-            for n,en in enumerate(xvec):
-                en = X[cont[n,0]][cont[n,1]]
-                x[n] = en
-            yvec = range(len(cont[:,1]))
-            for n,en in enumerate(yvec):
-                en = Y[cont[n,0]][cont[n,1]]
-                y[n] = en
-            xy_list = zip(x,y)
-            xy_list = np.array(xy_list)
+        ext = ext
+        pack = pack
+        in_cont = []
+        out_cont = []
+        unk_cont = []
+        func_vals= []
+        func_mod = 0 # value of func_vals at model ice edge
+        func_osi = 1 # value of func_vals at OSISAF ice edge
+        func_unk = 2 # value of func_vals at other parts of contour
         
-            # Centroid - Location in lon/lat of the centroid of the polygon
-            DX = 0
-            DY = 0
-            B = 0
-            for n in range(len(cont)-1):
-                DX += ((cont[n][0]+cont[n+1][0])*\
-                      ((cont[n][0]*cont[n+1][1])-(cont[n+1][0]*cont[n][1])))  
-                DY += ((cont[n][1]+cont[n+1][1])*\
-                      ((cont[n][0]*cont[n+1][1])-(cont[n+1][0]*cont[n][1])))  
-                B += ((cont[n][0]*cont[n+1][1])-(cont[n+1][0]*cont[n][1]))
-            A = (0.5)*B 
-            CX = (1/float(6*A))*DX
-            CY = (1/float(6*A))*DY
-            self.centroid = [CX,CY]
-            self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
-            clonlat = [self.centroid_longitude,self.centroid_latitude]
-            lon_list,lat_list=basemap(cont[:,0],cont[:,1],inverse=True)
-            poly = []
-            for n, en in enumerate(f_vals):
-                poly.append([num,lon_list[n],lat_list[n],en])
+        for n,el in enumerate(cont):
+            #getting all the neighbours
+            around1 = ((el[0],el[1]+.5),(el[0],el[1]-.5)) 
+            around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1]))
+            check_cont = 0
+            if el[0]/int(el[0]) == 1:
+                for h,v in around1:
+                    if pack[h][v] == ext[h][v] == 1:
+                    #if pack[h][v] == ext[h][v] == 0:
+                        in_cont.append(el)
+                        func_val=func_mod
+                        check_cont = 1
+                    elif pack[h][v] == ext[h][v] == 0:
+                    #elif pack[h][v] == ext[h][v] == 1:
+                        out_cont.append(el)
+                        func_val=func_osi
+                        check_cont = 1
+                if check_cont == 0:
+                    unk_cont.append(el)
+                    func_val=func_unk
+                func_vals.append(func_val)
+            else:
+                for h,v in around2:
+                    if pack[h][v] == ext[h][v] == 1:
+                    #if pack[h][v] == ext[h][v] == 0:
+                        in_cont.append(el)
+                        func_val=func_mod
+                        check_cont = 1
+                    elif pack[h][v] == ext[h][v] == 0:
+                    #elif pack[h][v] == ext[h][v] == 1:
+                        out_cont.append(el)
+                        func_val=func_osi
+                        check_cont = 1
+                if check_cont == 0:
+                    unk_cont.append(el)
+                    func_val=func_unk
+                func_vals.append(func_val)
+        
+        in_cont = np.array(in_cont)
+        out_cont = np.array(out_cont)
+        unk_cont = np.array(unk_cont)
+        f_vals = np.array(func_vals)
 
-            a = 0
-            x0,y0 = cont[0]
-            for [x1,y1] in cont[1:]:
-                dx = x1-x0
-                dy = y1-y0
-                a += 0.5*(y0*dx - x0*dy)
-                x0 = x1 
-                y0 = y1 
-            E_area = abs(a*100)
-            
-            # Calculating perimeter in xy coordinates (unit = 10km)
-            perim = 0
-            for n in range(len(cont)-1):
-                perim += np.sqrt(pow(cont[n+1][0]-cont[n][0],2)+pow(cont[n+1][1]-cont[n][1],2))
-            E_perim = abs(perim*10)
+        # changes indexes to x and y 
+        x = np.ma.copy(cont)
+        y = np.ma.copy(cont)
+        xvec = range(len(cont[:,0]))
+        for n,en in enumerate(xvec):
+            en = X[cont[n,0]][cont[n,1]]
+            x[n] = en
+        yvec = range(len(cont[:,1]))
+        for n,en in enumerate(yvec):
+            en = Y[cont[n,0]][cont[n,1]]
+            y[n] = en
+        xy_list = zip(x,y)
+        xy_list = np.array(xy_list)
+        
+        ## Centroid - Location in lon/lat of the centroid of the polygon
+        #DX = 0
+        #DY = 0
+        #B = 0
+        #for n in range(len(cont)-1):
+        #    DX += ((cont[n][0]+cont[n+1][0])*\
+        #          ((cont[n][0]*cont[n+1][1])-(cont[n+1][0]*cont[n][1])))  
+        #    DY += ((cont[n][1]+cont[n+1][1])*\
+        #          ((cont[n][0]*cont[n+1][1])-(cont[n+1][0]*cont[n][1])))  
+        #    B += ((cont[n][0]*cont[n+1][1])-(cont[n+1][0]*cont[n][1]))
+        #A = (0.5)*B 
+        #CX = (1/float(6*A))*DX
+        #CY = (1/float(6*A))*DY
+        #self.centroid = [CX,CY]
+        #self.centroid_longitude,self.centroid_latitude = basemap(CX,CY,inverse=True)
+        #clonlat = [self.centroid_longitude,self.centroid_latitude]
+        lon_list,lat_list=basemap(cont[:,0],cont[:,1],inverse=True)
+        clon = np.mean(lon_list)
+        clat = np.mean(lat_list)
+        clonlat = [clon,clat]
 
-            return(poly,E_area,E_perim,clonlat)
+        poly = []
+        for n, en in enumerate(f_vals):
+            poly.append([num,lon_list[n],lat_list[n],en])
+
+        a = 0
+        x0,y0 = cont[0]
+        for [x1,y1] in cont[1:]:
+            dx = x1-x0
+            dy = y1-y0
+            a += 0.5*(y0*dx - x0*dy)
+            x0 = x1 
+            y0 = y1 
+        E_area = abs(a*100)
+        
+        # Calculating perimeter in xy coordinates (unit = 10km)
+        perim = 0
+        for n in range(len(cont)-1):
+            perim += np.sqrt(pow(cont[n+1][0]-cont[n][0],2)+pow(cont[n+1][1]-cont[n][1],2))
+        E_perim = abs(perim*10)
+
+        return(poly,E_area,E_perim,clonlat)
     
     def regional_save(self,data,poly_list,area,perimeter,clonlat,basemap,region):
 
@@ -1066,7 +966,7 @@ class MIZwidth:
                 os.mkdir(reg_repo)
         else:
             # REGION
-            reg_repo = './outputs/MIZ/WIM/'+str(region)
+            reg_repo = './outputs/MIZ/MDL/'+str(region)
             if not os.path.exists(reg_repo):
                 os.mkdir(reg_repo)
 
@@ -1123,7 +1023,7 @@ class MIZwidth:
         for n,en in enumerate(clonlat):
             num_lon += en[0]*area[n]
             num_lat += en[1]*area[n]
-            den += area[0]
+            den += area[n]
         mean_lon = num_lon/float(den)
         mean_lat = num_lat/float(den)
 
@@ -1770,10 +1670,14 @@ def mask_region(data,region,mreg=None,oreg=None,mmask=None,omask=None,mask=False
         osi_reg[osi_reg!=1] = 0
     elif region == 'bar':
         mdl_reg[mdl_reg!=2] = 0
+        mdl_reg[mdl_reg!=0] = 1
         osi_reg[osi_reg!=2] = 0
+        osi_reg[osi_reg!=0] = 1
     elif region == 'bal':
         mdl_reg[mdl_reg!=3] = 0
+        mdl_reg[mdl_reg!=0] = 1
         osi_reg[osi_reg!=3] = 0
+        osi_reg[osi_reg!=0] = 1
     else:
         print('no region selected, three masks applied: 1=gre,2=bar,3=bal')
     if data.shape == mdl_reg.shape:

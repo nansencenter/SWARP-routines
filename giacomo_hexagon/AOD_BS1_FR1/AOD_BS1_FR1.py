@@ -80,6 +80,7 @@ class reader:
                  std += 7
         data_date = datetime.datetime(2015,1,1)+datetime.timedelta(stj)
         data_date = data_date.strftime('%Y%m%d')
+        print data_date
         self.jdaystart = stj
         self.data_date = data_date
         return()
@@ -1221,7 +1222,7 @@ class AODwidth:
             und_clonlat.append(clonlat)
         self.ovr_list = ovr_list
         self.und_list = und_list
-        #self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+        self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
         return
     
     def poly_ovr_und(self,conc_m,conc_o):
@@ -1384,22 +1385,25 @@ class AODwidth:
         xy_list = zip(x,y)
         xy_list = np.array(xy_list)
     
-        # Centroid - Location in lon/lat of the centroid of the polygon
-        DX = 0
-        DY = 0
-        B = 0
-        for n in range(len(xy_list)-1):
-            DX += ((xy_list[n][0]+xy_list[n+1][0])*\
-                  ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-            DY += ((xy_list[n][1]+xy_list[n+1][1])*\
-                  ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
-            B += ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
-        A = (0.5)*B 
-        CX = (1/float(6*A))*DX
-        CY = (1/float(6*A))*DY
-        centroid_longitude,centroid_latitude = basemap(CX,CY,inverse=True)
-        clonlat = [centroid_longitude,centroid_latitude]
+        ## Centroid - Location in lon/lat of the centroid of the polygon
+        #DX = 0
+        #DY = 0
+        #B = 0
+        #for n in range(len(xy_list)-1):
+        #    DX += ((xy_list[n][0]+xy_list[n+1][0])*\
+        #          ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+        #    DY += ((xy_list[n][1]+xy_list[n+1][1])*\
+        #          ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1])))  
+        #    B += ((xy_list[n][0]*xy_list[n+1][1])-(xy_list[n+1][0]*xy_list[n][1]))
+        #A = (0.5)*B 
+        #CX = (1/float(6*A))*DX
+        #CY = (1/float(6*A))*DY
+        #centroid_longitude,centroid_latitude = basemap(CX,CY,inverse=True)
+        #clonlat = [centroid_longitude,centroid_latitude]
         lon,lat=basemap(xy_list[:,0],xy_list[:,1],inverse=True)
+        clon = np.mean(lon)
+        clat = np.mean(lat)
+        clonlat = [clon,clat]
 
         poly_list = []
         for n, en in enumerate(f_vals):
@@ -1528,7 +1532,7 @@ class AODwidth:
            for n,en in enumerate(ovr_clonlat):
                num_lon += en[0]*ovr_area[n]
                num_lat += en[1]*ovr_area[n]
-               den += ovr_area[0]
+               den += ovr_area[n]
            mean_ovr_lon = num_lon/float(den)
            mean_ovr_lat = num_lat/float(den)
           
@@ -1591,7 +1595,7 @@ class AODwidth:
            for n,en in enumerate(und_clonlat):
                num_lon += en[0]*und_area[n]
                num_lat += en[1]*und_area[n]
-               den += und_area[0]
+               den += und_area[n]
            mean_und_lon = num_lon/float(den)
            mean_und_lat = num_lat/float(den)
    
@@ -1703,10 +1707,14 @@ def mask_region(data,region,mreg=None,oreg=None,mmask=None,omask=None,mask=False
         osi_reg[osi_reg!=1] = 0
     elif region == 'bar':
         mdl_reg[mdl_reg!=2] = 0
+        mdl_reg[mdl_reg!=0] = 1
         osi_reg[osi_reg!=2] = 0
+        osi_reg[osi_reg!=0] = 1
     elif region == 'bal':
         mdl_reg[mdl_reg!=3] = 0
+        mdl_reg[mdl_reg!=0] = 1
         osi_reg[osi_reg!=3] = 0
+        osi_reg[osi_reg!=0] = 1
     else:
         print('no region selected, three masks applied: 1=gre,2=bar,3=bal')
     if data.shape == mdl_reg.shape:
@@ -1736,6 +1744,8 @@ region = sys.argv[2]
 
 # Start the count and analyse the datasets
 time0 = time.time()
+print('Working on '+str(dadate))
+print('')
 
 # Let's go, go, GO!
 time1 = time.time()
