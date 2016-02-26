@@ -63,8 +63,8 @@ class reader:
         self._read_osi_(dadate,bmo)
         #self._read_osi_2(dadate,bmo)
         self._read_mdl_DAILY(self.data_date,dadate,bmm)
-        self._read_mdl_ice_only(self.data_date,bmm)
-        self._read_mdl_waves_ice(self.data_date,bmm)
+        #self._read_mdl_ice_only(self.data_date,bmm)
+        #self._read_mdl_waves_ice(self.data_date,bmm)
 
     def jday_start(self,jday):
         if jday < 60 or jday > 274:
@@ -185,7 +185,7 @@ class reader:
         latM = Mrdg.nc_get_var(ncfil,slat) # lat[:,:] is a numpy array
         latM = latM[:,:]
         X,Y = basemap(lonM[:,:],latM[:,:],inverse=False)
-        self.lonM,self.latM,self.X,self.Y = lonM,latM,X,Y
+        self.lonM,self.latM,self.XM,self.YM = lonM,latM,X,Y
         conc = Mrdg.nc_get_var(ncfil,sconc,time_index=0)
         conc = conc[:,:]
         thic = Mrdg.nc_get_var(ncfil,sthic,time_index=0)
@@ -861,13 +861,13 @@ class MIZwidth:
             check_cont = 0
             if el[0]/int(el[0]) == 1:
                 for h,v in around1:
-                    if pack[h][v] == ext[h][v] == 1:
-                    #if pack[h][v] == ext[h][v] == 0:
+                    #if pack[h][v] == ext[h][v] == 1:
+                    if pack[h][v] == ext[h][v] == 0:
                         in_cont.append(el)
                         func_val=func_mod
                         check_cont = 1
-                    elif pack[h][v] == ext[h][v] == 0:
-                    #elif pack[h][v] == ext[h][v] == 1:
+                    #elif pack[h][v] == ext[h][v] == 0:
+                    elif pack[h][v] == ext[h][v] == 1:
                         out_cont.append(el)
                         func_val=func_osi
                         check_cont = 1
@@ -877,13 +877,13 @@ class MIZwidth:
                 func_vals.append(func_val)
             else:
                 for h,v in around2:
-                    if pack[h][v] == ext[h][v] == 1:
-                    #if pack[h][v] == ext[h][v] == 0:
+                    #if pack[h][v] == ext[h][v] == 1:
+                    if pack[h][v] == ext[h][v] == 0:
                         in_cont.append(el)
                         func_val=func_mod
                         check_cont = 1
-                    elif pack[h][v] == ext[h][v] == 0:
-                    #elif pack[h][v] == ext[h][v] == 1:
+                    #elif pack[h][v] == ext[h][v] == 0:
+                    elif pack[h][v] == ext[h][v] == 1:
                         out_cont.append(el)
                         func_val=func_osi
                         check_cont = 1
@@ -898,16 +898,16 @@ class MIZwidth:
         f_vals = np.array(func_vals)
 
         # changes indexes to x and y 
-        x = np.ma.copy(cont)
-        y = np.ma.copy(cont)
+        x = []
+        y = []
         xvec = range(len(cont[:,0]))
         for n,en in enumerate(xvec):
             en = X[cont[n,0]][cont[n,1]]
-            x[n] = en
+            x.append(en)
         yvec = range(len(cont[:,1]))
         for n,en in enumerate(yvec):
             en = Y[cont[n,0]][cont[n,1]]
-            y[n] = en
+            y.append(en)
         xy_list = zip(x,y)
         xy_list = np.array(xy_list)
         
@@ -1713,12 +1713,12 @@ time1 = time.time()
 print('Basemap creation...')
 bmm = basemap_creator('TP4')
 bmo = basemap_creator('OSI')
-if region == 'bar':
-   bmb = basemap_creator('BS1')
-   print('Barents!')
-elif region == 'gre':
-   bmf = basemap_creator('FR1')
-   print('Greenland!')
+#if region == 'bar':
+#   bmb = basemap_creator('BS1')
+#   print('Barents!')
+#elif region == 'gre':
+#   bmf = basemap_creator('FR1')
+#   print('Greenland!')
 elapsedtime = time.time() - time1
 print 'Basemap created in ',elapsedtime
 print('')
@@ -1738,21 +1738,21 @@ if region == 'bar':
    print('Studying the BARENTS region...')
    print('')
    
-   XM,YM,latM,lonM,XO,YO,latO,lonO = data.XM,data.YM,data.latM,data.lonM,\
-           data.XO,data.YO,data.latO,data.lonO
+   ZM,XM,YM,latM,lonM,ZO,XO,YO,latO,lonO = data.ZM,data.XM,data.YM,data.latM,data.lonM,\
+           data.ZO,data.XO,data.YO,data.latO,data.lonO
    
-   XMo,YMo = bmo(lonM[:,:],latM[:,:])
-           
-   ZM,ZO,TXI,TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD = \
-           data.ZM,data.ZO,data.TXI,data.TYI,data.TXW,data.TYW,\
-           data.FOI,data.TOI,data.ZDW,data.QA,data.QC,data.QO,\
-           data.TDI,data.FDI,data.HSD
+   #XMo,YMo = bmo(lonM[:,:],latM[:,:])
+   #        
+   #ZM,ZO,TXI,TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD = \
+   #        data.ZM,data.ZO,data.TXI,data.TYI,data.TXW,data.TYW,\
+   #        data.FOI,data.TOI,data.ZDW,data.QA,data.QC,data.QO,\
+   #        data.TDI,data.FDI,data.HSD
    
-   print('Analysing WIM (stresses and growths)...')
-   bar_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
-           TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'bar')
-   print('DONE')
-   print('')
+   #print('Analysing WIM (stresses and growths)...')
+   #bar_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
+   #        TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'bar')
+   #print('DONE')
+   #print('')
    
    print('Analysing model MIZ (widths)...')
    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
@@ -1783,11 +1783,11 @@ elif region == 'gre':
            data.FOI,data.TOI,data.ZDW,data.QA,data.QC,data.QO,\
            data.TDI,data.FDI,data.HSD
    
-   print('Analysing WIM (stresses and growths)...')
-   gre_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
-           TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'gre')
-   print('DONE')
-   print('')
+   #print('Analysing WIM (stresses and growths)...')
+   #gre_WIM = WIM_growth_stress(bmo,bmm,XMo,YMo,ZM,XO,YO,ZO,TXI,\
+   #        TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD,'gre')
+   #print('DONE')
+   #print('')
    
    print('Analysing model MIZ (widths)...')
    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
