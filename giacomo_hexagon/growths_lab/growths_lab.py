@@ -30,7 +30,7 @@ import test_HYCOM_diag as Hdiag
 import MIZchar as widths
 
 class reader:
-    def __init__(self,dadate,bmm,bmo):
+    def __init__(self,dadate,bmm):
 
         self.year = dadate[:4]
         self.month = dadate[4:6]
@@ -43,11 +43,11 @@ class reader:
         self.tidx_i,self.tidx_w = self.time_frame(gigio)
 
         #Reading the datasets
-        self._read_osi_(dadate,bmo)
+        #self._read_osi_(dadate,bmo)
         #self._read_osi_2(dadate,bmo)
-        self._read_mdl_DAILY(self.data_date,dadate,bmm)
-        #self._read_mdl_ice_only(self.data_date,bmm)
-        #self._read_mdl_waves_ice(self.data_date,bmm)
+        #self._read_mdl_DAILY(self.data_date,dadate,bmm)
+        self._read_mdl_ice_only(self.data_date,bmm)
+        self._read_mdl_waves_ice(self.data_date,bmm)
 
     def jday_start(self,jday):
         if jday < 60 or jday > 274:
@@ -371,15 +371,14 @@ def basemap_creator(region,cres='i'):
     return bm
 
 dadate = sys.argv[1] 
-xy = sys.argv[2]
-
-x = xy[0]
-y = xy[1]
+x = sys.argv[2]
+y = sys.argv[3]
 
 bmm = basemap_creator('TP4')
 data = reader(dadate,bmm)
 
 dmax  = data.ZDW[x,y]
+print dmax
 f_old = data.FOI[x,y]
 h_old = data.TOI[x,y]
 hs_old = data.HSO[x,y]
@@ -389,6 +388,7 @@ Qcool = data.QC[x,y]
 
 fusi  = 3.02e8
 fuss  = 1.10e8
+dmin  = 20.
 dt    = 400.
 
 print(Qatm*(1-f_old),Qother*f_old)
@@ -398,6 +398,22 @@ print(' ')
 if dmax>200:
    beta_lat    = (4*h_old*dmax)/pow(dmax,2)
    alpha_lat   = beta_lat/(1+beta_lat)
+elif dmax>dmin:
+   M = np.log(dmax/dmin)
+   M = M/np.log(2)
+   M = np.floor(M)
+   for el in range(M+1):
+      nm = N0*(1-f)*(f*xi**2)**el
+      dm = linZD[n]/(xi**el)
+      nsum = nsum + nm 
+      ndsum = ndsum + (nm*dm)
+      ndsum2 = ndsum2 + (nm*dm**2)
+   linDmean[n] = ndsum/nsum
+   linD2mean[n] = ndsum2/nsum
+   linSlat[n] = N0*4*ndsum*linthic_old[n]
+   linSbot[n] = N0*ndsum2
+   linAlpha[n] = linSlat[n]/(linSlat[n]+linSbot[n])
+   linBeta[n] = linSlat[n]/linSbot[n]
 
 qdist = (Qcool+(1-f_old)*Qatm)*dt
 qlat  = alpha_lat*qdist

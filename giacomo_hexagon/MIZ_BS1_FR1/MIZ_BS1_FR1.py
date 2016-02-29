@@ -1,4 +1,4 @@
-# vv. 1.2 28/02/2016
+# vv. 1.3 29/02/2016
 ############################################################################
 # THIS script will:
 # 1) Read in WIM ice_only and waves_ice
@@ -203,17 +203,13 @@ class reader:
 class MIZwidth:
     def __init__(self,X,Y,Z,basemap,region):
         ZM = mask_region(Z,region)
-        if np.nanmax(ZM) < 1:
-            MIZraw,ice_ext,pack_ice = self.binary_diff(ZM,.15,.80)
-            self.MIZraw,self.ice_ext,self.pack_ice = MIZraw,ice_ext,pack_ice
-        else:
-            MIZraw,ice_ext,pack_ice = self.binary_diff(ZM,.1,300)
-            self.MIZraw,self.ice_ext,self.pack_ice = MIZraw,ice_ext,pack_ice
+        MIZraw,ice_ext,pack_ice = self.binary_diff(ZM,.15,.80)
+        self.MIZraw,self.ice_ext,self.pack_ice = MIZraw,ice_ext,pack_ice
 
         MIZcont = self.poly_maker(self.MIZraw)
         self.MIZcont = MIZcont
 
-        MIZ = self.mapper(self.MIZraw,Z)
+        MIZ = self.mapper(self.MIZraw,ZM)
         self.MIZ = MIZ
 
         # Analysing the polygons one by one, dividing them into their respective regions
@@ -228,7 +224,7 @@ class MIZwidth:
             perim_list.append(perim)
             clonlat_list.append(clonlat)
         self.poly_list = poly_list
-        self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+        self.regional_save(ZM,poly_list,area_list,perim_list,clonlat_list,basemap,region)
         basemap.imshow(MIZ)
         return
     
@@ -293,13 +289,11 @@ class MIZwidth:
             check_cont = 0
             if el[0]/int(el[0]) == 1:
                 for h,v in around1:
-                    #if pack[h][v] == ext[h][v] == 1:
-                    if pack[h][v] == ext[h][v] == 0:
+                    if pack[h][v] == ext[h][v] == 1:
                         in_cont.append(el)
                         func_val=func_mod
                         check_cont = 1
-                    #elif pack[h][v] == ext[h][v] == 0:
-                    elif pack[h][v] == ext[h][v] == 1:
+                    elif pack[h][v] == ext[h][v] == 0:
                         out_cont.append(el)
                         func_val=func_osi
                         check_cont = 1
@@ -309,13 +303,11 @@ class MIZwidth:
                 func_vals.append(func_val)
             else:
                 for h,v in around2:
-                    #if pack[h][v] == ext[h][v] == 1:
-                    if pack[h][v] == ext[h][v] == 0:
+                    if pack[h][v] == ext[h][v] == 1:
                         in_cont.append(el)
                         func_val=func_mod
                         check_cont = 1
-                    #elif pack[h][v] == ext[h][v] == 0:
-                    elif pack[h][v] == ext[h][v] == 1:
+                    elif pack[h][v] == ext[h][v] == 0:
                         out_cont.append(el)
                         func_val=func_osi
                         check_cont = 1
@@ -465,26 +457,26 @@ class MIZwidth:
         lst = []
     
         # Which mode?
-        if np.nanmax(data) < 1:
+        if np.nanmax(data) <= 1:
             lindata = np.reshape(data,data.size)
             for pt in lindata:
                 if pt > .15 and pt < .80:
-                    lst.append([1,pt*100,1,pt*100])
+                    lst.append([1,1])
                 elif pt >= .80:
-                    lst.append([1,pt*100,0,0])
+                    lst.append([1,0])
         else:
             lindata = np.reshape(data,data.size)
             for pt in lindata:
                 if pt > .1 and pt < 300:
-                    lst.append([1,pt*100,1,pt*100])
+                    lst.append([1,1])
                 elif pt == 300:
-                    lst.append([1,pt*100,0,0])
+                    lst.append([1,0])
 
         stats = map(sum,zip(*lst))
     
         filname = reg_repo+'/stats.txt'
         with open(filname,'a') as f:
-            row1 = [dadate,stats[0],stats[1],stats[2],stats[3],avg_width,mean_lon,mean_lat]
+            row1 = [dadate,stats[0],stats[1],avg_width,mean_lon,mean_lat]
             str1 = ' '.join(map(str,row1))
             f.write(str1+'\n')
             f.close()
@@ -779,6 +771,26 @@ if region == 'bar':
    ZM,XM,YM,latM,lonM,ZO,XO,YO,latO,lonO = data.ZM,data.XM,data.YM,data.latM,data.lonM,\
            data.ZO,data.XO,data.YO,data.latO,data.lonO
    
+   #ZZM = mask_region(ZM,region)
+   #ZZO = mask_region(ZO,region)
+
+   #miz = ZZM[(ZZM>.15)&(ZZM<.8)].size
+   #sie = ZZM[.15<ZZM].size
+   #nans = np.isnan(ZZM)
+   #tot = mrg[mrg==2].size
+
+   #omiz = ZZO[(ZZO>.15)&(ZZO<.8)].size
+   #osie = ZZO[.15<ZZO].size
+   #onans = np.isnan(ZZO)
+   #otot = org[org==2].size
+
+   #filname = './'+str(region)+'_ext.txt'
+   #with open(filname,'a') as f:
+   #   row1 = [dadate,tot,sie,miz,otot,osie,omiz]
+   #   str1 = ' '.join(map(str,row1))
+   #   f.write(str1+'\n')
+   #   f.close()
+
    print('Analysing model MIZ (widths)...')
    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
    print('DONE')
@@ -796,6 +808,26 @@ elif region == 'gre':
    ZM,XM,YM,latM,lonM,ZO,XO,YO,latO,lonO = data.ZM,data.XM,data.YM,data.latM,data.lonM,\
            data.ZO,data.XO,data.YO,data.latO,data.lonO
    
+   #ZZM = mask_region(ZM,region)
+   #ZZO = mask_region(ZO,region)
+
+   #miz = ZZM[(ZZM>.15)&(ZZM<.8)].size
+   #sie = ZZM[.15<ZZM].size
+   #nans = np.isnan(ZZM)
+   #tot = mrg[mrg==1].size
+
+   #omiz = ZZO[(ZZO>.15)&(ZZO<.8)].size
+   #osie = ZZO[.15<ZZO].size
+   #onans = np.isnan(ZZO)
+   #otot = org[org==1].size
+
+   #filname = './'+str(region)+'_ext.txt'
+   #with open(filname,'a') as f:
+   #   row1 = [dadate,tot,sie,miz,otot,osie,omiz]
+   #   str1 = ' '.join(map(str,row1))
+   #   f.write(str1+'\n')
+   #   f.close()
+
    print('Analysing model MIZ (widths)...')
    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
    print('DONE')
