@@ -71,25 +71,25 @@ class read_MIZpoly_summary:
 def reproj_mod2obs(X1,Y1,Z1,X2,Y2,mask=None):
 
    # getting ready for reprojection
+   Z1d            = Z1.data
+   Z1d[Z1.mask]   = np.nan
+
    X1vec = X1.reshape(X1.size)
    Y1vec = Y1.reshape(Y1.size)
    Z1vec = Z1.reshape(Z1.size)
+   Z1vec = Z1d.reshape(Z1.size)
    C = [X1vec,Y1vec]
    C = np.array(C)
    C = C.T # input coords from X1,Y1; Z1 is array to interp; X2,Y2 are output matrices
 
    # Interpolation can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
-   Z2   = grd(C,Z1vec,(X2,Y2),method='linear')
+   Z2    = grd(C,Z1vec,(X2,Y2),method='linear')
+   mask2 = np.isnan(Z2)
    if mask is not None:
-      # get good values from Z2
-      Arr         = np.zeros(Z2.shape)
-      good        = np.isfinite(Z2)
-      nans        = np.logical_not(good)
-      Arr[good]   = Z2[good]
-
       # apply union of mask and model nans
-      Z2 = np.ma.array(Arr,mask=np.logical_or(mask,nans))
+      mask2=np.logical_or(mask2,mask)
     
+   Z2 = np.ma.array(Z2,mask=mask2)
    return(Z2)
 ##########################################################
 
@@ -503,9 +503,10 @@ class nc_getinfo:
             # - otherwise assume YYYYMMDD format
             split2   = cdate.split('-')
             for loop_i in range(1,3):
-               if (split2[loop_i])==1:
+               if len(split2[loop_i])==1:
                   split2[loop_i] = '0'+split2[loop_i]
             cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
+
          if len(cdate)<8:
             cdate = (8-len(cdate))*'0'+cdate
 
@@ -1201,6 +1202,70 @@ class nc_getinfo:
 
 
    ###########################################################
+   def compare_ice_edge_obs(self,pobj=None,bmap=None,\
+         obs_type='OSISAF',date_label=1,figname=None,time_index=0,**kwargs):
+
+      var_opts1   = make_plot_options('ficem',\
+         vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
+      var_opts1   = check_var_opts(var_opts1,self.variables)
+
+      if 'show' in kwargs:
+         show           = kwargs['show']
+         kwargs['show'] = False
+         pobj,bmap      = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,time_index=time_index,**kwargs)
+      else:
+         show        = True
+         pobj,bmap   = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,time_index=time_index,show=False,**kwargs)
+
+      fig,ax,cbar = pobj.get()
+
+      dtmo  = self.datetimes[time_index]
+      if obs_type=='OSISAF':
+         obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+\
+               dtmo.strftime('%Y')+'_nh_polstere/'+\
+               'ice_conc_nh_polstere-100_multi_'+\
+               dtmo.strftime('%Y%m%d')+'1200.nc'
+      else:
+         raise ValueError('invalid value of obs_type: '+obs_type)
+
+      print(obsfil)
+      obs      = nc_getinfo(obsfil)
+      fice     = obs.get_var('ice_conc')
+      lon,lat  = obs.get_lonlat()
+      bmap.contour(lon,lat,fice.values[:,:],[15],colors='g',\
+            linewidths=2,ax=ax,latlon=True)
+
+      if 'HYCOMreg' in kwargs:
+         reg   = kwargs['HYCOMreg']
+      else:
+         reg   = 'Arctic'
+         kwargs.update({'HYCOMreg':reg})
+
+      if reg=='TP4':
+         xyann = (0.05,.925)
+      else:
+         xyann = (0.4,.925)
+
+      if date_label==1:
+         tlabel   = dtmo.strftime('%d %b %Y')
+         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+      elif date_label==2:
+         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+         pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+
+      if figname is not None:
+         print('Saving to '+figname)
+         fig.savefig(figname)
+
+      if show:
+         # fig.show()
+         plt.show(fig)
+
+      return pobj,bmap
+   ###########################################################
+
+
+   ###########################################################
    def MIZmap(self,var_name='dmax',time_index=0,do_sort=False,EastOnly=True,\
          plotting=True,HYCOM_region='Arctic',**kwargs):
       """
@@ -1349,7 +1414,8 @@ class nc_getinfo:
 
 
    ###########################################################
-   def areas_of_disagreement(self,obs_type='OSISAF',time_index=0,do_sort=True,EastOnly=True,plotting=True,**kwargs):
+   def areas_of_disagreement(self,obs_type='OSISAF',time_index=0,do_sort=True,EastOnly=True,\
+         plotting=True,HYCOMreg='Arctic',**kwargs):
       # kwargs: outdir='.',do_sort=True
 
       import MIZchar as mc
@@ -1358,6 +1424,7 @@ class nc_getinfo:
          var_name    = 'fice'
          lower_limit = .15
          bmap        = basemap_OSISAF()
+         conv_fac    = .01
          #
          cyear = self.datetimes[time_index].strftime('%Y')
          cdate = self.datetimes[time_index].strftime('%Y%m%d')
@@ -1382,30 +1449,39 @@ class nc_getinfo:
       lon,lat     = self.get_lonlat()
       Xmod,Ymod   = bmap(lon,lat)
 
+      if '%' in Zobs.units:
+         conv_fac = .01
+      else:
+         conv_fac = 1
+
       if 1:
          #Zref,Zint should be np.ma.array
          lon_ref,lat_ref   = lon2,lat2
-         Xref,Yref,Zref    = Xobs,Yobs,Zobs.values  # obs grid is reference;                 
-         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values  # to be interped from model grid onto obs grid;  Zint is np.ma.array
+         Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
+         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
 
-      # add the mask for the ref to Arr
+      # *interpolate
+      # *add the mask for the ref to Arr
       Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
 
       # add the mask for Arr to Zref
       Zref  = np.ma.array(Zref.data,mask=Arr.mask)
 
-      MPdict   = {'Over':{},'Under':{}}
-      tfiles   = {'Over':{},'Under':{}}
-
       if 0:
          # test interpolation and matching of masks
          fig   = plt.figure()
          ax1   = fig.add_subplot(1,2,1)
-         ax1.imshow(Arr)
+         im1   = ax1.imshow(Arr)
+         fig.colorbar(im1)
+         #
          ax2   = fig.add_subplot(1,2,2)
-         ax2.imshow(Zref)
-         plt.show(fig)
-         return
+         im2   = ax2.imshow(Zref)
+         fig.colorbar(im2)
+         fig.show()
+         # return
+
+      MPdict   = {'Over':{},'Under':{}}
+      tfiles   = {'Over':{},'Under':{}}
 
       if do_sort:
          # possible regions are:
@@ -1440,7 +1516,7 @@ class nc_getinfo:
             return MPdict
       else:
          reg         = 'all'
-         Over,Under  = mc.get_AOD_polys(Arr.values,Zref.values,lon_ref,lat_ref)
+         Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
          MPdict['Over'] .update({reg:Over})
          MPdict['Under'].update({reg:Under})
 
@@ -1469,16 +1545,14 @@ class nc_getinfo:
 
             ##########################################################
             if do_sort:
-               mapreg   = reg
-            else:
-               mapreg   = self.HYCOM_region
+               HYCOMreg   = reg
             ##########################################################
 
 
             ##########################################################
             # process each text file to get MIZ width etc
             print("MIZchar.single_file: "+tfil+"\n")
-            bmap     = Fplt.start_HYCOM_map(mapreg)
+            bmap     = Fplt.start_HYCOM_map(HYCOMreg)
             Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
             Pdict[OU].update({reg:Psolns})
             
@@ -1706,6 +1780,232 @@ def get_record_numbers_HYCOM(bfile):
    return [lut2d,min2d,max2d],[lut3d,min3d,max3d]
    ######################################################################
 
+class HYCOM_grid_info:
+
+   ###################################################################
+   def __init__(self,gridpath='.'):
+      """
+      call hgi = mod_reading.HYCOM_grid_info(gridpath='.')
+      methods:
+      hgi.get_corners    (q-points)
+      hgi.get_centres    (p-points)    - option to only have p-points that are surrounded by q-points
+      hgi.get_grid_sizes (scux,scvy)   - option to only have p-points that are surrounded by q-points
+      hgi.get_areas      (scux*scvy)   - option to only have p-points that are surrounded by q-points
+      """
+
+      self.afile        = gridpath+'/regional.grid.a'
+      self.bfile        = gridpath+'/regional.grid.b'
+      self.afile_depth  = gridpath+'/regional.depths.a'
+      self.bfile_depth  = gridpath+'/regional.depths.b'
+
+      # get grid size & record numbers
+      self._read_bfile()
+
+      return
+   ###################################################################
+
+
+   ###################################################################
+   def _read_bfile(self):
+      bid   = open(self.bfile,'r')
+      lines = bid.readlines()
+      bid.close()
+
+      # get grid size
+      self.Nx  = int(lines[0].split()[0])
+      self.Ny  = int(lines[1].split()[0])
+
+      R     = {}
+      for i,lin in enumerate(lines[3:]):
+         word  = lin.split()[0] # 1st word in line 
+         R.update({word,i})
+
+      self.record_numbers  = R
+      return
+   ###################################################################
+
+
+   ###################################################################
+   def get_array(self,vbl):
+      recno = self.record_numbers[vbl]
+      return get_array_from_HYCOM_binary(self.afile,recno)
+   ###################################################################
+
+
+   ###################################################################
+   def get_corners(self):
+      """
+      call self.get_corners()
+      returns qlon,qlat - corners of grid cells if only using inner points
+      """
+      qlon  = self.get_array('qlon')
+      qlat  = self.get_array('qlat')
+      return qlon,qlat
+   ###################################################################
+
+
+   ###################################################################
+   def get_centres(self,inner_points=False):
+      """
+      call self.get_centres(inner_points=False)
+
+      grid is arranged (Arakawa C-grid):
+      i=-0.5   : q-v-q-v-q-...v-q-v-q-v
+      i=0      : u-p-u-p-u-...p-u-p-u-p
+      i=0.5    : q-v-q-v-q-...v-q-v-q-v
+      i=2      : u-p-u-p-u-...p-u-p-u-p
+      ...
+      i=nx-1.5 : q-v-q-v-q-...v-q-v-q-v
+      i=nx-1   : u-p-u-p-u-...p-u-p-u-p
+      i=nx-0.5 : q-v-q-v-q-...v-q-v-q-v
+      i=nx     : u-p-u-p-u-...p-u-p-u-p
+
+      if inner_points:
+         return plon[:-1,:-1],plat[:-1,:-1]  # ie p-points not surrounded by q points
+         # NB 1st/last rows/cols are "land" (no valid data)
+      else:
+         return plon,plat                    # ie all p-points
+      """
+
+      plon  = self.get_array('plon')
+      plat  = self.get_array('plat')
+      if inner_points:
+         return plon[:-1,:-1],plat[:-1,:-1]
+      else:
+         return plon,plat
+   ###################################################################
+
+
+   ###################################################################
+   def get_grid_sizes(self,inner_points=False):
+      """
+      call self.get_centres(inner_points=False)
+
+      grid is arranged (Arakawa C-grid):
+      i=-0.5   : q-v-q-v-q-...v-q-v-q-v
+      i=0      : u-p-u-p-u-...p-u-p-u-p
+      i=0.5    : q-v-q-v-q-...v-q-v-q-v
+      i=2      : u-p-u-p-u-...p-u-p-u-p
+      ...
+      i=nx-1.5 : q-v-q-v-q-...v-q-v-q-v
+      i=nx-1   : u-p-u-p-u-...p-u-p-u-p
+      i=nx-0.5 : q-v-q-v-q-...v-q-v-q-v
+      i=nx     : u-p-u-p-u-...p-u-p-u-p
+
+      if inner_points:
+         return scux[:-1,:-1],scvy[:-1,:-1]  # ie grid sizes corresponding to p-points not surrounded by q points
+         # NB 1st/last rows/cols are "land" (no valid data)
+      else:
+         return scux,scvy                    # ie grid sizes corresponding to all p-points
+      """
+      scux  = self.get_array('scux')
+      scvy  = self.get_array('scvy')
+      if inner_points:
+         return scux[:-1,:-1],scvy[:-1,:-1]
+      else:
+         return scux,scvy
+   ###################################################################
+
+   ###################################################################
+   def get_areas(self,inner_points=False):
+      """
+      call self.get_centres(inner_points=False)
+
+      grid is arranged (Arakawa C-grid):
+      i=-0.5   : q-v-q-v-q-...v-q-v-q-v
+      i=0      : u-p-u-p-u-...p-u-p-u-p
+      i=0.5    : q-v-q-v-q-...v-q-v-q-v
+      i=2      : u-p-u-p-u-...p-u-p-u-p
+      ...
+      i=nx-1.5 : q-v-q-v-q-...v-q-v-q-v
+      i=nx-1   : u-p-u-p-u-...p-u-p-u-p
+      i=nx-0.5 : q-v-q-v-q-...v-q-v-q-v
+      i=nx     : u-p-u-p-u-...p-u-p-u-p
+
+      if inner_points:
+         return scux[:-1,:-1],scvy[:-1,:-1]  # ie grid sizes corresponding to p-points not surrounded by q points
+         # NB 1st/last rows/cols are "land" (no valid data)
+      else:
+         return scux,scvy                    # ie grid sizes corresponding to all p-points
+      """
+      scux,scvy   = self.get_grid_sizes(inner_points=inner_points)
+      return scux*scvy
+   ###################################################################
+
+
+   ###################################################################
+   def get_depth(self,inner_points=False):
+     dep = get_array_from_HYCOM_binary(self.afile_depth,1)
+     if inner_points:
+        return dep[:-1,:-1]
+     else:
+        return dep
+   ###################################################################
+
+
+   ###################################################################
+   def land_mask(self,inner_points=False):
+      dep   = self.get_depth(self,inner_points=inner_points)
+      return (dep==0.) # mask land out
+   ###################################################################
+
+
+   ###################################################################
+   def create_ESMF_grid(self,do_mask):
+      import ESMF
+      maxIndex       = [self.Nx-1,self.Ny-1] # no of centres
+      coordTypeKind  = 'r8'                  # real double
+      coordSys       = ESMF.CoordSys.SPH_DEG      # lon,lat (degrees) or SPH_DEG or CART
+      numPeriDims    = 1                     # no of periodic dimensions (lon)
+      staggerlocs    = [ESMF.StaggerLoc.CORNER,ESMF.StaggerLoc.CENTER]
+
+      Egrid = ESMF.Grid(maxIndex, numPeriDims=numPeriDims, coordSys=coordSys,\
+                        coordTypeKind=coordTypeKind, staggerlocs=staggerlocs)
+
+      # # VM - needed?
+      # vm = ESMF.ESMP_VMGetGlobal()
+      # localPet, petCount = ESMF.ESMP_VMGet(vm)
+  
+      # ========================================================
+      # CORNERS
+      # get the coordinate pointers and set the coordinates
+      [x,y]       = [0, 1]
+      gridXCorner = Egrid.get_coords(x, ESMF.StaggerLoc.CORNER)
+      gridYCorner = Egrid.get_coords(y, ESMF.StaggerLoc.CORNER)
+
+      qlon,qlat         = self.get_corners()
+      gridXCorner[:,:]  = qlon
+      gridYCorner[:,:]  = qlat
+      # ========================================================
+  
+  
+      # ========================================================
+      # CENTERS
+      # get the coordinate pointers and set the coordinates
+      [x,y]       = [0, 1]
+      gridXCenter = Egrid.get_coords(x, ESMF.StaggerLoc.CENTER)
+      gridYCenter = Egrid.get_coords(y, ESMF.StaggerLoc.CENTER)
+  
+      plon,plat         = self.get_centres(inner_points=True)
+      gridXCenter[:,:]  = plon
+      gridYCenter[:,:]  = plat
+      # ========================================================
+
+
+      # ========================================================
+      if do_mask:
+        # set up the grid mask
+        grid.add_item(ESMF.GridItem.MASK)
+        mask      = Egrid.get_item(ESMF.GridItem.MASK) # pointer
+        mask[:,:] = self.land_mask()
+      # ========================================================
+      
+
+      return Egrid
+   ###################################################################
+
+######################################################################
+
 
 ######################################################################
 class HYCOM_binary_info:
@@ -1725,6 +2025,7 @@ class HYCOM_binary_info:
       basename                = fname.split('/')[-1]
       self.basename           = basename[:-2]
       self.HYCOM_region       = basename[:3]
+
 
       # info from bfile
       lut2d,lut3d = get_record_numbers_HYCOM(self.bfile)
@@ -1779,7 +2080,13 @@ class HYCOM_binary_info:
       self.time_value   = float(line.split()[-5]) # model time (days)
       bid.close()
 
-      self.reference_date  = datetime(1900,12,31)
+      if 'DAILY' in self.basename:
+         # "model day" has a different ref time to archv for some reason
+         self.reference_date  = datetime(1900,12,30)
+      else:
+         # archv,archv_wav
+         self.reference_date  = datetime(1900,12,31)
+
       self.datetime        = self.reference_date+timedelta(self.time_value)
       self.datetimes       = [self.datetime]
       self.time_values     = [self.time_value]
@@ -2371,13 +2678,18 @@ class HYCOM_binary_info:
       lon,lat     = self.get_lonlat()
       Xmod,Ymod   = bmap(lon,lat)
 
+      if '%' in Zobs.units:
+         conv_fac = .01
+      else:
+         conv_fac = 1
+
       if 1:
          #Zref,Zint should be np.ma.array
          lon_ref,lat_ref   = lon2,lat2
-         Xref,Yref,Zref    = Xobs,Yobs,Zobs.values  # obs grid is reference;                 
-         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values  # to be interped from model grid onto obs grid;  Zint is np.ma.array
+         Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
+         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
 
-      # add the mask for the ref to Arr
+      # add the mask for the ref to output (Arr)
       Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
 
       # add the mask for Arr to Zref
@@ -2429,7 +2741,7 @@ class HYCOM_binary_info:
             return MPdict
       else:
          reg         = 'all'
-         Over,Under  = mc.get_AOD_polys(Arr.values,Zref.values,lon_ref,lat_ref)
+         Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
          MPdict['Over'] .update({reg:Over})
          MPdict['Under'].update({reg:Under})
 
@@ -2536,11 +2848,12 @@ class HYCOM_binary_info:
 
       fig,ax,cbar = pobj.get()
 
+      dtmo  = self.datetimes[0]
       if obs_type=='OSISAF':
          obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+\
-               self.datetime.strftime('%Y')+'_nh_polstere/'+\
+               dtmo.strftime('%Y')+'_nh_polstere/'+\
                'ice_conc_nh_polstere-100_multi_'+\
-               self.datetime.strftime('%Y%m%d')+'1200.nc'
+               dtmo.strftime('%Y%m%d')+'1200.nc'
       else:
          raise ValueError('invalid value of obs_type: '+obs_type)
 
@@ -2551,8 +2864,13 @@ class HYCOM_binary_info:
       bmap.contour(lon,lat,fice.values[:,:],[15],colors='g',\
             linewidths=2,ax=ax,latlon=True)
 
-      dtmo     = self.datetimes[0]
-      if self.HYCOM_region=='TP4':
+      if 'HYCOMreg' in kwargs:
+         reg   = kwargs['HYCOMreg']
+      else:
+         reg   = self.HYCOM_region
+         kwargs.update({'HYCOMreg':reg})
+
+      if reg=='TP4':
          xyann = (0.05,.925)
       else:
          xyann = (0.4,.925)
