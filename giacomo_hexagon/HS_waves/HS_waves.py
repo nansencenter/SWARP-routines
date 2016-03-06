@@ -221,6 +221,7 @@ class reader:
         sconc = 'icec'
         sthic = 'icetk'
         shsnow = 'hsnow'
+        sst = 'sst'
         sqtot = 'qtot'
         sqcool = 'flx_cool'
         sqother = 'flx_itop'
@@ -245,6 +246,8 @@ class reader:
         thic = thic[:,:]
         hsnow = Mrdg.nc_get_var(ncfil,shsnow,time_index=tidx)
         hsnow = hsnow[:,:]
+        sst = Mrdg.nc_get_var(ncfil,sst,time_index=tidx)
+        sst = sst[:,:]
         qtot = Mrdg.nc_get_var(ncfil,sqtot,time_index=tidx)
         qtot = qtot[:,:]
         qcool = Mrdg.nc_get_var(ncfil,sqcool,time_index=tidx)
@@ -274,6 +277,8 @@ class reader:
                 self.TOI,self.HSO,self.HSD,self.FDI,self.TDI,self.TXI,self.TYI =\
                 conc,thic,shsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,\
                 hsnow_diff,conc_diff,thic_diff,taux,tauy
+        
+        self.sst = sst
         
         print('Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,'+\
                 'hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy')
@@ -1700,7 +1705,20 @@ def HS_save(data,data2,region):
    HS_avg = np.nanmean(ndata)
    filname = str(region)+'_HS_data.txt'
    with open(filname,'a') as f:
-       row1 = [HS_max,HS_avg,MWD_avg]
+       row1 = [dadate,HS_max,HS_avg,MWD_avg]
+       str1 = ' '.join(map(str,row1))
+       f.write(str1)
+       f.write('\n')
+       f.close()
+
+def QA_save(data,data2,region):
+   ndata = mask_region(data,region)
+   ndata2 = mask_region(data2,region)
+   QA_avg = np.nanmean(ndata)
+   tmp_avg = np.nanmean(ndata2)
+   filname = str(region)+'_QA_tmp_data.txt'
+   with open(filname,'a') as f:
+       row1 = [dadate,QA_avg,tmp_avg]
        str1 = ' '.join(map(str,row1))
        f.write(str1)
        f.write('\n')
@@ -1743,8 +1761,8 @@ print('DONE')
 print('')
 
 print('Getting the wave data...')
-HS_save(data.SWHW,data.MWDW,'bar')
-HS_save(data.SWHW,data.MWDW,'gre')
+QA_save(data.QA,data.sst,'bar')
+QA_save(data.QA,data.sst,'gre')
 print('DONE!')
 
 #if region == 'bar':

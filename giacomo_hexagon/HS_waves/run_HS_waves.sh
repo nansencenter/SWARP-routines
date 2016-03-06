@@ -1,6 +1,6 @@
 #!/bin/bash
 
-startdate='20150301'
+startdate='20150302'
 enddate='20150930'
 sdj=$(date --date="$startdate" +%j)
 edj=$(date --date="$enddate" +%j)
