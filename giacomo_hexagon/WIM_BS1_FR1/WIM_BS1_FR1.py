@@ -19,7 +19,7 @@ import subprocess
 import shutil
 import matplotlib
 #NOTE to be used only on servers (i.e. Hexagon)
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -61,10 +61,10 @@ class reader:
         self.tidx_i,self.tidx_w = self.time_frame(gigio)
 
         #Reading the datasets
-        self._read_osi_(dadate,bmo)
+        #self._read_osi_(dadate,bmo)
         #self._read_osi_2(dadate,bmo)
-        self._read_mdl_DAILY(self.data_date,dadate,bmm)
-        self._read_mdl_ice_only(self.data_date,bmm)
+        #self._read_mdl_DAILY(self.data_date,dadate,bmm)
+        #self._read_mdl_ice_only(self.data_date,bmm)
         self._read_mdl_waves_ice(self.data_date,bmm)
 
     def jday_start(self,jday):
@@ -198,7 +198,6 @@ class reader:
 
         return()
 
-
     def _read_mdl_ice_only(self,data_date,basemap):
         
         # NetCDF reader 
@@ -292,6 +291,7 @@ class reader:
 
         # TIME INDEX
         tidx = self.tidx_w
+        tidx = 0
 
         # Read TP4arch_wav
         if jdaystart < 100:
@@ -301,7 +301,10 @@ class reader:
            outdir = '/work/timill/RealTime_Models/results_hindcasts/TP4a0.12/'+\
                    'wavesice/2015_GOOD/2015_'+str(jdaystart)+'/final_output'
 
+        outdir = '/home/charlie/Documents/ncdata'
         ncfil = outdir+'/SWARP_hindcast_wavesice_start'+data_date+'T000000Z.nc'
+        ncfil = outdir+'/SWARPwavesice_forecast_start'+dadate+'_UTC000000.nc'
+        print ncfil
         slon = 'longitude'
         slat = 'latitude'
         sconc = 'icec'
@@ -325,14 +328,15 @@ class reader:
         dmax = dmax[:,:]
         swh = Mrdg.nc_get_var(ncfil,sswh,time_index=tidx)
         swh = swh[:,:]
-        taux = Mrdg.nc_get_var(ncfil,staux,time_index=tidx)
-        taux = taux[:,:]
-        tauy = Mrdg.nc_get_var(ncfil,stauy,time_index=tidx)
-        tauy = tauy[:,:]
-        mwd = Mrdg.nc_get_var(ncfil,smwd,time_index=tidx)
-        mwd = mwd[:,:]
-        self.ZCW,self.ZTW,self.ZDW,self.SWHW,self.MWDW,self.TXW,self.TYW =\
-                conc,thic,dmax,swh,mwd,taux,tauy
+        #taux = Mrdg.nc_get_var(ncfil,staux,time_index=tidx)
+        #taux = taux[:,:]
+        #tauy = Mrdg.nc_get_var(ncfil,stauy,time_index=tidx)
+        #tauy = tauy[:,:]
+        #mwd = Mrdg.nc_get_var(ncfil,smwd,time_index=tidx)
+        #mwd = mwd[:,:]
+        #self.ZCW,self.ZTW,self.ZDW,self.SWHW,self.MWDW,self.TXW,self.TYW =\
+        #        conc,thic,dmax,swh,mwd,taux,tauy
+        self.ZC,self.ZT,self.ZD,self.SWH = conc,thic,dmax,swh
 
         print('Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy')
        
@@ -827,9 +831,9 @@ def basemap_creator(region,cres='i'):
     
     elif region=='FR1':
         lonc     = 0.5
-        latc     = 78.75
+        latc     = 74.75
         lat_ts   = latc
-        rad      = 6.0 # radius in deg
+        rad      = 12.0 # radius in deg
         width    = 2*rad*111.e3
         height   = 2*rad*111.e3
         #
@@ -893,6 +897,17 @@ def closing(data):
     data_cl = morph.closing(data,kernel)
     return(data_cl)
 
+# Function to plot a variable
+def plot_var(data,lon,lat,bm):
+    bm.pcolor(lon,lat,data,latlon=True)
+    bm.drawcoastlines()
+    bm.fillcontinents()
+    bm.drawparallels(np.arange(50,90,5),labels=[1,0,0,0], linewidth=0.0)
+    bm.drawmeridians(np.arange(-50,70,10),labels=[0,0,0,1], linewidth=0.0)
+    plt.show(False)
+    return()
+
+
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # Beginning of the script
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -910,10 +925,10 @@ print('Basemap creation...')
 bmm = basemap_creator('TP4')
 bmo = basemap_creator('OSI')
 #if region == 'bar':
-#   bmb = basemap_creator('BS1')
+bmb = basemap_creator('BS1')
 #   print('Barents!')
 #elif region == 'gre':
-#   bmf = basemap_creator('FR1')
+bmf = basemap_creator('FR1')
 #   print('Greenland!')
 elapsedtime = time.time() - time1
 print 'Basemap created in ',elapsedtime
