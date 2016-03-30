@@ -21,6 +21,7 @@ forecast_scripts/test/*
 forecast_scripts/test_check/*
 forecast_scripts/out/*
 forecast_scripts/ice_only/logs/
+forecast_scripts/utility_scripts/logs/
 #
 forecast_scripts/ModelSetups/TP4a0.12/ice_only/logs/
 forecast_scripts/ModelSetups/BS1a0.045/ice_only/logs/

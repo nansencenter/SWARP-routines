@@ -34,7 +34,22 @@ then
    echo "- launch from root model directory eg 'TP4a0.12'"
    echo " "
    exit
+else
+   source REGION.src       # need R variable
+   rungen=${R:0:3}
 fi
+
+if [ $rungen == 'TP4' ]
+then
+   nmpi=133
+elif [ $rungen == 'BS1' ]
+then
+   nmpi=112
+elif [ $rungen == 'FR1' ]
+then
+   nmpi=51
+fi
+JOBNAME=${rungen}HC$E
 
 mkdir -p $enew
 mkdir -p $enew/data
@@ -56,6 +71,7 @@ then
    done
 
    cd $enew
+   mkdir -p log
 
    # Change EXPT.src
    mv EXPT.src EXPT.src.tmp
@@ -72,6 +88,13 @@ then
       sed "s/$ss/ $E\t  'iexpt ' = experiment number x10/" \
       > blkdat.input
    rm blkdat.input.tmp
+
+   # change pbsjob.sh
+   cat $FCcommon/inputs/pbsjob.sh | sed \
+        -e "s/JOBNAME/$JOBNAME/g" \
+        -e "s/MPPWIDTH/$nmpi/g" \
+        -e "s/exit \$?//g" \
+        > pbsjob.sh
 
    # nesting
    if [ -d $eold/nest_out* ]
