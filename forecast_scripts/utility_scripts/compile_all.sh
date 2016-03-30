@@ -37,8 +37,11 @@ fi
 logdir=$here/logs
 mkdir -p $logdir
 logfile=$logdir/compile.log
-rm -r $logfile
-touch $logfile
+rm -f $logfile
+echo "************************************************************"  >  $logfile
+echo "Recompiling HYCOM (no error means compilation was succesful)"  >> $logfile
+echo "************************************************************"  >> $logfile
+echo " "                                                             >> $logfile
 
 for Xno in 1 3
 do
