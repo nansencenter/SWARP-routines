@@ -493,7 +493,7 @@ fi
 # - thermobaric reference state?
 # 
 echo "**Setting up various forcing files"
-touch tbaric.a tbaric.b
+#touch tbaric.a tbaric.b
 ${pget} $BASEDIR/topo/tbaric.a tbaric.a  || tellwarn "Could not get tbaric.a"
 ${pget} $BASEDIR/topo/tbaric.b tbaric.b  || tellwarn "Could not get tbaric.b"
 
