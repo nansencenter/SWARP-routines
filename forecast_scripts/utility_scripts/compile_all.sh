@@ -48,6 +48,9 @@ do
    for rdir in $TP4_REALTIME
    do
       cd $rdir/Build_V2.2.12_X01.$Xno
+      pwd
+      echo " "
+
       pwd                                       >> $logfile
       echo " "                                  >> $logfile
       python $here/print_flags.py               >> $logfile
@@ -57,6 +60,7 @@ do
       echo " "                                  >> $logfile
    done
 done
+# exit
 
 for Xno in 0 1
 do
