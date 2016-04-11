@@ -5,9 +5,9 @@
 # 1. Update wam_nsea_fc_YYYY.nc file with forecast data from met.no WAMNSEA 10km 
 # ==============================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THISFC="$FORECAST/ModelSetups/common/ww3arctic_data"
-fget="$THISFC/ww3_arctic_download.sh"
-fsort="$THISFC//ww3_arctic_sort.sh"
+HERE="$FORECAST/ModelSetups/common/ww3arctic_data"
+fget="$HERE/ww3_arctic_download.sh"
+fsort="$HERE/ww3_arctic_sort.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 cycle=2 # get 05:20 update from ifremer server
 print_info=0
@@ -86,7 +86,7 @@ do
       $fget    $ddate $cycle
 
       echo "Sorting WW3 Arctic files for $ddate"  >> $log
-      $fsort   $ddate $cycle
+      $fsort   $ddate $cycle 1
       DLS=$((DLS+1))
    # else
    #    echo "WW3 Arctic files present for $ddate"      >> $log
