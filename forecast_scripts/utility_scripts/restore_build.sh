@@ -80,7 +80,7 @@ cat ../bak/$file | sed \
 if [ ! -f ../expt_$X/blkdat.input ]
 then
    # need some files from expt directory
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_expt.sh $HYCOMreg $Xno
+   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_expt.sh $HYCOMreg $FCtype
 fi
 
 echo cp svn_Build/* .
