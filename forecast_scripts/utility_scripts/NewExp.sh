@@ -1,3 +1,4 @@
+# run from regional directory eg TP4a0.12
 exp=1
 lnk=1
 Bld=1
@@ -162,17 +163,7 @@ then
       cp    $B1/dimensions_nersc.h $B2
    else
       # run setuppatch.sh (needs blkdat.input correct)
-
-      if [ ${R:0:3} == "TP4" ]
-      then
-        ./setuppatch 133
-      elif [ ${R:0:3} == "BS1" ]
-      then
-        ./setuppatch 112
-      elif [ ${R:0:3} == "FR1" ]
-      then
-        ./setuppatch 51
-      fi
+     ./setuppatch $nmpi
    fi
 
    # cp svn_Build/* .
@@ -202,5 +193,3 @@ echo ""
 echo "Also (TW comments):"
 echo "1. Now need to get restart files and maybe nesting_out directory"
 echo "2. Check links to flags, dependencies and Makefile are OK"
-echo "3. Run setuppatch.sh in Build to make dimensions_nersc.h"
-echo "   eg ./setuppatch.sh 133 for TP4"
