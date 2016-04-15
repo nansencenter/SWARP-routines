@@ -1,0 +1,6 @@
+Total_perimeter :           721218
+Total_area :       9004294331
+Mean_intersecting_width :            36129
+Mean_total_width :            36922
+Maximum_intersecting_width :            74679
+Maximum_total_width :            75306

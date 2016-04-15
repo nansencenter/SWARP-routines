@@ -13,11 +13,6 @@ from email.mime.text import MIMEText
 from scipy.interpolate import griddata as grd
 from operator import itemgetter as itg
 
-# not present (2.7.2)
-import pygrib
-from ncepgrib2 import Grib2Encode as g2e  # part of pygrib package
-# import rtree.index      as Rindex         # not originally requested 
-# 
 # errors in import (2.7.2)
 from skimage import measure as msr
 # 
@@ -26,3 +21,8 @@ from netCDF4 import Dataset
 
 # # not present (2.7.9)
 import rtree.index      as Rindex         # not originally requested 
+
+# pygrib doesn't work in conda
+if 0:
+   import pygrib
+   from ncepgrib2 import Grib2Encode as g2e  # part of pygrib package

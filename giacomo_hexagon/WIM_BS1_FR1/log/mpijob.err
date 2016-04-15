@@ -1,0 +1,1055 @@
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1899, in <module>
+    gre_AOD = AODwidth(XMo,YMo,ZM,XO,YO,ZO,bmo,'gre')
+  File "MIZ_BS1_FR1.py", line 1327, in __init__
+    self.regional_save(ZO,ZMo,ovr_list,und_list,ovr_area,und_area,ovr_clonlat,und_clonlat,region,basemap)
+  File "MIZ_BS1_FR1.py", line 1588, in regional_save
+    ovr_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+
+Warning: netcdf module is deprecated!
+Please, whenever possible, use instead the cray-netcdf module.
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1889, in <module>
+    gre_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'gre')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum
+Traceback (most recent call last):
+  File "MIZ_BS1_FR1.py", line 1854, in <module>
+    bar_mdl_MIZ = MIZwidth(XM,YM,ZM,bmm,'bar')
+  File "MIZ_BS1_FR1.py", line 904, in __init__
+    self.regional_save(Z,poly_list,area_list,perim_list,clonlat_list,basemap,region)
+  File "MIZ_BS1_FR1.py", line 1095, in regional_save
+    reg_widths = widths.single_file(filname,basemap)
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/MIZchar.py", line 2084, in single_file
+    import fns_Stefan_Maps as FSM
+  File "/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/py_funs/fns_Stefan_Maps.py", line 3, in <module>
+    import rtree.index	as Rindex
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/__init__.py", line 1, in <module>
+    from .index import Rtree
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/index.py", line 6, in <module>
+    from . import core
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/site-packages/Rtree-0.8.2-py2.7.egg/rtree/core.py", line 110, in <module>
+    rt.Error_GetLastErrorNum.restype = ctypes.c_int
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 378, in __getattr__
+    func = self.__getitem__(name)
+  File "/work/apps/python/2.7.9-dso-gnu/lib/python2.7/ctypes/__init__.py", line 383, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: python: undefined symbol: Error_GetLastErrorNum

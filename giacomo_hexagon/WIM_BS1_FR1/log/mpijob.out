@@ -1,0 +1,928 @@
+> hexagon-3 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+Basemap creation...
+Greenland!
+Basemap created in  14.8255429268
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Basemap creation...
+Greenland!
+Basemap created in  14.5906100273
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Basemap creation...
+Greenland!
+Basemap created in  14.6032459736
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Basemap creation...
+Greenland!
+Basemap created in  14.5866911411
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Basemap creation...
+Greenland!
+Basemap created in  14.6092209816
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Basemap creation...
+Greenland!
+Basemap created in  14.6172380447
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Basemap creation...
+Greenland!
+Basemap created in  14.6099829674
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing AOD...
+Application 5348032 exit codes: 1
+Application 5348032 resources: utime ~164s, stime ~13s, Rss ~421836, inblocks ~8118217, outblocks ~15287
+--------------------------------------------------
+Begin PBS Epilogue hexagon.bccs.uib.no
+Date:             Wed Feb 24 15:50:28 CET 2016
+Job ID:           1853911.sdb
+Username:         timill
+Group:            nersc
+Job Name:         MIZ_BS1_FR1_AOD_8
+Session:          8643
+Limits:           mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+Resources:        energy_used=0,walltime=00:03:35
+Queue:            small
+Account:          nn2993k
+End PBS Epilogue  Wed Feb 24 15:50:28 CET 2016
+--------------------------------------------------
+> hexagon-4 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+> hexagon-1 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+Basemap creation...
+Basemap creation...
+Greenland!
+Basemap created in  14.7942228317
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  21.0808341503
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.5926589966
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.9104931355
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.606096983
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.8956038952
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Greenland!
+Basemap created in  14.6185061932
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Basemap creation...
+Barents!
+Basemap created in  20.8953549862
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6106629372
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.8929841518
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6105298996
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.9036140442
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6166009903
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.9022328854
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Application 5348047 exit codes: 1
+Application 5348047 resources: utime ~983s, stime ~14s, Rss ~538112, inblocks ~8118210, outblocks ~378014
+--------------------------------------------------
+Begin PBS Epilogue hexagon.bccs.uib.no
+Date:             Wed Feb 24 16:24:43 CET 2016
+Job ID:           1853918.sdb
+Username:         timill
+Group:            nersc
+Job Name:         MIZ_FR1_1
+Session:          1290
+Limits:           mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+Resources:        energy_used=0,walltime=00:17:14
+Queue:            small
+Account:          nn2993k
+End PBS Epilogue  Wed Feb 24 16:24:43 CET 2016
+--------------------------------------------------
+DONE
+
+Analysing model MIZ (widths)...
+Application 5348045 exit codes: 1
+Application 5348045 resources: utime ~1027s, stime ~14s, Rss ~539812, inblocks ~8118210, outblocks ~291729
+--------------------------------------------------
+Begin PBS Epilogue hexagon.bccs.uib.no
+Date:             Wed Feb 24 16:25:23 CET 2016
+Job ID:           1853917.sdb
+Username:         timill
+Group:            nersc
+Job Name:         MIZ_BS1_1
+Session:          6685
+Limits:           mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+Resources:        energy_used=0,walltime=00:18:00
+Queue:            small
+Account:          nn2993k
+End PBS Epilogue  Wed Feb 24 16:25:23 CET 2016
+--------------------------------------------------
+> hexagon-4 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+> hexagon-1 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+Basemap creation...
+Basemap creation...
+Barents!
+Basemap created in  21.0596849918
+
+Reading datasets...
+Greenland!
+Basemap created in  14.6314020157
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Basemap creation...
+Greenland!
+Basemap created in  14.6067531109
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.9085857868
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.596820116
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.9070620537
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6065249443
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.904378891
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6215469837
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+DONE
+
+Analysing model MIZ (widths)...
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Basemap creation...
+Barents!
+Basemap created in  20.900454998
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6080970764
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.8944029808
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6025340557
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.9038932323
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Application 5348087 exit codes: 1
+Application 5348087 resources: utime ~976s, stime ~14s, Rss ~538112, inblocks ~8118210, outblocks ~357873
+--------------------------------------------------
+Begin PBS Epilogue hexagon.bccs.uib.no
+Date:             Wed Feb 24 16:57:24 CET 2016
+Job ID:           1853926.sdb
+Username:         timill
+Group:            nersc
+Job Name:         MIZ_FR1_1
+Session:          13496
+Limits:           mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+Resources:        energy_used=0,walltime=00:16:57
+Queue:            small
+Account:          nn2993k
+End PBS Epilogue  Wed Feb 24 16:57:24 CET 2016
+--------------------------------------------------
+DONE
+
+Analysing model MIZ (widths)...
+Application 5348085 exit codes: 1
+Application 5348085 resources: utime ~1027s, stime ~14s, Rss ~539812, inblocks ~8118210, outblocks ~288746
+--------------------------------------------------
+Begin PBS Epilogue hexagon.bccs.uib.no
+Date:             Wed Feb 24 16:58:04 CET 2016
+Job ID:           1853925.sdb
+Username:         timill
+Group:            nersc
+Job Name:         MIZ_BS1_1
+Session:          20847
+Limits:           mppnodect=1,mppnppn=1,mppwidth=1,walltime=00:30:00
+Resources:        energy_used=0,walltime=00:18:04
+Queue:            small
+Account:          nn2993k
+End PBS Epilogue  Wed Feb 24 16:58:04 CET 2016
+--------------------------------------------------
+> hexagon-4 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+Basemap creation...
+> hexagon-1 <
+nmpi=1
+nomp=0
+PBS_O_WORKDIR= /work/users/timill/giacomo/MIZ_BS1_FR1 
+Launching job from:
+/work/users/timill/giacomo/MIZ_BS1_FR1
+Barents!
+Basemap created in  20.9221961498
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Basemap creation...
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+Greenland!
+Basemap created in  14.630751133
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.9108710289
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+Greenland!
+Basemap created in  14.5939691067
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Barents!
+Basemap created in  20.8985800743
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+Greenland!
+Basemap created in  14.6828510761
+
+Reading datasets...
+DAILY: lonM,latM,X,Y,ZC,ZT
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Analysing WIM (stresses and growths)...
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Basemap creation...
+Greenland!
+Basemap created in  14.6139068604
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.9037311077
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.5954101086
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.8987519741
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+Greenland!
+Basemap created in  14.6011531353
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Barents!
+Basemap created in  20.9033000469
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
+DONE
+
+Analysing model MIZ (widths)...
+Basemap creation...
+DONE
+
+Analysing model MIZ (widths)...
+Greenland!
+Basemap created in  14.6197910309
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the GREENLAND region...
+
+Analysing WIM (stresses and growths)...
+Basemap creation...
+Barents!
+Basemap created in  20.9246139526
+
+Reading datasets...
+OSI-SAF: lonO,latO,XO,YO,ZO
+DAILY: lonM,latM,X,Y,ZC,ZT
+Ice Only: lonM,latM,X,Y,ZC,ZT,hsnow,qtot,qcool,qother,qatm,conc_old,thic_old,hsnow_old,hsnow_diff,conc_diff,thic_diff,taux,tauy
+Wave Ice: lonM,latM,X,Y,ZC,ZT,ZD,swh,mwd,taux,tauy
+DONE
+
+Studying the BARENTS region...
+
+Analysing WIM (stresses and growths)...
