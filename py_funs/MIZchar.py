@@ -19,6 +19,7 @@ import fns_plotting as Fplt
 # - 'Close' seems best
 MORPH = 'Close'
 
+
 #################################################################
 def get_region_v2(llc=None):
    """
@@ -219,7 +220,7 @@ def get_region_v2(llc=None):
 #################################################################
 
 ################################################################################
-def mask_region(MIZbins,lon,lat,region):
+def mask_region(MIZbins,lon,lat,region=None,vertices=None):
 
    shp         = MIZbins.shape
    sz          = MIZbins.size
@@ -230,18 +231,70 @@ def mask_region(MIZbins,lon,lat,region):
    ICEmask     = MIZbins.ICEmask .reshape(sz)
    PACKmask    = MIZbins.PACKmask.reshape(sz)
 
+   # fig   = plt.figure()
+   # ax1   = fig.add_subplot(1,2,1)
+   # # ax1.imshow(MIZmask.reshape(shp).transpose(),origin='lower')
+
    lons  = lon.reshape(sz)
    lats  = lat.reshape(sz)
 
-   for i in np.where(MIZmask==1)[0]:
-      # where there is MIZ, check if it's in the region
-      # - if not set MIZ=0,ICE,PACK=NaN
+   if vertices is not None:
+      print('\nUsing vertices to restrict MIZ calculation')
+      jMIZ     = np.where(MIZmask==1)[0]
+      MIZlons  = lons[jMIZ]
+      MIZlats  = lats[jMIZ]
+      #
+      MM = MIZmask[jMIZ]
+      IM = MIZmask[jMIZ]
+      PM = MIZmask[jMIZ]
+
+      # simple (fast) stereographic projection
+      xMIZ,yMIZ   = GS.polar_stereographic_simple(MIZlons,MIZlats,NH=True,inverse=False)
+      # ax1.plot(xMIZ,yMIZ,'.')
+      
+      # Mask out points not inside the polygon
+      vlons,vlats = np.array(vertices).transpose()
+      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+      xyverts     = [(vx[i],vy[i]) for i in range(len(vx))]
+
+      # make sure polygon is closed
+      if xyverts[0] != xyverts[-1]:
+         print('- closing polygon')
+         xyverts.append(xyverts[0])
+
+      inside   = GP.maskgrid_outside_polygon(xMIZ,yMIZ,xyverts) #true if inside poly
+      outside  = np.logical_not(inside)
+      # ax1.plot(xMIZ[inside],yMIZ[inside],'or')
+      # ax1.plot(vx,vy,'-')
+
+      # if not in region set MIZ=0,ICE,PACK=NaN
       # - effectively this is land, so these boundaries become "unknown"
-      llc   = (lons[i],lats[i])
-      if get_region_v2(llc)!=region:
-         MIZmask [i] = 0
-         ICEmask [i] = np.nan
-         PACKmask[i] = np.nan
+      MM[outside]    = 0.
+      IM[outside]    = np.nan
+      PM[outside]    = np.nan
+      MIZmask [jMIZ] = MM
+      ICEmask [jMIZ] = IM
+      PACKmask[jMIZ] = PM
+
+      # ax2   = fig.add_subplot(1,2,2)
+      # # ax2.imshow(MIZmask.reshape(shp).transpose(),origin='lower')
+      # # ax2.imshow(ICEmask.reshape(shp).transpose(),origin='lower')
+      # ax2.imshow(PACKmask.reshape(shp).transpose(),origin='lower')
+      # plt.show(fig)
+      # raise ValueError('HEY!')
+     
+   elif region is None:
+      raise ValueError('Need to provide vertices or name of region')
+   else:
+      for i in np.where(MIZmask==1)[0]:
+         # where there is MIZ, check if it's in the region
+         # - if not set MIZ=0,ICE,PACK=NaN
+         # - effectively this is land, so these boundaries become "unknown"
+         llc   = (lons[i],lats[i])
+         if get_region_v2(llc)!=region:
+            MIZmask [i] = 0
+            ICEmask [i] = np.nan
+            PACKmask[i] = np.nan
 
    MIZmask  = MIZmask .reshape(shp)
    ICEmask  = ICEmask .reshape(shp)
@@ -704,7 +757,7 @@ def arrays2binary_diff(Zmod,Zobs,threshm):
 
 
 ############################################################################
-def get_MIZ_poly(ZM,lon,lat,var_name='dmax',region=None):
+def get_MIZ_poly(ZM,lon,lat,var_name='dmax',region=None,vertices=None):
    """
    get_MIZ_poly(ZM,var_name='dmax')
    *ZM is a masked array
@@ -727,8 +780,10 @@ def get_MIZ_poly(ZM,lon,lat,var_name='dmax',region=None):
    MIZbins  = array2binaries(ZM,thresh_min,thresh_max,var_name)
       # icemap is 0: water; 1: MIZ; 2: pack; NaN: land
 
+   if vertices is not None:
+      MIZbins  = mask_region(MIZbins,lon,lat,vertices=vertices)
    if region is not None:
-      MIZbins  = mask_region(MIZbins,lon,lat,region)
+      MIZbins  = mask_region(MIZbins,lon,lat,region=region)
    
    return MIZ_poly(MIZbins,lon,lat,region=region)
       # object with contours of MIZ and some methods 
@@ -861,9 +916,9 @@ class MIZ_poly:
          arr2  = np.transpose(arr)
          ny,nx = arr2.shape
          ax    = fig.add_subplot(2,2,i+1)
-         im    = ax.imshow(arr2)
+         im    = ax.imshow(arr2,origin='upper')
          ax.set_title(ttl[i])
-         ax.axis([0,nx,0,ny])
+         # ax.axis([0,nx,0,ny])
          fig.colorbar(im)
          for cont in self.MIZcont:
             ivec  = cont[:,0]
@@ -887,6 +942,9 @@ class MIZ_poly:
    #############################################################
    def write_poly_stats(self,outdir='.',\
          filename_start='MIZpolys',do_sort=True):
+
+      if not os.path.exists(outdir):
+         os.mkdir(outdir)
 
       if self.region is None:
          do_sort  = False
