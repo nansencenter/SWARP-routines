@@ -90,7 +90,12 @@ THREDDS="/mnt/10.11.12.232/Projects/SWARP/Thredds_data_dir" # final destination 
 SRjoh="/Data/sim/tim/Projects/SWARP/SWARP-routines"         # location of SWARP routines on johansen
 TP4rt="/work/timill/RealTime_Models/results/$Reg"           # location of forecast outputs on hexagon
 hidden=$SRjoh/forecast_scripts/hidden                       # location of private info eg logs, ssh_info.src
+
+# FTP directory
 FTP="/Data/FTPRoot/pub/Tim/SWARP_forecasts/$reg/"
+
+# SWARP web page
+WEB="/WebData/swarp.nersc.no/SWARP_forecasts/$reg/"
 FCemail=$hidden/FCemail.txt
 
 # FC-specific variables
@@ -160,6 +165,7 @@ do
    # only do scp if file not present
    if [ ! -f $joh_dir/$joh_fil ]
    then
+      rm -f $tmp_dir/gifs/*
       echo "scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir"
       scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
 
@@ -175,24 +181,71 @@ do
          echo "No product on $hdate" >> $cplog
          wrn_count=$(expr $wrn_count + 1)
       fi
+   else
+      echo "Netcdf product already on johansen" >> $cplog
+      echo " " >> $cplog
+   fi
 
-      #################################################################
-      # gif's for website
+
+   #################################################################
+   # gif's for website
+   # copy gif files and make comb figures if:
+   # 1) the gif folder is cleared (when the .nc file is copied, see above) and
+   # 2) the gif files exist on hexagon for the current day
+   # if [ ! "$(ls -A $tmp_dir/gifs/*.gif )" ] && [ ! "$(ssh -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no ls -A $hex_dir/$hdate/figures/gifs/*.gif 2>/dev/null)" == "" ];
+   if [ ! -f $tmp_dir/gifs/*.gif ]
+   then
       if [ $n -eq 0 ]
       then
-         # copy gifs from latest forecast
-         # TODO: mv to /Webdata and link to website
-         echo scp -r -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
-         scp -r -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
+         if [ ! "$(ssh -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no ls -A $hex_dir/$hdate/figures/gifs/*.gif 2>/dev/null)" == "" ]
+         then
+            # copy gifs from latest forecast
+            # mv to /Webdata and link to website
+            echo scp -r -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
+            scp -r -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
 
-         # copy to FTP
-         chmod o+r $tmp_dir/gifs/*
-         cp $tmp_dir/gifs/* $FTP
+            # need to change permissions to make files accessible on FTP or SWARP area
+            chmod o+r $tmp_dir/gifs/*
+            chmod o+w $tmp_dir/gifs/*
+            chmod g+r $tmp_dir/gifs/*
+            chmod g+w $tmp_dir/gifs/*
+
+            # copy to FTP
+            cp $tmp_dir/gifs/* $FTP
+
+            # make combined figures synced in time for WEB page
+            if [ $FCtype_joh="ice_only" ]; then
+               # sea ice concentration and thickness
+               convert \( $tmp_dir/gifs/icec.gif  -coalesce -append \) \
+                       \( $tmp_dir/gifs/icetk.gif -coalesce -append \) \
+                       +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/IO1comb.gif
+               # Sea ice and surface velocity speed
+               convert \( $tmp_dir/gifs/uice.gif  -coalesce -append \) \
+                       \( $tmp_dir/gifs/usurf.gif -coalesce -append \) \
+                       +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/IO2comb.gif
+            fi
+              
+            if [ $FCtype_joh="wavesice" ]; then
+               # Max floe size and wave-in-ice significant wave height
+               convert \( $tmp_dir/gifs/dmax.gif  -coalesce -append \) \
+                       \( $tmp_dir/gifs/swh.gif -coalesce -append \) \
+                       +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/WIcomb.gif
+            fi
+
+            # need to change permissions to make files accessible on FTP or SWARP area
+            chmod o+r $tmp_dir/gifs/*comb.gif
+            chmod o+w $tmp_dir/gifs/*comb.gif
+            chmod g+r $tmp_dir/gifs/*comb.gif
+            chmod g+w $tmp_dir/gifs/*comb.gif
+
+            # copy to SWARP web page area
+            cp $tmp_dir/gifs/* $WEB
+         fi
       fi
       #################################################################
-   else
-      echo "Product already on johansen" >> $cplog
-      echo " " >> $cplog
+#   else
+#      echo "Product already on johansen" >> $cplog
+#      echo " " >> $cplog
    fi
 done
 
