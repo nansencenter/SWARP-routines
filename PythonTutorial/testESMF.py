@@ -75,3 +75,27 @@ def create_grid(bounds, do_mask):
         mask[i, :] = 0
 
   return grid
+
+import fns_plotting as Fplt
+import mod_reading  as mr
+from matplotlib import pyplot as plt
+
+gdir  = '/work/shared/nersc/msc/ModelInput/../REANALYSIS/topo'
+afil  = gdir+'/regional.grid.a'
+
+plon  = mr.get_array_from_HYCOM_binary(afil,1)
+plat  = mr.get_array_from_HYCOM_binary(afil,2)
+qlon  = mr.get_array_from_HYCOM_binary(afil,3)
+qlat  = mr.get_array_from_HYCOM_binary(afil,4)
+ulon  = mr.get_array_from_HYCOM_binary(afil,5)
+ulat  = mr.get_array_from_HYCOM_binary(afil,6)
+vlon  = mr.get_array_from_HYCOM_binary(afil,7)
+vlat  = mr.get_array_from_HYCOM_binary(afil,8)
+
+if 0:
+   bmap  = Fplt.start_HYCOM_map('TP4')
+   bmap.plot(plon[:-1,:-1],plat[:-1,:-1],'.k',latlon=True)
+   bmap.plot(qlon,qlat,'or',latlon=True)
+   bmap.plot(ulon,ulat,'^g',latlon=True)
+   bmap.plot(vlon,vlat,'vb',latlon=True)
+   plt.show()
