@@ -332,6 +332,11 @@ def polar_stereographic_simple(lon_vec,lat_vec,NH=True,radius=6371.e3,inverse=Fa
 
    import numpy as np
 
+   if type(lon_vec)!=type(np.array([0])):
+      raise ValueError('lon_vec should be a numpy array')
+   if type(lat_vec)!=type(np.array([0])):
+      raise ValueError('lat_vec should be a numpy array')
+
    ###########################################
    def projection_cartesian(lon,lat,radius):
 
@@ -390,7 +395,6 @@ def polar_stereographic_simple(lon_vec,lat_vec,NH=True,radius=6371.e3,inverse=Fa
          x  = r/r2*x2
          y  = r/r2*y2
 
-      print(x,y,z)
       lon   = (180./np.pi)*np.arctan2(y,x)
       lat   = (180./np.pi)*np.arctan2(z,r)
 

@@ -28,6 +28,7 @@ def maskgrid_outside_polygon(x,y,coords):
    return mask.reshape(shp)
 #######################################################
 
+
 #########################################################
 def area_polygon_euclidean(x,y):
    # area of a polygon in Euclidean space
