@@ -41,7 +41,8 @@ do
    echo "Making $vdir.gif"
    cd $vdir
    $convert -delay 15 -loop 0 *.png $vdir.gif
-   mv $vdir.gif $gdir
+   mv $vdir.gif ..
    cd ..
 done
+mv *.gif $gdir
 echo " "

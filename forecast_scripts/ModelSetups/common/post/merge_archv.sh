@@ -3,34 +3,36 @@
 
 # NO NEED FOR A MAIL ALERT. IF CONVERT WORKS THEN THIS WILL AS WELL. IF CONVERT FAILS THEN IT WILL SEND A MESSAGE.
 
+
+#########################################################################
+# inputs are source file & start date of forecast
+if [ $# -ne 2 ]
+then
+   ME=`readlink -f $0`
+   echo "Usage `basename $ME` [source file] [start date of forecast/hindcast (yyyymmdd)]"
+   exit
+else
+   THIS_SRC=`readlink -f $1`
+   tday=$2                                   # start date of forecast YYYYMMDD
+   tday_long=`date --date=$tday +%Y-%m-%d`   # start date of forecast YYYY-MM-DD
+   lognm=merge_log.txt
+fi
+#########################################################################
+
+
 # ===================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THIS_SRC=`readlink -f $1`
 source $THIS_SRC
+dir0=$THISFC2/$tday/netcdf
+odir=$THISFC2/$tday/final_output
 # ===================================================================================
+
 
 # ==================================================================================
 # EMAIL ADDRESS
 email=$(cat $FCemail)
 # ==================================================================================
 
-#########################################################################
-# inputs are start date of forecast
-if [ $# -eq 0 ]
-then
-   # do a test
-   tday=`date +%Y%m%d`                       # start date of forecast YYYYMMDD
-   echo \${tday}=$tday
-   tday_long=`date --date=$tday +%Y-%m-%d`   # start date of forecast YYYY-MM-DD
-   lognm=merge_log_test.txt
-else
-   tday=$2                                   # start date of forecast YYYYMMDD
-   tday_long=`date --date=$tday +%Y-%m-%d`   # start date of forecast YYYY-MM-DD
-   lognm=merge_log.txt
-fi
-dir0=$THISFC2/$tday/netcdf
-odir=$THISFC2/$tday/final_output
-#########################################################################
 
 cd $dir0
 rm -r -f  tmp
@@ -57,11 +59,11 @@ do
    if [ "$cf" -ge "$tday" ]
    then
       Nfiles=$((Nfiles+1))
-      echo Unpacking   $f
+      echo Unpacking   $f                             >> $log
       # unpack files to make sure that scale factors are same in each file
       ncpdq -U $f tmp/$f
    else
-      echo "*.nc older than actual date"              >> $log
+      echo "$f older than actual date ($tday)"      >> $log
    fi
 done
 
@@ -69,6 +71,8 @@ done
 echo " "                                              >> $log
 echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
+ncatted -O -a _FillValue,,o,f,-32767      tmp.nc
+ncatted -O -a missing_value,,o,f,-32767   tmp.nc
 
 #set name of output file
 ofil=${FC_OUTPUT}_start${tday}T000000Z.nc

@@ -1,3 +1,4 @@
+# run from regional directory eg TP4a0.12
 exp=1
 lnk=1
 Bld=1
@@ -34,7 +35,22 @@ then
    echo "- launch from root model directory eg 'TP4a0.12'"
    echo " "
    exit
+else
+   source REGION.src       # need R variable
+   rungen=${R:0:3}
 fi
+
+if [ $rungen == 'TP4' ]
+then
+   nmpi=133
+elif [ $rungen == 'BS1' ]
+then
+   nmpi=112
+elif [ $rungen == 'FR1' ]
+then
+   nmpi=51
+fi
+JOBNAME=${rungen}HC$E
 
 mkdir -p $enew
 mkdir -p $enew/data
@@ -56,6 +72,7 @@ then
    done
 
    cd $enew
+   mkdir -p log
 
    # Change EXPT.src
    mv EXPT.src EXPT.src.tmp
@@ -72,6 +89,13 @@ then
       sed "s/$ss/ $E\t  'iexpt ' = experiment number x10/" \
       > blkdat.input
    rm blkdat.input.tmp
+
+   # change pbsjob.sh
+   cat $FCcommon/inputs/pbsjob.sh | sed \
+        -e "s/JOBNAME/$JOBNAME/g" \
+        -e "s/MPPWIDTH/$nmpi/g" \
+        -e "s/exit \$?//g" \
+        > pbsjob.sh
 
    # nesting
    if [ -d $eold/nest_out* ]
@@ -139,17 +163,7 @@ then
       cp    $B1/dimensions_nersc.h $B2
    else
       # run setuppatch.sh (needs blkdat.input correct)
-
-      if [ ${R:0:3} == "TP4" ]
-      then
-        ./setuppatch 133
-      elif [ ${R:0:3} == "BS1" ]
-      then
-        ./setuppatch 112
-      elif [ ${R:0:3} == "FR1" ]
-      then
-        ./setuppatch 51
-      fi
+     ./setuppatch $nmpi
    fi
 
    # cp svn_Build/* .
@@ -179,5 +193,3 @@ echo ""
 echo "Also (TW comments):"
 echo "1. Now need to get restart files and maybe nesting_out directory"
 echo "2. Check links to flags, dependencies and Makefile are OK"
-echo "3. Run setuppatch.sh in Build to make dimensions_nersc.h"
-echo "   eg ./setuppatch.sh 133 for TP4"

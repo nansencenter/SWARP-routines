@@ -1,8 +1,8 @@
+import matplotlib
+matplotlib.use('Agg')
 import os,sys
 from getopt import getopt
 import mod_reading as Mr
-import matplotlib
-matplotlib.use('Agg')
 
 # ==========================================================================
 # options
@@ -23,10 +23,10 @@ for opt,arg in opts:
       FCtype   = arg
 
 if ncfile is None:
-   raise ValueError('no netcdf file specified (use --ncfile==)')
+   raise ValueError('no netcdf file specified (use --ncfile=)')
 
 if FCtype is None:
-   raise ValueError('forecast type not specified (use --FCtype==)')
+   raise ValueError('forecast type not specified (use --FCtype=)')
 # ==========================================================================
 
 print(' ')

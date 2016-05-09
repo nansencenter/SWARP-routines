@@ -6,10 +6,12 @@ hd=$SWARP_ROUTINES/forecast_scripts/hindcast/TP4a0.12
 HCtype=ice_only
 Done=0
 FULL_RESET=0
+refno=5
+GetRestarts=0 # all are copied to expt_01.{$refno}/data, then linked to other expt's
 
 P=$TP4_REALTIME
 cd $P
-refno=4
+
 xref=$P/expt_01.$refno           # reference expt directory  (has restarts)
 bref=$P/Build_V2.2.12_X01.$refno # reference Build directory (has hycom executable compiled)
 
@@ -19,8 +21,65 @@ Eno=0$E0
 
 md=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts/
 list=(`ls $md/2015/*gz`)
-list2=(`ls $md/2016/*gz`)
 Nlist=${#list[@]}
+list2=(`ls $md/2016/*gz`)
+Nlist2=${#list2[@]}
+
+#########################################################################
+if [ $GetRestarts -eq 1 ]
+then
+   cd $P/expt_01.$refno/data
+   for nR in `seq 2 $((Nlist-1))`
+   do
+      Rfil=${list[$nR]}
+      rfil=`basename $Rfil`
+      rbase=${rfil%.tar.gz}
+      afil=${rbase}.a
+      bfil=${rbase}.b
+      ufil=${rbase}ICE.uf
+      if [ -f $afil ] && [ -f $bfil ] && [ -f $ufil ]
+      then
+         echo Restart $rbase already present
+         continue
+      fi
+
+      cp $Rfil .
+      echo tar -zxf $rfil
+      tar -zxf $rfil
+      echo mv ${rbase}_mem001.a $afil
+      mv ${rbase}_mem001.a $afil
+      echo mv ${rbase}_mem001.b $bfil
+      mv ${rbase}_mem001.b $bfil
+      rm $rfil
+   done
+
+   for nR in `seq 0 $((Nlist2-1))`
+   do
+      Rfil=${list2[$nR]}
+      rfil=`basename $Rfil`
+      rbase=${rfil%.tar.gz}
+      afil=${rbase}.a
+      bfil=${rbase}.b
+      ufil=${rbase}ICE.uf
+      if [ -f $afil ] && [ -f $bfil ] && [ -f $ufil ]
+      then
+         echo Restart $rbase already present
+         continue
+      fi
+
+      cp $Rfil .
+      echo tar -zxf $rfil
+      tar -zxf $rfil
+      echo mv ${rbase}_mem001.a $afil
+      mv ${rbase}_mem001.a $afil
+      echo mv ${rbase}_mem001.b $bfil
+      mv ${rbase}_mem001.b $bfil
+      rm $rfil
+   done
+   exit
+fi
+#########################################################################
+
 inext=Nlist
 for loop_i in `seq 1 ${#list2[@]}`
 do
@@ -28,6 +87,7 @@ do
    inext=$((inext+1))
    Nlist=$((Nlist+1))
 done
+
 
 logdir=$hd/$HCtype/logs
 mkdir -p $logdir
@@ -58,13 +118,13 @@ Nbad=${#bad_dates[@]}
 if [ 1 -eq 1 ]
 then
    # DO ALL
-   E0_start=14
+   E0_start=$((1$refno+1))
    E0_stop=2000
 else
    # DO SOME
    # E0_start=36
    # E0_stop=56
-   E0_start=57
+   E0_start=66
    E0_stop=2000
 fi
 
@@ -118,6 +178,8 @@ do
       echo $BAD_ERROR
       echo " "
       continue
+   # else
+   #    echo "Setting up week ${ryear}_${rday} ($rdate)";continue
    fi
 
    xdir=$P/expt_$X            # new expt directory  (has restarts)
@@ -138,11 +200,14 @@ do
    echo ln -s $bref/hycom .
    ln -s $bref/hycom .
 
+
    cd $xdir/data
-   mkdir -p log
    echo ln -s $xref/data/TP4restart${ryear}_${rday}* .  # link to restart 
    ln -s $xref/data/TP4restart${ryear}_${rday}* .  # link to restart 
+
+   # log dir
    cd $xdir
+   mkdir -p log
 
    # archv.extract
    id=$hd/$HCtype/inputs
