@@ -1,6 +1,13 @@
 #!/bin/bash
 #Get latest restart from the internal repo to the working dir
 #Interpolate with curviint
+Me=`readlink -f $0`
+me=`basename $Me`
+if [ $# -ne 1 ]
+then
+   echo "Usage: $me [source file with forecast variables]"
+   exit
+fi
 
 print_info=1 # print info for debugging
 
