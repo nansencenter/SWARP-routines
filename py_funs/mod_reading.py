@@ -453,8 +453,16 @@ class nc_getinfo:
 
 
       # open the file
-      nc                = ncopen(ncfil)
-      self.dimensions   = nc.dimensions.keys()
+      nc    = ncopen(ncfil)
+      dkeys = nc.dimensions.keys()
+      vkeys = nc.variables.keys()
+
+      # remove dimensions from variables
+      self.dimensions   = dkeys
+      for key in dkeys:
+         if key in vkeys:
+            vkeys.remove(key)
+      Nkeys = len(vkeys)
 
       # is time a dimension?
       self.time_dim     = ('time' in self.dimensions)
@@ -466,14 +474,9 @@ class nc_getinfo:
                attval   = getattr(nc,att)
                setattr(self,att,attval)
             return
-         def list(self):
+         def atts2list(self):
             return vars(self).keys()
-
       self.ncattrs   = ncatts(nc)
-
-      dkeys = nc.dimensions.keys()
-      vkeys = nc.variables.keys()
-      Nkeys = len(vkeys)
 
       ########################################################
       # time info:
@@ -527,9 +530,14 @@ class nc_getinfo:
          day0     = int(cdate[6:8])
          hr0      = int(ctime[:2])
          min0     = int(ctime[2:4])
-         sec0     = int(ctime[4:6])
+         sec0     = int(float(ctime[4:]))
          refpoint = datetime(year0,mon0,day0,hr0,min0,sec0)
-         #
+
+         # check format of time
+         i32   = np.array([0],dtype='int32')
+         if type(i32[0])==type(reftime_u):
+            reftime_u   = int(reftime_u)
+
          if time_info[0]=='second':
             self.reftime = refpoint+timedelta(seconds=reftime_u)
          elif time_info[0]=='hour':
@@ -570,7 +578,13 @@ class nc_getinfo:
       if self.lonlat_dim:
          self.lon0    = lon[0]
          self.lat0    = lat[0]
-         for dkey in nc.dimensions.keys():
+
+         # get example variable:
+         # - for eg plotting, need to make the lon/lat matrices
+         # (converted from vectors)
+         # have the same shape as the variables
+         vbl_dims = nc.variables[vkeys[0]].dimensions
+         for dkey in vbl_dims:
             if dkey==self.lonname:
                self.lon_first = True
                self.shape     = (len(lon),len(lat))
@@ -587,6 +601,7 @@ class nc_getinfo:
       ##############################################################
       
 
+      ##############################################################
       ny,nx        = self.shape
       self.Npts_x  = nx    # No of points in x dirn
       self.Npts_y  = ny    # No of points in y dirn
@@ -643,15 +658,17 @@ class nc_getinfo:
       
       ########################################################
       # variable list
-      vlist = []
-      bkeys = [proj_name,self.lonname,self.latname,'model_depth']
-      bkeys.extend(dkeys)
-      for key in vkeys:
-         if key not in bkeys:
-            vlist.append(key)
+      # - remove some other variables from vkeys
+      # - eg projection,lon,lat
+      # - TODO model_depth?
+      bkeys = [proj_name,self.lonname,self.latname]
+      # bkeys.append('model_depth')
+      for key in bkeys:
+         if key in vkeys:
+            vkeys.remove(key)
 
-      self.variable_list   = vlist
-      self.variables       = vlist
+      self.variable_list   = vkeys
+      self.variables       = vkeys
       ########################################################
 
       nc.close()
@@ -661,6 +678,12 @@ class nc_getinfo:
 
    ###########################################################
    def timeval_to_datetime(self,timeval):
+
+      # check format of time
+      i32   = np.array([0],dtype='int32')
+      if type(i32[0])==type(timeval):
+         timeval  = int(timeval)
+
       if self.timeunits=='second':
          dt = self.reftime +timedelta(seconds=timeval)
       elif self.timeunits=='hour':
