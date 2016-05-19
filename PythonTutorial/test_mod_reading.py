@@ -66,14 +66,17 @@ elif 0:
 elif 0:
    # plot pair of variables & save to png
    fobj.make_png_pair(vobj,vobj2,figdir='out2',date_label=2,time_index=idx)
-elif 1:
+elif 0:
    # plot fice & OSISAF ice edge
-   # save to png if 
+   # save to png if figname is given
    fobj.compare_ice_edge_obs(date_label=2,time_index=idx,figname=fobj.basename+'.OSISAF.png')
 
+elif 0:
+   # MIZ width diagnostic
+   fobj.MIZmap(var_name='fice',do_sort=True,time_index=idx,outdir='out')
+elif 1:
+   # distance to ice edge diagnostic
+   fobj.areas_of_disagreement(outdir='out',time_index=idx)
+
 # make_png_all(
-# 
 # make_png_pair_all(
-# 
-# areas_of_disagreement(
-# MIZmap(

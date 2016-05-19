@@ -466,6 +466,32 @@ class nc_getinfo:
 
 
    ###########################################################
+   def MIZmap(self,**kwargs):
+      """
+      Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs)
+      Inputs:
+         var_name is variable to find MIZ from
+         **kwargs to be passed onto MIZchar.get_MIZ_poly:
+            outdir='.',do_sort=True
+      Returns: MIZchar.MIZpoly object
+      """
+      return MR.MIZmap(self,**kwargs)
+   ###########################################################
+
+
+   ###########################################################
+   def areas_of_disagreement(self,**kwargs):
+      """
+      MPdict,tfiles,Pdict = self.areas_of_disagreement(obs_type='OSISAF',\
+            time_index=0,do_sort=True,EastOnly=True,\
+            plotting=True,HYCOMreg='Arctic',**kwargs)
+      kwargs: outdir='.',do_sort=True
+      """
+      return MR.areas_of_disagreement(self,**kwargs)
+   ###########################################################
+
+
+   ###########################################################
    def make_png_all(self,var_opts,HYCOMreg='TP4',figdir='.',**kwargs):
 
       # check names
@@ -528,343 +554,6 @@ class nc_getinfo:
 
       plt.close(fig)
       return
-   ###########################################################
-
-
-   ###########################################################
-   def MIZmap(self,var_name='dmax',time_index=0,do_sort=False,EastOnly=True,\
-         plotting=True,HYCOM_region='Arctic',**kwargs):
-      """
-      Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
-      Inputs:
-         var_name is variable to find MIZ from
-         **kwargs to be passed onto MIZchar.get_MIZ_poly:
-            outdir='.',do_sort=True
-      Returns: MIZchar.MIZpoly object
-      """
-
-      import MIZchar as mc
-      vname = check_names(var_name,self.variables)
-
-      if var_name == 'dmax':
-         # FSD MIZarray(1-
-         Arr         = self.get_var(vname,time_index=time_index)
-         clim        = [0,300]# for plotting
-         lower_limit = .1     # for plotting
-      elif var_name == 'fice':
-         # conc MIZ
-         Arr         = self.get_var(vname,time_index=time_index)
-         clim        = [0,1]  # for plotting
-         lower_limit = .15    # for plotting
-      elif var_name == 'hice':
-         # thin ice areas
-         Arr         = self.get_var(vname,time_index=time_index)
-         clim        = [0,2.] # for plotting
-         lower_limit = .01    # for plotting
-      else:
-         raise ValueError('Wrong selection variable for MIZmap')
-
-      print("MIZchar.get_MIZ_poly\n")
-      lon,lat  = self.get_lonlat()
-      MPdict   = {}
-      tfiles   = {}
-
-      if do_sort:
-         # possible regions are:
-         regions  = ['gre','bar','beau','lab','balt','les','can']
-
-         if EastOnly:
-            # concentrate on the eastern Arctic
-            # (and forget Baltic Sea)
-            regions.remove('balt' )
-            regions.remove('les' )
-            regions.remove('can' )
-            regions.remove('beau')
-
-         # for reg in ['gre']:
-         for reg in regions:
-            mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,region=reg)
-            MPdict.update({reg:mp})
-
-            fname0   = self.basename+'_'+var_name +'_'+reg
-            tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-            if 'all' in tfile.keys():
-               tfiles.update({reg:tfile['all']})
-
-         if 0:
-            MPdict['gre'].show_maps()
-            return MPdict
-
-      else:
-         reg   = 'all'
-         mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name)
-         MPdict.update({reg:mp})
-         #
-         fname0   = self.basename+'_'+var_name
-         tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-         if 'all' in tfile.keys():
-            tfiles.update({reg:tfile['all']})
-
-      Pdict    = {}
-      PLOTTING = False
-      for reg in tfiles.keys():
-
-         ##########################################################
-         # filenames
-         tfil     = tfiles[reg]                          # text file with polygon outlines characterized
-         figname  = tfil.replace('.txt','.png')          # plot of polygons
-         shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
-         sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
-         ##########################################################
-
-
-         ##########################################################
-         if do_sort:
-            mapreg   = reg
-         else:
-            mapreg   = HYCOM_region
-         ##########################################################
-
-
-         ##########################################################
-         # process each text file to get MIZ width etc
-         print("MIZchar.single_file: "+tfil+"\n")
-         bmap     = Fplt.start_HYCOM_map(mapreg)
-         Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
-         Pdict.update({reg:Psolns})
-         
-         # Save summary & shapefile
-         mc.save_summary  (Psolns,sumname)
-         mc.save_shapefile(Psolns,filename=shpname)
-         ##########################################################
-
-         
-         if plotting:
-            ##########################################################
-            # Make plot
-            var_opts = make_plot_options(vname,lower_limit=lower_limit)
-            pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=clim)[0]
-            fig      = pobj.fig
-            ax       = pobj.ax
-            PLOTTING = True
-
-            for MIZi in Psolns:
-               # plot outlines of polygons
-               lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
-               bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
-
-               Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
-               if Wavg>26:
-                  MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
-
-                  # add text with mean width
-                  xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
-                  xav                  = (xmin+xmax)/2.
-                  ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                     color='k',fontsize=16,horizontalalignment='right',\
-                     verticalalignment='top')
-
-            Fplt.finish_map(bmap)
-            print('Saving '+figname)
-            fig.savefig(figname)
-            # plt.show(fig)
-            ax.cla()
-            fig.clear()
-            # finished region
-            ##########################################################
-
-      if PLOTTING:
-         plt.close(fig)
-      return mp,Pdict,tfiles
-   ###########################################################
-
-
-   ###########################################################
-   def areas_of_disagreement(self,obs_type='OSISAF',time_index=0,do_sort=True,EastOnly=True,\
-         plotting=True,HYCOMreg='Arctic',**kwargs):
-      # kwargs: outdir='.',do_sort=True
-
-      import MIZchar as mc
-
-      if obs_type == 'OSISAF':
-         var_name    = 'fice'
-         lower_limit = .15
-         bmap        = basemap_OSISAF()
-         #
-         cyear = self.datetimes[time_index].strftime('%Y')
-         cdate = self.datetimes[time_index].strftime('%Y%m%d')
-         obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+cyear+\
-                     '_nh_polstere/ice_conc_nh_polstere-100_multi_'+\
-                     cdate+'1200.nc'
-      else:
-         raise ValueError('Wrong selection variable for areas_of_disagreement')
-
-      vname = check_names(var_name,self.variables)
-
-      # observation grid & compared quantity
-      nci         = nc_getinfo(obsfil)
-      lon2,lat2   = nci.get_lonlat()
-      Xobs,Yobs   = bmap(lon2,lat2)
-
-      vname2   = check_names(var_name,nci.variables)
-      Zobs     = nci.get_var(vname2)
-
-      # model grid & compared quantity
-      Zmod        = self.get_var(vname,time_index=time_index)
-      lon,lat     = self.get_lonlat()
-      Xmod,Ymod   = bmap(lon,lat)
-
-      if '%' in Zobs.units:
-         conv_fac = .01
-      else:
-         conv_fac = 1
-
-      if 1:
-         #Zref,Zint should be np.ma.array
-         lon_ref,lat_ref   = lon2,lat2
-         Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
-         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
-
-      # *interpolate
-      # *add the mask for the ref to Arr
-      Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
-
-      # add the mask for Arr to Zref
-      Zref  = np.ma.array(Zref.data,mask=Arr.mask)
-
-      if 0:
-         # test interpolation and matching of masks
-         fig   = plt.figure()
-         ax1   = fig.add_subplot(1,2,1)
-         im1   = ax1.imshow(Arr)
-         fig.colorbar(im1)
-         #
-         ax2   = fig.add_subplot(1,2,2)
-         im2   = ax2.imshow(Zref)
-         fig.colorbar(im2)
-         fig.show()
-         return Xint,Yint,Zint,Xref,Yref,Zref
-
-      MPdict   = {'Over':{},'Under':{}}
-      tfiles   = {'Over':{},'Under':{}}
-
-      if do_sort:
-         # possible regions are:
-         regions  = ['gre','bar','beau','lab','balt','les','can']
-
-         if EastOnly:
-            # concentrate on the eastern Arctic
-            # (and forget Baltic Sea)
-            regions.remove('balt' )
-            regions.remove('les' )
-            regions.remove('can' )
-            regions.remove('beau')
-
-         # for reg in ['bar']:
-         for reg in regions:
-
-            # Arr,Zref are np.ma.array objects
-            Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
-            MPdict['Over'] .update({reg:Over})
-            MPdict['Under'].update({reg:Under})
-
-            for OU in ['Over','Under']:
-
-               fname0   = self.basename+'_v'+obs_type +'_'+OU+'_'+reg
-               tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-               if 'all' in tfile.keys():
-                  tfiles[OU].update({reg:tfile['all']})
-
-         if 0:
-            MPdict['Over'] [reg].show_maps()
-            MPdict['Under'][reg].show_maps()
-            return MPdict
-      else:
-         reg         = 'all'
-         Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
-         MPdict['Over'] .update({reg:Over})
-         MPdict['Under'].update({reg:Under})
-
-         for OU in ['Over','Under']:
-
-            fname0   = self.basename+'_v'+obs_type+'_'+OU+'_'+reg
-            tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-            if 'all' in tfile.keys():
-               tfiles[OU].update({reg:tfile['all']})
-
-      print(tfiles)
-      print(MPdict)
-      Pdict = {'Over':{},'Under':{}}
-      for OU in ['Over','Under']:
-         PLOTTING = False
-         for reg in tfiles[OU].keys():
-
-            ##########################################################
-            # filenames
-            tfil     = tfiles[OU][reg]                          # text file with polygon outlines characterized
-            figname  = tfil.replace('.txt','.png')          # plot of polygons
-            shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
-            sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
-            ##########################################################
-
-
-            ##########################################################
-            if do_sort:
-               HYCOMreg   = reg
-            ##########################################################
-
-
-            ##########################################################
-            # process each text file to get MIZ width etc
-            print("MIZchar.single_file: "+tfil+"\n")
-            bmap     = Fplt.start_HYCOM_map(HYCOMreg)
-            Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
-            Pdict[OU].update({reg:Psolns})
-            
-            # Save summary & shapefile
-            mc.save_summary  (Psolns,sumname)
-            mc.save_shapefile(Psolns,filename=shpname)
-            ##########################################################
-
-            
-            if plotting:
-               ##########################################################
-               # Make plot
-               var_opts = make_plot_options(vname,lower_limit=lower_limit)
-               pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=[0,1])[0]
-               fig      = pobj.fig
-               ax       = pobj.ax
-               PLOTTING = True
-
-               for MIZi in Psolns:
-                  # plot outlines of polygons
-                  lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
-                  bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
-
-                  Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
-                  if Wavg>26:
-                     MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
-
-                     # add text with mean width
-                     xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
-                     xav                  = (xmin+xmax)/2.
-                     ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                        color='k',fontsize=16,horizontalalignment='right',\
-                        verticalalignment='top')
-
-               Fplt.finish_map(bmap)
-               print('Saving '+figname)
-               fig.savefig(figname)
-               # plt.show(fig)
-               ax.cla()
-               fig.clf()
-               # finished region
-               ##########################################################
-
-         if PLOTTING:
-            plt.close(fig)
-
-      return MPdict,tfiles,Pdict
    ###########################################################
 
 ###########################################################

@@ -949,6 +949,8 @@ class MIZ_poly:
       if self.region is None:
          do_sort  = False
 
+      # header of text file:
+      ss = 'polygon    lon    lat    flag\n'
       if do_sort:
          ##########################################################
          # write to regional text files:
@@ -957,7 +959,6 @@ class MIZ_poly:
          reg_list    = Nreg.keys()
          tfil_list   = {}
          tfiles      = {}
-         ss          = 'polygon    lon    lat    func_val\n'
          for reg in reg_list:
             fname = outdir+'/'+filename_start+'_'+reg+'.txt'
             tfiles.update({reg:fname})
@@ -971,6 +972,7 @@ class MIZ_poly:
          Nreg        = {reg:0}
          tfil_list   = {reg:open(fname,'w')}
          reg_list    = [reg]
+         tfil_list[reg].write(ss)
 
       for num,cont in enumerate(self.MIZcont):
          PS = poly_stat(cont,self.MIZbinaries.icemap,\
