@@ -1313,6 +1313,16 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
       # Save summary & shapefile
       mc.save_summary  (Psolns,sumname)
       mc.save_shapefile(Psolns,filename=shpname)
+
+      if vertices is not None:
+         # add total area to sumname
+         loncnr,latcnr  = np.array(vertices).transpose()
+         tot_area       = GS.area_polygon_ellipsoid(loncnr,latcnr)
+
+         # append to file
+         fid   = open(sumname,'a')
+         fid.write('total_area_of_rectangle : '+str(tot_area))
+         fid.close()
       ##########################################################
 
       
@@ -1324,6 +1334,9 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
          fig      = pobj.fig
          ax       = pobj.ax
          PLOTTING = True
+
+         if vertices is not None:
+            bmap.plot(loncnr,latcnr,latlon=True,ax=ax,color='g',linewidth=2.5)
 
          for MIZi in Psolns:
             # plot outlines of polygons
@@ -1340,6 +1353,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
                ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
                   color='k',fontsize=16,horizontalalignment='right',\
                   verticalalignment='top')
+         
 
          Fplt.finish_map(bmap)
          print('Saving '+figname)

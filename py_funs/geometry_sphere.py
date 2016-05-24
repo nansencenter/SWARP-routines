@@ -107,12 +107,12 @@ def greatcircledist(lat1, lon1, lat2, lon2, R=None,radians=True):
       # arrays
       nvec  = np.arange(len(rng))
       for n in nvec[(rng/R)<(5.e3/R0)]:
-         dphi     = lat2[n]-lat1[n]
-         dlam     = lon2[n]-lon1[n]
-         rng[n]  = R*2*np.arcsin(np.sqrt(\
-            pow(np.sin(dphi/2),2)+\
-            np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
-               ))
+         dphi  = lat2[n]-lat1[n]
+         dlam  = lon2[n]-lon1[n]
+         c     = pow(np.sin(dphi/2.),2)+\
+                  np.cos(lat1[n])*np.cos(lat2[n])*pow(np.sin(dlam/2.),2)
+         #
+         rng[n]  = R*2*np.arcsin(np.sqrt(c))
    else:
       # numbers
       if (rng/R)<(5.e3/R0):
