@@ -323,9 +323,8 @@ class nc_getinfo:
          if key in vkeys:
             vkeys.remove(key)
 
-      self.variable_list   = vkeys
       self.variables       = vkeys
-      # self.variables3d     = None  #TODO enable treatment of 3d fields
+      self.variables3d     = None  #TODO enable treatment of 3d fields
       self.all_variables   = vkeys
       ########################################################
 
@@ -381,7 +380,7 @@ class nc_getinfo:
    def get_var(self,vname,time_index=None):
 
       # conc can have multiple names
-      vlist    = self.variable_list
+      vlist    = self.variables
       cnames   = ['fice','ficem','icec','ice_conc']
       if vname in cnames:
          for vi in cnames:
@@ -492,67 +491,23 @@ class nc_getinfo:
 
 
    ###########################################################
-   def make_png_all(self,var_opts,HYCOMreg='TP4',figdir='.',**kwargs):
+   def make_png_all(self,var_opts,**kwargs):
+      """
+      self.make_png_all(var_opts,HYCOMreg=None,figdir='.')
+      """
 
-      # check names
-      var_opts    = check_var_opts(var_opts,self.variable_list)
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-
-      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      N  = len(self.timevalues)
-      for i in range(N):
-
-         pobj,bmap   = self.make_png(var_opts,\
-                           bmap=bmap,time_index=i,\
-                           figdir=figdir,show=False,**kwargs)
-
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
-
-         print('\n'+str(i+1)+' records done out of '+str(N))
-
-      plt.close(fig)
+      MR.make_png_all(self,var_opts,**kwargs)
       return
    ###########################################################
 
 
    ###########################################################
-   def make_png_pair_all(self,var_opts1,var_opts2,HYCOMreg='TP4',figdir='.',**kwargs):
+   def make_png_pair_all(self,var_opts1,var_opts2,**kwargs):
+      """
+      self.make_png_pair_all(var_opts1,var_opts2,HYCOMreg=None,figdir='.')
+      """
 
-      # ====================================================================
-      # check names
-      var_opts1   = check_var_opts(var_opts1,self.variable_list)
-      var_opts2   = check_var_opts(var_opts2,self.variable_list)
-
-      # check options
-      check_pair(var_opts1,var_opts2)
-      # ====================================================================
-
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-      bmap        = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      N  = len(self.timevalues)
-      for i in range(N):
-
-         pobj,bmap   = self.make_png_pair(var_opts1,var_opts2,\
-                        pobj=pobj,bmap=bmap,time_index=i,\
-                        figdir=figdir,show=False,**kwargs)
-
-         if i==0:
-            # Fix axes position to stop it moving round
-            pobj  = pobj.renew(axpos=pobj.ax.get_position())
-
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
-
-         print('\n'+str(i+1)+' records done out of '+str(N))
-
-      plt.close(fig)
+      MR.make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
       return
    ###########################################################
 

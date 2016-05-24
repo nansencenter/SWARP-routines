@@ -362,19 +362,6 @@ class var_object:
 ##########################################################
 
 
-# areas_of_disagreement(
-# MIZmap(
-# compare_ice_edge_obs(
-# 
-# plot_var(
-# plot_var_pair(
-# 
-# make_png(
-# make_png_all(
-# 
-# make_png_pair(
-# make_png_pair_all(
-
 ##########################################################
 def nc_getinfo(ncfil,time_index=None,lonlat_file=None):
    import mod_netcdf_utils as MNU
@@ -935,6 +922,12 @@ def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
    if new_fig:
       pobj  = plot_object()
 
+   if 'time_index' not in kwargs:
+      time_index  = 0
+      kwargs.update({'time_index':time_index})
+   else:
+      time_index  = kwargs['time_index']
+
    if 'show' in kwargs:
       show           = kwargs['show']
       kwargs['show'] = False
@@ -943,7 +936,7 @@ def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
       show        = False
       pobj,bmap   = fobj.plot_var(var_opts,pobj=pobj,bmap=bmap,show=False,**kwargs)
 
-   dtmo     = fobj.datetimes[0]
+   dtmo     = fobj.datetimes[time_index]
    datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
 
    if fobj.HYCOM_region=='TP4':
@@ -1037,6 +1030,12 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
    if new_fig:
       pobj  = plot_object()
 
+   if 'time_index' not in kwargs:
+      time_index  = 0
+      kwargs.update({'time_index':time_index})
+   else:
+      time_index  = kwargs['time_index']
+
    if 'show' in kwargs:
       show           = kwargs['show']
       kwargs['show'] = False
@@ -1049,7 +1048,7 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
 
    fig,ax,cbar = pobj.get()
 
-   dtmo     = fobj.datetimes[0]
+   dtmo     = fobj.datetimes[time_index]
    datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
    if fobj.HYCOM_region=='TP4':
       xyann = (0.05,.925)
@@ -1558,6 +1557,77 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
 
 
 
+###########################################################
+def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',**kwargs):
+
+   pobj        = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   if HYCOMreg is None:
+      HYCOMreg = fobj.HYCOM_region
+      if fobj.HYCOM_region is None:
+         HYCOMreg = 'TP4'
+
+   bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   N     = fobj.number_of_time_records
+
+   ############################################################
+   # loop over time records
+   for i in range(N):
+      pobj,bmap   = fobj.make_png(var_opts,time_index=i,pobj=pobj,\
+            HYCOMreg=HYCOMreg,figdir=figdir,**kwargs)
+
+      if i==0:
+         # Fix axes position to stop it moving round
+         pobj  = pobj.renew(axpos=pobj.ax.get_position())
+
+      pobj.ax.cla()
+      if pobj.cbar is not None:
+         pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      print('\n'+str(i+1)+' records done out of '+str(N))
+   ############################################################
+
+   plt.close(pobj.fig)
+   return
+###########################################################
+
+
+###########################################################
+def make_png_pair_all(fobj,var_opts1,var_opts2,\
+      HYCOMreg=None,figdir='.',**kwargs):
+
+   pobj        = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   if HYCOMreg is None:
+      HYCOMreg = fobj.HYCOM_region
+      if fobj.HYCOM_region is None:
+         HYCOMreg = 'TP4'
+
+   bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   N     = fobj.number_of_time_records
+
+   ############################################################
+   # loop over time records
+   for i in range(N):
+      pobj,bmap   = fobj.make_png_pair(var_opts1,var_opts2,time_index=i,pobj=pobj,\
+            HYCOMreg=HYCOMreg,figdir=figdir,**kwargs)
+
+      if i==0:
+         # Fix axes position to stop it moving round
+         pobj  = pobj.renew(axpos=pobj.ax.get_position())
+
+      pobj.ax.cla()
+      if pobj.cbar is not None:
+         pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      print('\n'+str(i+1)+' records done out of '+str(N))
+   ############################################################
+
+   plt.close(pobj.fig)
+   return
+###########################################################
 
 
 class file_list:
@@ -1577,6 +1647,8 @@ class file_list:
          if (fext==extension) and (pattern in fname):
             file_list.append(fil)
 
+      # print(file_list)
+      # print(directory)
       wsn            = '/work/shared/nersc/msc/ModelInput'
       gridpath_lut   = {'FR1':wsn+'/FramStrait_Hyc2.2.12/FR1a0.03-clean//topo',\
                         'BS1':wsn+'/BS1a0.045-clean/topo',\
@@ -1596,23 +1668,29 @@ class file_list:
       # get main objects
       objects     = []
       datetimes   = []
-      time_values = []
       for fil in file_list:
          obj   = self.getinfo(self.directory+'/'+fil,**kwargs)
          objects.append(obj)
          datetimes.append(obj.datetimes[0])
-         time_values.append(obj.time_values[0])
 
-      self.reference_date  = obj.reference_date
-      self.time_units      = obj.time_units
+      self.reference_date  = min(datetimes)
+      self.timeunits       = 'hours'
+      timevalues           = [(dt-self.reference_date).total_seconds()/3600. for dt in datetimes]
 
       # sort the time values (1st record is earliest)
       # - also reorder objects, datetimes, file_list
-      TV                   = sorted([(e,i) for i,e in enumerate(time_values)])
-      self.time_values,ii  = np.array(TV).transpose()
+      TV                   = sorted([(e,i) for i,e in enumerate(timevalues)])
+      self.timevalues,ii   = np.array(TV).transpose()
       self.objects         = [objects  [int(i)] for i in ii]
       self.datetimes       = [datetimes[int(i)] for i in ii]
       self.file_list       = [file_list[int(i)] for i in ii]
+
+      #set some extra variables to work with eg make_png_all
+      self.number_of_time_records   = len(ii)
+      self.basename                 = self.objects[0].basename
+      self.variables                = self.objects[0].variables    
+      self.variables3d              = self.objects[0].variables3d  
+      self.all_variables            = self.objects[0].all_variables
 
       self.date_strings = []
       self.time_strings = []
@@ -1630,62 +1708,48 @@ class file_list:
 
 
    ###########################################################
-   def make_png_all(self,var_opts,HYCOMreg=None,figdir='.',**kwargs):
-
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-
-      if HYCOMreg is None:
-         HYCOMreg = self.HYCOM_region
-      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      N  = len(self.objects)
-      for i,obj in enumerate(self.objects):
-
-         pobj,bmap   = obj.make_png(var_opts,\
-                           bmap=bmap,\
-                           figdir=figdir,show=False,**kwargs)
-
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
-
-         print('\n'+str(i+1)+' records done out of '+str(N))
-
-      plt.close(fig)
-      return
+   def plot_var(self,var_opts,time_index=0,**kwargs):
+      out   = plot_var(self.objects[time_index],\
+                  var_opts,**kwargs)
+      return out
    ###########################################################
 
 
    ###########################################################
-   def make_png_pair_all(self,var_opts1,var_opts2,HYCOMreg=None,figdir='.',**kwargs):
+   def plot_var_pair(self,var_opts1,var_opts2,time_index=0,**kwargs):
+      out   = plot_var_pair(self.objects[time_index],\
+                  var_opts1,var_opts2,**kwargs)
+      return out
+   ###########################################################
 
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
 
-      if HYCOMreg is None:
-         HYCOMreg = self.HYCOM_region
-      bmap        = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   ###########################################################
+   def make_png(self,var_opts,time_index=0,**kwargs):
+      out   = make_png(self.objects[time_index],\
+                  var_opts,**kwargs)
+      return out
+   ###########################################################
 
-      N  = len(self.objects)
-      for i,obj in enumerate(self.objects):
 
-         print('\n'+str(i)+' records done out of '+str(N))
+   ###########################################################
+   def make_png_pair(self,var_opts1,var_opts2,time_index=0,**kwargs):
+      out   = make_png_pair(self.objects[time_index],\
+                  var_opts1,var_opts2,**kwargs)
+      return out
+   ###########################################################
 
-         pobj,bmap   = obj.make_png_pair(var_opts1,var_opts2,\
-                        pobj=pobj,bmap=bmap,\
-                        figdir=figdir,show=False,**kwargs)
 
-         if i==0:
-            # Fix axes position to stop it moving round
-            pobj  = pobj.renew(axpos=pobj.ax.get_position())
+   ###########################################################
+   def make_png_all(self,var_opts,**kwargs):
+      out   = make_png_all(self,var_opts,**kwargs)
+      return out
+   ###########################################################
 
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
 
-      plt.close(fig)
-      return
+   ###########################################################
+   def make_png_pair_all(self,var_opts1,var_opts2,**kwargs):
+      out   = make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
+      return out
    ###########################################################
 
 
@@ -1728,3 +1792,4 @@ class file_list:
    ###########################################################
 
 ######################################################################
+# compare_ice_edge_obs_all
