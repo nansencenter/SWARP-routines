@@ -131,8 +131,8 @@ def start_HYCOM_map(region,cres='i'):
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
-   elif region=='nor':
-      # Norway fjord
+   elif region=='balt':
+      # Baltic sea
       lonc     = 22.
       latc     = 64.
       lat_ts   = latc
