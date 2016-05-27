@@ -3,11 +3,15 @@ import numpy as np
 import rtree.index	as Rindex
 from datetime import datetime
 import shapely.geometry as SHgeom
+from matplotlib import pyplot as plt
 
 SR = os.getenv('SWARP_ROUTINES')
 sys.path.append(SR+'/py_funs')
 import fns_plotting as Fplt
 import geometry_planar as GP
+import geometry_sphere as GS
+import mod_reading as MR
+import MIZchar as MC
 
 #######################################################################
 def write_polys(fname,Polys):
@@ -79,23 +83,38 @@ class line_info:
 
 #######################################################################
 class poly_info:
-   # make object with helpful info:
-   def __init__(self,ll_coords,bmap,func_vals=None,cdate=None):
+   """
+   CALL: MIZchar.poly_info(ll_coords,func_vals=None,cdate=None,**kwargs)
+   **kwargs: for geometry_sphere.polar_stereographic_simple,NH=True,radius=6371.e3
+   make object with helpful info about polygons
+   """
+   def __init__(self,ll_coords,func_vals=None,cdate=None,**kwargs):
 
       if type(cdate)==type('string'):
          self.datetime  = datetime.strptime(cdate,'%Y%m%d')
       else:
          self.datetime  = cdate # already a datetime object (or is None)
-      self.length    = len(ll_coords)
 
-      if type(bmap)==type([]):
-         # already given list of x,y
-         xy_coords   = 1*bmap
-      else:
-         # get x,y from basemap
-         lon,lat     = np.array(ll_coords).transpose()
-         x,y         = bmap(lon,lat)
-         xy_coords   = list(np.array([x,y]).transpose())
+      if 0:
+         # test coords
+         ll_coords = [(0,77.),(1.,77.),(1.,78.),(0.,78.),(0,77.)]
+
+      lon,lat     = np.array(ll_coords).transpose()
+      self.length = len(ll_coords)
+
+      # if type(bmap)==type([]):
+      #    # already given list of x,y
+      #    xy_coords   = 1*bmap
+      # else:
+      #    # get x,y from basemap
+      #    x,y         = bmap(lon,lat)
+      #    xy_coords   = list(np.array([x,y]).transpose())
+
+      self.map = GS.polar_stereographic_simple 
+      if 'inverse' in kwargs:
+         del kwargs['inverse']
+      x,y         = self.map(lon,lat,inverse=False,**kwargs)
+      xy_coords   = list(np.array([x,y]).transpose())
 
       if func_vals is not None:
          fvals = list(func_vals)
@@ -156,7 +175,115 @@ class poly_info:
       self.index  = idx
 
       return
+   ################################################################
+
+
+   ################################################################
+   def plot(self,pobj=None,latlon=False,show=True,**kwargs):
+
+      if pobj is None:
+         pobj  = MR.plot_object()
+
+      if latlon:
+         lon,lat  = np.array(self.ll_coords).transpose()
+         pobj.ax.plot(lon,lat,**kwargs)
+      else:
+         lon,lat  = np.array(self.ll_coords).transpose()
+         x,y      = self.map(lon,lat)
+         pobj.ax.plot(x,y,**kwargs)
+
+      if show:
+         plt.show(pobj.fig)
+
+      return pobj
+   ################################################################
+
+
+   ################################################################
+   def basemap_plot(self,basemap,show=True,pobj=None,**kwargs):
+
+      # add 'ax' to kwargs if not there already
+      if pobj is None:
+         if 'ax' not in kwargs:
+            pobj  = MR.plot_object()
+            kwargs.update({'ax':pobj.ax})
+         # else 'ax' in kwargs and don't need to make an axis
+      else:
+         if 'ax' not in kwargs:
+            kwargs.update({'ax':pobj.ax})
+         else:
+            raise ValueError('Conflicting axes in pobj and kwargs')
+
+      lon,lat  = np.array(self.ll_coords).transpose()
+      basemap.plot(lon,lat,latlon=True,**kwargs)
+
+      if show and pobj is not None:
+         Fplt.finish_map(basemap)
+         plt.show(pobj.fig)
+
+      return pobj
+   ################################################################
+
+
+   ################################################################
+   def get_solution(self,METH=5):
+      lons,lats   = np.array(self.ll_coords).transpose()
+      if METH<2:
+         import Laplace_eqn_solution as Leqs
+
+         if METH==0:
+            # direct Laplacian soln
+            # - use fvals
+            print('\nUsing Laplacian on original polygon, with boundary flags\n')
+            Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=self.func_vals,basemap=self.map)
+         else:
+            print('\nUsing Laplacian on original polygon, with PCA\n')
+            # - use PCA
+            Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=self.map)
+
+      elif METH<4:
+         # apply Laplacian method to simpler covering polygon
+         import Laplace_eqn_solution as Leqs
+
+         if METH==2:
+            method   = 'ConvexHull'
+         else:
+            method   = 'Buffer'
+
+         print('\nUsing Laplacian on simplified polygon ('+method\
+               +'), with PCA\n')
+         Psoln = MC.SimplifyPolygon(lons,lats,self.map,method=method)
+
+      elif METH==4:
+         print('\nUsing PCA without Laplacian solution\n')
+         
+         PCA   = MC.pca_mapper(self.xy_coords)
+         Psoln = PCA.get_MIZ_lines(self.map)
+
+      elif METH==5:
+         #print('\nUsing PCA without Laplacian solution')
+         #print('\n - oriented wrt ice edge\n')
+
+         if self.func_vals is None:
+            raise ValueError("Need 'func_vals' input to use 'METH' = "+METH)
+
+         subset   = (np.array(self.func_vals)==0)
+         if not np.any(subset):
+            subset   = None
+         # TODO add selector function as extra input?
+
+         # print(self.func_vals)
+         # print(subset)
+         # print(self.ll_coords)
+         # print(self.xy_coords)
+         PCA   = MC.pca_mapper(self.xy_coords,subset=subset)
+         Psoln = PCA.get_MIZ_lines(self.map)
+
+      return Psoln
+   ################################################################
+
 #######################################################################
+
 
 #######################################################################
 def read_txt_file(fname):
