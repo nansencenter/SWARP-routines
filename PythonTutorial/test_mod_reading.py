@@ -3,11 +3,11 @@ import mod_reading as MR
 import time
 import datetime as DTM
 
-# get yesterday's date
+# get day before yesterday's date
 fmt   = '%Y%m%d'
 tday  = time.strftime(fmt)
 dtm0  = DTM.datetime.strptime(tday,fmt)
-dtm   = dtm0-DTM.timedelta(1)
+dtm   = dtm0-DTM.timedelta(2)
 yday  = dtm.strftime(fmt)
 idx   = 0
 
@@ -20,7 +20,7 @@ else:
       vec_opt=2,layer=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
 
 FCdir = os.getenv('TP4_REALTIME_RES')+'/ice_only/'+yday
-if 0:
+if 1:
    # binary file
    jday  = int(dtm.strftime('%j'))-1  #
    dts   = '%4.4i_%3.3i' %(dtm.year,jday)
@@ -92,9 +92,10 @@ elif 0:
 elif 0:
    # MIZ width diagnostic
    fobj.MIZmap(var_name='fice',do_sort=True,time_index=idx,outdir='out')
-elif 0:
+elif 1:
    # distance to ice edge diagnostic
-   fobj.areas_of_disagreement(outdir='out',time_index=idx)
+   # fobj.areas_of_disagreement(outdir='out',time_index=idx)               # Labrador, Greenland and Barents Seas
+   fobj.areas_of_disagreement(outdir='out',time_index=idx,EastOnly=False) # do Beaufort Sea & "far-east Russian seas" too
    # =========================================================================
 
 
