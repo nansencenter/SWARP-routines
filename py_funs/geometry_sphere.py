@@ -249,7 +249,6 @@ def area_polygon_ellipsoid(lon,lat,ellipsoid_mat=None,ellipsoid=None,radians=Fal
 
       # Ensure the path segment closes upon itself by
       # repeating beginning point at the end.
-
       if (lat[-1]!=lat[0]) or (lon[-1]!=lon[0]):
          lat   = np.concatenate([lat,[lat[0]]],0)
          lon   = np.concatenate([lon,[lon[0]]],0)

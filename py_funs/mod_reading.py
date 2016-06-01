@@ -1109,7 +1109,8 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
 
 ###########################################################
 def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
-      obs_type='OSISAF',date_label=1,figname=None,**kwargs):
+      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      date_label=1,figname=None,**kwargs):
 
    var_opts1   = make_plot_options('ficem',\
       vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
@@ -1125,11 +1126,15 @@ def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
 
    fig,ax,cbar = pobj.get()
 
-   dtmo  = fobj.datetimes[0]
+   dtmo  = fobj.datetimes[time_index]
    if obs_type=='OSISAF':
-      obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+\
-            dtmo.strftime('%Y')+'_nh_polstere/'+\
-            'ice_conc_nh_polstere-100_multi_'+\
+      if obs_path is None:
+      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
+            dtmo.strftime('%Y')+'_nh_polstere/'
+      if obs_option is None:
+	 obs_option='multi'
+      obsfil   = obs_path+\
+            '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
             dtmo.strftime('%Y%m%d')+'1200.nc'
    else:
       raise ValueError('invalid value of obs_type: '+obs_type)
@@ -1306,7 +1311,10 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
                                  width=width,height=height,\
                                  resolution='i')
 
-      Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
+      # Psolns   = mc.single_file(tfil,MK_PLOT=False,METH=5)
+      tfo      = mc.single_file(tfil,cdate=cdate)
+      Psolns   = tfo.get_solutions(METH=5)
+
       Pdict.update({reg:Psolns})
       
       # Save summary & shapefile
@@ -1370,23 +1378,33 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
 
 
 ###########################################################
-def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
+def areas_of_disagreement(fobj,time_index=0,\
+      obs_type='OSISAF',obs_path=None,obs_option='multi',\
       do_sort=True,EastOnly=True,plotting=True,**kwargs):
    # kwargs: outdir='.',do_sort=True
 
    import MIZchar as mc
+   PRINT_INFO  = 1
 
+   dtmo  = fobj.datetimes[time_index]
    if obs_type == 'OSISAF':
       var_name = 'fice'
       bmap     = basemap_OSISAF()
-      obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+\
-            fobj.datetimes[time_index].strftime('%Y')+'_nh_polstere/'+\
-            'ice_conc_nh_polstere-100_multi_'+\
-            fobj.datetimes[time_index].strftime('%Y%m%d')+'1200.nc'
+      if obs_path is None:
+      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
+            dtmo.strftime('%Y')+'_nh_polstere/'
+      if obs_option is None:
+	 obs_option='multi'
+      obsfil   = obs_path+\
+            '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
+            dtmo.strftime('%Y%m%d')+'1200.nc'
    else:
       raise ValueError('Wrong selection variable for areas_of_disagreement')
 
    # observation grid & compared quantity
+   if PRINT_INFO:
+      print(obsfil)
+
    nci         = nc_getinfo(obsfil)
    lon2,lat2   = nci.get_lonlat()
    Xobs,Yobs   = bmap(lon2,lat2)
@@ -1409,6 +1427,8 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
       Xint,Yint,Zint    = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
 
    # add the mask for the ref to output (Arr)
+   if PRINT_INFO:
+      print('Reprojecting model...')
    Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
 
    # add the mask for Arr to Zref
@@ -1438,11 +1458,15 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
          regions.remove('les' )
          regions.remove('can' )
          regions.remove('beau')
+      else:
+         regions.remove('balt' )
 
       # for reg in ['bar']:
       for reg in regions:
 
          # Arr,Zref are np.ma.array objects
+         if PRINT_INFO:
+            print('Locating AODs for region '+reg+'...')
          Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
          MPdict['Over'] .update({reg:Over})
          MPdict['Under'].update({reg:Under})
@@ -1461,6 +1485,8 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
          return MPdict
    else:
       reg         = 'all'
+      if PRINT_INFO:
+         print('Locating AODs for all regions...')
       Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
       MPdict['Over'] .update({reg:Over})
       MPdict['Under'].update({reg:Under})
@@ -1478,8 +1504,15 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
          MPdict['Under']['all'].show_maps()
          return MPdict
 
-   print(tfiles)
-   print(MPdict)
+   print('\n------------------------------------------------------')
+   print('Polygon info printed to files:')
+   for OU in ['Over','Under']:
+      for key in tfiles[OU].keys():
+         print(OU+', '+key+': '+tfiles[OU][key])
+      print('\n')
+   print('------------------------------------------------------\n')
+   # print(MPdict)
+
    Pdict = {'Over':{},'Under':{}}
    for OU in ['Over','Under']:
       PLOTTING = False
@@ -1506,7 +1539,8 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
          # process each text file to get MIZ width etc
          print("MIZchar.single_file: "+tfil+"\n")
          bmap     = Fplt.start_HYCOM_map(mapreg)
-         Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
+         tfo      = mc.single_file(tfil)
+         Psolns   = tfo.get_solutions(METH=5)
          Pdict[OU].update({reg:Psolns})
          
          # Save summary & shapefile
@@ -1523,6 +1557,11 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
             fig      = pobj.fig
             ax       = pobj.ax
             PLOTTING = True
+
+            if 1:
+               # add observation ice edge
+               bmap.contour(lon2,lat2,conv_fac*Zobs.values,[.15],lat_lon=True,\
+                              colors='g',linewidths=2,ax=ax,latlon=True)
 
             for MIZi in Psolns:
                # plot outlines of polygons
@@ -1554,7 +1593,6 @@ def areas_of_disagreement(fobj,obs_type='OSISAF',time_index=0,\
 
    return MPdict,tfiles,Pdict
 ###########################################################
-
 
 
 ###########################################################
@@ -1772,14 +1810,19 @@ class file_list:
          obs_type = 'OSISAF'
          kwargs.update({'obs_type':obs_type})
 
+      if not os.path.exists(figdir):
+         os.mkdir(figdir)
+
+
       N  = len(self.objects)
       for i,obj in enumerate(self.objects):
 
-         dtmo     = obj.datetime
-         datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-         figname  = figdir+'/'+obj.basename+'_v'+obs_type+'_'+datestr+'.png'
-         pobj,bmap   = obj.compare_ice_edge_obs(pobj=pobj,bmap=bmap,\
-               figname=figname,**kwargs)
+         dtmo              = obj.datetime
+         # datestr           = dtmo.strftime('%Y%m%dT%H%M%SZ')
+         datestr           = dtmo.strftime('%Y%m%d')
+         figname           = figdir+'/'+obj.basename+'_v'+obs_type+'_'+datestr+'.png'
+         pobj,bmap,obsfil  = obj.compare_ice_edge_obs(pobj=pobj,bmap=bmap,\
+                              figname=figname,**kwargs)
 
          ax.cla()
          if pobj.cbar is not None:

@@ -1005,24 +1005,55 @@ class MIZ_poly:
 # -SINGLE POLYGON (need to loop over cont in MIZcont from MIZ_poly)
 class poly_stat:
    def __init__(self,cont,icemap,X,Y,number=None,basemap=None,region=None):
+   # def __init__(self,cont,icemap,X,Y,number=None,latlon=True,region=None):
       # basemap is None : X,Y are lon,lat
       # else            : X,Y are projected val's
       # icemap = 0, water; 1,MIZ; 2, pack 
 
       self.number    = number #get the number
       self.latlon    = (basemap is None)
+      # self.latlon    = latlon
       self.ij_list   = cont #get the contour
       self.class_def() #calculate class from contour (big,medium etc)
 
-      xy_list  = self.ij2xy(X,Y) #ij -> xy (these can be lon/lat also)
-      if self.latlon:
-         self.ll_list   = 1*xy_list
-         lonl,latl      = xy_list.transpose()
+      if 0:
+         xy_list  = self.ij2xy(X,Y) #ij -> xy (these can be lon/lat also)
+         if self.latlon:
+            # already lon,lat coords
+            self.ll_list   = 1*xy_list
+            lonl,latl      = xy_list.transpose()
+         else:
+            xl             = xy_list[:,0]
+            yl             = xy_list[:,1]
+            lonl,latl      = basemap(xl,yl,inverse=True)
+            self.ll_list   = np.array([lonl,latl]).transpose()
       else:
-         xl             = xy_list[:,0]
-         yl             = xy_list[:,1]
-         lonl,latl      = basemap(xl,yl,inverse=True)
-         self.ll_list   = np.array([lonl,latl]).transpose()
+         if self.latlon:
+            # project to x,y coords (lon is discts)
+            # - GS.polar_stereographic_simple is faster than a basemap
+            shp   = X.shape
+            X,Y   = GS.polar_stereographic_simple(X[:],Y[:],\
+                        NH=True,radius=6371.e3,inverse=False)# routine outputs vectors
+
+            # find x,y on boundaries of cont's
+            X        = np.reshape(X,shp)
+            Y        = np.reshape(Y,shp)
+            xy_list  = self.ij2xy(X,Y) #ij -> xy (these can be lon/lat also)
+            xl       = xy_list[:,0]    #np array
+            yl       = xy_list[:,1]    #np array
+
+            # transform back to lon,lat
+            lonl,latl      = GS.polar_stereographic_simple(xl,yl,\
+                                 NH=True,radius=6371.e3,inverse=True)# routine outputs vectors
+            self.ll_list   = np.array([lonl,latl]).transpose()
+         else:
+            # already projected coords (with basemap)
+            # - find coords of boundary, project back to lon,lat
+            xy_list        = self.ij2xy(X,Y)
+            xl             = xy_list[:,0]
+            yl             = xy_list[:,1]
+            lonl,latl      = basemap(xl,yl,inverse=True)
+            self.ll_list   = np.array([lonl,latl]).transpose()
 
       self.area	        = GS.area_polygon_ellipsoid(lonl,latl)       # area of polygon
       self.perimeter    = GS.perimeter(lonl,latl)                    # perimeter of polygon
@@ -1148,52 +1179,52 @@ class poly_stat:
 
 
    #########################################################
-   def get_region(self):
-      # output: lon,lat,region of polygon
-      # NOTE cont_list might be XY or IJ (no LONLAT)
+   # def get_region(self):
+   #    # output: lon,lat,region of polygon
+   #    # NOTE cont_list might be XY or IJ (no LONLAT)
 
-      lat_list = 1*self.ll_list[:,1]
-      latc     = np.mean(lat_list)
+   #    lat_list = 1*self.ll_list[:,1]
+   #    latc     = np.mean(lat_list)
 
-      lon_list       = 1*self.ll_list[:,0]
-      lon_list,lonc  = cts_lon(lon_list)
+   #    lon_list       = 1*self.ll_list[:,0]
+   #    lon_list,lonc  = cts_lon(lon_list)
 
-      # Defining the region
-      self.lon_mean,self.lat_mean   = lonc,latc
+   #    # Defining the region
+   #    self.lon_mean,self.lat_mean   = lonc,latc
 
-      # read in Baffin Bay outline
-      bblone,bblate,bblonw,bblatw   = baffin_bay()
+   #    # read in Baffin Bay outline
+   #    bblone,bblate,bblonw,bblatw   = baffin_bay()
 
-      if lonc < 90 and lonc > 16:
-         # barents
-         self.region = 'bar'
-      elif lonc <= 16 and lonc > -44:
-         # greenland
-         self.region = 'gre'
-      elif lonc <= -44 and lonc > -90:
-         n = 0
-         N = len(bblatw[:-1])
-         if latc <= bblatw[-1] and lonc >= bblonw[-1]:
-            self.region = 'lab'
-         else:
-            while n < N:
-               if latc >= bblatw[n+1] and latc <= bblatw[n]:
-                  if lonc >= bblonw[n]: 
-                     self.region = 'lab'
-                     break
-               n += 1
-            else:
-               # north canada/beaufort
-               self.region = 'ncb'
-      elif lonc < 180 and lonc > 90:
-         # laptev/east siberian
-         self.region = 'les'
-      else:
-         # north canada/beaufort
-         self.region = 'ncb'
-      
-      return
-   #########################################################
+   #    if lonc < 90 and lonc > 16:
+   #       # barents
+   #       self.region = 'bar'
+   #    elif lonc <= 16 and lonc > -44:
+   #       # greenland
+   #       self.region = 'gre'
+   #    elif lonc <= -44 and lonc > -90:
+   #       n = 0
+   #       N = len(bblatw[:-1])
+   #       if latc <= bblatw[-1] and lonc >= bblonw[-1]:
+   #          self.region = 'lab'
+   #       else:
+   #          while n < N:
+   #             if latc >= bblatw[n+1] and latc <= bblatw[n]:
+   #                if lonc >= bblonw[n]: 
+   #                   self.region = 'lab'
+   #                   break
+   #             n += 1
+   #          else:
+   #             # north canada/beaufort
+   #             self.region = 'ncb'
+   #    elif lonc < 180 and lonc > 90:
+   #       # laptev/east siberian
+   #       self.region = 'les'
+   #    else:
+   #       # north canada/beaufort
+   #       self.region = 'ncb'
+   #    
+   #    return
+   # #########################################################
 
 
    #########################################################
@@ -1530,9 +1561,11 @@ class comp_mapper:
    def feval(self,X,Y,inverse=True):
       if inverse:
          x,y         = self.map1(X,Y,inverse=True) # eg PCA X,Y -> basemap x,y
+         x,y         = np.array(x),np.array(y)
          lons,lats   = self.map2(x,y,inverse=True) # eg basemap x,y -> lon,lat
          out         = lons,lats
       else:
+         X,Y   = np.array(X),np.array(Y)
          x,y   = self.map2(X,Y,inverse=False) # eg basemap x,y <- lon,lat
          X,Y   = self.map1(x,y,inverse=False) # eg PCA X,Y <- basemap x,y
          out   = X,Y
@@ -1572,6 +1605,7 @@ class MIZcont:
          # LSi is a single line
          self.Nlines = 1
          xv,yv       = LSi.coords.xy
+         xv,yv       = np.array(xv),np.array(yv)
          lons,lats   = mapper(xv,yv,inverse=True)
          #
          self.intersection_length   = GS.perimeter(lons,lats)
@@ -1588,23 +1622,26 @@ class MIZcont:
          self.total_length          = 0
          for i,Lsi in enumerate(LSi.geoms):
             xv,yv     = Lsi.coords.xy
+            xv,yv     = np.array(xv),np.array(yv)
             lons,lats = mapper(xv,yv,inverse=True)
             MIZl      = MIZline(lons,lats)
             self.lines.append(MIZl)
-            d0 = GS.perimeter(lons,lats)
-            #
+
+            d0                         = GS.perimeter(lons,lats)
             self.intersection_length   = self.intersection_length+d0
 
             # add distance between end of previous line and start of current line
             # to total length
             if i>0:
-               x0,y0       = list(LSi.geoms[i-1].coords)[-1] # end of previous line
-               x1,y1       = list(LSi.geoms[i].coords)[0]    # start of current line
-               lon0,lat0   = mapper(x0,y0,inverse=True)
-               lon1,lat1   = mapper(x1,y1,inverse=True)
-               lon_ends    = np.array([lon0,lon1])
-               lat_ends    = np.array([lat0,lat1])
-               d0          = d0+GS.perimeter(lon_ends,lat_ends)
+               x0,y0     = list(LSi.geoms[i-1].coords)[-1] # end of previous line
+               x1,y1     = list(LSi.geoms[i].coords)[0]    # start of current line
+               x0,y0     = np.array(x0),np.array(y0)
+               x1,y1     = np.array(x1),np.array(y1)
+               lon0,lat0 = mapper(x0,y0,inverse=True)
+               lon1,lat1 = mapper(x1,y1,inverse=True)
+               lon_ends  = np.array([lon0,lon1])
+               lat_ends  = np.array([lat0,lat1])
+               d0        = d0+GS.perimeter(lon_ends,lat_ends)
 
             self.total_length = self.total_length+d0
       return
@@ -1931,7 +1968,7 @@ class MIZ_info_Lap:
       Wavg  = self.record[plot_type]
       count = 0
       for i,MIZc in enumerate(self.MIZlines):
-         diff  = abs(Wav-MIZc.intersection_length)/Wavg
+         diff  = abs(Wavg-MIZc.intersection_length)/Wavg
          if (diff<.05) and (MIZc.Nlines==1):
             MIZc.plot_lines(bmap,**kwargs)
             count = count+1
@@ -2120,157 +2157,134 @@ def save_summary(MIZpolys,filename):
 
 
 #########################################################
-def single_file(filename,bmap,MK_PLOT=False,pobj=None,cdate=None,METH=5):
+class single_file:
+   def __init__(self,filename,cdate=None):
+      """
+      CALL: single_file(filename,bmap,MK_PLOT=False,pobj=None,cdate=None,METH=5)
+      0     : direct Laplacian with specified boundary flags
+      1     : direct Laplacian with boundary flags determined from PCA
+      2,3   : direct Laplacian to simplified polygon (lower fractal dimension index),
+               with boundary flags determined from PCA for new shape
+       * 2 > get convex hull
+       * 3 > dilation to get less complicated shape (in between original and convex hull)
+      4     : Use PCA to determine direction to get the width in,
+               then just take straight lines across (in stereographic projection space)
+      5     : Use PCA to determine direction to get the width in,
+               oriented wrt the ice edge
+               then just take straight lines across (in stereographic projection space)
 
-   """
-   0     : direct Laplacian with specified boundary flags
-   1     : direct Laplacian with boundary flags determined from PCA
-   2,3   : direct Laplacian to simplified polygon (lower fractal dimension index),
-            with boundary flags determined from PCA for new shape
-    * 2 > get convex hull
-    * 3 > dilation to get less complicated shape (in between original and convex hull)
-   4     : Use PCA to determine direction to get the width in,
-            then just take straight lines across (in stereographic projection space)
-   5     : Use PCA to determine direction to get the width in,
-            oriented wrt the ice edge
-            then just take straight lines across (in stereographic projection space)
+      *Read in text file "filename":
+      >each line is:
+      [polygon number] lon  lat  [function value]
+      >First line is header
+      """
 
-   *Read in text file "filename":
-   >each line is:
-   [polygon number] lon  lat  [function value]
-   >First line is header
-   """
+      import fns_Stefan_Maps as FSM
 
-   import fns_Stefan_Maps as FSM
-   import Laplace_eqn_solution   as Leqs
 
-   if pobj is not None:
-      fig,ax1  = pobj
-      MK_PLOT  = True
-   elif MK_PLOT:
-      from matplotlib import pyplot as plt
-      fig   = plt.figure()
-      ax1   = fig.add_subplot(1,1,1)
-      pobj  = [fig,ax1]
+      ############################################################
+      # get polys as "poly_info" objects
+      Pols  = FSM.read_txt_file_polys(filename)
+
+      self.poly_info_objects = []
+      for llc,fvals in Pols:
+         Poly  = FSM.poly_info(llc,cdate=cdate,func_vals=fvals)
+         self.poly_info_objects.append(Poly)
+
+      return
+   ############################################################
 
 
    ############################################################
-   # get polys as "poly_info" objects
-   Pols  = FSM.read_txt_file_polys(filename)
-   Polys = []
-   for llc,fvals in Pols:
-      Poly  = FSM.poly_info(llc,bmap,cdate=cdate,func_vals=fvals)
-      Polys.append(Poly)
-   ############################################################
+   def get_solutions(self,METH=5,basemap=None,pobj=None):
 
-   ############################################################
-   Psolns   = []
-   for Poly in Polys:
-      lons,lats   = np.array(Poly.ll_coords).transpose()
-      if METH<2:
-         if METH==0:
-            # direct Laplacian soln
-            # - use fvals
-            print('\nUsing Laplacian on original polygon, with boundary flags\n')
-            Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=Poly.func_vals,basemap=bmap)
+      ################################################################
+      MK_PLOT  = False
+      if basemap is not None:
+         bmap     = basemap
+         MK_PLOT  = True
+         if pobj is not None:
+            fig,ax1  = pobj.fig,pobj.ax
          else:
-            print('\nUsing Laplacian on original polygon, with PCA\n')
-            # - use PCA
-            Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=bmap)
+            fig      = plt.figure()
+            ax1      = fig.add_subplot(1,1,1)
+            MK_PLOT  = True
+      ################################################################
 
-         if MK_PLOT:
-            cbar  = (Psolns==[])
-            Psoln.plot_soln(pobj=pobj,bmap=bmap,cbar=cbar)
 
+      Psolns   = []
+      cbar     = False
+      for Poly in self.poly_info_objects:
+         Psoln       = Poly.get_solution(METH=METH)
          Psolns.append(Psoln)
 
-      elif METH<4:
-         # apply Laplacian method to simpler covering polygon
-         if METH==2:
-            method   = 'ConvexHull'
-         else:
-            method   = 'Buffer'
-
-         print('\nUsing Laplacian on simplified polygon ('+method\
-               +'), with PCA\n')
-         Psoln = SimplifyPolygon(lons,lats,bmap,method=method)
-
          if MK_PLOT:
-            # plot Laplacian solution
-            cbar  = (Psolns==[])
-            Psoln.Laplacian_soln.plot_soln(pobj=pobj,bmap=bmap,cbar=cbar)
-            #
-            x,y   = np.array(Poly.xy_coords).transpose()
-            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-            #
-            for MIZc in Psoln.MIZlines:
-               MIZc.plot_lines(bmap,ax=ax1,color='c')
+            lons,lats   = np.array(Poly.ll_coords).transpose()
+            bmap.plot(lons,lats,'k',latlon=True,linewidth=2,ax=ax1)
 
-         Psolns.append(Psoln)
+            
+            #########################################################
+            if METH<2:
+               # soln from Laplacian method on original polygon
+               Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=(not cbar),show=False)
+               cbar  = True
+            #########################################################
 
-      elif METH==4:
-         print('\nUsing PCA without Laplacian solution\n')
-         
-         PCA      = pca_mapper(Poly.xy_coords)
-         MIZinfo  = PCA.get_MIZ_lines(bmap)
-         Psolns.append(MIZinfo)
 
-         if MK_PLOT:
-            x,y   = np.array(Poly.xy_coords).transpose()
-            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-            MIZinfo.plot_soln(bmap,ax=ax1,color='c')
+            #########################################################
+            elif METH<4:
+               # soln from Laplacian method on simpler covering polygon
+               # plot Laplacian solution
+               Psoln.Laplacian_soln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=(not cbar),show=False)
+               cbar  = True
+               #
+               for MIZc in Psoln.MIZlines:
+                  MIZc.plot_lines(bmap,ax=ax1,color='c')
+            #########################################################
 
-      elif METH==5:
-         #print('\nUsing PCA without Laplacian solution')
-         #print('\n - oriented wrt ice edge\n')
 
-         if Poly.func_vals is None:
-            raise ValueError("Need 'func_vals' input to use 'METH' = "+METH)
+            #########################################################
+            elif METH==4 or METH==5:
+                  # PCA without Laplacian solution
+                  # - 5: oriented wrt ice edge
+                  Psoln.plot_soln(bmap,ax=ax1,color='c',show=False)
+            #########################################################
 
-         subset   = (np.array(Poly.func_vals)==0)
-         if not np.any(subset):
-            subset   = None
-         # TODO add selector function as extra input?
 
-         # print(Poly.func_vals)
-         # print(subset)
-         # print(Poly.ll_coords)
-         # print(Poly.xy_coords)
-         PCA      = pca_mapper(Poly.xy_coords,subset=subset)
-         MIZinfo  = PCA.get_MIZ_lines(bmap)
-         Psolns.append(MIZinfo)
+            #########################################################
+            # add text and representative lines to figs
+            Wavg  = Psoln.record['Width_mean']/1.e3         # mean width in km
+            W95   = Psoln.record['Width_percentile95']/1.e3 # 95th percentile width in km
+            if Wavg>26:
+               Psoln.plot_representative_lines(bmap,plot_type='Width_mean',ax=ax1,color='r',linewidth=1.5)
+               Psoln.plot_representative_lines(bmap,plot_type='Width_percentile95',ax=ax1,color='g',linewidth=1.5)
 
-         if MK_PLOT:
-            x,y   = np.array(Poly.xy_coords).transpose()
-            bmap.plot(x,y,'k',linewidth=2,ax=ax1)
-            MIZinfo.plot_soln(bmap,ax=ax1,color='c')
-   ############################################################
+               # add text
+               xmin,xmax,ymin,ymax  = Psoln.bbox(bmap)
+               xav   = (xmin+xmax)/2.
+               if 0:
+                  # write mean
+                  ax1.text(xmax,ymin,'%4.1f km' %(Wavg),\
+                     color='r',fontsize=16,horizontalalignment='right',\
+                     verticalalignment='top')
+               else:
+                  # write 95th percentile
+                  ax1.text(xmax,ymin,'%4.1f km' %(W95),\
+                     color='g',fontsize=16,horizontalalignment='right',\
+                     verticalalignment='top')
 
-   if MK_PLOT:
-      for pp in Psolns:
-         Wavg  = pp.record['Width_mean']/1.e3         # mean width in km
-         W95   = pp.record['Width_percentile95']/1.e3 # 95th percentile width in km
-         if Wavg>26:
-            pp.plot_representative_lines(bmap,plot_type='Width_mean',ax=ax1,color='r',linewidth=1.5)
-            pp.plot_representative_lines(bmap,plot_type='Width95',ax=ax1,color='g',linewidth=1.5)
+            #########################################################
 
-            # add text
-            xmin,xmax,ymin,ymax  = pp.bbox(bmap)
-            xav   = (xmin+xmax)/2.
-            if 0:
-               # write mean
-               ax1.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                  color='r',fontsize=16,horizontalalignment='right',\
-                  verticalalignment='top')
-            else:
-               # write 95th percentile
-               ax1.text(xmax,ymin,'%4.1f km' %(W95),\
-                  color='g',fontsize=16,horizontalalignment='right',\
-                  verticalalignment='top')
 
-      import fns_plotting as FP
-      FP.finish_map(bmap)
-      fig.show()
+      if MK_PLOT:
+         #########################################################
+         # finish map and close before returning
+         import fns_plotting as FP
+         FP.finish_map(bmap)
 
-   return Psolns
+         # fig.show()
+         plt.show(fig)
+      #########################################################
+
+      return Psolns
 #########################################################
