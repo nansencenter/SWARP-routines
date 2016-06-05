@@ -39,7 +39,7 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 
 # flags for rheology and diagnostics;
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-                -DTHERMF_BUGFIX \
+                -DTHERMF_BUGFIX2 \
 #               -DTHERM_DIAG \
 #               -DICE_DYN_DIAG \
 #               -DICE_DYN_DIAG_DUMP \
