@@ -13,6 +13,7 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DDAILY_AVERAGE \
 
 # selective archiving (choose variables)
+# and archive restart
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DARCHIVE_SELECT \
 
@@ -30,7 +31,7 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DSEASONAL_PORT \
                  -DNEST_OUTER \
-#                -DINTERANNUAL_PORT \
+# #                -DINTERANNUAL_PORT \
 
 # # flags specific to inner models :
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
@@ -38,23 +39,20 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 
 # flags for rheology and diagnostics;
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-                  -DTHERM_DIAG \
-                  -DTHERM_BUGFIX \
-#                 -DICE_DYN_DIAG \
-#                 -DICE_DYN_DIAG_DUMP \
-#                 -DMIZ \
-#                 -DMIZ2 \
+                -DTHERMF_BUGFIX2 \
+#               -DTHERM_DIAG \
+#               -DICE_DYN_DIAG \
+#               -DICE_DYN_DIAG_DUMP \
+#               -DMIZ \
+#               -DMIZ2 \
 
 # # flags for waves run 
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 #                  -DWAVES \
-#                  -DWAVES_THERM \
-#                  -DWAVES_WAMNSEA \
-#                  -DWAVES_CHECK_FINAL \
 #                  -DWAVES_TEST_READWAVES \
 #                  -DWAVES_TESTADV \
-# #                -DWAVES_WW3_ARCTIC \
-# #                -DWAVES_WW3 \
+#                  -DWAVES_WW3 \
+# #                -DWAVES_WAMNSEA \
 # #                -DWAVES_NOSAVE \
 # #                -DWAVES_TIME_INTERP \
 # #                -DWAVES_RESET_ICE \
