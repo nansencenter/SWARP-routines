@@ -1239,12 +1239,14 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
       if EastOnly:
          # concentrate on the eastern Arctic
          # (and forget Baltic Sea)
-         regions.remove('balt' )
+         regions.remove('balt')
          regions.remove('les' )
          regions.remove('can' )
          regions.remove('beau')
+      else:
+         # forget Baltic Sea
+         regions.remove('balt')
 
-      # for reg in ['gre']:
       for reg in regions:
          mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,region=reg)
          MPdict.update({reg:mp})
@@ -1312,7 +1314,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
                                  resolution='i')
 
       # Psolns   = mc.single_file(tfil,MK_PLOT=False,METH=5)
-      tfo      = mc.single_file(tfil,cdate=cdate)
+      tfo      = mc.single_file(tfil)
       Psolns   = tfo.get_solutions(METH=5)
 
       Pdict.update({reg:Psolns})

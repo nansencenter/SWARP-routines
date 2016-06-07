@@ -6,6 +6,7 @@ import shapely.geometry as shg
 from matplotlib import pyplot as plt
 from skimage import measure as msr
 from skimage import morphology as morph
+import rtree.index	as Rindex
 
 # statchart:
 import matplotlib.gridspec as gridspec
@@ -19,6 +20,246 @@ import fns_plotting as Fplt
 # - 'Close' seems best
 MORPH = 'Close'
 
+
+#########################################################
+def read_txt_file_polys(fname):
+
+   # read in text file:
+   # each line is:
+   # [polygon number]  lon  lat  [function value]
+   # 1st line should be a header line
+
+   fid   = open(fname,'r')
+   lins  = fid.readlines()
+   fid.close()
+   
+   Polys = []
+   llc   = []
+   fvals = []
+   Pn0   = int(lins[1].split()[0])
+
+   for lin in lins[1:]:
+      ss   = lin.split()
+      Pno  = int(ss[0])
+      lon  = float(ss[1])
+      lat  = float(ss[2])
+      fval = int(ss[3])
+
+      if Pno==Pn0:
+         llc  .append((lon,lat))
+         fvals.append(fval)
+      else:
+         Polys.append([llc,fvals])
+         llc     = [(lon,lat)]
+         fvals   = [fval]
+         Pn0     = Pno
+
+   Polys.append([llc,fvals])
+   return Polys
+#########################################################
+
+
+#######################################################################
+class poly_info:
+   """
+   CALL: MIZchar.poly_info(ll_coords,func_vals=None,cdate=None,**kwargs)
+   **kwargs: for geometry_sphere.polar_stereographic_simple,NH=True,radius=6371.e3
+   make object with helpful info about polygons
+   """
+   def __init__(self,ll_coords,func_vals=None,cdate=None,**kwargs):
+
+      if type(cdate)==type('string'):
+         self.datetime  = datetime.strptime(cdate,'%Y%m%d')
+      else:
+         self.datetime  = cdate # already a datetime object (or is None)
+
+      if 0:
+         # test coords
+         ll_coords = [(0,77.),(1.,77.),(1.,78.),(0.,78.),(0,77.)]
+
+      lon,lat     = np.array(ll_coords).transpose()
+      self.length = len(ll_coords)
+
+      # if type(bmap)==type([]):
+      #    # already given list of x,y
+      #    xy_coords   = 1*bmap
+      # else:
+      #    # get x,y from basemap
+      #    x,y         = bmap(lon,lat)
+      #    xy_coords   = list(np.array([x,y]).transpose())
+
+      self.map = GS.polar_stereographic_simple 
+      if 'inverse' in kwargs:
+         del kwargs['inverse']
+      x,y         = self.map(lon,lat,inverse=False,**kwargs)
+      xy_coords   = list(np.array([x,y]).transpose())
+
+      if func_vals is not None:
+         fvals = list(func_vals)
+      else:
+         fvals = None
+      xyc2  = [tuple(xyp) for xyp in xy_coords] # list of tuples (otherwise logical ops are difficult)
+      llc2  = [tuple(llp) for llp in ll_coords] # list of tuples (otherwise logical ops are difficult)
+
+      critter  = (len(ll_coords)!=len(xy_coords))
+      flen     = 0
+      if func_vals is not None:
+         flen     = len(func_vals)
+         critter  = critter\
+                     or (len(ll_coords)!=len(func_vals))\
+                     or (len(xy_coords)!=len(func_vals))
+
+      #####################################################
+      if critter:
+         if flen>0:
+            print('lengths (ll,xy,f):')
+            print(len(ll_coords))
+            print(len(xy_coords))
+            print(flen)
+         else:
+            print('lengths (ll,xy):')
+            print(len(ll_coords))
+            print(len(xy_coords))
+         raise ValueError('Inconsistent lengths of inputs')
+      #####################################################
+
+      # close polygon if necessary
+      if xyc2[0]!=xyc2[-1]:
+         llc2.append(llc2[0])
+         xyc2.append(xyc2[0])
+         if func_vals is not None:
+            fvals.append(fvals[0])
+
+      x,y   = np.array(xyc2).transpose()
+      area  = GP.area_polygon_euclidean(x,y)
+      if area<0:
+         # reverse order (want anti-clockwise ordering)
+         xyc2.reverse()
+         llc2.reverse()
+         if func_vals is not None:
+            fvals.reverse()
+
+      self.area      = abs(area)
+      self.func_vals = fvals
+      self.ll_coords = llc2
+      self.xy_coords = xyc2
+      self.perimeter = GP.calc_perimeter(xyc2,closed=True)
+
+      # make rtree index
+      idx   = Rindex.Index()
+      for i in range(self.length):
+         xp,yp = self.xy_coords[i]
+         idx.insert(i,(xp,yp,xp,yp)) # a point is a rectangle of zero side-length
+      self.index  = idx
+
+      return
+   ################################################################
+
+
+   ################################################################
+   def plot(self,pobj=None,latlon=False,show=True,**kwargs):
+
+      if pobj is None:
+         pobj  = MR.plot_object()
+
+      if latlon:
+         lon,lat  = np.array(self.ll_coords).transpose()
+         pobj.ax.plot(lon,lat,**kwargs)
+      else:
+         lon,lat  = np.array(self.ll_coords).transpose()
+         x,y      = self.map(lon,lat)
+         pobj.ax.plot(x,y,**kwargs)
+
+      if show:
+         plt.show(pobj.fig)
+
+      return pobj
+   ################################################################
+
+
+   ################################################################
+   def basemap_plot(self,basemap,show=True,pobj=None,**kwargs):
+
+      # add 'ax' to kwargs if not there already
+      if pobj is None:
+         if 'ax' not in kwargs:
+            pobj  = MR.plot_object()
+            kwargs.update({'ax':pobj.ax})
+         # else 'ax' in kwargs and don't need to make an axis
+      else:
+         if 'ax' not in kwargs:
+            kwargs.update({'ax':pobj.ax})
+         else:
+            raise ValueError('Conflicting axes in pobj and kwargs')
+
+      lon,lat  = np.array(self.ll_coords).transpose()
+      basemap.plot(lon,lat,latlon=True,**kwargs)
+
+      if show and pobj is not None:
+         Fplt.finish_map(basemap)
+         plt.show(pobj.fig)
+
+      return pobj
+   ################################################################
+
+
+   ################################################################
+   def get_solution(self,METH=5):
+      lons,lats   = np.array(self.ll_coords).transpose()
+      if METH<2:
+         import Laplace_eqn_solution as Leqs
+
+         if METH==0:
+            # direct Laplacian soln
+            # - use fvals
+            print('\nUsing Laplacian on original polygon, with boundary flags\n')
+            Psoln = Leqs.get_MIZ_widths(lons,lats,fvals=self.func_vals,basemap=self.map)
+         else:
+            print('\nUsing Laplacian on original polygon, with PCA\n')
+            # - use PCA
+            Psoln = Leqs.get_MIZ_widths(lons,lats,basemap=self.map)
+
+      elif METH<4:
+         # apply Laplacian method to simpler covering polygon
+         import Laplace_eqn_solution as Leqs
+
+         if METH==2:
+            method   = 'ConvexHull'
+         else:
+            method   = 'Buffer'
+
+         print('\nUsing Laplacian on simplified polygon ('+method\
+               +'), with PCA\n')
+         Psoln = SimplifyPolygon(lons,lats,self.map,method=method)
+
+      elif METH==4:
+         print('\nUsing PCA without Laplacian solution\n')
+         
+         PCA   = pca_mapper(self.xy_coords)
+         Psoln = PCA.get_MIZ_lines(self.map)
+
+      elif METH==5:
+         #print('\nUsing PCA without Laplacian solution')
+         #print('\n - oriented wrt ice edge\n')
+
+         if self.func_vals is None:
+            raise ValueError("Need 'func_vals' input to use 'METH' = "+METH)
+
+         subset   = (np.array(self.func_vals)==0)
+         if not np.any(subset):
+            subset   = None
+         # TODO add selector function as extra input?
+
+         # print(self.func_vals)
+         # print(subset)
+         # print(self.ll_coords)
+         # print(self.xy_coords)
+         PCA   = pca_mapper(self.xy_coords,subset=subset)
+         Psoln = PCA.get_MIZ_lines(self.map)
+
+      return Psoln
+   ################################################################
+#######################################################################
 
 #################################################################
 def get_region_v2(llc=None):
@@ -959,6 +1200,8 @@ class MIZ_poly:
          reg_list    = Nreg.keys()
          tfil_list   = {}
          tfiles      = {}
+
+         # open text files and write headers
          for reg in reg_list:
             fname = outdir+'/'+filename_start+'_'+reg+'.txt'
             tfiles.update({reg:fname})
@@ -972,6 +1215,8 @@ class MIZ_poly:
          Nreg        = {reg:0}
          tfil_list   = {reg:open(fname,'w')}
          reg_list    = [reg]
+
+         # open text file and write header
          tfil_list[reg].write(ss)
 
       for num,cont in enumerate(self.MIZcont):
@@ -1264,7 +1509,7 @@ class poly_stat:
       ##############################################################################
       # run MIZ width analysis (selective PCA method)
       bmap        = Fplt.start_HYCOM_map(self.region)
-      Poly        = FSM.poly_info(self.ll_list,bmap,func_vals=self.f_vals,cdate=None)
+      Poly        = poly_info(self.ll_list,bmap,func_vals=self.f_vals,cdate=None)
       lons,lats   = np.array(Poly.ll_coords).transpose()
       if METH<2:
          if METH==0:
@@ -1648,7 +1893,7 @@ class MIZcont:
    #################################################################
 
    #################################################################
-   def plot_lines(self,bmap,**kwargs):
+   def plot_lines(self,bmap,show=False,**kwargs):
       for MIZl in self.lines:
          MIZl.plot_line(bmap,**kwargs)
       return
@@ -2157,10 +2402,36 @@ def save_summary(MIZpolys,filename):
 
 
 #########################################################
-class single_file:
-   def __init__(self,filename,cdate=None):
+def single_file(filename,cdate=None):
+   """
+   CALL: single_file(filename,cdate=None)
+   *Read in text file "filename":
+   >each line is:
+   [polygon number] lon  lat  [function value]
+   >First line is header
+
+   returns a MIZchar.poly_info_list object
+   """
+
+   ############################################################
+   # get polys as "poly_info" objects
+   Pols  = read_txt_file_polys(filename)
+
+   poly_infos = []
+   for llc,fvals in Pols:
+      Poly  = poly_info(llc,func_vals=fvals,cdate=cdate)
+      poly_infos.append(Poly)
+
+   # turn the list into a poly_info_list object
+   return poly_info_list(poly_infos,cdate=cdate)
+#########################################################
+
+
+#########################################################
+class poly_info_list:
+   def __init__(self,poly_infos,cdate=None):
       """
-      CALL: single_file(filename,bmap,MK_PLOT=False,pobj=None,cdate=None,METH=5)
+      CALL: poly_info_list(filename,cdate=None)
       0     : direct Laplacian with specified boundary flags
       1     : direct Laplacian with boundary flags determined from PCA
       2,3   : direct Laplacian to simplified polygon (lower fractal dimension index),
@@ -2184,12 +2455,8 @@ class single_file:
 
       ############################################################
       # get polys as "poly_info" objects
-      Pols  = FSM.read_txt_file_polys(filename)
-
-      self.poly_info_objects = []
-      for llc,fvals in Pols:
-         Poly  = FSM.poly_info(llc,cdate=cdate,func_vals=fvals)
-         self.poly_info_objects.append(Poly)
+      self.poly_info_objects  = 1*poly_infos
+      self.cdate              = cdate
 
       return
    ############################################################
@@ -2209,13 +2476,16 @@ class single_file:
             fig      = plt.figure()
             ax1      = fig.add_subplot(1,1,1)
             MK_PLOT  = True
+      elif pobj is not None:
+         MK_PLOT  = True
+         fig,ax1  = pobj.fig,pobj.ax
       ################################################################
 
 
       Psolns   = []
       cbar     = False
       for Poly in self.poly_info_objects:
-         Psoln       = Poly.get_solution(METH=METH)
+         Psoln = Poly.get_solution(METH=METH)
          Psolns.append(Psoln)
 
          if MK_PLOT:
@@ -2245,9 +2515,9 @@ class single_file:
 
             #########################################################
             elif METH==4 or METH==5:
-                  # PCA without Laplacian solution
-                  # - 5: oriented wrt ice edge
-                  Psoln.plot_soln(bmap,ax=ax1,color='c',show=False)
+               # PCA without Laplacian solution
+               # - 5: oriented wrt ice edge
+               Psoln.plot_soln(bmap,ax=ax1,color='c')
             #########################################################
 
 
@@ -2287,4 +2557,52 @@ class single_file:
       #########################################################
 
       return Psolns
+      #########################################################
+
+   def reduce_area(self,vertices):
+
+      # ===============================================================
+      # get info about vertices
+      vlons,vlats = np.array(vertices).transpose()
+      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+      xyverts     = [(vx[i],vy[i]) for i in range(len(vx))]
+
+      # make sure polygon is closed
+      if xyverts[0] != xyverts[-1]:
+         print('- closing polygon')
+         xyverts.append(xyverts[0])
+      # ===============================================================
+
+
+      # ===============================================================
+      # test individual polygons to see if they are inside the vertices
+      pil_new  = []
+      for pi_old in self.poly_info_objects:
+         lons,lats   = np.array(pi_old.ll_coords).transpose()
+         x,y         = GS.polar_stereographic_simple(lons,lats,NH=True,inverse=False)
+         fvals       = np.array(pi_old.func_vals)
+         inside      = GP.maskgrid_outside_polygon(x,y,xyverts) #true if inside poly
+
+         # if any points inside, check size and add to new list
+         if np.any(inside):
+            lons,lats   = GS.polar_stereographic_simple(x[inside],y[inside],NH=True,inverse=True)
+            fvals       = 1*fvals[inside]
+            N           = len(fvals)
+
+            # if set of points are not too small add the polygon
+            if N>3:
+               llc      = [(lons[i],lats[i]) for i in range(N)]
+               pi_new   = poly_info(llc,func_vals=fvals)
+               pil_new.append(pi_new)
+      # ===============================================================
+
+
+      # ===============================================================
+      if len(pil_new)>0:# convert to poly_info_list object and return
+         return poly_info_list(pil_new)
+      else:
+         return
+      # ===============================================================
+
+
 #########################################################
