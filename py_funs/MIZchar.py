@@ -2428,6 +2428,98 @@ def single_file(filename,cdate=None):
 
 
 #########################################################
+class MIZ_info_list:
+
+   ######################################################
+   def __init__(self,MIZ_infos,METH=5,cdate=None):
+      self.METH               = METH
+      self.MIZ_info_objects   = []
+      for mi in MIZ_infos:
+         self.MIZ_info_objects.append(mi)
+      return
+   ######################################################
+
+
+   ######################################################
+   def plot_solutions(self,basemap,pobj=None,figname=None):
+
+      bmap  = basemap
+      if pobj is None:
+         pobj  = Fplt.plot_object()
+      fig,ax1  = pobj.fig,pobj.ax
+
+      cbar  = False # colorbar not made yet
+      for Psoln in self.MIZ_info_objects:
+
+         # plot poly boundary
+         lons,lats   = np.array(Psoln.ll_bdy_coords).transpose()
+         bmap.plot(lons,lats,'k',latlon=True,linewidth=2,ax=ax1)
+
+         #########################################################
+         if self.METH<2:
+            # soln from Laplacian method on original polygon
+            Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=(not cbar),show=False)
+            cbar  = True
+         #########################################################
+         
+
+         #########################################################
+         elif self.METH<4:
+            # soln from Laplacian method on simpler covering polygon
+            # plot Laplacian solution
+            Psoln.Laplacian_soln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=(not cbar),show=False)
+            cbar  = True
+            #
+            for MIZc in Psoln.MIZlines:
+               MIZc.plot_lines(bmap,ax=ax1,color='c')
+         #########################################################
+
+
+         #########################################################
+         elif self.METH<6:
+            # PCA without Laplacian solution
+            # - 4: orientated wrt major axis of "ellipse"
+            # - 5: oriented wrt ice edge
+            Psoln.plot_soln(bmap,ax=ax1,color='c')
+         #########################################################
+
+
+      #########################################################
+      # finish map and close before returning
+      import fns_plotting as FP
+      FP.finish_map(bmap)
+
+      if figname is None:
+         # fig.show()
+         plt.show(fig)
+      else:
+         fig.savefig(figname)
+         ax1.cla()
+         plt.close(fig)
+      #########################################################
+
+         
+      return pobj
+   ######################################################
+   
+   
+   ######################################################
+   def save_shapefile(self,filename):
+      save_shapefile(self.MIZ_info_objects)
+      return
+   ######################################################
+
+
+   ######################################################
+   def save_summary(self,filename):
+      save_summary(self.MIZ_info_objects,filename)
+      return
+   ######################################################
+
+#########################################################
+
+
+#########################################################
 class poly_info_list:
    def __init__(self,poly_infos,cdate=None):
       """
@@ -2463,24 +2555,7 @@ class poly_info_list:
 
 
    ############################################################
-   def get_solutions(self,METH=5,basemap=None,pobj=None):
-
-      ################################################################
-      MK_PLOT  = False
-      if basemap is not None:
-         bmap     = basemap
-         MK_PLOT  = True
-         if pobj is not None:
-            fig,ax1  = pobj.fig,pobj.ax
-         else:
-            fig      = plt.figure()
-            ax1      = fig.add_subplot(1,1,1)
-            MK_PLOT  = True
-      elif pobj is not None:
-         MK_PLOT  = True
-         fig,ax1  = pobj.fig,pobj.ax
-      ################################################################
-
+   def get_solutions(self,METH=5):
 
       Psolns   = []
       cbar     = False
@@ -2488,73 +2563,8 @@ class poly_info_list:
          Psoln = Poly.get_solution(METH=METH)
          Psolns.append(Psoln)
 
-         if MK_PLOT:
-            lons,lats   = np.array(Poly.ll_coords).transpose()
-            bmap.plot(lons,lats,'k',latlon=True,linewidth=2,ax=ax1)
-
-            
-            #########################################################
-            if METH<2:
-               # soln from Laplacian method on original polygon
-               Psoln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=(not cbar),show=False)
-               cbar  = True
-            #########################################################
-
-
-            #########################################################
-            elif METH<4:
-               # soln from Laplacian method on simpler covering polygon
-               # plot Laplacian solution
-               Psoln.Laplacian_soln.plot_soln(pobj=[fig,ax1],bmap=bmap,cbar=(not cbar),show=False)
-               cbar  = True
-               #
-               for MIZc in Psoln.MIZlines:
-                  MIZc.plot_lines(bmap,ax=ax1,color='c')
-            #########################################################
-
-
-            #########################################################
-            elif METH==4 or METH==5:
-               # PCA without Laplacian solution
-               # - 5: oriented wrt ice edge
-               Psoln.plot_soln(bmap,ax=ax1,color='c')
-            #########################################################
-
-
-            #########################################################
-            # add text and representative lines to figs
-            Wavg  = Psoln.record['Width_mean']/1.e3         # mean width in km
-            W95   = Psoln.record['Width_percentile95']/1.e3 # 95th percentile width in km
-            if Wavg>26:
-               Psoln.plot_representative_lines(bmap,plot_type='Width_mean',ax=ax1,color='r',linewidth=1.5)
-               Psoln.plot_representative_lines(bmap,plot_type='Width_percentile95',ax=ax1,color='g',linewidth=1.5)
-
-               # add text
-               xmin,xmax,ymin,ymax  = Psoln.bbox(bmap)
-               xav   = (xmin+xmax)/2.
-               if 0:
-                  # write mean
-                  ax1.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                     color='r',fontsize=16,horizontalalignment='right',\
-                     verticalalignment='top')
-               else:
-                  # write 95th percentile
-                  ax1.text(xmax,ymin,'%4.1f km' %(W95),\
-                     color='g',fontsize=16,horizontalalignment='right',\
-                     verticalalignment='top')
-
-            #########################################################
-
-
-      if MK_PLOT:
-         #########################################################
-         # finish map and close before returning
-         import fns_plotting as FP
-         FP.finish_map(bmap)
-
-         # fig.show()
-         plt.show(fig)
-      #########################################################
+      # make a MIZ_info_list object and return
+      Psolns   = MIZ_info_list(Psolns,METH=METH)
 
       return Psolns
       #########################################################

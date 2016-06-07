@@ -1108,17 +1108,18 @@ class MIZ_soln:
                cbar=cbar,ax=ax)
 
          # plot streamlines (m)
-         for cc in self.area_info.xy_contours:
+         for cc in self.area_info.ll_contours:
             xx,yy = np.array(cc).transpose()
-            bmap.plot(xx,yy,'m',linewidth=2,ax=ax)
+            bmap.plot(xx,yy,'m',latlon=True,linewidth=2,ax=ax)
 
       else:
+         # TODO does this work?
          plot_fun(plot_boundary=False,pobj=[fig,ax],show=False,cbar=cbar)
 
          # plot streamlines (km)
-         for cc in self.area_info.xy_contours:
+         for cc in self.area_info.ll_contours:
             xx,yy = np.array(cc).transpose()
-            ax.plot(xx/1.e3,yy/1.e3,'m',linewidth=2)
+            ax.plot(xx/1.e3,yy/1.e3,'m',latlon=True,linewidth=2)
 
          ax.set_aspect('equal')
       #################################################
