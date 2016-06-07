@@ -41,10 +41,11 @@ print('\nEnd of forecast:')
 print(nci.datetimes[-1])
 print('\n')
 
-if 'area' in nci.ncattrs.list():
-   HYCOMreg = nci.ncattrs.area[:3]
-elif 'area_name' in nci.ncattrs.list():
-   HYCOMreg = nci.ncattrs.area_name[:3]
+dct   = vars(nci.ncattrs)
+if 'area' in dct:
+   HYCOMreg = dct['area'][:3]
+elif 'area_name' in dct:
+   HYCOMreg = dct['area_name'][:3]
 else:
    HYCOMreg = 'TP4'
 

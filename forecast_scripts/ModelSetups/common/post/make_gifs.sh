@@ -3,7 +3,15 @@
 
 # ===================================================================================
 source $SWARP_ROUTINES/source_files/hex_vars.src
-THIS_SRC=`readlink -f $1`
+if [ $# -ne 2 ]
+then
+   echo "Usage: make_gifs.sh [source file] [date]"
+   echo "-date in yyyymmdd format"
+   exit
+else
+   THIS_SRC=`readlink -f $1`
+   cdate=$2
+fi
 source $THIS_SRC
 # ===================================================================================
 
@@ -13,14 +21,6 @@ source $THIS_SRC
 email=$(cat $FCemail)
 # =============================================================================
 
-if [ $# -ne 2 ]
-then
-   echo "Usage: make_gifs.sh [source file] [date]"
-   echo "-date in yyyymmdd format"
-   exit
-else
-   cdate=$2
-fi
 
 ncfil=$THISFC2/$cdate/final_output/${FC_OUTPUT}_start${cdate}T000000Z.nc
 figdir=$THISFC2/$cdate/figures
