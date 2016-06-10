@@ -193,7 +193,21 @@ do
    # 1) the gif folder is cleared (when the .nc file is copied, see above) and
    # 2) the gif files exist on hexagon for the current day
    # if [ ! "$(ls -A $tmp_dir/gifs/*.gif )" ] && [ ! "$(ssh -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no ls -A $hex_dir/$hdate/figures/gifs/*.gif 2>/dev/null)" == "" ];
-   if [ ! -f $tmp_dir/gifs/*.gif ]
+
+   # check for gifs' presence
+   lst=($tmp_dir/gifs/*.gif)
+   Ng=${#lst}
+   if [ $Ng -eq 1 ]
+   then
+      if [ ! -f ${lst[0]} ]
+      then
+         # change from 1 to 0
+         Ng=0
+      fi
+   fi
+   
+   # do copy if they are there
+   if [ $Ng -gt 0 ]
    then
       if [ $n -eq 0 ]
       then
@@ -214,7 +228,7 @@ do
             cp $tmp_dir/gifs/* $FTP
 
             # make combined figures synced in time for WEB page
-            if [ $FCtype_joh="ice_only" ]; then
+            if [ $FCtype_joh == "ice_only" ]; then
                # sea ice concentration and thickness
                convert \( $tmp_dir/gifs/icec.gif  -coalesce -append \) \
                        \( $tmp_dir/gifs/icetk.gif -coalesce -append \) \
@@ -225,7 +239,7 @@ do
                        +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/IO2comb.gif
             fi
               
-            if [ $FCtype_joh="wavesice" ]; then
+            if [ $FCtype_joh == "wavesice" ]; then
                # Max floe size and wave-in-ice significant wave height
                convert \( $tmp_dir/gifs/dmax.gif  -coalesce -append \) \
                        \( $tmp_dir/gifs/swh.gif -coalesce -append \) \
