@@ -22,6 +22,8 @@ from netCDF4 import Dataset
 # # not present (2.7.9)
 import rtree.index      as Rindex         # not originally requested 
 
+import ESMF # ESMF regridding
+
 # pygrib doesn't work in conda
 if 0:
    import pygrib
