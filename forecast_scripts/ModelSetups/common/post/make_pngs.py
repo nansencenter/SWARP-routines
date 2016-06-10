@@ -1,8 +1,8 @@
+import matplotlib
+matplotlib.use('Agg')
 import os,sys
 from getopt import getopt
 import mod_reading as Mr
-import matplotlib
-matplotlib.use('Agg')
 
 # ==========================================================================
 # options
@@ -23,10 +23,10 @@ for opt,arg in opts:
       FCtype   = arg
 
 if ncfile is None:
-   raise ValueError('no netcdf file specified (use --ncfile==)')
+   raise ValueError('no netcdf file specified (use --ncfile=)')
 
 if FCtype is None:
-   raise ValueError('forecast type not specified (use --FCtype==)')
+   raise ValueError('forecast type not specified (use --FCtype=)')
 # ==========================================================================
 
 print(' ')
@@ -41,10 +41,11 @@ print('\nEnd of forecast:')
 print(nci.datetimes[-1])
 print('\n')
 
-if 'area' in nci.ncattrs.list():
-   HYCOMreg = nci.ncattrs.area[:3]
-elif 'area_name' in nci.ncattrs.list():
-   HYCOMreg = nci.ncattrs.area_name[:3]
+dct   = vars(nci.ncattrs)
+if 'area' in dct:
+   HYCOMreg = dct['area'][:3]
+elif 'area_name' in dct:
+   HYCOMreg = dct['area_name'][:3]
 else:
    HYCOMreg = 'TP4'
 

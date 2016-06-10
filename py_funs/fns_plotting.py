@@ -1,3 +1,45 @@
+from matplotlib import pyplot as plt
+
+##########################################################
+class plot_object:
+   """
+   create object with:
+   pobj  = plot_object(fig=None,ax=None,cbar=None,axpos=None)
+   fig  is a pyplot.figure instance
+   ax   is a subplot axis of fig
+   cbar is a colorbar associated with fig and a plot on ax
+   - used in the plotting routines of mod_reading
+   TODO move to fns_plotting
+   """
+
+   def __init__(self,fig=None,ax=None,cbar=None,axpos=None):
+
+      if fig is None:
+         self.fig   = plt.figure()
+      else:
+         self.fig   = fig
+
+      if ax is None:
+         self.ax = self.fig.add_subplot(1,1,1)
+      else:
+         self.ax  = ax
+
+      self.cbar   = cbar
+      self.axpos  = axpos
+
+      return
+
+   def get(self):
+      return self.fig,self.ax,self.cbar
+
+   def renew(self,axpos=None):
+      
+      pobj  = plot_object(fig=self.fig,ax=self.ax,cbar=self.cbar,axpos=axpos)
+
+      return pobj
+##########################################################
+
+
 ############################################################################
 def start_HYCOM_map(region,cres='i'):
 
@@ -131,8 +173,8 @@ def start_HYCOM_map(region,cres='i'):
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
-   elif region=='nor':
-      # Norway fjord
+   elif region=='balt':
+      # Baltic sea
       lonc     = 22.
       latc     = 64.
       lat_ts   = latc

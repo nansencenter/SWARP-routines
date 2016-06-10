@@ -1,12 +1,13 @@
 # script to restore forecast expt directories
 # if it has been cleaned
+source $SWARP_ROUTINES/source_files/hex_vars.src
 
-if [ $# -lt 2 ]
+if [ $# -ne 2 ]
 then
    echo Usage:
-   echo restore_expt.sh Region Xno
-   echo "where Region = TP4, FR1 or BS1"
-   echo "where Xno = 1 (ice_only), 2 (waves-in-ice - WAM), 3 (waves-in-ice - WW3)"
+   echo restore_expt.sh Region FCtype
+   echo "*Region = TP4, FR1 or BS1"
+   echo "*FCtype = ice_only, waves-in-ice (WAM), waves-in-ice (WW3)"
    exit
 else
    HYCOMreg=$1
@@ -62,7 +63,8 @@ fi
 echo " "
 X=01.$Xno
 E=01$Xno
-cd $TP4_REALTIME/expt_$X
+wdir=$TP4_REALTIME/../$R # path to expt on /work
+cd $wdir/expt_$X
 pwd
 
 for f in bak/*
@@ -90,3 +92,9 @@ file=blkdat.input
 cat bak/$file | sed \
 -e "s/010/$E/g" \
 > $file
+echo " "
+
+# clean SCRATCH - to make sure ECMWF path is new one (linked in preprocess.sh)
+echo "Cleaning SCRATCH..."
+rm -rf SCRATCH/*
+echo " "

@@ -460,7 +460,7 @@ class WIM_growth_stress:
             alpha = np.log(xi*xi*f)/np.log(xi)
 
             for n,en in enumerate(linZD):
-                if en != 0 and en > 20:
+                if en > 20:
                     A = alpha/(pow(dmin,-alpha)-pow(en,-alpha))
                     linDmean[n] = A/(alpha-1)*(pow(dmin,1-alpha)-pow(en,1-alpha))
                     linD2mean[n] = A/(alpha-2)*(pow(dmin,2-alpha)-pow(en,2-alpha))
@@ -538,14 +538,14 @@ class WIM_growth_stress:
                     linSlat[n] = N0*4*ndsum*linthic_old[n]
                     linSbot[n] = N0*ndsum2
                     linAlpha[n] = linSlat[n]/(linSlat[n]+linSbot[n])
-                    linBeta[n] = linSlat[n]/linSbot[n]
+                    linBeta[n] = 4*linthic_old[n]*linDmean[n]/linD2mean[n]
                 elif en == 999 and linZD[n] != 0 and linthic_old[n] != 0:
                     linDmean[n] = linZD[n]
                     linD2mean[n] = linZD[n]**2
                     linSlat[n] = 4*linthic_old[n]*N0*linZD[n]
                     linSbot[n] = N0*linD2mean[n]
                     linAlpha[n] = linSlat[n]/(linSlat[n]+linSbot[n])
-                    linBeta[n] = linSlat[n]/linSbot[n]
+                    linBeta[n] = 4*linthic_old[n]*linDmean[n]/linD2mean[n]
                 else:
                     linDmean[n] = 0
                     linD2mean[n] = 0

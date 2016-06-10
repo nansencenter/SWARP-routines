@@ -13,9 +13,9 @@ nesting_inner=T
 
 # forecast stops $FCdays from current day,
 #  at $FCfinal_hour
-FCdays=6
+FCdays=5
 FCfinal_hour=00
-FCrecords=49
+FCrecords=41
 
 # no need to change below here
 THISFC="$SWARP_ROUTINES/forecast_scripts/ModelSetups/$HYCOMreg/$FCtype"    # inputs,logs

@@ -1,37 +1,78 @@
 # compile all FC models
+me=`readlink -f $0`
+here=`dirname $me`
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
 
-if [ $# -gt 0 ]
+if [ $# -eq 0 ]
 then
-   # restore deleted files in Build
-   # - this also gets flags from the proper "inputs"
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh TP4 ice_only            || echo "Build set-up error: TP4 ice_only          "
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh TP4 wavesice_ww3arctic  || echo "Build set-up error: TP4 wavesice_ww3arctic"
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh BS1 ice_only            || echo "Build set-up error: BS1 ice_only          "
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh BS1 wavesice_ww3arctic  || echo "Build set-up error: BS1 wavesice_ww3arctic"
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh FR1 ice_only            || echo "Build set-up error: FR1 ice_only          "
-   $SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh FR1 wavesice_ww3arctic  || echo "Build set-up error: FR1 wavesice_ww3arctic"
+   echo Usage: $0 restore
+   echo "*restore=1: do want to restore Build directories"
+   echo "(also rerun nesting if using TP4 domain)"
+   echo "*restore=0: don't want to restore Build directories"
+   exit
+else
+   restore=$1
 fi
 
 
+# restore Build directory if needed
+if [ $restore -eq 1 ]
+then
+   # restore deleted files in Build
+   # - this also gets flags from the proper "inputs"
+   RBS=$SWARP_ROUTINES/forecast_scripts/utility_scripts/restore_build.sh
+   for reg in TP4 BS1 FR1
+   do
+      for FCtype in ice_only wavesice_ww3arctic
+      do
+         echo $RBS $reg $FCtype
+         $RBS $reg $FCtype   || echo "Build set-up error: $reg $FCtype"
+      done
+   done
+fi
+
+
+# recompile
+logdir=$here/logs
+mkdir -p $logdir
+logfile=$logdir/compile.log
+rm -f $logfile
+echo "************************************************************"  >  $logfile
+echo "Recompiling HYCOM (no error means compilation was succesful)"  >> $logfile
+echo "************************************************************"  >> $logfile
+echo " "                                                             >> $logfile
+
 for Xno in 1 3
 do
-   cd $TP4_REALTIME/Build_V2.2.12_X01.$Xno
-   pwd
-   make clean
-   make || echo "compilation error"
+   for rdir in $TP4_REALTIME
+   do
+      cd $rdir/Build_V2.2.12_X01.$Xno
+      pwd
+      echo " "
+
+      pwd                                       >> $logfile
+      echo " "                                  >> $logfile
+      python $here/print_flags.py               >> $logfile
+      echo " "                                  >> $logfile
+      make clean
+      make || echo "!!**COMPILATION ERROR**!!"  >> $logfile
+      echo " "                                  >> $logfile
+   done
 done
+# exit
 
 for Xno in 0 1
 do
-   cd $BS1_REALTIME/Build_V2.2.12_X01.$Xno
-   pwd
-   make clean
-   make || echo "compilation error"
-
-   cd $FR1_REALTIME/Build_V2.2.12_X01.$Xno
-   pwd
-   make clean
-   make || echo "compilation error"
+   for rdir in $BS1_REALTIME $FR1_REALTIME
+   do
+      cd $rdir/Build_V2.2.12_X01.$Xno
+      pwd                                       >> $logfile
+      echo " "                                  >> $logfile
+      python $here/print_flags.py               >> $logfile
+      echo " "                                  >> $logfile
+      make clean
+      make || echo "!!**COMPILATION ERROR**!!"  >> $logfile
+      echo " "                                  >> $logfile
+   done
 done

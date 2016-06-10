@@ -107,12 +107,12 @@ def greatcircledist(lat1, lon1, lat2, lon2, R=None,radians=True):
       # arrays
       nvec  = np.arange(len(rng))
       for n in nvec[(rng/R)<(5.e3/R0)]:
-         dphi     = lat2[n]-lat1[n]
-         dlam     = lon2[n]-lon1[n]
-         rng[n]  = R*2*np.arcsin(np.sqrt(\
-            pow(np.sin(dphi/2),2)+\
-            np.cos(lat1)*np.cos(lat2)*pow(np.sin(dlam/2),2)\
-               ))
+         dphi  = lat2[n]-lat1[n]
+         dlam  = lon2[n]-lon1[n]
+         c     = pow(np.sin(dphi/2.),2)+\
+                  np.cos(lat1[n])*np.cos(lat2[n])*pow(np.sin(dlam/2.),2)
+         #
+         rng[n]  = R*2*np.arcsin(np.sqrt(c))
    else:
       # numbers
       if (rng/R)<(5.e3/R0):
@@ -249,7 +249,6 @@ def area_polygon_ellipsoid(lon,lat,ellipsoid_mat=None,ellipsoid=None,radians=Fal
 
       # Ensure the path segment closes upon itself by
       # repeating beginning point at the end.
-
       if (lat[-1]!=lat[0]) or (lon[-1]!=lon[0]):
          lat   = np.concatenate([lat,[lat[0]]],0)
          lon   = np.concatenate([lon,[lon[0]]],0)
@@ -317,133 +316,86 @@ def lonlat2vec(lon,lat):
    return v
 ###################################################################
 
-# ###################################################################
-# def polar_stereographic_ellipsoid(lon_vec,lat_vec,proj_params,ellipsoid=None,inverse=False):
-# 
-#    import numpy as np
-# 
-#    latc,lonc,lat_ts  = proj_params # degrees
-#    # latc   = central lat
-#    # lonc   = central lat
-#    #  - lon=lonc     -> to X=0 in projection
-#    #  - (lonc,latc)  -> (0,0)  in projection
-#    # lat_ts = latitude of true scale
-#    #  - when not using north or south pole as origin,
-#    #    the [SHAPE=?] through (lonc,lat_ts) has distances at true scale
-# 
-#    if ellipsoid is not None:
-#       a,b   = ellipsoid 
-#       # a      = dist centre to north pole
-#       # b      = radius at equator (a>b)
-#    else:
-#       import geopy.distance as geodist
-#       ellipsoid   = geodist.ELLIPSOIDS['WGS-84'] # has extra parameter "flattening=(b-a)/a"
-#       a,b         = ellipsoid[:-1]
-# 
-#    def projection(vp,a,b,lon,lat):
-# 
-#       z  = a*np.sin(lat)
-#       r  = b*np.cos(lat)
-#       x  = r*np.cos(lon)
-#       y  = r*np.sin(lon)
-#       v  = np.zeros((3,len(z)))
-# 
-#       
-# 
-#       
-#       
-# 
-#       return X,Y
-# 
-#    NP    = (latc==90.)
-#    SP    = (latc==-90.)
-#    TSP   = (lat_ts==latc)
-#    if TSP:
-#       # dy/dlat=ds/dlat at pole
-# 
-#    # if NP:
-#    #    # north pole is centre
-#    #    lat_ref  = 80.
-#    #    ang_ref  = -np.pi/2.# (lonc,lat_ref) should be on negative y axis 
-#    # elif SP:
-#    #    # south pole is centre
-#    #    lat_ref  = -80.
-#    #    ang_ref  = np.pi/2.# (lonc,lat_ref) should be on positive y axis 
-#    # elif (TSP):
-#    # else:
-#    #    lat_ref  = lat_ts
-#    #    ang_ref  = np.sign(lat_ts-latc)*np.pi/2.
-#    #       # (lonc,lat_ts) should be on positive y axis if lat_ts>latc
-#    #       # (lonc,lat_ts) should be on negative y axis if lat_ts<latc
-# 
-# 
-# 
-# 
-#    if not inverse:
-#       # convert from lon,lat to X,Y
-# 
-#       # convert to radians if necessary
-#       latc     = latc*180./np.pi
-#       lonc     = lonc*180./np.pi
-#       lat_ts   = lat_ts*180./np.pi
-#       lon      = (lon-lonc)*180./np.pi # redefine relative to lonc, so (lon=lonc) -> x=0 automatically
-#       lat      = lat*180./np.pi
-# 
-#       # pole is opposite point to centre of proj in 3d:
-#       vp = - lonlat2vec(lonc,latc)
-# 
-#       # projection plane
-#       # plane through origin, normal to vp (vp\cdot x=0):
-#       plane_params   = [vp,0]
-# 
-#       ########################################################################
-#       # Get scale factor
-# 
-#       if NP:
-#          # Get rotation and scale factor from lonc,lat_ts
-#          v     = lonlat2vec(0,lat_ts)
-# 
-#          # line through v,vp:
-#          line_coeffs = [vp-v,v] # [m,c], x=m*t+c: t=0 -> v, t=1 -> vp
-# 
-#          # intersection of line, projection plane:
-#          X,Y   = intersection_line_plane(plane_params,line_coeffs)
-# 
-#          # rotation matrix:
-#          Rang  = np.sign(lat_ts-latc)*np.pi/2.-np.atan2(Y,X)
-#          Rmat  = [[np.cos(Rang),-np.sin(Rang)],
-#                   [np.sin(Rang), np.cos(Rang)] ]
-# 
-# 
-#       if lat_ts!=latc:
-#          # Get rotation and scale factor from lonc,lat_ts
-#          v     = lonlat2vec(lonc,lat_ts)
-# 
-#          # line through v,vp:
-#          line_coeffs = [vp-v,v] # [m,c], x=m*t+c: t=0 -> v, t=1 -> vp
-# 
-#          # intersection of line, projection plane:
-#          X,Y   = intersection_line_plane(plane_params,line_coeffs)
-# 
-#          # rotation matrix:
-#          Rang  = np.sign(lat_ts-latc)*np.pi/2.-np.atan2(Y,X)
-#          Rmat  = [[np.cos(Rang),-np.sin(Rang)],
-#                   [np.sin(Rang), np.cos(Rang)] ]
-#       else:
-# 
-#       ########################################################################
-# 
-#       for n in range(len(lon_vec)):
-#          lon   = lon_vec[n]
-#          lat   = lat_vec[n]
-#          v     = lonlat2vec(lon,lat)
-# 
-#          # line through v,vp:
-#          line_coeffs = [vp-v,v] # [m,c], x=m*t+c: t=0 -> v, t=1 -> vp
-# 
-#          # intersection of line, projection plane
-#          X,Y   = intersection_line_plane(plane_params,line_coeffs)
-# 
-#    else:
-#       # convert from X,Y to lon,lat 
-#       X,Y   = lon,lat
+###################################################################
+def polar_stereographic_simple(lon_vec,lat_vec,NH=True,radius=6371.e3,inverse=False):
+   """
+   x,y      = polar_stereographic_simple(lon,lat,NH=True,radius=6371.e3,inverse=False)
+   lon,lat  = polar_stereographic_simple(x,y,NH=True,radius=6371.e3,inverse=True)
+   *x,y,lon,lat are numpy arrays
+   *simple stereographic projection - when not worrying about area distortion etc,
+   only conformity of mapping
+   *NH=True: northern hemisphere - project from south pole;
+   else: southern hemisphere - project from north pole
+   *radius (of earth)
+   """
+
+   import numpy as np
+
+   if type(lon_vec)!=type(np.array([0])):
+      raise ValueError('lon_vec should be a numpy array')
+   if type(lat_vec)!=type(np.array([0])):
+      raise ValueError('lat_vec should be a numpy array')
+
+   ###########################################
+   def projection_cartesian(lon,lat,radius):
+
+      a  = radius
+      b  = radius
+      z  = a*np.sin(np.pi/180.*lat)
+      r  = b*np.cos(np.pi/180.*lat) # tan(lat)=(z*b)/(a*r)
+      x  = r*np.cos(np.pi/180.*lon)
+      y  = r*np.sin(np.pi/180.*lon) # tan(lon)=y/x
+
+      return x,y,z
+   ###########################################
+
+
+   ###########################################
+   if not inverse:
+
+      x,y,z = projection_cartesian(lon_vec,lat_vec,radius)
+      r     = np.sqrt(x**2+y**2)
+
+      if NH:
+         # project from South Pole
+         r2 = r*radius/(z+radius)
+         x2 = (r2/r)*x
+         y2 = (r2/r)*y
+      else:
+         # project from North Pole
+         r2 = r*radius/(-z+radius)
+         x2 = (r2/r)*x
+         y2 = (r2/r)*y
+
+      return x2,y2
+
+   ###########################################
+   else:
+
+      x2,y2 = lon_vec,lat_vec
+      r2    = np.sqrt(x2**2+y2**2)
+
+      if NH:
+         # project from South Pole
+         A  = radius**2+r2**2
+         B  = 2*radius*r2**2
+         C  = -radius**2*(radius**2-r2**2)
+         z  = (-B+np.sqrt(B**2-4*A*C))/(2*A) # >0
+         r  = r2/radius*(z+radius)
+         x  = r/r2*x2
+         y  = r/r2*y2
+      else:
+         # project from North Pole
+         A  = radius**2+r2**2
+         B  = -2*radius*r2**2
+         C  = -radius**2*(radius**2-r2**2)
+         z  = (-B-np.sqrt(B**2-4*A*C))/(2*A) # <0
+         r  = r2/radius*(-z+radius)
+         x  = r/r2*x2
+         y  = r/r2*y2
+
+      lon   = (180./np.pi)*np.arctan2(y,x)
+      lat   = (180./np.pi)*np.arctan2(z,r)
+
+      return lon,lat
+   ###########################################

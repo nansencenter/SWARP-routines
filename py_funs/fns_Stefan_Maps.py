@@ -3,11 +3,15 @@ import numpy as np
 import rtree.index	as Rindex
 from datetime import datetime
 import shapely.geometry as SHgeom
+from matplotlib import pyplot as plt
 
 SR = os.getenv('SWARP_ROUTINES')
 sys.path.append(SR+'/py_funs')
 import fns_plotting as Fplt
 import geometry_planar as GP
+import geometry_sphere as GS
+import mod_reading as MR
+import MIZchar as MC
 
 #######################################################################
 def write_polys(fname,Polys):
@@ -77,86 +81,8 @@ class line_info:
       return
 #######################################################################
 
-#######################################################################
-class poly_info:
-   # make object with helpful info:
-   def __init__(self,ll_coords,bmap,func_vals=None,cdate=None):
 
-      if type(cdate)==type('string'):
-         self.datetime  = datetime.strptime(cdate,'%Y%m%d')
-      else:
-         self.datetime  = cdate # already a datetime object (or is None)
-      self.length    = len(ll_coords)
 
-      if type(bmap)==type([]):
-         # already given list of x,y
-         xy_coords   = 1*bmap
-      else:
-         # get x,y from basemap
-         lon,lat     = np.array(ll_coords).transpose()
-         x,y         = bmap(lon,lat)
-         xy_coords   = list(np.array([x,y]).transpose())
-
-      if func_vals is not None:
-         fvals = list(func_vals)
-      else:
-         fvals = None
-      xyc2  = [tuple(xyp) for xyp in xy_coords] # list of tuples (otherwise logical ops are difficult)
-      llc2  = [tuple(llp) for llp in ll_coords] # list of tuples (otherwise logical ops are difficult)
-
-      critter  = (len(ll_coords)!=len(xy_coords))
-      flen     = 0
-      if func_vals is not None:
-         flen     = len(func_vals)
-         critter  = critter\
-                     or (len(ll_coords)!=len(func_vals))\
-                     or (len(xy_coords)!=len(func_vals))
-
-      #####################################################
-      if critter:
-         if flen>0:
-            print('lengths (ll,xy,f):')
-            print(len(ll_coords))
-            print(len(xy_coords))
-            print(flen)
-         else:
-            print('lengths (ll,xy):')
-            print(len(ll_coords))
-            print(len(xy_coords))
-         raise ValueError('Inconsistent lengths of inputs')
-      #####################################################
-
-      # close if necessary
-      if xyc2[0]!=xyc2[-1]:
-         llc2.append(llc2[0])
-         xyc2.append(xyc2[0])
-         if func_vals is not None:
-            fvals.append(fvals[0])
-
-      x,y   = np.array(xyc2).transpose()
-      area  = GP.area_polygon_euclidean(x,y)
-      if area<0:
-         # reverse order (want anti-clockwise ordering)
-         xyc2.reverse()
-         llc2.reverse()
-         if func_vals is not None:
-            fvals.reverse()
-
-      self.area      = abs(area)
-      self.func_vals = fvals
-      self.ll_coords = llc2
-      self.xy_coords = xyc2
-      self.perimeter = GP.calc_perimeter(xyc2,closed=True)
-
-      # make rtree index
-      idx   = Rindex.Index()
-      for i in range(self.length):
-         xp,yp = self.xy_coords[i]
-         idx.insert(i,(xp,yp,xp,yp)) # a point is a rectangle of zero side-length
-      self.index  = idx
-
-      return
-#######################################################################
 
 #######################################################################
 def read_txt_file(fname):
@@ -194,43 +120,6 @@ def read_txt_file(fname):
 
    return Lins
 #######################################################################
-
-#########################################################
-def read_txt_file_polys(fname):
-
-   # read in text file:
-   # each line is:
-   # [polygon number]  lon  lat  [function value]
-   # 1st line should be a header line
-
-   fid   = open(fname,'r')
-   lins  = fid.readlines()
-   fid.close()
-   
-   Polys = []
-   llc   = []
-   fvals = []
-   Pn0   = int(lins[1].split()[0])
-
-   for lin in lins[1:]:
-      ss   = lin.split()
-      Pno  = int(ss[0])
-      lon  = float(ss[1])
-      lat  = float(ss[2])
-      fval = int(ss[3])
-
-      if Pno==Pn0:
-         llc  .append((lon,lat))
-         fvals.append(fval)
-      else:
-         Polys.append([llc,fvals])
-         llc     = [(lon,lat)]
-         fvals   = [fval]
-         Pn0     = Pno
-
-   Polys.append([llc,fvals])
-   return Polys
-#########################################################
 
 
 #######################################################################

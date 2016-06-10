@@ -30,7 +30,7 @@ tday=$(cat $datelist | sed '1!d')
 tyear=`date --date=$tday "+%Y"`
 pyear=$(expr $tyear - 1)            # previous year
 tday_j=`date --date=$tday "+%j"`
-tday_j=$((tday_j-1))                # current day julian (1 Jan = 0)
+tday_j=$((10#$tday_j-1))            # current day julian (1 Jan = 0) - now decimal
 idir=$THISFC2/$tday/info
 mkdir -p $idir
 
@@ -53,8 +53,8 @@ then
 fi
 lastMon_y=`date --date="$lastMon" "+%Y"`
 lastMon_j=`date --date="$lastMon" "+%j"`
-lastMon_j=$((lastMon_j-1))
-rfil0=TP4restart${lastMon_y}_${lastMon_j}_00
+lastMon_j=$((10#$lastMon_j-1))
+rfil0=TP4restart${lastMon_y}_$(printf '%3.3d' $lastMon_j)_00
 
 if [[ -f $ddir/$rfil0.a && -f $ddir/$rfil0.b && -f $ddir/${rfil0}ICE.uf ]]
 then
@@ -157,15 +157,11 @@ then
 
       if [ $byr -eq $tyear ]
       then
-         J2=$(( 10#$tday_j ))                # convert to decimal
-         J1=$(( 10#$bdj    ))                # convert to decimal
-         age=$((J2-J1))
+         age=$(($tday_j-10#$bdj))   # convert restart julian day to decimal
       else
-         J2=$(( 10#$tday_j ))                # convert to decimal
          J0=`date --date="${byr}1231 +%j"`   # days in previous year
          J2=$((tday_j+J0))
-         J1=$(( 10#$bdj    ))                # convert to decimal
-         age=$((J2-J1))
+         age=$((J2-10#$bdj))  # convert restart julian day to decimal
       fi
 
       if [ $age -gt 13 ]
@@ -210,15 +206,11 @@ else
    bdj=${baseday:5:3}
    if [ $byr -eq $tyear ]
    then
-      J2=$(( 10#$tday_j ))                # convert to decimal
-      J1=$(( 10#$bdj    ))                # convert to decimal
-      age=$((J2-J1))
+      age=$(($tday_j-10#$bdj))   # convert restart julian day to decimal
    else
-      J2=$(( 10#$tday_j ))                # convert to decimal
       J0=`date --date="${byr}1231 +%j"`   # days in previous year
       J2=$((tday_j+J0))
-      J1=$(( 10#$bdj    ))                # convert to decimal
-      age=$((J2-J1))
+      age=$((J2-10#$bdj))  # convert restart julian day to decimal
    fi
 
    if [ $age -gt 13 ]

@@ -5,6 +5,10 @@ from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
 import fns_plotting as Fplt
 from scipy.interpolate import griddata as grd
+import os,sys
+import shapely.geometry as shg
+import geometry_sphere as GS
+
 
 ##########################################################
 def basemap_OSISAF():
@@ -71,25 +75,25 @@ class read_MIZpoly_summary:
 def reproj_mod2obs(X1,Y1,Z1,X2,Y2,mask=None):
 
    # getting ready for reprojection
+   Z1d            = 1*Z1.data
+   Z1d[Z1.mask]   = np.nan
+
    X1vec = X1.reshape(X1.size)
    Y1vec = Y1.reshape(Y1.size)
    Z1vec = Z1.reshape(Z1.size)
+   Z1vec = Z1d.reshape(Z1.size)
    C = [X1vec,Y1vec]
    C = np.array(C)
    C = C.T # input coords from X1,Y1; Z1 is array to interp; X2,Y2 are output matrices
 
    # Interpolation can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
-   Z2   = grd(C,Z1vec,(X2,Y2),method='linear')
+   Z2    = grd(C,Z1vec,(X2,Y2),method='linear')
+   mask2 = np.isnan(Z2)
    if mask is not None:
-      # get good values from Z2
-      Arr         = np.zeros(Z2.shape)
-      good        = np.isfinite(Z2)
-      nans        = np.logical_not(good)
-      Arr[good]   = Z2[good]
-
       # apply union of mask and model nans
-      Z2 = np.ma.array(Arr,mask=np.logical_or(mask,nans))
+      mask2=np.logical_or(mask2,mask)
     
+   Z2 = np.ma.array(Z2,mask=mask2)
    return(Z2)
 ##########################################################
 
@@ -159,7 +163,7 @@ def check_names(vname,variables):
    lists = []
 
    # ice conc alt names
-   lists.append(['ficem','fice','ice_conc','icec,'\
+   lists.append(['ficem','fice','ice_conc','icec',\
                   'concentration','sea_ice_concentration'])
 
    # ice thick alt names
@@ -167,7 +171,7 @@ def check_names(vname,variables):
                   'sea_ice_thickness','thickness','sea_ice_concentration'])
 
    # floe size alt names
-   lists.append(['dfloe','dmax'])
+   lists.append(['dfloe','dmax','Dfloe','Dmax'])
 
    for names in lists:
       if vname in names:
@@ -296,18 +300,6 @@ def check_pair(var_opts1,var_opts2):
    return
 ###########################################################
 
-##########################################################
-def lonlat_names(ncfil):
-   nc = ncopen(ncfil)
-   for vbl in nc.variables:
-      if 'lon' in vbl or 'Lon' in vbl:
-         lon   = vbl
-      if 'lat' in vbl or 'Lat' in vbl:
-         lat   = vbl
-   nc.close()
-   return lon,lat
-##########################################################
-
 
 ##########################################################
 class var_object:
@@ -371,1164 +363,13 @@ class var_object:
 
 
 ##########################################################
-def nc_get_var(ncfil,vblname,time_index=None):
-   """
-   vbl=nc_get_var(ncfil,vblname,time_index=None):
-   *ncfil is string (filename)
-   *vname is string (variable name)
-   *time_index is record number to get
-   *vbl is a mod_reading.var_object instance
-   """
+def nc_getinfo(ncfil,time_index=None,lonlat_file=None):
+   import mod_netcdf_utils as MNU
+   nci   = MNU.nc_getinfo(ncfil,time_index=time_index,\
+            lonlat_file=lonlat_file)
+   return nci
+##########################################################
 
-   nc    = ncopen(ncfil)
-   vbl0  = nc.variables[vblname]
-
-   # get the netcdf attributes
-   attlist   = vbl0.ncattrs()
-   attvals  = []
-   for att in attlist:
-      attval   = getattr(vbl0,att)
-      attvals.append(attval)
-
-   dims  = vbl0.dimensions
-   shape = vbl0.shape
-
-   ##################################################
-   # some attributes that depend on rank
-   if vbl0.ndim==1:
-      vals  = vbl0[:]
-   elif vbl0.ndim==2:
-      vals  = vbl0[:,:]
-   elif vbl0.ndim==3:
-      if time_index is None:
-         if shape[0]==1:
-            vals  = vbl0[0,:,:]
-            dims  = dims[1:]
-         else:
-            vals  = vbl0[:,:,:]
-      else:
-         vals  = vbl0[time_index,:,:]
-         dims  = dims[1:]
-   ##################################################
-
-   nc.close()
-
-   attlist.append('dimensions')
-   attvals.append(dims)
-   vbl   = var_object(vals,extra_atts=[attlist,attvals])
-
-   return vbl
-########################################################
-
-
-########################################################
-class nc_getinfo:
-
-   #####################################################
-   def __init__(self,ncfil,time_index=None,lonlat_file=None):
-
-      ##################################################
-      self.filename  = ncfil
-      if ncfil[0]=='/':
-         self.basedir   = '/'
-      else:
-         import os
-         self.basedir   = os.getcwd()+'/'
-
-      ss = ncfil.split('/')
-      for i in range(len(ss)-1):
-         self.basedir   = self.basedir+'/'
-
-      self.basename  = ss[-1].strip('.nc')
-      ##################################################
-
-      # added here manually
-      # - TODO could possibly be determined
-      #   from netcdf metadata though
-      # - could also be an input
-      self.reftime_sig  = 'start of forecast'
-
-
-      # open the file
-      nc                = ncopen(ncfil)
-      self.dimensions   = nc.dimensions.keys()
-
-      # is time a dimension?
-      self.time_dim     = ('time' in self.dimensions)
-
-      # get global netcdf attributes
-      class ncatts:
-         def __init__(self,nc):
-            for att in nc.ncattrs():
-               attval   = getattr(nc,att)
-               setattr(self,att,attval)
-            return
-         def list(self):
-            return vars(self).keys()
-
-      self.ncattrs   = ncatts(nc)
-
-      dkeys = nc.dimensions.keys()
-      vkeys = nc.variables.keys()
-      Nkeys = len(vkeys)
-
-      ########################################################
-      # time info:
-      if self.time_dim:
-
-         time        = nc.variables['time']
-         Nt          = len(time[:])
-         reftime_u   = time[0] # hours since refpoint
-         time_info   = time.units.split()
-
-         time_info[0]   = time_info[0].strip('s') # 1st word gives units
-         if time_info[0]=='econd':
-            time_info[0]   = 'second'
-
-         tu    = time.units
-         if ('T' in tu) and ('Z' in tu):
-            # using the T...Z format for time
-            # eg hyc2proj (this is the standard)
-            split1   = tu.split('T')
-            ctime    = split1[1].split('Z')[0]
-            cdate    = split1[0].split()[2]
-         else:
-            # eg WAMNSEA product from met.no
-            split1   = tu.split()
-            cdate    = split1[2]
-            ctime    = split1[3]
-
-         if '-' in cdate:
-            # remove '-'
-            # - otherwise assume YYYYMMDD format
-            split2   = cdate.split('-')
-            for loop_i in range(1,3):
-               if (split2[loop_i])==1:
-                  split2[loop_i] = '0'+split2[loop_i]
-            cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
-         if len(cdate)<8:
-            cdate = (8-len(cdate))*'0'+cdate
-
-         if ':' in ctime:
-            # remove ':'
-            # - otherwise assume HHMMSS format
-            split2   = ctime.split(':')
-            for loop_i in range(0,3):
-               if (split2[loop_i])==1:
-                  split2[loop_i] = '0'+split2[loop_i]
-            ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
-
-         year0    = int(cdate[:4])
-         mon0     = int(cdate[4:6])
-         day0     = int(cdate[6:8])
-         hr0      = int(ctime[:2])
-         min0     = int(ctime[2:4])
-         sec0     = int(ctime[4:6])
-         refpoint = datetime(year0,mon0,day0,hr0,min0,sec0)
-         #
-         if time_info[0]=='second':
-            self.reftime = refpoint+timedelta(seconds=reftime_u)
-         elif time_info[0]=='hour':
-            self.reftime = refpoint+timedelta(hours=reftime_u)
-         elif time_info[0]=='day':
-            self.reftime = refpoint+timedelta(reftime_u) #NB works for fraction of days also
-
-         if time_info[0]=='second':
-            # convert time units to hours for readability of the messages:
-            self.timeunits  = 'hour'
-            self.timevalues = [int((time[i]-time[0])/3600.) for i in range(Nt)]
-         else:
-            self.timeunits  = time_info[0]
-            self.timevalues = [time[i]-time[0] for i in range(Nt)]
-
-         self.number_of_time_records = Nt
-         self.datetimes              = []
-         for tval in self.timevalues:
-            self.datetimes.append(self.timeval_to_datetime(tval))
-      ########################################################
-
-
-      ########################################################
-      # grid info:
-      if lonlat_file is None:
-         lonlat_file = ncfil
-      self.lonlat_file  = lonlat_file
-
-      # are lon,lat dimensions?
-      self.lonname,self.latname  = lonlat_names(self.lonlat_file)
-      self.lonlat_dim            = (self.lonname in self.dimensions)
-
-      ##############################################################
-      # basic lon-lat info
-      nc2   = ncopen(self.lonlat_file)
-      lon   = nc2.variables[self.lonname]
-      lat   = nc2.variables[self.latname]
-      if self.lonlat_dim:
-         self.lon0    = lon[0]
-         self.lat0    = lat[0]
-         for dkey in nc.dimensions.keys():
-            if dkey==self.lonname:
-               self.lon_first = True
-               self.shape     = (len(lon),len(lat))
-               break
-            elif dkey==self.latname:
-               self.lon_first = False
-               self.shape     = (len(lat),len(lon))
-               break
-      else:
-         self.lon0    = lon[0,0]
-         self.lat0    = lat[0,0]
-         self.shape   = lon.shape
-      nc2.close()
-      ##############################################################
-      
-
-      ny,nx        = self.shape
-      self.Npts_x  = nx    # No of points in x dirn
-      self.Npts_y  = ny    # No of points in y dirn
-      self.Npts    = nx*ny # Total no of points
-      ########################################################
-
-
-      ########################################################
-      # projection info:
-      proj_list   = ['stereographic','projection_3'] # could also have mercator or regular lon-lat
-      HAVE_PROJ   = 0   # if 0 assume HYCOM native grid
-      for proj_name in proj_list: 
-         if proj_name in vkeys:
-            proj        = nc.variables[proj_name]
-            att_list    = proj.ncattrs()
-            HAVE_PROJ   = 1
-            break
-
-      if HAVE_PROJ:
-         # object with the netcdf attributes of projection variable
-         # + some extra proj-dependent info 
-         att_list_full  = [att_list[i] for i in range(len(att_list))]
-         att_vals_full  = []
-         for att in att_list:
-            att_val  = proj.getncattr(att)
-            att_vals_full.append(att_val)
-
-         # specific to stereographic
-         if proj_name=='stereographic':
-            # add x,y resolution to ncinfo.proj_info
-            att_list_full.extend(['x_resolution','y_resolution'])
-
-            xx = nc.variables['x'][0:2]
-            yy = nc.variables['y'][0:2]
-            dx = xx[1]-xx[0]
-            dy = yy[1]-yy[0]
-
-            #convert to m
-            xunits   = nc.variables['x'].units.split()
-            fac      = 1.
-            if len(xunits)==2:
-               fac   = float(xunits[0])
-               xunits.remove(xunits[0])
-
-            if xunits[0]=='km':
-               fac   = fac*1.e3
-            #
-            att_vals_full.extend([dx*fac,dy*fac])
-
-         self.proj_info = proj_obj(att_list_full,att_vals_full)
-      else:
-         self.proj_info = []
-      ########################################################
-      
-      ########################################################
-      # variable list
-      vlist = []
-      bkeys = [proj_name,self.lonname,self.latname,'model_depth']
-      bkeys.extend(dkeys)
-      for key in vkeys:
-         if key not in bkeys:
-            vlist.append(key)
-
-      self.variable_list   = vlist
-      self.variables       = vlist
-      ########################################################
-
-      nc.close()
-      return
-   ###########################################################
-
-
-   ###########################################################
-   def timeval_to_datetime(self,timeval):
-      if self.timeunits=='second':
-         dt = self.reftime +timedelta(seconds=timeval)
-      elif self.timeunits=='hour':
-         dt = self.reftime +timedelta(hours=timeval)
-      elif self.timeunits=='day':
-         dt = self.reftime +timedelta(timeval) #NB works for fraction of days also
-      return dt
-   ###########################################################
-
-   ###########################################################
-   def get_lonlat(self,vec2mat=True):
-
-      nc    = ncopen(self.lonlat_file)
-      lono  = nc.variables[self.lonname]
-      lato  = nc.variables[self.latname]
-
-      if lono.ndim==2:
-         lon   = lono[:,:]
-         lat   = lato[:,:]
-      else:
-         lon   = lono[:]
-         lat   = lato[:]
-         if vec2mat:
-            if self.lon_first:
-               # lon in cols, lat in rows
-               lon,lat  = np.meshgrid(lon,lat,indexing='ij')
-            else:
-               # lon in rows, lat in cols
-               lon,lat  = np.meshgrid(lon,lat,indexing='xy')
-      nc.close()
-
-      return lon,lat
-   ###########################################################
-
-
-   ###########################################################
-   def get_var(self,vname,time_index=None):
-
-      # conc can have multiple names
-      vlist    = self.variable_list
-      cnames   = ['fice','ficem','icec','ice_conc']
-      if vname in cnames:
-         for vi in cnames:
-            if vi in vlist:
-               vname = vi
-
-      # thickness can have multiple names
-      hnames   = ['hice','hicem','icetk']
-      if vname in hnames:
-         for vi in hnames:
-            if vi in vlist:
-               vname = vi
-
-      vbl   = nc_get_var(self.filename,vname,time_index=time_index)
-
-      return vbl
-   ###########################################################
-
-
-   ###########################################################
-   def plot_var(self,var_opts,time_index=0,\
-         pobj=None,bmap=None,HYCOMreg='TP4',\
-         clim=None,add_cbar=True,clabel=None,show=True,\
-         test_lonlats=None,date_label=0):
-
-      from mpl_toolkits.basemap import Basemap, cm
-
-      if type(var_opts)==type('hi'):
-         # if only a string is passed in
-         print("Converting string '"+var_opts+"' to mod_reading.make_plot_options object")
-         print("- create and pass in such an object directly")
-         print("to specify more complicated plot options:")
-         print("ie")
-         print("var_opts=mod_reading.make_plot_options('"+var_opts+"',")
-         print("   vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=False,dir_from=True)")
-         var_opts = make_plot_options(var_opts)
-
-      var_opts    = check_var_opts(var_opts,self.variable_list)
-      vname       = var_opts.name
-      vec_opt     = var_opts.vec_opt
-      conv_fac    = var_opts.conv_fac
-      ice_mask    = var_opts.ice_mask
-      wave_mask   = var_opts.wave_mask
-      dir_from    = var_opts.dir_from
-
-      if pobj is None:
-         pobj  = plot_object()
-
-      fig,ax,cbar = pobj.get()
-
-      if bmap is None:
-         # make basemap
-         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      if clim is not None:
-         vmin,vmax   = clim
-      else:
-         vmin  = None
-         vmax  = None
-
-      lon,lat  = self.get_lonlat()
-      vbl      = self.get_var(vname,time_index=time_index)
-      mask     = vbl.values.mask
-
-
-      ################################################################## 
-      # add ice or wave masks
-      if ice_mask and wave_mask:
-         fice  = self.get_var('fice',time_index=time_index)
-         mask1 = 1-np.logical_and(1-mask,fice[:,:]>.01) #0 if finite,non-low conc
-         #
-         Hs    = self.get_var('swh',time_index=time_index)
-         mask2 = 1-np.logical_and(1-mask,Hs[:,:]>.01) #0 if finite,non-low waves
-         #
-         mask  = np.logical_or(mask1,mask2)
-
-      elif ice_mask:
-         fice  = self.get_var('fice',time_index=time_index)
-         mask  = 1-np.logical_and(1-mask,fice[:,:]>.01) #0 if finite,non-low conc
-
-      elif wave_mask:
-         Hs    = self.get_var('swh',time_index=time_index)
-         mask  = 1-np.logical_and(1-mask,Hs[:,:]>.01) #0 if finite,non-low waves
-      ################################################################## 
-
-
-      ################################################################## 
-      if vec_opt==0:
-
-         # just plot scalar
-         U     = None # no quiver plot
-         Marr  = vbl.values.data
-         Marr  = np.ma.array(conv_fac*Marr,mask=mask) #masked array
-
-
-      elif vec_opt==1:
-
-         # plot vector magnitude
-         U  = None # no quiver plot
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         vbl2  = self.get_var(vname2,time_index=time_index)
-         U     = vbl.values.data
-         V     = vbl2.values.data
-
-         # speed
-         spd   = np.hypot(U,V)
-         Marr  = np.ma.array(conv_fac*spd,mask=mask) #masked array
-
-      elif vec_opt==2:
-
-         # plot vector magnitude + direction (unit vectors)
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         vbl2  = self.get_var(vname2,time_index=time_index)
-         U     = conv_fac*vbl.values.data
-         V     = conv_fac*vbl2.values.data
-
-         # speed
-         spd   = np.hypot(U,V)
-         Marr  = np.ma.array(spd,mask=mask) #masked array
-
-         # rotate vectors
-         U,V   = bmap.rotate_vector(U,V,lon,lat)
-
-         #unit vectors
-         U     = np.ma.array(U/spd,mask=mask)
-         V     = np.ma.array(V/spd,mask=mask)
-
-      elif vec_opt==3:
-
-         # plot vector direction only
-         # (no pcolor, but vector length is proportional to magnitude)
-         Marr  = None
-
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         vbl2  = self.get_var(vname2,time_index=time_index)
-         U     = conv_fac*vbl.values.data
-         V     = conv_fac*vbl2.values.data
-
-         # speed
-         spd   = np.hypot(U,V)
-         avg   = np.mean(np.ma.array(spd,mask=mask))
-         print('avg speed: '+str(avg))
-
-         # rotate vectors
-         U,V   = bmap.rotate_vector(U,V,lon,lat)
-
-         # scale by the average speed
-         # TODO: add key
-         U  = np.ma.array(U/avg,mask=mask)
-         V  = np.ma.array(V/avg,mask=mask)
-
-      elif vec_opt==4:
-
-         # plot direction as scalar
-         U  = None
-
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         vbl2  = self.get_var(vname2,time_index=time_index)
-         dir   = 180/np.pi*np.arctan2(vbl2.values.data,vbl.values.data)#dir-to in degrees (<180,>-180)
-         dir   = 90-dir #north is 0,angle clockwise
-         if dir_from:
-            # direction-from
-            dir[dir>0]  = dir[dir>0]-360
-            Marr        = np.ma.array(dir+180,mask=np.logical_or(mask,1-np.isfinite(dir)))
-         else:
-            # direction-to
-            dir[dir>180]   = dir[dir>180]-360
-            Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
-
-      elif vec_opt==5:
-         #vbl is a direction - convert to vector
-         Marr  = None
-         dir   = 90-vbl.values.data
-         if dir_from:
-            dir   = np.pi/180*(dir+180)
-         else:
-            dir   = np.pi/180*dir
-
-         # rotate unit vectors
-         U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
-         U     = np.ma.array(U,mask=mask)
-         V     = np.ma.array(V,mask=mask)
-      ################################################################## 
-
-
-      ################################################################## 
-      # pcolor plot
-      if Marr is not None:
-
-         #########################################################################
-         # add additional masking (too low or too high)
-         if (var_opts.lower_limit is not None) or (var_opts.upper_limit is not None):
-            mask  = 1*Marr.mask
-            data  = Marr.data
-            good  = np.logical_not(mask)
-            if (var_opts.lower_limit is not None) and (var_opts.upper_limit is not None):
-               mask[good]  = np.logical_or(data[good]<var_opts.lower_limit,data[good]>var_opts.upper_limit)
-            elif (var_opts.lower_limit is not None):
-               mask[good]  = (data[good]<var_opts.lower_limit)
-            elif (var_opts.upper_limit is not None):
-               mask[good]  = (data[good]>var_opts.upper_limit)
-            Marr  = np.ma.array(data,mask=mask)
-         #########################################################################
-
-         PC    = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
-
-         # date label
-         dtmo  = self.datetimes[time_index]
-         if HYCOMreg=='TP4':
-            xyann = (0.05,.925)
-         else:
-            xyann = (0.4,.925)
-
-         if date_label==1:
-            tlabel   = dtmo.strftime('%d %b %Y')
-            pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-         elif date_label==2:
-            tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-            pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
-
-         # colorbar
-         if add_cbar:
-
-            if cbar is None:
-               cbar  = fig.colorbar(PC)
-            else:
-               cbar  = fig.colorbar(PC,cax=cbar.ax)
-
-            pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
-            if clabel is not None:
-               cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
-      ################################################################## 
-
-
-      ################################################################## 
-      if pobj.axpos is not None:
-         # try to make sure axes don't move round
-         pobj.ax.set_position(pobj.axpos)
-      ################################################################## 
-
-
-      ################################################################## 
-      # quiver plot
-      if U is not None:
-         dens  = 10   # density of arrows
-         scale = 50
-         QP    = bmap.quiver(lon[::dens,::dens],lat[::dens,::dens],\
-                              U[::dens,::dens],V[::dens,::dens],\
-                              latlon=True,scale=scale,ax=ax)
-
-      if test_lonlats is not None:
-         for lont,latt in test_lonlats:
-            bmap.plot(lont,latt,'^m',markersize=5,latlon=True,ax=ax)
-
-      Fplt.finish_map(bmap,ax=ax)
-      if show:
-         fig.show()
-
-      return pobj,bmap
-   ###########################################################
-
-
-   ###########################################################
-   def plot_var_pair(self,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
-
-      # ====================================================================
-      # check names
-      var_opts1   = check_var_opts(var_opts1,self.variable_list)
-      var_opts2   = check_var_opts(var_opts2,self.variable_list)
-
-      # check options
-      check_pair(var_opts1,var_opts2)
-      # ====================================================================
-
-      pobj,bmap   = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,**kwargs)
-      self.plot_var(var_opts2,pobj=pobj,bmap=bmap,**kwargs)
-
-      return pobj,bmap
-   ###########################################################
-
-   ###########################################################
-   def make_png(self,var_opts,pobj=None,bmap=None,figdir='.',time_index=0,date_label=True,**kwargs):
-
-      var_opts    = check_var_opts(var_opts,self.variable_list)
-
-      new_fig  = (pobj is None)
-      if new_fig:
-         pobj  = plot_object()
-
-      pobj,bmap   = self.plot_var(var_opts,pobj=pobj,bmap=bmap,time_index=time_index,**kwargs)
-
-      dtmo     = self.datetimes[time_index]
-      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-
-      if date_label:
-         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-         pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
-
-      if pobj.axpos is not None:
-         # try to make sure axes don't move round
-         pobj.ax.set_position(pobj.axpos)
-
-      vname    = var_opts.name
-      Fname    = vname
-      vec_opt  = var_opts.vec_opt
-
-      if vec_opt==1:
-         #magnitude only
-         if vname in ['u','usurf']:
-            Fname = 'surf_speed'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_speed'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_magnitude'
-
-      elif vec_opt==2 or vec_opt==3:
-         #quiver plots on top of magnitude or by itself
-         if vname in ['u','usurf']:
-            Fname = 'surf_vel'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress'
-
-      elif vec_opt==4:
-         #direction as scalar
-         if vname in ['u','usurf']:
-            Fname = 'surf_current_dirn'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel_dirn'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_dirn'
-
-      elif vec_opt==5:
-         #direction -> vector
-         if vname in ['u','usurf']:
-            Fname = 'surf_current_dirn'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel_dirn'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_dirn'
-
-      Fname    = Fname.strip('_')
-      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
-
-      print('Saving to '+figname) 
-      pobj.fig.savefig(figname)
-
-      if new_fig:
-         pobj.ax.cla()
-         pobj.fig.clear()
-         plt.close(pobj.fig)
-
-      return pobj,bmap
-   ###########################################################
-
-
-   ###########################################################
-   def make_png_pair(self,var_opts1,var_opts2,time_index=0,\
-         pobj=None,bmap=None,figdir='.',date_label=True,**kwargs):
-
-      # ====================================================================
-      # check names
-      var_opts1   = check_var_opts(var_opts1,self.variable_list)
-      var_opts2   = check_var_opts(var_opts2,self.variable_list)
-
-      # check options
-      check_pair(var_opts1,var_opts2)
-      # ====================================================================
-
-      new_fig  = (pobj is None)
-      if new_fig:
-         pobj  = plot_object()
-
-      pobj,bmap   = self.plot_var_pair(var_opts1,var_opts2,time_index=time_index,\
-                     pobj=pobj,bmap=bmap,**kwargs)
-      fig,ax,cbar = pobj.get()
-
-      dtmo     = self.datetimes[time_index]
-      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-
-      if date_label:
-         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-         ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
-
-      # set name with 1st variable only
-      Fname    = var_opts1.name
-      vec_opt  = var_opts1.vec_opt
-      if vec_opt==1:
-         #magnitude only
-         if vname in ['u','usurf']:
-            Fname = 'surf_speed'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_speed'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_magnitude'
-
-      elif vec_opt==4:
-         #direction as scalar
-         if vname in ['u','usurf']:
-            Fname = 'surf_current_dirn'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel_dirn'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_dirn'
-
-      Fname    = Fname.strip('_')
-      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
-
-      print('Saving to '+figname) 
-      fig.savefig(figname)
-
-      if new_fig:
-         ax.cla()
-         fig.clear()
-         plt.close(fig)
-
-      return pobj,bmap
-   ###########################################################
-
-
-   ###########################################################
-   def make_png_all(self,var_opts,HYCOMreg='TP4',figdir='.',**kwargs):
-
-      # check names
-      var_opts    = check_var_opts(var_opts,self.variable_list)
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-
-      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      N  = len(self.timevalues)
-      for i in range(N):
-
-         pobj,bmap   = self.make_png(var_opts,\
-                           bmap=bmap,time_index=i,\
-                           figdir=figdir,show=False,**kwargs)
-
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
-
-         print('\n'+str(i+1)+' records done out of '+str(N))
-
-      plt.close(fig)
-      return
-   ###########################################################
-
-
-   ###########################################################
-   def make_png_pair_all(self,var_opts1,var_opts2,HYCOMreg='TP4',figdir='.',**kwargs):
-
-      # ====================================================================
-      # check names
-      var_opts1   = check_var_opts(var_opts1,self.variable_list)
-      var_opts2   = check_var_opts(var_opts2,self.variable_list)
-
-      # check options
-      check_pair(var_opts1,var_opts2)
-      # ====================================================================
-
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-      bmap        = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      N  = len(self.timevalues)
-      for i in range(N):
-
-         pobj,bmap   = self.make_png_pair(var_opts1,var_opts2,\
-                        pobj=pobj,bmap=bmap,time_index=i,\
-                        figdir=figdir,show=False,**kwargs)
-
-         if i==0:
-            # Fix axes position to stop it moving round
-            pobj  = pobj.renew(axpos=pobj.ax.get_position())
-
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
-
-         print('\n'+str(i+1)+' records done out of '+str(N))
-
-      plt.close(fig)
-      return
-   ###########################################################
-
-
-   ###########################################################
-   def MIZmap(self,var_name='dmax',time_index=0,do_sort=False,EastOnly=True,\
-         plotting=True,HYCOM_region='Arctic',**kwargs):
-      """
-      Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
-      Inputs:
-         var_name is variable to find MIZ from
-         **kwargs to be passed onto MIZchar.get_MIZ_poly:
-            outdir='.',do_sort=True
-      Returns: MIZchar.MIZpoly object
-      """
-
-      import MIZchar as mc
-      vname = check_names(var_name,self.variables)
-
-      if var_name == 'dmax':
-         # FSD MIZarray(1-
-         Arr         = self.get_var(vname,time_index=time_index)
-         clim        = [0,300]# for plotting
-         lower_limit = .1     # for plotting
-      elif var_name == 'fice':
-         # conc MIZ
-         Arr         = self.get_var(vname,time_index=time_index)
-         clim        = [0,1]  # for plotting
-         lower_limit = .15    # for plotting
-      elif var_name == 'hice':
-         # thin ice areas
-         Arr         = self.get_var(vname,time_index=time_index)
-         clim        = [0,2.] # for plotting
-         lower_limit = .01    # for plotting
-      else:
-         raise ValueError('Wrong selection variable for MIZmap')
-
-      print("MIZchar.get_MIZ_poly\n")
-      lon,lat  = self.get_lonlat()
-      MPdict   = {}
-      tfiles   = {}
-
-      if do_sort:
-         # possible regions are:
-         regions  = ['gre','bar','beau','lab','balt','les','can']
-
-         if EastOnly:
-            # concentrate on the eastern Arctic
-            # (and forget Baltic Sea)
-            regions.remove('balt' )
-            regions.remove('les' )
-            regions.remove('can' )
-            regions.remove('beau')
-
-         # for reg in ['gre']:
-         for reg in regions:
-            mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,region=reg)
-            MPdict.update({reg:mp})
-
-            fname0   = self.basename+'_'+var_name +'_'+reg
-            tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-            if 'all' in tfile.keys():
-               tfiles.update({reg:tfile['all']})
-
-         if 0:
-            MPdict['gre'].show_maps()
-            return MPdict
-
-      else:
-         reg   = 'all'
-         mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name)
-         MPdict.update({reg:mp})
-         #
-         fname0   = self.basename+'_'+var_name
-         tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-         if 'all' in tfile.keys():
-            tfiles.update({reg:tfile['all']})
-
-      Pdict    = {}
-      PLOTTING = False
-      for reg in tfiles.keys():
-
-         ##########################################################
-         # filenames
-         tfil     = tfiles[reg]                          # text file with polygon outlines characterized
-         figname  = tfil.replace('.txt','.png')          # plot of polygons
-         shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
-         sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
-         ##########################################################
-
-
-         ##########################################################
-         if do_sort:
-            mapreg   = reg
-         else:
-            mapreg   = HYCOM_region
-         ##########################################################
-
-
-         ##########################################################
-         # process each text file to get MIZ width etc
-         print("MIZchar.single_file: "+tfil+"\n")
-         bmap     = Fplt.start_HYCOM_map(mapreg)
-         Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
-         Pdict.update({reg:Psolns})
-         
-         # Save summary & shapefile
-         mc.save_summary  (Psolns,sumname)
-         mc.save_shapefile(Psolns,filename=shpname)
-         ##########################################################
-
-         
-         if plotting:
-            ##########################################################
-            # Make plot
-            var_opts = make_plot_options(vname,lower_limit=lower_limit)
-            pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=clim)[0]
-            fig      = pobj.fig
-            ax       = pobj.ax
-            PLOTTING = True
-
-            for MIZi in Psolns:
-               # plot outlines of polygons
-               lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
-               bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
-
-               Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
-               if Wavg>26:
-                  MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
-
-                  # add text with mean width
-                  xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
-                  xav                  = (xmin+xmax)/2.
-                  ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                     color='k',fontsize=16,horizontalalignment='right',\
-                     verticalalignment='top')
-
-            Fplt.finish_map(bmap)
-            print('Saving '+figname)
-            fig.savefig(figname)
-            # plt.show(fig)
-            ax.cla()
-            fig.clear()
-            # finished region
-            ##########################################################
-
-      if PLOTTING:
-         plt.close(fig)
-      return mp,Pdict,tfiles
-   ###########################################################
-
-
-   ###########################################################
-   def areas_of_disagreement(self,obs_type='OSISAF',time_index=0,do_sort=True,EastOnly=True,plotting=True,**kwargs):
-      # kwargs: outdir='.',do_sort=True
-
-      import MIZchar as mc
-
-      if obs_type == 'OSISAF':
-         var_name    = 'fice'
-         lower_limit = .15
-         bmap        = basemap_OSISAF()
-         #
-         cyear = self.datetimes[time_index].strftime('%Y')
-         cdate = self.datetimes[time_index].strftime('%Y%m%d')
-         obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+cyear+\
-                     '_nh_polstere/ice_conc_nh_polstere-100_multi_'+\
-                     cdate+'1200.nc'
-      else:
-         raise ValueError('Wrong selection variable for areas_of_disagreement')
-
-      vname = check_names(var_name,self.variables)
-
-      # observation grid & compared quantity
-      nci         = nc_getinfo(obsfil)
-      lon2,lat2   = nci.get_lonlat()
-      Xobs,Yobs   = bmap(lon2,lat2)
-
-      vname2   = check_names(var_name,nci.variables)
-      Zobs     = nci.get_var(vname2)
-
-      # model grid & compared quantity
-      Zmod        = self.get_var(vname,time_index=time_index)
-      lon,lat     = self.get_lonlat()
-      Xmod,Ymod   = bmap(lon,lat)
-
-      if 1:
-         #Zref,Zint should be np.ma.array
-         lon_ref,lat_ref   = lon2,lat2
-         Xref,Yref,Zref    = Xobs,Yobs,Zobs.values  # obs grid is reference;                 
-         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values  # to be interped from model grid onto obs grid;  Zint is np.ma.array
-
-      # add the mask for the ref to Arr
-      Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
-
-      # add the mask for Arr to Zref
-      Zref  = np.ma.array(Zref.data,mask=Arr.mask)
-
-      MPdict   = {'Over':{},'Under':{}}
-      tfiles   = {'Over':{},'Under':{}}
-
-      if 0:
-         # test interpolation and matching of masks
-         fig   = plt.figure()
-         ax1   = fig.add_subplot(1,2,1)
-         ax1.imshow(Arr)
-         ax2   = fig.add_subplot(1,2,2)
-         ax2.imshow(Zref)
-         plt.show(fig)
-         return
-
-      if do_sort:
-         # possible regions are:
-         regions  = ['gre','bar','beau','lab','balt','les','can']
-
-         if EastOnly:
-            # concentrate on the eastern Arctic
-            # (and forget Baltic Sea)
-            regions.remove('balt' )
-            regions.remove('les' )
-            regions.remove('can' )
-            regions.remove('beau')
-
-         # for reg in ['bar']:
-         for reg in regions:
-
-            # Arr,Zref are np.ma.array objects
-            Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
-            MPdict['Over'] .update({reg:Over})
-            MPdict['Under'].update({reg:Under})
-
-            for OU in ['Over','Under']:
-
-               fname0   = self.basename+'_v'+obs_type +'_'+OU+'_'+reg
-               tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-               if 'all' in tfile.keys():
-                  tfiles[OU].update({reg:tfile['all']})
-
-         if 0:
-            MPdict['Over'] [reg].show_maps()
-            MPdict['Under'][reg].show_maps()
-            return MPdict
-      else:
-         reg         = 'all'
-         Over,Under  = mc.get_AOD_polys(Arr.values,Zref.values,lon_ref,lat_ref)
-         MPdict['Over'] .update({reg:Over})
-         MPdict['Under'].update({reg:Under})
-
-         for OU in ['Over','Under']:
-
-            fname0   = self.basename+'_v'+obs_type+'_'+OU+'_'+reg
-            tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-            if 'all' in tfile.keys():
-               tfiles[OU].update({reg:tfile['all']})
-
-      print(tfiles)
-      print(MPdict)
-      Pdict = {'Over':{},'Under':{}}
-      for OU in ['Over','Under']:
-         PLOTTING = False
-         for reg in tfiles[OU].keys():
-
-            ##########################################################
-            # filenames
-            tfil     = tfiles[OU][reg]                          # text file with polygon outlines characterized
-            figname  = tfil.replace('.txt','.png')          # plot of polygons
-            shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
-            sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
-            ##########################################################
-
-
-            ##########################################################
-            if do_sort:
-               mapreg   = reg
-            else:
-               mapreg   = self.HYCOM_region
-            ##########################################################
-
-
-            ##########################################################
-            # process each text file to get MIZ width etc
-            print("MIZchar.single_file: "+tfil+"\n")
-            bmap     = Fplt.start_HYCOM_map(mapreg)
-            Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
-            Pdict[OU].update({reg:Psolns})
-            
-            # Save summary & shapefile
-            mc.save_summary  (Psolns,sumname)
-            mc.save_shapefile(Psolns,filename=shpname)
-            ##########################################################
-
-            
-            if plotting:
-               ##########################################################
-               # Make plot
-               var_opts = make_plot_options(vname,lower_limit=lower_limit)
-               pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=[0,1])[0]
-               fig      = pobj.fig
-               ax       = pobj.ax
-               PLOTTING = True
-
-               for MIZi in Psolns:
-                  # plot outlines of polygons
-                  lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
-                  bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
-
-                  Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
-                  if Wavg>26:
-                     MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
-
-                     # add text with mean width
-                     xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
-                     xav                  = (xmin+xmax)/2.
-                     ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                        color='k',fontsize=16,horizontalalignment='right',\
-                        verticalalignment='top')
-
-               Fplt.finish_map(bmap)
-               print('Saving '+figname)
-               fig.savefig(figname)
-               # plt.show(fig)
-               ax.cla()
-               fig.clear()
-               # finished region
-               ##########################################################
-
-         if PLOTTING:
-            plt.close(fig)
-
-      return MPdict,tfiles,Pdict
-   ###########################################################
-
-###########################################################
 
 ###########################################################
 def print_grib_messages(grb2fil,N=None):
@@ -1556,727 +397,1132 @@ def print_grib_messages(grb2fil,N=None):
    gr.close()
 ###########################################################
 
-##############################################################
-def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
-   # routine to get the array from the .a (binary) file
-   # * fmt_size = size in bytes of each entry)
-   #   > default = 4 (real*4/single precision)
 
-   import struct
-
-   recs     = nx*ny
-   rec_size = recs*fmt_size
-   #
-   data  = fid.read(rec_size)
-   if fmt_size==4:
-      fmt_py   = 'f' # python string for single
-   else:
-      fmt_py   = 'd' # python string for double
-
-   fld   = struct.unpack(recs*fmt_py,data)
-   fld   = np.array(fld)
-
-   if order!='fortran':
-      fld   = fld.reshape((nx,ny))  # array order follows python/c convention
-                                    # (index increases across array)
-   else:
-      fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
-                                                # python/c and fortran/matlab 
-
-   return fld
-##############################################################
-
-##############################################################
-def get_array_from_HYCOM_binary(afile,recno,dims=None,grid_dir='.'):
-   # routine to get the array from the .a (binary) file
-   # * recno=1 is 1st record 
-   # * fmt_size = size in bytes of each entry)
-   #   > default = 4 (real*4/single precision)
-
-   import struct
-
-   ######################################################################
-   # get size of grid
-   if dims is None:
-      if 'regional.grid' in afile:
-         # afile is a grid file
-         # - check .b file for size of grid
-         bfile = afile[:-2]+'.b'
-      else:
-         # check regional.grid.b file for size of grid
-         bfile = grid_dir+'/regional.grid.b'
-         if os.path.exists(bfile):
-            sys.exit('Grid file not present: '+bfile)
-
-      bid   = open(bfile,'r')
-      nx    = int( bid.readline().split()[0] )
-      ny    = int( bid.readline().split()[0] )
-      bid.close()
-   else:
-      nx = dims[0]
-      ny = dims[1]
-   ######################################################################
-
-   ######################################################################
-   # set record size, skip to record number
-   fmt_size = 4      # HYCOM files are single precision
-   if fmt_size==4:
-      fmt_py   = 'f' # python string for single
-   else:
-      fmt_py   = 'd' # python string for double
-
-   n0       = 4096   # HYCOM stores records in multiples of 4096
-   Nhyc     = (1+(nx*ny)/n0)*n0
-   rec_size = Nhyc*fmt_size
-   #
-   aid   = open(afile,'rb')
-   for n in range(1,recno):
-      aid.seek(rec_size,1) # seek in bytes (1: reference is current position)
-   ######################################################################
-
-   # read data and close file
-   data  = aid.read(rec_size)
-   aid.close()
-
-   # rearrange into correctly sized array
-   fld   = struct.unpack('>'+Nhyc*fmt_py,data) # NB BIG-ENDIAN so need '>'
-   fld   = np.array(fld[0:nx*ny]) # select the 1st nx,ny - rest of the Nhyc record is rubbish
-   fld   = fld.reshape((ny,nx)).transpose()  # need to transpose because of differences between
-                                             # python/c and fortran/matlab 
-
-   land_thresh          = 1.e30# on land 1.2677e30 
-   fld[fld>land_thresh] = np.nan
-
-   return fld
-##############################################################
-
-##############################################################
-def get_record_numbers_HYCOM(bfile):
-   # routine to get the array from the .a (binary) file
-   # * fmt_size = size in bytes of each entry)
-   #   > default = 4 (real*4/single precision)
-
-
-   bid   = open(bfile,'r')
-   word  = bid.readline().split()[0] # 1st word in line 
-   while word!='field':
-      word  = bid.readline().split()[0] # 1st word in line 
-
-   # have found table title
-   n     = 0
-   lut2d = {}
-   min2d = {}
-   max2d = {}
-   lut3d = {}
-   min3d = {}
-   max3d = {}
-   lin   = bid.readline()
-   EOF   = (lin=='')
-   while not EOF:
-      n     = n+1
-      word  = lin.split()[0]        # 1st word in line 
-      layer = int(lin.split()[4])   # layer number (5th entry)
-      xmin  = float(lin.split()[6]) # min where defined
-      xmax  = float(lin.split()[7]) # max where defined
-
-      if layer==0:
-         # surface/2D var
-         lut2d.update({word:n})
-         min2d.update({word:xmin})
-         max2d.update({word:xmax})
-      else:
-         # 3D var
-         LUT   = {layer:n}
-         MIN   = {layer:xmin}
-         MAX   = {layer:xmax}
-         if word not in lut3d.keys():
-            lut3d.update({word:LUT})
-            min3d.update({word:MIN})
-            max3d.update({word:MAX})
-         else:
-            lut3d[word].update(LUT)
-            min3d[word].update(MIN)
-            max3d[word].update(MAX)
-      #
-      lin   = bid.readline()
-      EOF   = (lin=='')
-
-   bid.close()
-
-   return [lut2d,min2d,max2d],[lut3d,min3d,max3d]
-   ######################################################################
+######################################################################
+def HYCOM_binary_info(fname,gridpath=None):
+   import mod_HYCOM_utils as MHU
+   hbi   = MHU.HYCOM_binary_info(fname,gridpath=gridpath)
+   return hbi
+######################################################################
 
 
 ######################################################################
-class HYCOM_binary_info:
-   def __init__(self,fname,gridpath=None):
-      from datetime import datetime,timedelta
+def GetVar(fobj,vname,layer=0,time_index=0):
 
-      ss = fname.split('.')
-      if ss[-1]=='a':
-         self.afile = fname
-         self.bfile = fname[:-1]+'b'
-      elif ss[-1]=='b':
-         self.bfile = fname
-         self.afile = fname[:-1]+'a'
-      else:
-         raise ValueError('HYCOM binaries should have extensions .a or .b')
-
-      basename                = fname.split('/')[-1]
-      self.basename           = basename[:-2]
-      self.HYCOM_region       = basename[:3]
-
-      # info from bfile
-      lut2d,lut3d = get_record_numbers_HYCOM(self.bfile)
-      #
-      self.record_numbers  ,self.minvals2d,self.maxvals2d   = lut2d
-      self.record_numbers3d,self.minvals3d,self.maxvals3d   = lut3d
-
-      self.variables          = self.record_numbers.keys()
-      self.variables3d        = self.record_numbers3d.keys() 
-      self.all_variables      = 1*self.variables
-      self.all_variables.extend(1*self.variables3d)
-
-      #######################################################################
-      #path to regional.grid.[ab] files
-      if gridpath is not None:
-         self.gridpath = gridpath
-      else:
-         wsn            = '/work/shared/nersc/msc/ModelInput'
-         gridpath_lut   = {'FR1':wsn+'/FramStrait_Hyc2.2.12/FR1a0.03-clean//topo',\
-                           'BS1':wsn+'/BS1a0.045-clean/topo',\
-                           'TP4':wsn+'/../REANALYSIS/topo'}
-         self.gridpath = gridpath_lut[self.HYCOM_region]
-
-      # get grid size
-      bid   = open(self.gridpath+'/regional.grid.b','r')
-      line  = bid.readline()
-      while 'idm' not in line:
-         line  = bid.readline()
-      nx    = int( line.split()[0] )
-
-      line  = bid.readline()
-      while 'jdm' not in line:
-         line  = bid.readline()
-      ny    = int( line.split()[0] )
-
-      self.dims   = [nx,ny]
-      self.Nx     = nx
-      self.Ny     = ny
-      #######################################################################
-
-
-      #######################################################################
-      # date
-      bid   = open(self.bfile)
-      line  = bid.readline()
-      its   = 0
-      while 'model day' not in line and its<1200:
-         its   = its+1
-         line  = bid.readline()
-
-      line              = bid.readline()
-      self.time_value   = float(line.split()[-5]) # model time (days)
-      bid.close()
-
-      self.reference_date  = datetime(1900,12,31)
-      self.datetime        = self.reference_date+timedelta(self.time_value)
-      self.datetimes       = [self.datetime]
-      self.time_values     = [self.time_value]
-      self.time_units      = 'days'
-      #######################################################################
-
-      return # __init__
-   #######################################################################
-
-
-   #######################################################################
-   def get_lonlat(self):
-
-      gfil  = self.gridpath+'/regional.grid.a'
-      plon  = get_array_from_HYCOM_binary(gfil,1,\
-                  dims=self.dims,grid_dir=self.gridpath)
-      plat  = get_array_from_HYCOM_binary(gfil,2,\
-                  dims=self.dims,grid_dir=self.gridpath)
-
-      return plon,plat
-   #######################################################################
-
-
-   #######################################################################
-   def get_fixed_lonlat(self,bmap):
-      gfil     = self.gridpath+'/regional.grid.a'
-
-      if 1:
-         # get ulon,vlat
-         lon   = get_array_from_HYCOM_binary(gfil,5,\
-                     dims=self.dims,grid_dir=self.gridpath)
-         lat   = get_array_from_HYCOM_binary(gfil,8,\
-                     dims=self.dims,grid_dir=self.gridpath)
-
-      else:
-         # try to fix plon,plat with scpx,scpy
-         lon,lat  = self.get_lonlat()
-         X,Y      = bmap(lon,lat)
-
-         scpx  = get_array_from_HYCOM_binary(gfil,10,\
-                     dims=self.dims,grid_dir=self.gridpath)
-         scpy  = get_array_from_HYCOM_binary(gfil,11,\
-                     dims=self.dims,grid_dir=self.gridpath)
-         
-         nx,ny = self.dims
-         X2    = np.zeros((nx+1,ny+1))
-         Y2    = np.zeros((nx+1,ny+1))
-         #
-         X2[1:,1:]   = 1*X    +.5*scpx
-         X2[0,1:]    = X[0,:] -.5*scpx[0,:]
-         X2[1:,0]    = X[:,0] -.5*scpx[:,0]
-         X2[0,0]     = X[0,0] -.5*scpx[0,0]
-         #
-         Y2[1:,1:]   = 1*Y    +.5*scpy
-         Y2[0,1:]    = Y[0,:] -.5*scpy[0,:]
-         Y2[1:,0]    = Y[:,0] -.5*scpy[:,0]
-         Y2[0,0]     = Y[0,0] -.5*scpy[0,0]
-
-         # return new ones
-         lon,lat  = bmap(X2,Y2,inverse=True)
-
-      return lon,lat
-   #######################################################################
-
-
-   #######################################################################
-   def get_depths(self):
-
-      dfil     = self.gridpath+'/regional.depth.a'
-      depths   = get_array_from_HYCOM_binary(dfil,1,\
-                     dims=self.dims,grid_dir=self.gridpath)
-
-      return depths
-   #######################################################################
-
-
-   #######################################################################
-   def get_var(self,vname,time_index=None):
-      """
-      vbl=get_var(vname,time_index=None) - vname is a string of 2d variable name (surface variable name,layer=0)
-      vbl=get_var([vname,layer],time_index=None) - vname is a string of 2d or 3d variable name (layer=0 is surface, layer=1 to kdm are ocean layers)
-      *time_index is not used - only a place-holder for some routines which handle netcdf as well
-      *vbl is a mod_reading.var_opt class (vbl.values is type np.ma.array - eg land is masked)
-      """
-
-      if type(vname)!=type([]):
-         # 2d var
-         layer = 0
-         vname = check_names(vname,self.variables)
-         recno = self.record_numbers[vname]
-         xmin  = self.minvals2d[vname]
-         xmax  = self.maxvals2d[vname]
-         #
-         vbl   = get_array_from_HYCOM_binary(self.afile,recno,\
-                     dims=self.dims)
-         mask  = np.array(1-np.isfinite(vbl),dtype='bool')
-      else:
-         # 3d var
-         vname,layer = vname
-         vname       = check_names(vname,self.variables3d)
-         recno       = self.record_numbers3d[vname][layer]
-         xmin        = self.minvals3d       [vname][layer]
-         xmax        = self.maxvals3d       [vname][layer]
-         vbl         = get_array_from_HYCOM_binary(self.afile,recno,\
-                           dims=self.dims)
-
-      extra_atts  = [['dimensions'],['i','j']]
-      vbl         = var_object(vbl,extra_atts=extra_atts)
-
-      ########################################################
-      # consistency check between afile and bfile
-      # TODO debug this
-      if 0:
-         if xmax==0:
-            ddx   = 1.e-8
-         else:
-            ddx   = 1e-8*abs(xmax)
-
-         if abs(vbl.max()-xmax)>ddx:
-            ss = 'Maximum of '+vname+'('+str(layer)+') '+\
-                 'inconsistent with '+self.bfile
-            print(ss)
-            print(self.afile+': '+str(vbl.max()) )
-            print(self.bfile+': '+str(xmax)      )
-            raise ValueError()
-
-         if xmin==0:
-            ddx   = 1.e-8
-         else:
-            ddx   = 1e-8*abs(xmin)
-
-         if abs(vbl.min()-xmin)>ddx:
-            ss = 'Minimum of '+vname+'('+str(layer)+') '+\
-                 'inconsistent with '+self.bfile
-            print(ss)
-            print(self.afile+': '+str(vbl.min()) )
-            print(self.bfile+': '+str(xmin)      )
-            raise ValueError()
-      ########################################################
-
-      return vbl
-   #######################################################################
-
-
-   #######################################################################
-   def plot_var(self,var_opts,\
-         pobj=None,bmap=None,HYCOMreg=None,\
-         clim=None,add_cbar=True,clabel=None,show=True,\
-         test_lonlats=None):
-
-      from mpl_toolkits.basemap import Basemap
-      from matplotlib import cm
-
-      var_opts    = check_var_opts(var_opts,self.all_variables)
-      vname       = var_opts.name
-      layer       = var_opts.layer
-      vec_opt     = var_opts.vec_opt
-      conv_fac    = var_opts.conv_fac
-      ice_mask    = var_opts.ice_mask
-      wave_mask   = var_opts.wave_mask
-      dir_from    = var_opts.dir_from
-      if vname not in self.all_variables:
-         raise ValueError('Variable '+vname+'not in '+self.afile)
-
-      if pobj is None:
-         pobj  = plot_object()
-      fig,ax,cbar = pobj.get()
-
-      if HYCOMreg is None:
-         HYCOMreg = self.HYCOM_region
-      if bmap is None:
-         # make basemap
-         bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      # lon,lat  = self.get_lonlat()
-      lon,lat  = self.get_fixed_lonlat(bmap)
-
-      if clim is not None:
-         vmin,vmax   = clim
-      else:
-         vmin  = None
-         vmax  = None
-
+   if fobj.filetype=='HYCOM_binary':
       if layer==0:
-         vbl   = self.get_var(vname)
+         vbl   = fobj.get_var(vname)
       else:
-         vbl   = self.get_var([vname,layer])
+         vbl   = fobj.get_var([vname,layer])
+   elif fobj.filetype=='netcdf':
+      vbl   = fobj.get_var(vname,time_index=time_index)
 
-      mask     = vbl.values.mask
+   return vbl
+######################################################################
 
-      ################################################################## 
-      # add ice or wave masks
-      if ice_mask and wave_mask:
-         fice        = self.get_var('ficem')
-         good        = np.array(1-fice.values.mask  ,dtype='bool')
-         mask1       = np.zeros(fice.shape         ,dtype='bool')
-         mask1[good] = (fice[good]<.01)          # water
-         mask1       = np.logical_or(mask,mask1) # water or NaN
-         #
-         Hs          = self.get_var('swh')
-         good        = np.array(1-Hs.values.mask,dtype='bool')
-         mask2       = np.zeros(Hs.shape        ,dtype='bool')
-         mask2[good] = (Hs[good]<.01)              # no waves
-         mask2       = np.logical_or(mask,mask2)   # no waves or NaN
-         #
-         mask  = np.logical_or(mask1,mask2)
+#######################################################################
+def imshow(fobj,var_opts,pobj=None,\
+      clim=None,add_cbar=True,clabel=None,show=True,\
+      test_ijs=None,time_index=0):
 
-      elif ice_mask:
-         fice        = self.get_var('ficem')
-         good        = np.array(1-fice.values.mask ,dtype='bool')
-         mask1       = np.zeros(fice.shape         ,dtype='bool')
-         mask1[good] = (fice[good]<.01)          # water
-         mask        = np.logical_or(mask,mask1) # water or NaN
+   from mpl_toolkits.basemap import Basemap
+   from matplotlib import cm
 
-      elif wave_mask:
-         Hs          = self.get_var('swh')
-         good        = np.array(1-Hs.values.mask,dtype='bool')
-         mask2       = np.zeros(Hs.shape        ,dtype='bool')
-         mask2[good] = (Hs[good]<.01)              # no waves
-         mask        = np.logical_or(mask,mask2)   # no waves or NaN
-      ################################################################## 
+   var_opts    = check_var_opts(var_opts,fobj.all_variables)
+   vname       = var_opts.name
+   layer       = var_opts.layer
+   vec_opt     = var_opts.vec_opt
+   conv_fac    = var_opts.conv_fac
+   ice_mask    = var_opts.ice_mask
+   wave_mask   = var_opts.wave_mask
+   dir_from    = var_opts.dir_from
+   if vname not in fobj.all_variables:
+      raise ValueError('Variable '+vname+'not in '+fobj.afile)
+
+   if pobj is None:
+      pobj  = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   if clim is not None:
+      vmin,vmax   = clim
+   else:
+      vmin  = None
+      vmax  = None
+
+   vbl   = GetVar(fobj,vname,layer=layer,time_index=time_index)
+   # if fobj.filetype=='HYCOM_binary':
+   #    if layer==0:
+   #       vbl   = fobj.get_var(vname)
+   #    else:
+   #       vbl   = fobj.get_var([vname,layer])
+   # elif fobj.filetype=='netcdf':
+   #    vbl   = fobj.get_var(vname,time_index=time_index)
+
+   mask     = vbl.values.mask
+
+   ################################################################## 
+   # add ice or wave masks
+   if ice_mask and wave_mask:
+      fice        = GetVar(fobj,'fice',layer=0,time_index=time_index)
+      # fice        = fobj.get_var('ficem')
+      good        = np.array(1-fice.values.mask  ,dtype='bool')
+      mask1       = np.zeros(fice.shape         ,dtype='bool')
+      mask1[good] = (fice[good]<.01)          # water
+      mask1       = np.logical_or(mask,mask1) # water or NaN
+      #
+      Hs          = GetVar(fobj,'swh',layer=0,time_index=time_index)
+      # Hs          = fobj.get_var('swh')
+      good        = np.array(1-Hs.values.mask,dtype='bool')
+      mask2       = np.zeros(Hs.shape        ,dtype='bool')
+      mask2[good] = (Hs[good]<.01)              # no waves
+      mask2       = np.logical_or(mask,mask2)   # no waves or NaN
+      #
+      mask  = np.logical_or(mask1,mask2)
+
+   elif ice_mask:
+      fice        = GetVar(fobj,'fice',layer=0,time_index=time_index)
+      # fice        = fobj.get_var('ficem')
+      good        = np.array(1-fice.values.mask ,dtype='bool')
+      mask1       = np.zeros(fice.shape         ,dtype='bool')
+      mask1[good] = (fice[good]<.01)          # water
+      mask        = np.logical_or(mask,mask1) # water or NaN
+
+   elif wave_mask:
+      Hs          = GetVar(fobj,'swh',layer=0,time_index=time_index)
+      # Hs          = fobj.get_var('swh')
+      good        = np.array(1-Hs.values.mask,dtype='bool')
+      mask2       = np.zeros(Hs.shape        ,dtype='bool')
+      mask2[good] = (Hs[good]<.01)              # no waves
+      mask        = np.logical_or(mask,mask2)   # no waves or NaN
+   ################################################################## 
 
 
-      ###############################################################
-      if vec_opt==0:
+   ###############################################################
+   if vec_opt==0:
 
-         # just plot scalar
-         U     = None # no quiver plot
-         Marr  = np.ma.array(conv_fac*vbl.values.data,mask=mask)
+      # just plot scalar
+      U     = None # no quiver plot
+      Marr  = np.ma.array(conv_fac*vbl.values.data,mask=mask)
 
-      elif vec_opt==1:
+   elif vec_opt==1:
 
-         # vector magnitude of vel or stress
-         U  = None # no quiver plot
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
+      # vector magnitude of vel or stress
+      U  = None # no quiver plot
+      if vname[0]=='u':
+         vname2   = 'v'+vname[1:]
+      elif vname[:4]=='taux':
+         vname2   = 'tauy'+vname[4:]
 
-         if layer==0:
-            vbl2  = self.get_var(vname2)
+      vbl2  = GetVar(fobj,vname2,layer=layer,time_index=time_index)
+      # if layer==0:
+      #    vbl2  = fobj.get_var(vname2)
+      # else:
+      #    vbl2  = fobj.get_var([vname2,layer])
+
+      Marr  = np.hypot(vbl.values.data,vbl2.values.data)
+      Marr  = np.ma.array(conv_fac*Marr,mask=mask)
+
+   elif (vec_opt==2) or (vec_opt==3):
+      # 2: plot vector magnitude + direction (unit vectors)
+      # 3: plot vector direction only
+      raise ValueError('vec_opt==2,3 disabled for imshow')
+
+   elif vec_opt==4:
+
+      # plot direction as scalar
+      U  = None
+
+      if vname[0]=='u':
+         vname2   = 'v'+vname[1:]
+      elif vname[:4]=='taux':
+         vname2   = 'tauy'+vname[4:]
+
+      vbl2  = GetVar(fobj,vname2,layer=layer,time_index=time_index)
+      # if layer==0:
+      #    vbl2  = fobj.get_var(vname2)
+      # else:
+      #    vbl2  = fobj.get_var([vname2,layer])
+      dir   = 180/np.pi*np.arctan2(vbl2.values.data,vbl.values.data)#dir-to in degrees (<180,>-180)
+      dir   = 90-dir #north is 0,angle clockwise
+      if dir_from:
+         # direction-from
+         dir[dir>0]  = dir[dir>0]-360
+         Marr        = np.ma.array(dir+180,mask=np.logical_or(mask,1-np.isfinite(dir)))
+      else:
+         # direction-to
+         dir[dir>180]   = dir[dir>180]-360
+         Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
+
+   elif vec_opt==5:
+      #vbl is a direction - convert to vector
+      Marr  = None
+      dir   = 90-vbl.values.data
+      if dir_from:
+         dir   = np.pi/180*(dir+180)
+      else:
+         dir   = np.pi/180*dir
+
+      # rotate unit vectors
+      U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
+      U     = np.ma.array(U,mask=mask)
+      V     = np.ma.array(V,mask=mask)
+   ################################################################## 
+
+
+   ################################################################## 
+   # pcolor plot
+
+   #########################################################################
+   # add additional masking
+   if (var_opts.lower_limit is not None) or (var_opts.upper_limit is not None):
+      mask  = 1*Marr.mask
+      data  = Marr.data
+      good  = np.logical_not(mask)
+      if (var_opts.lower_limit is not None) and (var_opts.upper_limit is not None):
+         mask[good]  = np.logical_or(data[good]<var_opts.lower_limit,data[good]>var_opts.upper_limit)
+      elif (var_opts.lower_limit is not None):
+         mask[good]  = (data[good]<var_opts.lower_limit)
+      elif (var_opts.upper_limit is not None):
+         mask[good]  = (data[good]>var_opts.upper_limit)
+      Marr  = np.ma.array(data,mask=mask)
+   #########################################################################
+
+   if fobj.filetype=='netcdf':
+      PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax)
+   else:
+      PC = ax.imshow(Marr.transpose(),origin='lower',vmin=vmin,vmax=vmax)
+
+   if add_cbar:
+
+      if cbar is None:
+         cbar  = fig.colorbar(PC)
+      else:
+         cbar  = fig.colorbar(PC,cax=cbar.ax)
+
+      pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
+      if clabel is not None:
+         cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+   ################################################################## 
+
+
+   ################################################################## 
+   if pobj.axpos is not None:
+      # try to make sure axes don't move round
+      pobj.ax.set_position(pobj.axpos)
+   ################################################################## 
+
+
+   ################################################################## 
+   if test_ijs is not None:
+      for itst,jtst in test_ijs:
+         ax.plot(jtst,itst,'^m',markersize=5)
+   ################################################################## 
+
+   if show:
+      # fig.show()
+      plt.show(fig)
+
+   return pobj
+###########################################################
+
+
+#######################################################################
+def plot_var(fobj,var_opts,time_index=0,\
+      pobj=None,bmap=None,HYCOMreg=None,\
+      clim=None,add_cbar=True,clabel=None,show=True,\
+      test_lonlats=None):
+
+   from mpl_toolkits.basemap import Basemap
+   from matplotlib import cm
+
+   var_opts    = check_var_opts(var_opts,fobj.all_variables)
+   vname       = var_opts.name
+   layer       = var_opts.layer
+   vec_opt     = var_opts.vec_opt
+   conv_fac    = var_opts.conv_fac
+   ice_mask    = var_opts.ice_mask
+   wave_mask   = var_opts.wave_mask
+   dir_from    = var_opts.dir_from
+   if vname not in fobj.all_variables:
+      raise ValueError('Variable '+vname+'not in '+fobj.afile)
+
+   if pobj is None:
+      pobj  = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   if HYCOMreg is None:
+      HYCOMreg = fobj.HYCOM_region
+      if HYCOMreg is None:
+         HYCOMreg = 'TP4'
+
+   if bmap is None:
+      # make basemap
+      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+
+   # lon,lat  = fobj.get_lonlat()
+   lon,lat  = fobj.get_fixed_lonlat(bmap)
+
+   if clim is not None:
+      vmin,vmax   = clim
+   else:
+      vmin  = None
+      vmax  = None
+
+   vbl   = GetVar(fobj,vname,layer=layer,time_index=time_index)
+   mask  = vbl.values.mask
+
+   ################################################################## 
+   # add ice or wave masks
+   if ice_mask and wave_mask:
+      # fice        = fobj.get_var('ficem')
+      fice        = GetVar(fobj,'fice',layer=0,time_index=time_index)
+      good        = np.array(1-fice.values.mask  ,dtype='bool')
+      mask1       = np.zeros(fice.shape         ,dtype='bool')
+      mask1[good] = (fice[good]<.01)          # water
+      mask1       = np.logical_or(mask,mask1) # water or NaN
+      #
+      # Hs          = fobj.get_var('swh')
+      Hs          = GetVar(fobj,'swh',layer=0,time_index=time_index)
+      good        = np.array(1-Hs.values.mask,dtype='bool')
+      mask2       = np.zeros(Hs.shape        ,dtype='bool')
+      mask2[good] = (Hs[good]<.01)              # no waves
+      mask2       = np.logical_or(mask,mask2)   # no waves or NaN
+      #
+      mask  = np.logical_or(mask1,mask2)
+
+   elif ice_mask:
+      fice        = GetVar(fobj,'fice',layer=0,time_index=time_index)
+      # fice        = fobj.get_var('ficem')
+      good        = np.array(1-fice.values.mask ,dtype='bool')
+      mask1       = np.zeros(fice.shape         ,dtype='bool')
+      mask1[good] = (fice[good]<.01)          # water
+      mask        = np.logical_or(mask,mask1) # water or NaN
+
+   elif wave_mask:
+      # Hs          = fobj.get_var('swh')
+      Hs          = GetVar(fobj,'swh',layer=0,time_index=time_index)
+      good        = np.array(1-Hs.values.mask,dtype='bool')
+      mask2       = np.zeros(Hs.shape        ,dtype='bool')
+      mask2[good] = (Hs[good]<.01)              # no waves
+      mask        = np.logical_or(mask,mask2)   # no waves or NaN
+   ################################################################## 
+
+
+   ###############################################################
+   if vec_opt==0:
+
+      # just plot scalar
+      U     = None # no quiver plot
+      Marr  = np.ma.array(conv_fac*vbl.values.data,mask=mask)
+
+   elif vec_opt==1:
+
+      # vector magnitude of vel or stress
+      U  = None # no quiver plot
+      if vname[0]=='u':
+         vname2   = 'v'+vname[1:]
+      elif vname[:4]=='taux':
+         vname2   = 'tauy'+vname[4:]
+
+      vbl2  = GetVar(fobj,vname,layer=layer,time_index=time_index)
+      Marr  = np.hypot(vbl.values.data,vbl2.values.data)
+      Marr  = np.ma.array(conv_fac*Marr,mask=mask)
+
+   elif vec_opt==2:
+
+      # plot vector magnitude + direction (unit vectors)
+      if vname[0]=='u':
+         vname2   = 'v'+vname[1:]
+      elif vname[:4]=='taux':
+         vname2   = 'tauy'+vname[4:]
+
+      vbl2  = GetVar(fobj,vname,layer=layer,time_index=time_index)
+      U     = conv_fac*vbl.values.data
+      V     = conv_fac*vbl2.values.data
+
+      # speed (to be plotted)
+      spd         = np.hypot(U,V)
+      Marr        = np.ma.array(spd,mask=mask) #masked array
+      good        = np.logical_not(mask)
+      pos         = np.zeros(spd.shape,dtype='bool')
+      pos[good]   = (spd[good]>0)
+      npos        = np.logical_not(pos)
+
+      # rotate vectors
+      U,V      = bmap.rotate_vector(U,V,lon,lat)
+
+      #unit vectors
+      U[pos]   = U[pos]/spd[pos]
+      V[pos]   = V[pos]/spd[pos]
+      U[npos]  = 0.
+      V[npos]  = 0.
+
+      # add masks
+      U  = np.ma.array(U,mask=mask)
+      V  = np.ma.array(V,mask=mask)
+
+   elif vec_opt==3:
+
+      # plot vector direction only
+      # (no pcolor, but vector length is proportional to magnitude)
+      # TODO: add key
+      Marr  = None
+
+      if vname[0]=='u':
+         vname2   = 'v'+vname[1:]
+      elif vname[:4]=='taux':
+         vname2   = 'tauy'+vname[4:]
+
+      vbl2  = GetVar(fobj,vname,layer=layer,time_index=time_index)
+      U     = conv_fac*vbl.values.data
+      V     = conv_fac*vbl2.values.data
+
+      # speed
+      spd   = np.hypot(U,V)
+      avg   = np.mean(np.ma.array(spd,mask=mask))
+      print('avg speed: '+str(avg))
+
+      # rotate vectors
+      U,V   = bmap.rotate_vector(U,V,lon,lat)
+
+      # scale by the average speed
+      U  = np.ma.array(U/avg,mask=mask)
+      V  = np.ma.array(V/avg,mask=mask)
+
+   elif vec_opt==4:
+
+      # plot direction as scalar
+      U  = None
+
+      if vname[0]=='u':
+         vname2   = 'v'+vname[1:]
+      elif vname[:4]=='taux':
+         vname2   = 'tauy'+vname[4:]
+
+      vbl2  = GetVar(fobj,vname,layer=layer,time_index=time_index)
+      dir   = 180/np.pi*np.arctan2(vbl2.values.data,vbl.values.data)#dir-to in degrees (<180,>-180)
+      dir   = 90-dir #north is 0,angle clockwise
+      if dir_from:
+         # direction-from
+         dir[dir>0]  = dir[dir>0]-360
+         Marr        = np.ma.array(dir+180,mask=np.logical_or(mask,1-np.isfinite(dir)))
+      else:
+         # direction-to
+         dir[dir>180]   = dir[dir>180]-360
+         Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
+
+   elif vec_opt==5:
+      #vbl is a direction - convert to vector
+      Marr  = None
+      dir   = 90-vbl.values.data
+      if dir_from:
+         dir   = np.pi/180*(dir+180)
+      else:
+         dir   = np.pi/180*dir
+
+      # rotate unit vectors
+      U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
+      U     = np.ma.array(U,mask=mask)
+      V     = np.ma.array(V,mask=mask)
+   ################################################################## 
+
+
+   ################################################################## 
+   # pcolor plot
+   if Marr is not None:
+
+      #########################################################################
+      # add additional masking
+      if (var_opts.lower_limit is not None) or (var_opts.upper_limit is not None):
+         mask  = 1*Marr.mask
+         data  = Marr.data
+         good  = np.logical_not(mask)
+         if (var_opts.lower_limit is not None) and (var_opts.upper_limit is not None):
+            mask[good]  = np.logical_or(data[good]<var_opts.lower_limit,data[good]>var_opts.upper_limit)
+         elif (var_opts.lower_limit is not None):
+            mask[good]  = (data[good]<var_opts.lower_limit)
+         elif (var_opts.upper_limit is not None):
+            mask[good]  = (data[good]>var_opts.upper_limit)
+         Marr  = np.ma.array(data,mask=mask)
+      #########################################################################
+
+      PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
+      if add_cbar:
+
+         if cbar is None:
+            cbar  = fig.colorbar(PC)
          else:
-            vbl2  = self.get_var([vname2,layer])
+            cbar  = fig.colorbar(PC,cax=cbar.ax)
 
-         Marr  = np.hypot(vbl.values.data,vbl2.values.data)
-         Marr  = np.ma.array(conv_fac*Marr,mask=mask)
-
-      elif vec_opt==2:
-
-         # plot vector magnitude + direction (unit vectors)
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         if layer==0:
-            vbl2  = self.get_var(vname2)
-         else:
-            vbl2  = self.get_var([vname2,layer])
-
-         U  = conv_fac*vbl.values.data
-         V  = conv_fac*vbl2.values.data
-
-         # speed (to be plotted)
-         spd         = np.hypot(U,V)
-         Marr        = np.ma.array(spd,mask=mask) #masked array
-         good        = np.logical_not(mask)
-         pos         = np.zeros(spd.shape,dtype='bool')
-         pos[good]   = (spd[good]>0)
-         npos        = np.logical_not(pos)
-
-         # rotate vectors
-         U,V      = bmap.rotate_vector(U,V,lon,lat)
-
-         #unit vectors
-         U[pos]   = U[pos]/spd[pos]
-         V[pos]   = V[pos]/spd[pos]
-         U[npos]  = 0.
-         V[npos]  = 0.
-
-         # add masks
-         U  = np.ma.array(U,mask=mask)
-         V  = np.ma.array(V,mask=mask)
-
-      elif vec_opt==3:
-
-         # plot vector direction only
-         # (no pcolor, but vector length is proportional to magnitude)
-         # TODO: add key
-         Marr  = None
-
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         if layer==0:
-            vbl2  = self.get_var(vname2)
-         else:
-            vbl2  = self.get_var([vname2,layer])
-         U     = conv_fac*vbl.values.data
-         V     = conv_fac*vbl2.values.data
-
-         # speed
-         spd   = np.hypot(U,V)
-         avg   = np.mean(np.ma.array(spd,mask=mask))
-         print('avg speed: '+str(avg))
-
-         # rotate vectors
-         U,V   = bmap.rotate_vector(U,V,lon,lat)
-
-         # scale by the average speed
-         U  = np.ma.array(U/avg,mask=mask)
-         V  = np.ma.array(V/avg,mask=mask)
-
-      elif vec_opt==4:
-
-         # plot direction as scalar
-         U  = None
-
-         if vname[0]=='u':
-            vname2   = 'v'+vname[1:]
-         elif vname[:4]=='taux':
-            vname2   = 'tauy'+vname[4:]
-
-         if layer==0:
-            vbl2  = self.get_var(vname2)
-         else:
-            vbl2  = self.get_var([vname2,layer])
-         dir   = 180/np.pi*np.arctan2(vbl2.values.data,vbl.values.data)#dir-to in degrees (<180,>-180)
-         dir   = 90-dir #north is 0,angle clockwise
-         if dir_from:
-            # direction-from
-            dir[dir>0]  = dir[dir>0]-360
-            Marr        = np.ma.array(dir+180,mask=np.logical_or(mask,1-np.isfinite(dir)))
-         else:
-            # direction-to
-            dir[dir>180]   = dir[dir>180]-360
-            Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
-
-      elif vec_opt==5:
-         #vbl is a direction - convert to vector
-         Marr  = None
-         dir   = 90-vbl.values.data
-         if dir_from:
-            dir   = np.pi/180*(dir+180)
-         else:
-            dir   = np.pi/180*dir
-
-         # rotate unit vectors
-         U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
-         U     = np.ma.array(U,mask=mask)
-         V     = np.ma.array(V,mask=mask)
-      ################################################################## 
+         pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
+         if clabel is not None:
+            cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+   ################################################################## 
 
 
-      ################################################################## 
-      # pcolor plot
-      if Marr is not None:
-
-         #########################################################################
-         # add additional masking
-         if (var_opts.lower_limit is not None) or (var_opts.upper_limit is not None):
-            mask  = 1*Marr.mask
-            data  = Marr.data
-            good  = np.logical_not(mask)
-            if (var_opts.lower_limit is not None) and (var_opts.upper_limit is not None):
-               mask[good]  = np.logical_or(data[good]<var_opts.lower_limit,data[good]>var_opts.upper_limit)
-            elif (var_opts.lower_limit is not None):
-               mask[good]  = (data[good]<var_opts.lower_limit)
-            elif (var_opts.upper_limit is not None):
-               mask[good]  = (data[good]>var_opts.upper_limit)
-            Marr  = np.ma.array(data,mask=mask)
-         #########################################################################
-
-         PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
-         if add_cbar:
-
-            if cbar is None:
-               cbar  = fig.colorbar(PC)
-            else:
-               cbar  = fig.colorbar(PC,cax=cbar.ax)
-
-            pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
-            if clabel is not None:
-               cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
-      ################################################################## 
+   ################################################################## 
+   if pobj.axpos is not None:
+      # try to make sure axes don't move round
+      pobj.ax.set_position(pobj.axpos)
+   ################################################################## 
 
 
-      ################################################################## 
-      if pobj.axpos is not None:
-         # try to make sure axes don't move round
-         pobj.ax.set_position(pobj.axpos)
-      ################################################################## 
+   ################################################################## 
+   # quiver plot
+   if U is not None:
+      dens  = 10   # density of arrows
+      scale = 50
+      QP    = bmap.quiver(lon[::dens,::dens],lat[::dens,::dens],\
+                           U[::dens,::dens],V[::dens,::dens],\
+                           latlon=True,scale=scale,ax=ax)
+
+   if test_lonlats is not None:
+      for lont,latt in test_lonlats:
+         bmap.plot(lont,latt,'^m',markersize=5,latlon=True,ax=ax)
+
+   Fplt.finish_map(bmap,ax=ax)
+   if show:
+      # fig.show()
+      plt.show(fig)
+
+   return pobj,bmap
+###########################################################
 
 
-      ################################################################## 
-      # quiver plot
-      if U is not None:
-         dens  = 10   # density of arrows
-         scale = 50
-         QP    = bmap.quiver(lon[::dens,::dens],lat[::dens,::dens],\
-                              U[::dens,::dens],V[::dens,::dens],\
-                              latlon=True,scale=scale,ax=ax)
 
-      if test_lonlats is not None:
-         for lont,latt in test_lonlats:
-            bmap.plot(lont,latt,'^m',markersize=5,latlon=True,ax=ax)
+###########################################################
+def plot_var_pair(fobj,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
 
-      Fplt.finish_map(bmap,ax=ax)
-      if show:
-         fig.show()
+   # ====================================================================
+   # check options
+   var_opts1   = check_var_opts(var_opts1,fobj.all_variables)
+   var_opts2   = check_var_opts(var_opts2,fobj.all_variables)
+   check_pair(var_opts1,var_opts2)
+   # ====================================================================
 
-      return pobj,bmap
+   if 'show' in kwargs:
+      show  = kwargs['show']
+      del kwargs['show']
+   else:
+      # default is show:
+      show  = True
+   pobj,bmap   = plot_var(fobj,var_opts1,pobj=pobj,bmap=bmap,show=False,**kwargs)
+   plot_var(fobj,var_opts2,pobj=pobj,bmap=bmap,show=show,**kwargs)
+
+   return pobj,bmap
+###########################################################
+
+
+###########################################################
+def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs):
+
+   var_opts = check_var_opts(var_opts,fobj.all_variables)
+
+   new_fig  = (pobj is None)
+   if new_fig:
+      pobj  = plot_object()
+
+   if 'time_index' not in kwargs:
+      time_index  = 0
+      kwargs.update({'time_index':time_index})
+   else:
+      time_index  = kwargs['time_index']
+
+   if 'show' in kwargs:
+      show           = kwargs['show']
+      kwargs['show'] = False
+      pobj,bmap      = fobj.plot_var(var_opts,pobj=pobj,bmap=bmap,**kwargs)
+   else:
+      show        = False
+      pobj,bmap   = fobj.plot_var(var_opts,pobj=pobj,bmap=bmap,show=False,**kwargs)
+
+   dtmo     = fobj.datetimes[time_index]
+   datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+
+   if fobj.HYCOM_region=='TP4':
+      xyann = (0.05,.925)
+   else:
+      xyann = (0.4,.925)
+
+   if date_label==1:
+      tlabel   = dtmo.strftime('%d %b %Y')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+   elif date_label==2:
+      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+
+   if pobj.axpos is not None:
+      # try to make sure axes don't move round
+      pobj.ax.set_position(pobj.axpos)
+
+   vname    = var_opts.name
+   Fname    = vname
+   vec_opt  = var_opts.vec_opt
+
+   # =======================================================
+   # set figure name
+   if vec_opt==1:
+      #magnitude only
+      if vname in ['u','usurf']:
+         Fname = 'surf_speed'
+      elif 'u' in vname:
+         Fname = vname.strip('u')+'_speed'
+      elif 'taux' in vname:
+         Fname = vname.strip('taux')+'_stress_magnitude'
+
+   elif vec_opt==2 or vec_opt==3:
+      #quiver plots on top of magnitude or by itself
+      if vname in ['u','usurf']:
+         Fname = 'surf_vel'
+      elif 'u' in vname:
+         Fname = vname.strip('u')+'_vel'
+      elif 'taux' in vname:
+         Fname = vname.strip('taux')+'_stress'
+
+   elif vec_opt==4:
+      #direction as scalar
+      if vname in ['u','usurf']:
+         Fname = 'surf_current_dirn'
+      elif 'u' in vname:
+         Fname = vname.strip('u')+'_vel_dirn'
+      elif 'taux' in vname:
+         Fname = vname.strip('taux')+'_stress_dirn'
+
+   elif vec_opt==5:
+      #direction -> vector
+      if vname in ['u','usurf']:
+         Fname = 'surf_current_dirn'
+      elif 'u' in vname:
+         Fname = vname.strip('u')+'_vel_dirn'
+      elif 'taux' in vname:
+         Fname = vname.strip('taux')+'_stress_dirn'
+
+   Fname    = Fname.strip('_')
+   figname  = figdir+'/'+fobj.basename+'_'+Fname+datestr+'.png'
+   if not os.path.exists(figdir):
+      os.mkdir(figdir)
+
+   print('Saving to '+figname) 
+   pobj.fig.savefig(figname)
+   # =======================================================
+
+   if new_fig:
+      pobj.ax.cla()
+      pobj.fig.clear()
+      plt.close(pobj.fig)
+
+   return pobj,bmap
+###########################################################
+
+
+###########################################################
+def make_png_pair(fobj,var_opts1,var_opts2,\
+      pobj=None,bmap=None,figdir='.',date_label=2,**kwargs):
+
+   # ====================================================================
+   # check options
+   var_opts1   = check_var_opts(var_opts1,fobj.all_variables)
+   var_opts2   = check_var_opts(var_opts2,fobj.all_variables)
+   check_pair(var_opts1,var_opts2)
+   # ====================================================================
+
+   new_fig  = (pobj is None)
+   if new_fig:
+      pobj  = plot_object()
+
+   if 'time_index' not in kwargs:
+      time_index  = 0
+      kwargs.update({'time_index':time_index})
+   else:
+      time_index  = kwargs['time_index']
+
+   if 'show' in kwargs:
+      show           = kwargs['show']
+      kwargs['show'] = False
+      pobj,bmap      = plot_var_pair(fobj,var_opts1,var_opts2,\
+            pobj=pobj,bmap=bmap,**kwargs)
+   else:
+      show        = False
+      pobj,bmap   = plot_var_pair(fobj,var_opts1,var_opts2,\
+            pobj=pobj,bmap=bmap,show=False,**kwargs)
+
+   fig,ax,cbar = pobj.get()
+
+   dtmo     = fobj.datetimes[time_index]
+   datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+   if fobj.HYCOM_region=='TP4':
+      xyann = (0.05,.925)
+   else:
+      xyann = (0.4,.925)
+
+   if date_label==1:
+      tlabel   = dtmo.strftime('%d %b %Y')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+   elif date_label==2:
+      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+
+
+   # ==================================================================
+   # set name with 1st variable only
+   vname    = var_opts1.name
+   Fname    = var_opts1.name
+   vec_opt  = var_opts1.vec_opt
+   if vec_opt==1:
+      #magnitude only
+      if vname in ['u','usurf']:
+         Fname = 'surf_speed'
+      elif 'u' in vname:
+         Fname = vname.strip('u')+'_speed'
+      elif 'taux' in vname:
+         Fname = vname.strip('taux')+'_stress_magnitude'
+
+   elif vec_opt==4:
+      #direction as scalar
+      if vname in ['u','usurf']:
+         Fname = 'surf_current_dirn'
+      elif 'u' in vname:
+         Fname = vname.strip('u')+'_vel_dirn'
+      elif 'taux' in vname:
+         Fname = vname.strip('taux')+'_stress_dirn'
+
+   Fname    = Fname.strip('_')
+   figname  = figdir+'/'+fobj.basename+'_'+Fname+datestr+'.png'
+   if not os.path.exists(figdir):
+      os.mkdir(figdir)
+
+   print('Saving to '+figname) 
+   fig.savefig(figname)
+   # ==================================================================
+
+
+   if new_fig:
+      ax.cla()
+      fig.clear()
+      plt.close(fig)
+
+   return pobj,bmap
    ###########################################################
 
+###########################################################
 
-   ###########################################################
-   def MIZmap(self,var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
-      """
-      Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs):
-      Inputs:
-         var_name is variable to find MIZ from
-         **kwargs to be passed onto MIZchar.get_MIZ_poly:
-            outdir='.',do_sort=True
-      Returns: MIZchar.MIZpoly object
-      """
 
-      import MIZchar as mc
+###########################################################
+def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
+      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      date_label=1,figname=None,**kwargs):
 
-      vname = check_names(var_name,self.variables)
-      if var_name == 'dmax':
-         # FSD MIZarray(1-
-         Arr         = self.get_var(vname)
-         clim        = [0,300]# for plotting
-         lower_limit = .1     # for plotting
-      elif var_name == 'fice':
-         # conc MIZ
-         Arr         = self.get_var(vname)
-         clim        = [0,1]  # for plotting
-         lower_limit = .15    # for plotting
-      elif var_name == 'hice':
-         # thin ice areas
-         Arr         = self.get_var(vname)
-         clim        = [0,2.] # for plotting
-         lower_limit = .01    # for plotting
+   var_opts1   = make_plot_options('ficem',\
+      vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
+   var_opts1   = check_var_opts(var_opts1,fobj.variables)
+
+   if 'show' in kwargs:
+      show           = kwargs['show']
+      kwargs['show'] = False
+      pobj,bmap      = fobj.plot_var(var_opts1,pobj=pobj,bmap=bmap,**kwargs)
+   else:
+      show        = True
+      pobj,bmap   = fobj.plot_var(var_opts1,pobj=pobj,bmap=bmap,show=False,**kwargs)
+
+   fig,ax,cbar = pobj.get()
+
+   dtmo  = fobj.datetimes[time_index]
+   if obs_type=='OSISAF':
+      if obs_path is None:
+      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
+            dtmo.strftime('%Y')+'_nh_polstere/'
+      if obs_option is None:
+	 obs_option='multi'
+      obsfil   = obs_path+\
+            '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
+            dtmo.strftime('%Y%m%d')+'1200.nc'
+   else:
+      raise ValueError('invalid value of obs_type: '+obs_type)
+
+   print(obsfil)
+   obs      = nc_getinfo(obsfil)
+   fice     = obs.get_var('ice_conc')
+   lon,lat  = obs.get_lonlat()
+   bmap.contour(lon,lat,fice.values[:,:],[15],colors='g',\
+         linewidths=2,ax=ax,latlon=True)
+
+   if 'HYCOMreg' in kwargs:
+      reg   = kwargs['HYCOMreg']
+   else:
+      reg   = fobj.HYCOM_region
+      if reg is None:
+         reg   = 'TP4'
+      kwargs.update({'HYCOMreg':reg})
+
+
+   #############################################################
+   if reg=='TP4':
+      xyann = (0.05,.925)
+   else:
+      xyann = (0.4,.925)
+
+
+   if date_label==1:
+      # date only
+      tlabel   = dtmo.strftime('%d %b %Y')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+   elif date_label==2:
+      # date + time
+      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+      pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+   elif type(date_label)==type('hi'):
+      # manual label
+      pobj.ax.annotate(date_label,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
+   #############################################################
+
+
+   if figname is not None:
+      print('Saving to '+figname)
+      fig.savefig(figname)
+
+   if show:
+      # fig.show()
+      plt.show(fig)
+
+   return pobj,bmap,obsfil
+###########################################################
+
+
+###########################################################
+def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
+      do_sort=False,EastOnly=True,plotting=True,**kwargs):
+   """
+   Call  : fobj.MIZmap(var_name='dmax',vertices=None,\
+               do_sort=False,EastOnly=True,plotting=True,**kwargs)
+   Inputs:
+      var_name is variable to find MIZ from
+      **kwargs to be passed onto MIZchar.get_MIZ_poly:
+         outdir='.' - where to save results
+         mask_corners=None - can mask out smaller region
+                           - corners = [lons,lats], where lons=[DL,DR,UR,UL]
+   Returns: MIZchar.MIZpoly object
+   """
+
+   import MIZchar as mc
+
+   vname = check_names(var_name,fobj.variables)
+   if var_name == 'dmax':
+      # FSD MIZarray(1-
+      Arr         = GetVar(fobj,vname,time_index=time_index)
+      clim        = [0,300]# for plotting
+      lower_limit = .1     # for plotting
+   elif var_name == 'fice':
+      # conc MIZ
+      Arr         = GetVar(fobj,vname,time_index=time_index)
+      clim        = [0,1]  # for plotting
+      lower_limit = .15    # for plotting
+   elif var_name == 'hice':
+      # thin ice areas
+      Arr         = GetVar(fobj,vname,time_index=time_index)
+      clim        = [0,2.] # for plotting
+      lower_limit = .01    # for plotting
+   else:
+      raise ValueError('Wrong selection variable for MIZmap')
+
+   print("MIZchar.get_MIZ_poly\n")
+   lon,lat  = fobj.get_lonlat()
+   MPdict   = {}
+   tfiles   = {}
+
+   if vertices is not None:
+      do_sort  = False
+   
+   if do_sort:
+      # possible regions are:
+      regions  = ['gre','bar','beau','lab','balt','les','can']
+
+      if EastOnly:
+         # concentrate on the eastern Arctic
+         # (and forget Baltic Sea)
+         regions.remove('balt')
+         regions.remove('les' )
+         regions.remove('can' )
+         regions.remove('beau')
       else:
-         raise ValueError('Wrong selection variable for MIZmap')
+         # forget Baltic Sea
+         regions.remove('balt')
 
-      print("MIZchar.get_MIZ_poly\n")
-      lon,lat  = self.get_lonlat()
-      MPdict   = {}
-      tfiles   = {}
-
-      if do_sort:
-         # possible regions are:
-         regions  = ['gre','bar','beau','lab','balt','les','can']
-
-         if EastOnly:
-            # concentrate on the eastern Arctic
-            # (and forget Baltic Sea)
-            regions.remove('balt' )
-            regions.remove('les' )
-            regions.remove('can' )
-            regions.remove('beau')
-
-         # for reg in ['gre']:
-         for reg in regions:
-            mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,region=reg)
-            MPdict.update({reg:mp})
-
-            fname0   = self.basename+'_'+var_name +'_'+reg
-            tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-            if 'all' in tfile.keys():
-               tfiles.update({reg:tfile['all']})
-
-         if 0:
-            MPdict['gre'].show_maps()
-            return MPdict
-
-      else:
-         reg   = 'all'
-         mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name)
+      for reg in regions:
+         mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,region=reg)
          MPdict.update({reg:mp})
-         #
-         fname0   = self.basename+'_'+var_name
+
+         fname0   = fobj.basename+'_'+var_name +'_'+reg
          tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
          if 'all' in tfile.keys():
             tfiles.update({reg:tfile['all']})
 
-      Pdict    = {}
+      if 0:
+         MPdict['gre'].show_maps()
+         return MPdict
+
+   else:
+      reg   = 'all'
+      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,vertices=vertices)
+      MPdict.update({reg:mp})
+      #
+      fname0   = fobj.basename+'_'+var_name
+      tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+      if 'all' in tfile.keys():
+         tfiles.update({reg:tfile['all']})
+
+   Pdict    = {}
+   PLOTTING = False
+   for reg in tfiles.keys():
+
+      ##########################################################
+      # filenames
+      tfil     = tfiles[reg]                          # text file with polygon outlines characterized
+      figname  = tfil.replace('.txt','.png')          # plot of polygons
+      shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
+      sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
+      ##########################################################
+
+
+      if vertices is None:
+         ##########################################################
+         if do_sort:
+            mapreg   = reg
+         else:
+            mapreg   = fobj.HYCOM_region
+         ##########################################################
+
+
+         ##########################################################
+         # process each text file to get MIZ width etc
+         print("MIZchar.single_file: "+tfil+"\n")
+         bmap     = Fplt.start_HYCOM_map(mapreg)
+      else:
+         vlons,vlats = np.array(vertices).transpose()
+         vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+         xy_verts    = [(vx[i],vy[i]) for i in range(len(vx))]
+
+         # get approximate centre and limits for basemap
+         vP          = shg.Polygon(xy_verts)
+         width       = 5*np.sqrt(vP.area)
+         height      = 5*np.sqrt(vP.area)
+         xcen,ycen   = vP.centroid.coords.xy
+         lonc,latc   = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),\
+                        NH=True,inverse=True)
+         # make basemap
+         bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
+                                 width=width,height=height,\
+                                 resolution='i')
+
+      # Psolns   = mc.single_file(tfil,MK_PLOT=False,METH=5)
+      tfo      = mc.single_file(tfil)
+      Psolns   = tfo.get_solutions(METH=5)
+
+      Pdict.update({reg:Psolns})
+      
+      # Save summary & shapefile
+      mc.save_summary  (Psolns,sumname)
+      mc.save_shapefile(Psolns,filename=shpname)
+
+      if vertices is not None:
+         # add total area to sumname
+         loncnr,latcnr  = np.array(vertices).transpose()
+         tot_area       = GS.area_polygon_ellipsoid(loncnr,latcnr)
+
+         # append to file
+         fid   = open(sumname,'a')
+         fid.write('total_area_of_rectangle : '+str(tot_area))
+         fid.close()
+      ##########################################################
+
+      
+      if plotting:
+         ##########################################################
+         # Make plot
+         var_opts = make_plot_options(vname,lower_limit=lower_limit)
+         pobj     = fobj.plot_var(var_opts,bmap=bmap,show=False,clim=clim)[0]
+         fig      = pobj.fig
+         ax       = pobj.ax
+         PLOTTING = True
+
+         if vertices is not None:
+            bmap.plot(loncnr,latcnr,latlon=True,ax=ax,color='g',linewidth=2.5)
+
+         for MIZi in Psolns:
+            # plot outlines of polygons
+            lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
+            bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
+
+            Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
+            if Wavg>26:
+               MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
+
+               # add text with mean width
+               xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
+               xav                  = (xmin+xmax)/2.
+               ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
+                  color='k',fontsize=16,horizontalalignment='right',\
+                  verticalalignment='top')
+         
+
+         Fplt.finish_map(bmap)
+         print('Saving '+figname)
+         fig.savefig(figname)
+         # plt.show(fig)
+         ax.cla()
+         fig.clear()
+         # finished region
+         ##########################################################
+
+   if PLOTTING:
+      plt.close(fig)
+   return mp,Pdict,tfiles
+###########################################################
+
+
+###########################################################
+def areas_of_disagreement(fobj,time_index=0,\
+      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      do_sort=True,EastOnly=True,plotting=True,**kwargs):
+   # kwargs: outdir='.',do_sort=True
+
+   import MIZchar as mc
+   PRINT_INFO  = 1
+
+   dtmo  = fobj.datetimes[time_index]
+   if obs_type == 'OSISAF':
+      var_name = 'fice'
+      bmap     = basemap_OSISAF()
+      if obs_path is None:
+      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
+            dtmo.strftime('%Y')+'_nh_polstere/'
+      if obs_option is None:
+	 obs_option='multi'
+      obsfil   = obs_path+\
+            '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
+            dtmo.strftime('%Y%m%d')+'1200.nc'
+   else:
+      raise ValueError('Wrong selection variable for areas_of_disagreement')
+
+   # observation grid & compared quantity
+   if PRINT_INFO:
+      print(obsfil)
+
+   nci         = nc_getinfo(obsfil)
+   lon2,lat2   = nci.get_lonlat()
+   Xobs,Yobs   = bmap(lon2,lat2)
+   Zobs        = GetVar(nci,var_name,time_index=0)
+
+   # model grid & compared quantity
+   Zmod        = GetVar(fobj,var_name,time_index=time_index)
+   lon,lat     = fobj.get_lonlat()
+   Xmod,Ymod   = bmap(lon,lat)
+
+   if '%' in Zobs.units:
+      conv_fac = .01
+   else:
+      conv_fac = 1
+
+   if 1:
+      #Zref,Zint should be np.ma.array
+      lon_ref,lat_ref   = lon2,lat2
+      Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
+      Xint,Yint,Zint    = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
+
+   # add the mask for the ref to output (Arr)
+   if PRINT_INFO:
+      print('Reprojecting model...')
+   Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
+
+   # add the mask for Arr to Zref
+   Zref  = np.ma.array(Zref.data,mask=Arr.mask)
+
+   MPdict   = {'Over':{},'Under':{}}
+   tfiles   = {'Over':{},'Under':{}}
+
+   if 0:
+      # test interpolation and matching of masks
+      fig   = plt.figure()
+      ax1   = fig.add_subplot(1,2,1)
+      ax1.imshow(Arr.transpose(),origin='upper')
+      ax2   = fig.add_subplot(1,2,2)
+      ax2.imshow(Zref.transpose(),origin='upper')
+      plt.show(fig)
+      return Xint,Yint,Zint,Xref,Yref,Zref
+
+   if do_sort:
+      # possible regions are:
+      regions  = ['gre','bar','beau','lab','balt','les','can']
+
+      if EastOnly:
+         # concentrate on the eastern Arctic
+         # (and forget Baltic Sea)
+         regions.remove('balt' )
+         regions.remove('les' )
+         regions.remove('can' )
+         regions.remove('beau')
+      else:
+         regions.remove('balt' )
+
+      # for reg in ['bar']:
+      for reg in regions:
+
+         # Arr,Zref are np.ma.array objects
+         if PRINT_INFO:
+            print('Locating AODs for region '+reg+'...')
+         Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
+         MPdict['Over'] .update({reg:Over})
+         MPdict['Under'].update({reg:Under})
+
+         for OU in ['Over','Under']:
+
+            fname0   = fobj.basename+'_v'+obs_type +'_'+OU+'_'+reg
+            tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+            if 'all' in tfile.keys():
+               tfiles[OU].update({reg:tfile['all']})
+
+      if 0:
+         # Show the 4 maps for last region (for each over/under)
+         MPdict['Over'] [reg].show_maps()
+         MPdict['Under'][reg].show_maps()
+         return MPdict
+   else:
+      reg         = 'all'
+      if PRINT_INFO:
+         print('Locating AODs for all regions...')
+      Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
+      MPdict['Over'] .update({reg:Over})
+      MPdict['Under'].update({reg:Under})
+
+      for OU in ['Over','Under']:
+
+         fname0   = fobj.basename+'_v'+obs_type+'_'+OU
+         tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+         if 'all' in tfile.keys():
+            tfiles[OU].update({reg:tfile['all']})
+
+      if 0:
+         # Show the 4 maps (for over/under)
+         # MPdict['Over'] ['all'].show_maps()
+         MPdict['Under']['all'].show_maps()
+         return MPdict
+
+   print('\n------------------------------------------------------')
+   print('Polygon info printed to files:')
+   for OU in ['Over','Under']:
+      for key in tfiles[OU].keys():
+         print(OU+', '+key+': '+tfiles[OU][key])
+      print('\n')
+   print('------------------------------------------------------\n')
+   # print(MPdict)
+
+   Pdict = {'Over':{},'Under':{}}
+   for OU in ['Over','Under']:
       PLOTTING = False
-      for reg in tfiles.keys():
+      for reg in tfiles[OU].keys():
 
          ##########################################################
          # filenames
-         tfil     = tfiles[reg]                          # text file with polygon outlines characterized
+         tfil     = tfiles[OU][reg]                      # text file with polygon outlines characterized
          figname  = tfil.replace('.txt','.png')          # plot of polygons
          shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
          sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
@@ -2287,7 +1533,7 @@ class HYCOM_binary_info:
          if do_sort:
             mapreg   = reg
          else:
-            mapreg   = self.HYCOM_region
+            mapreg   = fobj.HYCOM_region
          ##########################################################
 
 
@@ -2295,8 +1541,9 @@ class HYCOM_binary_info:
          # process each text file to get MIZ width etc
          print("MIZchar.single_file: "+tfil+"\n")
          bmap     = Fplt.start_HYCOM_map(mapreg)
-         Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
-         Pdict.update({reg:Psolns})
+         tfo      = mc.single_file(tfil)
+         Psolns   = tfo.get_solutions(METH=5)
+         Pdict[OU].update({reg:Psolns})
          
          # Save summary & shapefile
          mc.save_summary  (Psolns,sumname)
@@ -2307,11 +1554,16 @@ class HYCOM_binary_info:
          if plotting:
             ##########################################################
             # Make plot
-            var_opts = make_plot_options(vname,lower_limit=lower_limit)
-            pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=clim)[0]
+            var_opts = make_plot_options('fice',ice_mask=True)
+            pobj     = fobj.plot_var(var_opts,bmap=bmap,show=False,clim=[0,1])[0]
             fig      = pobj.fig
             ax       = pobj.ax
             PLOTTING = True
+
+            if 1:
+               # add observation ice edge
+               bmap.contour(lon2,lat2,conv_fac*Zobs.values,[.15],lat_lon=True,\
+                              colors='g',linewidths=2,ax=ax,latlon=True)
 
             for MIZi in Psolns:
                # plot outlines of polygons
@@ -2340,425 +1592,82 @@ class HYCOM_binary_info:
 
       if PLOTTING:
          plt.close(fig)
-      return mp,Pdict,tfiles
-   ###########################################################
-   
-   
-   ###########################################################
-   def areas_of_disagreement(self,obs_type='OSISAF',do_sort=True,EastOnly=True,plotting=True,**kwargs):
-      # kwargs: outdir='.',do_sort=True
-
-      import MIZchar as mc
-
-      if obs_type == 'OSISAF':
-         var_name = 'fice'
-         bmap     = basemap_OSISAF()
-         obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+\
-               self.datetime.strftime('%Y')+'_nh_polstere/'+\
-               'ice_conc_nh_polstere-100_multi_'+\
-               self.datetime.strftime('%Y%m%d')+'1200.nc'
-      else:
-         raise ValueError('Wrong selection variable for areas_of_disagreement')
-
-      # observation grid & compared quantity
-      nci         = nc_getinfo(obsfil)
-      lon2,lat2   = nci.get_lonlat()
-      Xobs,Yobs   = bmap(lon2,lat2)
-      Zobs        = nci.get_var(var_name)
-
-      # model grid & compared quantity
-      Zmod        = self.get_var(var_name)
-      lon,lat     = self.get_lonlat()
-      Xmod,Ymod   = bmap(lon,lat)
-
-      if 1:
-         #Zref,Zint should be np.ma.array
-         lon_ref,lat_ref   = lon2,lat2
-         Xref,Yref,Zref    = Xobs,Yobs,Zobs.values  # obs grid is reference;                 
-         Xint,Yint,Zint    = Xmod,Ymod,Zmod.values  # to be interped from model grid onto obs grid;  Zint is np.ma.array
-
-      # add the mask for the ref to Arr
-      Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
-
-      # add the mask for Arr to Zref
-      Zref  = np.ma.array(Zref.data,mask=Arr.mask)
-
-      MPdict   = {'Over':{},'Under':{}}
-      tfiles   = {'Over':{},'Under':{}}
-
-      if 0:
-         # test interpolation and matching of masks
-         fig   = plt.figure()
-         ax1   = fig.add_subplot(1,2,1)
-         ax1.imshow(Arr)
-         ax2   = fig.add_subplot(1,2,2)
-         ax2.imshow(Zref)
-         plt.show(fig)
-         return
-
-      if do_sort:
-         # possible regions are:
-         regions  = ['gre','bar','beau','lab','balt','les','can']
-
-         if EastOnly:
-            # concentrate on the eastern Arctic
-            # (and forget Baltic Sea)
-            regions.remove('balt' )
-            regions.remove('les' )
-            regions.remove('can' )
-            regions.remove('beau')
-
-         # for reg in ['bar']:
-         for reg in regions:
-
-            # Arr,Zref are np.ma.array objects
-            Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
-            MPdict['Over'] .update({reg:Over})
-            MPdict['Under'].update({reg:Under})
-
-            for OU in ['Over','Under']:
-
-               fname0   = self.basename+'_v'+obs_type +'_'+OU+'_'+reg
-               tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-               if 'all' in tfile.keys():
-                  tfiles[OU].update({reg:tfile['all']})
-
-         if 0:
-            MPdict['Over'] [reg].show_maps()
-            MPdict['Under'][reg].show_maps()
-            return MPdict
-      else:
-         reg         = 'all'
-         Over,Under  = mc.get_AOD_polys(Arr.values,Zref.values,lon_ref,lat_ref)
-         MPdict['Over'] .update({reg:Over})
-         MPdict['Under'].update({reg:Under})
-
-         for OU in ['Over','Under']:
-
-            fname0   = self.basename+'_v'+obs_type+'_'+OU+'_'+reg
-            tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-            if 'all' in tfile.keys():
-               tfiles[OU].update({reg:tfile['all']})
-
-      print(tfiles)
-      print(MPdict)
-      Pdict = {'Over':{},'Under':{}}
-      for OU in ['Over','Under']:
-         PLOTTING = False
-         for reg in tfiles[OU].keys():
-
-            ##########################################################
-            # filenames
-            tfil     = tfiles[OU][reg]                          # text file with polygon outlines characterized
-            figname  = tfil.replace('.txt','.png')          # plot of polygons
-            shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
-            sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
-            ##########################################################
-
-
-            ##########################################################
-            if do_sort:
-               mapreg   = reg
-            else:
-               mapreg   = self.HYCOM_region
-            ##########################################################
-
-
-            ##########################################################
-            # process each text file to get MIZ width etc
-            print("MIZchar.single_file: "+tfil+"\n")
-            bmap     = Fplt.start_HYCOM_map(mapreg)
-            Psolns   = mc.single_file(tfil,bmap,MK_PLOT=False,METH=5)
-            Pdict[OU].update({reg:Psolns})
-            
-            # Save summary & shapefile
-            mc.save_summary  (Psolns,sumname)
-            mc.save_shapefile(Psolns,filename=shpname)
-            ##########################################################
-
-            
-            if plotting:
-               ##########################################################
-               # Make plot
-               var_opts = make_plot_options('fice',ice_mask=True)
-               pobj     = self.plot_var(var_opts,bmap=bmap,show=False,clim=[0,1])[0]
-               fig      = pobj.fig
-               ax       = pobj.ax
-               PLOTTING = True
-
-               for MIZi in Psolns:
-                  # plot outlines of polygons
-                  lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
-                  bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
-
-                  Wavg  = MIZi.record['Width_mean']/1.e3 # mean width in km
-                  if Wavg>26:
-                     MIZi.plot_representative_lines(bmap,ax=ax,color='k',linewidth=1.5)
-
-                     # add text with mean width
-                     xmin,xmax,ymin,ymax  = MIZi.bbox(bmap)
-                     xav                  = (xmin+xmax)/2.
-                     ax.text(xmax,ymin,'%4.1f km' %(Wavg),\
-                        color='k',fontsize=16,horizontalalignment='right',\
-                        verticalalignment='top')
-
-               Fplt.finish_map(bmap)
-               print('Saving '+figname)
-               fig.savefig(figname)
-               # plt.show(fig)
-               ax.cla()
-               fig.clear()
-               # finished region
-               ##########################################################
-
-         if PLOTTING:
-            plt.close(fig)
-
-      return MPdict,tfiles,Pdict
-   ###########################################################
-
-
-   ###########################################################
-   def compare_ice_edge_obs(self,pobj=None,bmap=None,\
-         obs_type='OSISAF',date_label=1,figname=None,**kwargs):
-
-      var_opts1   = make_plot_options('ficem',\
-         vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
-      var_opts1   = check_var_opts(var_opts1,self.variables)
-
-      if 'show' in kwargs:
-         show           = kwargs['show']
-         kwargs['show'] = False
-         pobj,bmap      = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,**kwargs)
-      else:
-         show        = True
-         pobj,bmap   = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,show=False,**kwargs)
-
-      fig,ax,cbar = pobj.get()
-
-      if obs_type=='OSISAF':
-         obsfil   = '/work/shared/nersc/msc/OSI-SAF/'+\
-               self.datetime.strftime('%Y')+'_nh_polstere/'+\
-               'ice_conc_nh_polstere-100_multi_'+\
-               self.datetime.strftime('%Y%m%d')+'1200.nc'
-      else:
-         raise ValueError('invalid value of obs_type: '+obs_type)
-
-      print(obsfil)
-      obs      = nc_getinfo(obsfil)
-      fice     = obs.get_var('ice_conc')
-      lon,lat  = obs.get_lonlat()
-      bmap.contour(lon,lat,fice.values[:,:],[15],colors='g',\
-            linewidths=2,ax=ax,latlon=True)
-
-      dtmo     = self.datetimes[0]
-      if self.HYCOM_region=='TP4':
-         xyann = (0.05,.925)
-      else:
-         xyann = (0.4,.925)
-
-      if date_label==1:
-         tlabel   = dtmo.strftime('%d %b %Y')
-         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-      elif date_label==2:
-         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-         pobj.ax.annotate(tlabel,xy=(0.05,.925),xycoords='axes fraction',fontsize=18)
-
-      if figname is not None:
-         fig.savefig(figname)
-
-      if show:
-         # fig.show()
-         plt.show(fig)
-
-      return pobj,bmap
-   ###########################################################
-
-
-   ###########################################################
-   def plot_var_pair(self,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
-
-      # ====================================================================
-      # check options
-      var_opts1   = check_var_opts(var_opts1,self.all_variables)
-      var_opts2   = check_var_opts(var_opts2,self.all_variables)
-      check_pair(var_opts1,var_opts2)
-      # ====================================================================
-
-      pobj,bmap   = self.plot_var(var_opts1,pobj=pobj,bmap=bmap,**kwargs)
-      self.plot_var(var_opts2,pobj=pobj,bmap=bmap,**kwargs)
-
-      return pobj,bmap
-   ###########################################################
-
-
-   ###########################################################
-   def make_png(self,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs):
-
-      var_opts = check_var_opts(var_opts,self.all_variables)
-
-      new_fig  = (pobj is None)
-      if new_fig:
-         pobj  = plot_object()
-
-      if 'show' in kwargs:
-         show           = kwargs['show']
-         kwargs['show'] = False
-         pobj,bmap      = self.plot_var(var_opts,pobj=pobj,bmap=bmap,**kwargs)
-      else:
-         show        = False
-         pobj,bmap   = self.plot_var(var_opts,pobj=pobj,bmap=bmap,show=False,**kwargs)
-
-      dtmo     = self.datetimes[0]
-      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-
-      if self.HYCOM_region=='TP4':
-         xyann = (0.05,.925)
-      else:
-         xyann = (0.4,.925)
-
-      if date_label==1:
-         tlabel   = dtmo.strftime('%d %b %Y')
-         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-      elif date_label==2:
-         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-
-      if pobj.axpos is not None:
-         # try to make sure axes don't move round
-         pobj.ax.set_position(pobj.axpos)
-
-      vname    = var_opts.name
-      Fname    = vname
-      vec_opt  = var_opts.vec_opt
-
-      if vec_opt==1:
-         #magnitude only
-         if vname in ['u','usurf']:
-            Fname = 'surf_speed'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_speed'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_magnitude'
-
-      elif vec_opt==2 or vec_opt==3:
-         #quiver plots on top of magnitude or by itself
-         if vname in ['u','usurf']:
-            Fname = 'surf_vel'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress'
-
-      elif vec_opt==4:
-         #direction as scalar
-         if vname in ['u','usurf']:
-            Fname = 'surf_current_dirn'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel_dirn'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_dirn'
-
-      elif vec_opt==5:
-         #direction -> vector
-         if vname in ['u','usurf']:
-            Fname = 'surf_current_dirn'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel_dirn'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_dirn'
-
-      Fname    = Fname.strip('_')
-      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
-
-      print('Saving to '+figname) 
-      pobj.fig.savefig(figname)
-
-      if new_fig:
-         pobj.ax.cla()
-         pobj.fig.clear()
-         plt.close(pobj.fig)
-
-      return pobj,bmap
-   ###########################################################
-
-
-   ###########################################################
-   def make_png_pair(self,var_opts1,var_opts2,\
-         pobj=None,bmap=None,figdir='.',date_label=2,**kwargs):
-
-      # ====================================================================
-      # check options
-      var_opts1   = check_var_opts(var_opts1,self.all_variables)
-      var_opts2   = check_var_opts(var_opts2,self.all_variables)
-      check_pair(var_opts1,var_opts2)
-      # ====================================================================
-
-      new_fig  = (pobj is None)
-      if new_fig:
-         pobj  = plot_object()
-
-      if 'show' in kwargs:
-         show           = kwargs['show']
-         kwargs['show'] = False
-         pobj,bmap      = self.plot_var_pair(var_opts1,var_opts2,\
-               pobj=pobj,bmap=bmap,**kwargs)
-      else:
-         show        = False
-         pobj,bmap   = self.plot_var_pair(var_opts1,var_opts2,\
-               pobj=pobj,bmap=bmap,show=False,**kwargs)
-
-      fig,ax,cbar = pobj.get()
-
-      dtmo     = self.datetimes[0]
-      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-      if self.HYCOM_region=='TP4':
-         xyann = (0.05,.925)
-      else:
-         xyann = (0.4,.925)
-
-      if date_label==1:
-         tlabel   = dtmo.strftime('%d %b %Y')
-         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-      elif date_label==2:
-         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-
-      # set name with 1st variable only
-      vname    = var_opts1.name
-      Fname    = var_opts1.name
-      vec_opt  = var_opts1.vec_opt
-      if vec_opt==1:
-         #magnitude only
-         if vname in ['u','usurf']:
-            Fname = 'surf_speed'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_speed'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_magnitude'
-
-      elif vec_opt==4:
-         #direction as scalar
-         if vname in ['u','usurf']:
-            Fname = 'surf_current_dirn'
-         elif 'u' in vname:
-            Fname = vname.strip('u')+'_vel_dirn'
-         elif 'taux' in vname:
-            Fname = vname.strip('taux')+'_stress_dirn'
-
-      Fname    = Fname.strip('_')
-      figname  = figdir+'/'+self.basename+'_'+Fname+datestr+'.png'
-
-      print('Saving to '+figname) 
-      fig.savefig(figname)
-
-      if new_fig:
-         ax.cla()
-         fig.clear()
-         plt.close(fig)
-
-      return pobj,bmap
-   ###########################################################
+
+   return MPdict,tfiles,Pdict
+###########################################################
+
+
+###########################################################
+def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',**kwargs):
+
+   pobj        = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   if HYCOMreg is None:
+      HYCOMreg = fobj.HYCOM_region
+      if fobj.HYCOM_region is None:
+         HYCOMreg = 'TP4'
+
+   bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   N     = fobj.number_of_time_records
+
+   ############################################################
+   # loop over time records
+   for i in range(N):
+      pobj,bmap   = fobj.make_png(var_opts,time_index=i,pobj=pobj,\
+            HYCOMreg=HYCOMreg,figdir=figdir,**kwargs)
+
+      if i==0:
+         # Fix axes position to stop it moving round
+         pobj  = pobj.renew(axpos=pobj.ax.get_position())
+
+      pobj.ax.cla()
+      if pobj.cbar is not None:
+         pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      print('\n'+str(i+1)+' records done out of '+str(N))
+   ############################################################
+
+   plt.close(pobj.fig)
+   return
+###########################################################
+
+
+###########################################################
+def make_png_pair_all(fobj,var_opts1,var_opts2,\
+      HYCOMreg=None,figdir='.',**kwargs):
+
+   pobj        = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   if HYCOMreg is None:
+      HYCOMreg = fobj.HYCOM_region
+      if fobj.HYCOM_region is None:
+         HYCOMreg = 'TP4'
+
+   bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   N     = fobj.number_of_time_records
+
+   ############################################################
+   # loop over time records
+   for i in range(N):
+      pobj,bmap   = fobj.make_png_pair(var_opts1,var_opts2,time_index=i,pobj=pobj,\
+            HYCOMreg=HYCOMreg,figdir=figdir,**kwargs)
+
+      if i==0:
+         # Fix axes position to stop it moving round
+         pobj  = pobj.renew(axpos=pobj.ax.get_position())
+
+      pobj.ax.cla()
+      if pobj.cbar is not None:
+         pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      print('\n'+str(i+1)+' records done out of '+str(N))
+   ############################################################
+
+   plt.close(pobj.fig)
+   return
+###########################################################
 
 
 class file_list:
@@ -2768,18 +1677,18 @@ class file_list:
       self.directory = directory
       self.extension = extension
 
-      print(directory,pattern,extension)
-
-      lst            = os.listdir(directory)
-      self.file_list = []
+      lst         = os.listdir(directory)
+      file_list   = []
       for fil in lst:
 
          fname,fext  = os.path.splitext(fil)
 
          # check pattern
          if (fext==extension) and (pattern in fname):
-            self.file_list.append(fil)
+            file_list.append(fil)
 
+      # print(file_list)
+      # print(directory)
       wsn            = '/work/shared/nersc/msc/ModelInput'
       gridpath_lut   = {'FR1':wsn+'/FramStrait_Hyc2.2.12/FR1a0.03-clean//topo',\
                         'BS1':wsn+'/BS1a0.045-clean/topo',\
@@ -2788,7 +1697,7 @@ class file_list:
       if extension=='.a':
          self.getinfo      = HYCOM_binary_info
          HB                = True
-         self.HYCOM_region = self.file_list[0][:3]
+         self.HYCOM_region = file_list[0][:3]
          if 'gridpath' not in kwargs:
             kwargs.update({'gridpath':gridpath_lut[self.HYCOM_region]})
          
@@ -2799,21 +1708,35 @@ class file_list:
       # get main objects
       objects     = []
       datetimes   = []
-      time_values = []
-      for fil in self.file_list:
+      for fil in file_list:
          obj   = self.getinfo(self.directory+'/'+fil,**kwargs)
          objects.append(obj)
          datetimes.append(obj.datetimes[0])
-         time_values.append(obj.time_values[0])
 
-      self.reference_date  = obj.reference_date
-      self.time_units      = obj.time_units
+      self.reference_date  = min(datetimes)
+      self.timeunits       = 'hours'
+      timevalues           = [(dt-self.reference_date).total_seconds()/3600. for dt in datetimes]
 
       # sort the time values (1st record is earliest)
-      TV                   = sorted([(e,i) for i,e in enumerate(time_values)])
-      self.time_values,ii  = np.array(TV).transpose()
+      # - also reorder objects, datetimes, file_list
+      TV                   = sorted([(e,i) for i,e in enumerate(timevalues)])
+      self.timevalues,ii   = np.array(TV).transpose()
       self.objects         = [objects  [int(i)] for i in ii]
       self.datetimes       = [datetimes[int(i)] for i in ii]
+      self.file_list       = [file_list[int(i)] for i in ii]
+
+      #set some extra variables to work with eg make_png_all
+      self.number_of_time_records   = len(ii)
+      self.basename                 = self.objects[0].basename
+      self.variables                = self.objects[0].variables    
+      self.variables3d              = self.objects[0].variables3d  
+      self.all_variables            = self.objects[0].all_variables
+
+      self.date_strings = []
+      self.time_strings = []
+      for dtm in self.datetimes:
+         self.date_strings.append(dtm.strftime('%Y%m%d'))
+         self.time_strings.append(dtm.strftime('%H%M%S'))
 
       # add some methods inherited from individual objects
       self.get_lonlat   = self.objects[0].get_lonlat
@@ -2825,62 +1748,48 @@ class file_list:
 
 
    ###########################################################
-   def make_png_all(self,var_opts,HYCOMreg=None,figdir='.',**kwargs):
-
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-
-      if HYCOMreg is None:
-         HYCOMreg = self.HYCOM_region
-      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      N  = len(self.objects)
-      for i,obj in enumerate(self.objects):
-
-         pobj,bmap   = obj.make_png(var_opts,\
-                           bmap=bmap,\
-                           figdir=figdir,show=False,**kwargs)
-
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
-
-         print('\n'+str(i+1)+' records done out of '+str(N))
-
-      plt.close(fig)
-      return
+   def plot_var(self,var_opts,time_index=0,**kwargs):
+      out   = plot_var(self.objects[time_index],\
+                  var_opts,**kwargs)
+      return out
    ###########################################################
 
 
    ###########################################################
-   def make_png_pair_all(self,var_opts1,var_opts2,HYCOMreg=None,figdir='.',**kwargs):
+   def plot_var_pair(self,var_opts1,var_opts2,time_index=0,**kwargs):
+      out   = plot_var_pair(self.objects[time_index],\
+                  var_opts1,var_opts2,**kwargs)
+      return out
+   ###########################################################
 
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
 
-      if HYCOMreg is None:
-         HYCOMreg = self.HYCOM_region
-      bmap        = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   ###########################################################
+   def make_png(self,var_opts,time_index=0,**kwargs):
+      out   = make_png(self.objects[time_index],\
+                  var_opts,**kwargs)
+      return out
+   ###########################################################
 
-      N  = len(self.objects)
-      for i,obj in enumerate(self.objects):
 
-         print('\n'+str(i)+' records done out of '+str(N))
+   ###########################################################
+   def make_png_pair(self,var_opts1,var_opts2,time_index=0,**kwargs):
+      out   = make_png_pair(self.objects[time_index],\
+                  var_opts1,var_opts2,**kwargs)
+      return out
+   ###########################################################
 
-         pobj,bmap   = obj.make_png_pair(var_opts1,var_opts2,\
-                        pobj=pobj,bmap=bmap,\
-                        figdir=figdir,show=False,**kwargs)
 
-         if i==0:
-            # Fix axes position to stop it moving round
-            pobj  = pobj.renew(axpos=pobj.ax.get_position())
+   ###########################################################
+   def make_png_all(self,var_opts,**kwargs):
+      out   = make_png_all(self,var_opts,**kwargs)
+      return out
+   ###########################################################
 
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
 
-      plt.close(fig)
-      return
+   ###########################################################
+   def make_png_pair_all(self,var_opts1,var_opts2,**kwargs):
+      out   = make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
+      return out
    ###########################################################
 
 
@@ -2903,14 +1812,19 @@ class file_list:
          obs_type = 'OSISAF'
          kwargs.update({'obs_type':obs_type})
 
+      if not os.path.exists(figdir):
+         os.mkdir(figdir)
+
+
       N  = len(self.objects)
       for i,obj in enumerate(self.objects):
 
-         dtmo     = obj.datetime
-         datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-         figname  = figdir+'/'+obj.basename+'_v'+obs_type+'_'+datestr+'.png'
-         pobj,bmap   = obj.compare_ice_edge_obs(pobj=pobj,bmap=bmap,\
-               figname=figname,**kwargs)
+         dtmo              = obj.datetime
+         # datestr           = dtmo.strftime('%Y%m%dT%H%M%SZ')
+         datestr           = dtmo.strftime('%Y%m%d')
+         figname           = figdir+'/'+obj.basename+'_v'+obs_type+'_'+datestr+'.png'
+         pobj,bmap,obsfil  = obj.compare_ice_edge_obs(pobj=pobj,bmap=bmap,\
+                              figname=figname,**kwargs)
 
          ax.cla()
          if pobj.cbar is not None:
@@ -2923,3 +1837,4 @@ class file_list:
    ###########################################################
 
 ######################################################################
+# compare_ice_edge_obs_all

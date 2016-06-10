@@ -201,7 +201,7 @@ class reader:
 
 # From MIZwidth
 class MIZwidth:
-    def __init__(self,X,Y,Z,basemap,region):
+    def __init__(self,X,Y,Z,basemap,region,save=False):
         ZM = mask_region(Z,region)
         MIZraw,ice_ext,pack_ice = self.binary_diff(ZM,.15,.80)
         self.MIZraw,self.ice_ext,self.pack_ice = MIZraw,ice_ext,pack_ice
@@ -224,8 +224,8 @@ class MIZwidth:
             perim_list.append(perim)
             clonlat_list.append(clonlat)
         self.poly_list = poly_list
-        self.regional_save(ZM,poly_list,area_list,perim_list,clonlat_list,basemap,region)
-        basemap.imshow(MIZ)
+        if save:
+            self.regional_save(ZM,poly_list,area_list,perim_list,clonlat_list,basemap,region)
         return
     
     def binary_diff(self,data,threshm,threshM):

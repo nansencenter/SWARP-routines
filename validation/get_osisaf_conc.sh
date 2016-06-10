@@ -52,3 +52,11 @@ EOF
    fi
 
 done
+
+#########################################################################
+# Launch validation script
+# - compares today's observation to relevant forecasts
+ME=`readlink -f $0`
+Vdir=`dirname $ME`
+$Vdir/ice_edge_OSISAF_1obs.sh $ydate
+#########################################################################
