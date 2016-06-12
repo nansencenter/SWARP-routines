@@ -18,6 +18,92 @@ def basemap_OSISAF():
 ##########################################################
 
 
+###############################################
+class time_series:
+
+   ############################################
+   def __init__(self,dates,data,units=None,filename=None):
+      self.dates     = dates
+      self.data      = data
+      self.units     = units
+      self.filename  = filename
+      self.variables = data.keys()
+      return
+   ############################################
+
+   ############################################
+   def plot(self,var_name,refdate=None,timeunits='days',yscaling=1.,pobj=None,**kwargs):
+      if pobj is None:
+         pobj  = plot_object()
+
+      if timeunits=='days':
+         xfac  = 24*3600. # seconds in 1 day
+      elif timeunits=='hours':
+         xfac  = 3600. # seconds in 1h
+      elif timeunits=='minutes':
+         xfac  = 60. # seconds in 1min
+      else:
+         xfac  = 1. # seconds in 1min
+      if refdate is None:
+         refdate  = self.dates[0]
+
+      x  = np.array([(dt-refdate).total_seconds()/xfac for dt in self.dates])
+      y  = self.data[var_name]*yscaling
+
+      lin  ,= pobj.ax.plot(x,y,**kwargs)
+      return pobj,lin
+   ############################################
+############################################
+
+############################################
+def read_time_series(tfil):
+
+   fid   = open(tfil)
+   lines = fid.readlines()
+   fid.close()
+   
+   #########################################
+   # read header
+   lin      = lines[0]
+   Vnames   = lin.split()[1:] #variable names : eg MIZ_width,m (1st col is date)
+   lines.remove(lin)
+   
+   # get variable names and units
+   data     = {}
+   units    = {}
+   vnames   = []
+   for v in Vnames:
+      sp    = v.split(',')
+      vname = sp[0]
+      vnames.append(vname)
+      data.update({vname:[]})
+
+      # add units
+      unit  = ''
+      if len(sp)>1:
+         unit  = sp[1]
+      units.update({vname:unit})
+   #########################################
+
+   #########################################
+   # read dates and data
+   dates = []
+   for lin in lines:
+      ss = lin.split()
+      dates.append(datetime.strptime(ss[0],'%Y%m%dT%H%M%SZ'))
+      for i,vname in enumerate(vnames):
+         data[vname].append(float(ss[i+1]))
+   #########################################
+
+   #########################################
+   # return time_series object
+   for vname in vnames:
+      data[vname] = np.array(data[vname])
+   if len(units)==0:
+      units = None
+   return time_series(dates,data,units=units,filename=tfil)
+############################################
+
 ##########################################################
 class read_MIZpoly_summary:
 
