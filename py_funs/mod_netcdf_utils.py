@@ -95,6 +95,7 @@ class nc_getinfo:
 
       self.basename     = ss[-1].strip('.nc')
       self.filetype     = 'netcdf'
+      self.object_type  = 'netcdf'
 
       # things to work with plotting stuff in mod_reading.py
       self.HYCOM_region    = None
@@ -509,6 +510,13 @@ class nc_getinfo:
 
       MR.make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
       return
+   ###########################################################
+
+
+   ###########################################################
+   def compare_ice_edge_obs_all(self,**kwargs):
+      out   = MR.compare_ice_edge_obs(self,**kwargs)
+      return out
    ###########################################################
 
 ###########################################################
