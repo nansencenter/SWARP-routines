@@ -19,14 +19,15 @@ def basemap_OSISAF():
 
 
 ##########################################################
-   class AOD_output:
-      def __init__(self,summary_files,tfiles,shapefiles,types,regions,dto):
-         self.summary_files      = summary_files
-         self.shapefiles         = shapefiles
-         self.text_files         = tfiles
-         self.regions_analysed   = regions
-         self.datetime           = dto
-         self.types              = types
+class AOD_output:
+  def __init__(self,summary_files,tfiles,shapefiles,types,regions,dto):
+     self.summary_files      = summary_files
+     self.shapefiles         = shapefiles
+     self.text_files         = tfiles
+     self.regions_analysed   = regions
+     self.datetime           = dto
+     self.types              = types
+     return
 ##########################################################
 
 
