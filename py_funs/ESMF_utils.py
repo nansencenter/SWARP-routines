@@ -19,7 +19,7 @@ def create_ESMF_grid(centres,corners,areas=None,mask=None,\
       coordSys=ESMF.CoordSys.CART #x,y,z   
       
 
-   maxIndex       = list(centres[0].shape) # no of centres
+   maxIndex       = np.array(centres[0].shape)-1 # no of centres
    Ndim           = len(maxIndex)
    staggerlocs    = [ESMF.StaggerLoc.CORNER,ESMF.StaggerLoc.CENTER]
 
