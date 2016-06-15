@@ -18,6 +18,18 @@ def basemap_OSISAF():
 ##########################################################
 
 
+##########################################################
+   class AOD_output:
+      def __init__(self,summary_files,tfiles,shapefiles,types,regions,dto):
+         self.summary_files      = summary_files
+         self.shapefiles         = shapefiles
+         self.text_files         = tfiles
+         self.regions_analysed   = regions
+         self.datetime           = dto
+         self.types              = types
+##########################################################
+
+
 ###############################################
 class time_series:
 
@@ -799,8 +811,6 @@ def plot_var(fobj,var_opts,time_index=0,\
 
    # lon,lat  = fobj.get_lonlat()
    lon,lat  = fobj.get_fixed_lonlat(bmap)
-   # print(lon)
-   # print(lat)
 
    if clim is not None:
       vmin,vmax   = clim
@@ -1433,9 +1443,11 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
       raise ValueError('Wrong selection variable for MIZmap')
 
    print("MIZchar.get_MIZ_poly\n")
-   lon,lat  = fobj.get_lonlat()
-   MPdict   = {}
-   tfiles   = {}
+   lon,lat        = fobj.get_lonlat()
+   MPdict         = {}
+   tfiles         = {}
+   summary_files  = {}
+   shapefiles     = {}
 
    if vertices is not None:
       do_sort  = False
@@ -1488,6 +1500,8 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
       figname  = tfil.replace('.txt','.png')          # plot of polygons
       shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
       sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
+      summary_files.update({reg:sumname})
+      shapefiles   .update({reg:shpname})
       ##########################################################
 
 
@@ -1555,7 +1569,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
          if vertices is not None:
             bmap.plot(loncnr,latcnr,latlon=True,ax=ax,color='g',linewidth=2.5)
 
-         for MIZi in Psolns:
+         for MIZi in Psolns.MIZ_info_objects:
             # plot outlines of polygons
             lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
             bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
@@ -1583,6 +1597,14 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
 
    if PLOTTING:
       plt.close(fig)
+
+   # define outputs
+   return AOD_output(summary_files,\
+                  tfiles,\
+                  shapefiles,\
+                  ['MIZ_'+var_name],\
+                  regions,\
+                  fobj.datetimes[time_index])
    return mp,Pdict,tfiles
 ###########################################################
 
@@ -1809,18 +1831,10 @@ def areas_of_disagreement(fobj,time_index=0,\
          plt.close(fig)
 
    # define outputs
-   class output:
-      def __init__(self,summary_files,tfiles,shapefiles,regions,dto):
-         self.summary_files      = summary_files
-         self.shapefiles         = shapefiles
-         self.text_files         = tfiles
-         self.regions_analysed   = regions
-         self.datetime           = dto
-         self.types              = ['Over','Under']
-
-   return output(summary_files,\
+   return AOD_output(summary_files,\
                   tfiles,\
                   shapefiles,\
+                  ['Over','Under'],\
                   regions,\
                   fobj.datetimes[time_index])
 ###########################################################
@@ -2026,6 +2040,12 @@ class AODs_all:
 
 ###########################################################
 class summary_info:
+   """
+   mod_reading.summary_info(outdir,dir_info)
+   get info about summary files in directory outdir
+   sorts them according to dir_info
+   - dictionary with keys 'types','regions'
+   """
 
    def __init__(self,outdir,dir_info):
 
