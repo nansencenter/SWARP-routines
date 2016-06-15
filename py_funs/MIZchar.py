@@ -2293,14 +2293,14 @@ def save_shapefile(MIZpolys,filename='test.shp'):
 
    ###############################################################################
    # define attributes
-   fields   = MIZpolys[0].record.keys()
+   fields   = MIZpolys.MIZ_info_objects[0].record.keys()
    for fld in fields:
       # create field in shapefile
       w.field(fld,'N','40') # name,type ('C'=character, 'N'=number), size (?)
    ###############################################################################
 
    ###############################################################################
-   for MIZi in MIZpolys:
+   for MIZi in MIZpolys.MIZ_info_objects:
       # add parts:
       parts = MIZi.parts()
       w.poly(parts=parts)
@@ -2318,7 +2318,7 @@ def save_shapefile(MIZpolys,filename='test.shp'):
 
 
 ################################################################################################
-def save_summary(MIZpolys,filename):
+def save_summary(MIZpolys,filename,wt_meth='A'):
 
 
    ###############################################################################
@@ -2345,10 +2345,9 @@ def save_summary(MIZpolys,filename):
 
    ###############################################################
    # Do analysis
-   wt_meth     = 'P' # weight means by perimeter
    tot_perim   = 0.
    tot_area    = 0.
-   for mp in MIZpolys:
+   for mp in MIZpolys.MIZ_info_objects:
       P           = mp.perimeter
       A           = mp.area
       tot_perim   = tot_perim +P
@@ -2358,7 +2357,7 @@ def save_summary(MIZpolys,filename):
          # use polygon perimeter as weight
          # TODO ice edge perimeter?
          wt = P
-      else:
+      elif wt_meth=='A':
          # use polygon area as weight
          wt = A
 
@@ -2377,7 +2376,7 @@ def save_summary(MIZpolys,filename):
 
    R['tot_perim'] = tot_perim
    R['tot_area']  = tot_area
-   if len(MIZpolys)>0:
+   if len(MIZpolys.MIZ_info_objects)>0:
       if wt_meth=='P':
          wt = float(tot_perim)
       else:
