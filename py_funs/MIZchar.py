@@ -2441,6 +2441,9 @@ class MIZ_info_list:
 
    ######################################################
    def plot_solutions(self,basemap,pobj=None,figname=None):
+      """
+      MIZchar.MIZ_info_list.plot_solutions(basemap,pobj=None,figname=None)
+      """
 
       bmap  = basemap
       if pobj is None:
@@ -2504,14 +2507,14 @@ class MIZ_info_list:
    
    ######################################################
    def save_shapefile(self,filename):
-      save_shapefile(self.MIZ_info_objects)
+      save_shapefile(self)
       return
    ######################################################
 
 
    ######################################################
    def save_summary(self,filename):
-      save_summary(self.MIZ_info_objects,filename)
+      save_summary(self,filename)
       return
    ######################################################
 
