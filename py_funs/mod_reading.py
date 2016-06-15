@@ -23,11 +23,18 @@ class time_series:
 
    ############################################
    def __init__(self,dates,data,units=None,filename=None):
-      self.dates     = dates
-      self.data      = data
-      self.units     = units
-      self.filename  = filename
-      self.variables = data.keys()
+      self.dates                 = dates
+      self.data                  = data
+      self.units                 = units
+      self.variables             = data.keys()
+      self.number_of_dates       = len(dates)
+      self.number_of_variables   = len(data.keys())
+      
+      if not os.path.exists(filename):
+         print('Saving time series to '+filename)
+         self.write_file(filename)
+
+      self.filename  = os.path.abspath(filename)
       return
    ############################################
 
@@ -53,6 +60,50 @@ class time_series:
       lin  ,= pobj.ax.plot(x,y,**kwargs)
       return pobj,lin
    ############################################
+
+
+   ############################################
+   def write_file(self,filename):
+      fid   = open(filename,'w')
+      blk   = 3*' '
+
+      # =======================================
+      # header
+      ss          = 'Date'+blk
+      add_units   = (self.units is not None)
+      for i,vbl in enumerate(self.variables):
+         su = ''
+         if add_units:
+            unit  = self.units[vbl]
+            if unit!=su:
+               su = ','+unit
+         if i<self.number_of_variables-1:
+            ss   += vbl+su+blk
+         else:
+            ss   += vbl+su+'\n'
+      fid.write(ss)
+      # =======================================
+
+
+      # ===================================================
+      # loop over dates and write variables for each date
+      for n,dt in enumerate(self.dates):
+         ss = dt.strftime('%Y%m%dT%H%M%SZ')+blk
+         for i,vbl in enumerate(self.variables):
+            if i<self.number_of_variables-1:
+               ss   += str(self.data[vbl][n])+blk
+            else:
+               if n<self.number_of_dates-1:
+                  ss   += str(self.data[vbl][n])+'\n'
+               else:
+                  ss   += str(self.data[vbl][n])
+         fid.write(ss)
+      # ===================================================
+
+      fid.close()
+      return
+   #########################################
+
 ############################################
 
 ############################################
@@ -110,16 +161,16 @@ class read_MIZpoly_summary:
    #######################################################
    def __init__(self,tfil,cdate=None,ctime=None):
       
-
-      self.filename     = tfil
-      self.datetime     = None
-      self.time_in_days = None
-      self.datetime_ref = datetime(1901,1,1)
-
+      ########################################################
+      self.info   = {'filename'    :tfil,\
+                     'datetime'    :None,\
+                     'time_in_days':None,\
+                     'datetime_ref':datetime(1901,1,1)}
       if (cdate is not None) and (ctime is not None):
-         self.datetime  = datetime.strptime(cdate+' '+ctime,'%Y%m%d %H%M%S')
+         self.info['datetime']   = datetime.strptime(cdate+' '+ctime,'%Y%m%d %H%M%S')
       elif (cdate is not None):
-         self.datetime  = datetime.strptime(cdate,'%Y%m%d')
+         self.info['datetime']   = datetime.strptime(cdate,'%Y%m%d')
+      ########################################################
 
       fid   = open(tfil,'r')
       lins  = fid.readlines()
@@ -137,18 +188,18 @@ class read_MIZpoly_summary:
             else:
                raise ValueError('date in '+tfil+' has wrong format')
 
-            if self.datetime is not None:
-               if self.datetime != dtm:
+            if self.info.datetime is not None:
+               if self.info['datetime'] != dtm:
                   raise ValueError('date in '+tfil+' not consistent with inputs cdate,ctime')
             else:
-               self.datetime  = dtm
+               self.info['datetime'] = dtm
          else:
             val   = float(sp[1].strip())
             setattr(self,att,val)
 
-      if self.datetime is not None:
-         dt                = self.datetime-self.datetime_ref
-         self.time_in_days = dt.total_seconds()/float(24*60*60)
+      if self.info['datetime'] is not None:
+         dt                         = self.info['datetime']-self.info['datetime_ref']
+         self.info['time_in_days']  = dt.total_seconds()/float(24*60*60)
 
       return
    #######################################################
@@ -715,6 +766,7 @@ def imshow(fobj,var_opts,pobj=None,\
 #######################################################################
 def plot_var(fobj,var_opts,time_index=0,\
       pobj=None,bmap=None,HYCOMreg=None,\
+      date_label=0,\
       clim=None,add_cbar=True,clabel=None,show=True,\
       test_lonlats=None):
 
@@ -747,6 +799,8 @@ def plot_var(fobj,var_opts,time_index=0,\
 
    # lon,lat  = fobj.get_lonlat()
    lon,lat  = fobj.get_fixed_lonlat(bmap)
+   # print(lon)
+   # print(lat)
 
    if clim is not None:
       vmin,vmax   = clim
@@ -970,6 +1024,22 @@ def plot_var(fobj,var_opts,time_index=0,\
    if show:
       # fig.show()
       plt.show(fig)
+   
+   # date label
+   dtmo     = fobj.datetimes[time_index]
+   datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+
+   if fobj.HYCOM_region=='TP4':
+      xyann = (0.05,.925)
+   else:
+      xyann = (0.4,.925)
+
+   if date_label==1:
+      tlabel   = dtmo.strftime('%d %b %Y')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+   elif date_label==2:
+      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
 
    return pobj,bmap
 ###########################################################
@@ -993,6 +1063,9 @@ def plot_var_pair(fobj,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
       # default is show:
       show  = True
    pobj,bmap   = plot_var(fobj,var_opts1,pobj=pobj,bmap=bmap,show=False,**kwargs)
+
+   if 'date_label' in kwargs:
+      del kwargs['date_label']
    plot_var(fobj,var_opts2,pobj=pobj,bmap=bmap,show=show,**kwargs)
 
    return pobj,bmap
@@ -1275,6 +1348,55 @@ def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
 
 
 ###########################################################
+def compare_ice_edge_obs_all(fobj,HYCOMreg=None,figdir='.',**kwargs):
+
+   pobj        = plot_object()
+   fig,ax,cbar = pobj.get()
+
+   # ================================================
+   # set basemap for plotting
+   if HYCOMreg is None:
+      if hasattr(fobj,'HYCOM_region'):
+         HYCOMreg = fobj.HYCOM_region
+      else:
+         HYCOMreg = 'Arctic'
+   bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
+   # ================================================
+
+   if 'show' in kwargs:
+      kwargs['show'] = False
+   else:
+      kwargs.update({'show':False})
+
+   if 'obs_type' not in kwargs:
+      obs_type = 'OSISAF'
+      kwargs.update({'obs_type':obs_type})
+
+   if not os.path.exists(figdir):
+      os.mkdir(figdir)
+
+   N  = len(fobj.objects)
+   for i,obj in enumerate(self.objects):
+
+      dtmo              = obj.datetime
+      # datestr           = dtmo.strftime('%Y%m%dT%H%M%SZ')
+      datestr           = dtmo.strftime('%Y%m%d')
+      figname           = figdir+'/'+obj.basename+'_v'+obs_type+'_'+datestr+'.png'
+      pobj,bmap,obsfil  = obj.compare_ice_edge_obs(pobj=pobj,bmap=bmap,\
+                           figname=figname,**kwargs)
+
+      ax.cla()
+      if pobj.cbar is not None:
+         pobj.cbar.ax.clear()   # cbar.ax.clear()
+
+      print('\n'+str(i+1)+' records done out of '+str(N))
+
+   plt.close(fig)
+   return
+###########################################################
+
+
+###########################################################
 def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
       do_sort=False,EastOnly=True,plotting=True,**kwargs):
    """
@@ -1522,8 +1644,10 @@ def areas_of_disagreement(fobj,time_index=0,\
    # add the mask for Arr to Zref
    Zref  = np.ma.array(Zref.data,mask=Arr.mask)
 
-   MPdict   = {'Over':{},'Under':{}}
-   tfiles   = {'Over':{},'Under':{}}
+   MPdict         = {'Over':{},'Under':{}}
+   tfiles         = {'Over':{},'Under':{}}
+   summary_files  = {'Over':{},'Under':{}}
+   shapefiles     = {'Over':{},'Under':{}}
 
    if 0:
       # test interpolation and matching of masks
@@ -1572,7 +1696,8 @@ def areas_of_disagreement(fobj,time_index=0,\
          MPdict['Under'][reg].show_maps()
          return MPdict
    else:
-      reg         = 'all'
+      regions  = ['all']
+      reg      = 'all'
       if PRINT_INFO:
          print('Locating AODs for all regions...')
       Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
@@ -1612,6 +1737,10 @@ def areas_of_disagreement(fobj,time_index=0,\
          figname  = tfil.replace('.txt','.png')          # plot of polygons
          shpname  = tfil.replace('.txt','.shp')          # save polygons to shapefile with characteristics eg MIZ width
          sumname  = tfil.replace('.txt','_summary.txt')  # save average MIZ width etc to summary file
+
+         # outputs
+         summary_files  [OU].update({reg:sumname})
+         shapefiles     [OU].update({reg:shpname})
          ##########################################################
 
 
@@ -1651,7 +1780,7 @@ def areas_of_disagreement(fobj,time_index=0,\
                bmap.contour(lon2,lat2,conv_fac*Zobs.values,[.15],lat_lon=True,\
                               colors='g',linewidths=2,ax=ax,latlon=True)
 
-            for MIZi in Psolns:
+            for MIZi in Psolns.MIZ_info_objects:
                # plot outlines of polygons
                lon,lat  = np.array(MIZi.ll_bdy_coords).transpose()
                bmap.plot(lon,lat,latlon=True,ax=ax,color='k',linewidth=2.5)
@@ -1679,7 +1808,258 @@ def areas_of_disagreement(fobj,time_index=0,\
       if PLOTTING:
          plt.close(fig)
 
-   return MPdict,tfiles,Pdict
+   # define outputs
+   class output:
+      def __init__(self,summary_files,tfiles,shapefiles,regions,dto):
+         self.summary_files      = summary_files
+         self.shapefiles         = shapefiles
+         self.text_files         = tfiles
+         self.regions_analysed   = regions
+         self.datetime           = dto
+         self.types              = ['Over','Under']
+
+   return output(summary_files,\
+                  tfiles,\
+                  shapefiles,\
+                  regions,\
+                  fobj.datetimes[time_index])
+###########################################################
+
+
+###########################################################
+def average(fobj,varname,start_date=None,end_date=None,**kwargs):
+
+      if not os.path.exists(outdir):
+         os.mkdir(outdir)
+
+      # ==================================================
+      # set dates to analyse, check for missing dates
+      if start_date is not None:
+         dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+      else:
+         dto0  = fobj.datetimes[0]
+
+      if end_date is not None:
+         dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+      else:
+         dto1  = fobj.datetimes[-1]
+
+      N     = 0
+      Vav   = 0
+      for dt in fobj.datetimes:
+         if dt>=dto0 and dt<=dto1:
+            idx   = fobj.datetimes.index(dt)
+            V     = fobj.get_var(varname,time_index=idx,**kwargs)
+            Vav  += V.values
+            N    += 1
+
+      Vav   = (1./N)*Vav
+      return Vav
+###########################################################
+
+
+###########################################################
+class AODs_all:
+   def __init__(self,fobj,outdir='.',start_date=None,end_date=None,step=1,dir_info=None,**kwargs):
+
+      if not os.path.exists(outdir):
+         os.mkdir(outdir)
+
+      # ==================================================
+      # set dates to analyse, check for missing dates
+      if start_date is not None:
+         dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         DTO   = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+      else:
+         dto0  = fobj.datetimes[0]
+         DTO   = fobj.datetimes[0]
+
+      if end_date is not None:
+         dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+      else:
+         dto1  = fobj.datetimes[-1]
+
+
+      self.times_to_analyse  = [dto0]
+      self.missing_times     = []
+      while DTO<dto1:
+         DTO   = DTO+timedelta(step)
+         self.times_to_analyse.append(DTO)
+         if DTO not in fobj.datetimes:
+            self.missing_times.append(DTO)
+
+      Ntimes   = len(self.times_to_analyse)
+      self.number_of_times_analysed = Ntimes
+      self.number_of_results        = 0
+      # ==================================================
+
+     
+      # ==================================================
+      # loop over times:
+      Init  = True
+      for it,dto in enumerate(self.times_to_analyse):
+         
+         # restrict analysis dates
+         if dto in self.missing_times:
+            continue
+         
+         idx      = fobj.datetimes.index(dto)
+         cdate    = dto.strftime('%Y%m%d')
+         outdir2  = outdir+'/'+cdate
+         if not os.path.exists(outdir2):
+            os.mkdir(outdir2)
+
+         if dir_info is None:
+            # run AOD analysis
+            print('Running AOD analysis for '+cdate)
+            out   = fobj.areas_of_disagreement(outdir=outdir2,time_index=idx,**kwargs)
+         else:
+            print('Getting summary info from '+outdir2)
+            # AOD analysis already done
+            # - get summary files
+            out   = summary_info(outdir2,dir_info)
+
+         # ===================================================================
+         # check if any answers present
+         empty = True
+         for OU in out.types:
+            regs  = out.summary_files[OU].keys()
+            if regs is not None:
+               empty    = False
+
+               if Init:
+                  reg      = regs[0]
+                  sumfile  = out.summary_files[OU][reg] # full path
+                  print('Initialising variable list from '+sumfile+'...')
+
+                  sfo      = read_MIZpoly_summary(sumfile)
+                  # EG OF SUMMARY FILE
+                  # Total_perimeter :          1146733
+                  # Total_area :      16769683265
+                  # Mean_intersecting_width :            41668
+                  # Mean_total_width :            41828
+                  # Maximum_intersecting_width :           107207
+                  # Maximum_total_width :           107207
+
+                  v  = vars(sfo)
+                  del(v['info'])
+                  var_names   = v.keys()
+
+                  print('\nVariables')
+                  for v in var_names:
+                     print(v)
+
+                  print('\n')
+               break
+
+         if empty:
+            # move to next date
+            continue
+         else:
+            self.number_of_results += 1
+         # ===================================================================
+
+
+         # ===================================================================
+         if Init:
+            Init                    = False # don't need to do this again
+            self.types              = out.types
+            self.regions_analysed   = out.regions_analysed
+
+            data  = {} # data will be data[OU][reg][variable]
+            for OU in out.types:
+               data.update({OU:{}})
+
+               for reg in out.regions_analysed:
+                  data[OU].update({reg:{}})
+
+                  var_names2  = {}
+                  for vbl in var_names:
+                     # v  = vbl+'_AOD' # change name variable is stored under
+                     v  = vbl # keep name of variable
+                     var_names2.update({vbl:v}) # map to the new name
+                     data[OU][reg].update({v:np.nan*np.zeros((Ntimes,))})
+         # ===================================================================
+
+
+         # ===================================================================
+         # read all summary files to add to time series
+         for OU in out.types:
+            for reg in out.regions_analysed:
+
+               if reg in out.summary_files[OU]:
+                  sumfile  = out.summary_files[OU][reg]
+                  sfo      = read_MIZpoly_summary(sumfile)
+                  # EG OF SUMMARY FILE
+                  # Total_perimeter :          1146733
+                  # Total_area :      16769683265
+                  # Mean_intersecting_width :            41668
+                  # Mean_total_width :            41828
+                  # Maximum_intersecting_width :           107207
+                  # Maximum_total_width :           107207
+
+                  for vbl in var_names:
+                     v  = var_names2[vbl]
+                     data[OU][reg][v][it]  = getattr(sfo,vbl)
+         # ===================================================================
+
+
+      # ===================================================================
+      # convert data to time_series object
+      # - gives plotting options etc
+      self.time_series  = {}
+      outdir3  = outdir+'/time_series'
+      if not os.path.exists(outdir3):
+         os.mkdir(outdir3)
+
+      for OU in self.types:
+         self.time_series.update({OU:{}})
+         for reg in self.regions_analysed:
+            ofil  = outdir3+'/AOD_time_series_'+OU+'_'+reg+'.txt'
+            self.time_series[OU].update({reg:[]})
+            self.time_series[OU][reg]  = time_series(self.times_to_analyse,data[OU][reg],filename=ofil)
+      # ===================================================================
+
+      return
+###########################################################
+
+
+###########################################################
+class summary_info:
+
+   def __init__(self,outdir,dir_info):
+
+      self.types              = dir_info['types']
+      self.regions_analysed   = dir_info['regions']
+
+      flist = os.listdir(outdir)
+      slist = []
+      for f in flist:
+         if 'summary.txt' in f:
+            slist.append(f)
+
+
+      self.summary_files   = {}
+      for OU in self.types:
+         self.summary_files.update({OU:{}})
+
+         for reg in self.regions_analysed:
+            self.summary_files[OU].update({reg:{}})
+
+            # Check for files present that correspond to type and region
+            no_file  = True
+            for f in slist:
+               if ('_'+OU+'_' in f) and ('_'+reg+'_' in f):
+                  self.summary_files[OU][reg]   = os.path.abspath(outdir+'/'+f)
+                  no_file  = False
+                  break
+
+            # delete key if no file present
+            if no_file:
+               del self.summary_files[OU][reg]
+
+      # print(self.summary_files)
+      return
 ###########################################################
 
 
@@ -1756,12 +2136,14 @@ def make_png_pair_all(fobj,var_opts1,var_opts2,\
 ###########################################################
 
 
+###########################################################
 class file_list:
    def __init__(self,directory,pattern,extension,**kwargs):
       import os
 
-      self.directory = directory
-      self.extension = extension
+      self.object_type  = 'file_list'
+      self.directory    = directory
+      self.extension    = extension
 
       lst         = os.listdir(directory)
       file_list   = []
@@ -1770,6 +2152,7 @@ class file_list:
          fname,fext  = os.path.splitext(fil)
 
          # check pattern
+         # print(fil)
          if (fext==extension) and (pattern in fname):
             file_list.append(fil)
 
@@ -1779,8 +2162,11 @@ class file_list:
       gridpath_lut   = {'FR1':wsn+'/FramStrait_Hyc2.2.12/FR1a0.03-clean//topo',\
                         'BS1':wsn+'/BS1a0.045-clean/topo',\
                         'TP4':wsn+'/../REANALYSIS/topo'}
+
+
       HB = False
       if extension=='.a':
+         self.filetype     = 'HYCOM_binary'
          self.getinfo      = HYCOM_binary_info
          HB                = True
          self.HYCOM_region = file_list[0][:3]
@@ -1788,6 +2174,7 @@ class file_list:
             kwargs.update({'gridpath':gridpath_lut[self.HYCOM_region]})
          
       elif extension=='.nc':
+         self.filetype     = 'netcdf'
          self.getinfo      = nc_getinfo
          self.HYCOM_region = 'TP4' #TODO pass in HYCOMreg?
 
@@ -1826,8 +2213,10 @@ class file_list:
 
       # add some methods inherited from individual objects
       self.get_lonlat   = self.objects[0].get_lonlat
+      self.get_corners  = self.objects[0].get_corners
       if HB:
-         self.get_depths   = self.objects[0].get_depths
+         self.get_depths         = self.objects[0].get_depths
+         self.create_ESMF_grid   = self.objects[0].create_ESMF_grid
 
       return
    ###########################################################
@@ -1880,47 +2269,30 @@ class file_list:
 
 
    ###########################################################
-   def compare_ice_edge_obs_all(self,HYCOMreg=None,figdir='.',**kwargs):
-
-      pobj        = plot_object()
-      fig,ax,cbar = pobj.get()
-
-      if HYCOMreg is None:
-         HYCOMreg = self.HYCOM_region
-      bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
-
-      if 'show' in kwargs:
-         kwargs['show'] = False
-      else:
-         kwargs.update({'show':False})
-
-      if 'obs_type' not in kwargs:
-         obs_type = 'OSISAF'
-         kwargs.update({'obs_type':obs_type})
-
-      if not os.path.exists(figdir):
-         os.mkdir(figdir)
+   def compare_ice_edge_obs_all(self,**kwargs):
+      out   = compare_ice_edge_obs(self,**kwargs)
+      return out
+   ###########################################################
 
 
-      N  = len(self.objects)
-      for i,obj in enumerate(self.objects):
+   ###########################################################
+   def areas_of_disagreement(self,time_index=0,**kwargs):
+      out   = self.objects[time_index].areas_of_disagreement(time_index=0,**kwargs)
+      return out
+   ###########################################################
 
-         dtmo              = obj.datetime
-         # datestr           = dtmo.strftime('%Y%m%dT%H%M%SZ')
-         datestr           = dtmo.strftime('%Y%m%d')
-         figname           = figdir+'/'+obj.basename+'_v'+obs_type+'_'+datestr+'.png'
-         pobj,bmap,obsfil  = obj.compare_ice_edge_obs(pobj=pobj,bmap=bmap,\
-                              figname=figname,**kwargs)
 
-         ax.cla()
-         if pobj.cbar is not None:
-            pobj.cbar.ax.clear()   # cbar.ax.clear()
+   ###########################################################
+   def AODs_all(self,**kwargs):
+      out   = AODs_all(self,**kwargs)
+      return out
+   ###########################################################
 
-         print('\n'+str(i+1)+' records done out of '+str(N))
 
-      plt.close(fig)
-      return
+   ###########################################################
+   def average(self,**kwargs):
+      out   = average(self,**kwargs)
+      return out
    ###########################################################
 
 ######################################################################
-# compare_ice_edge_obs_all
