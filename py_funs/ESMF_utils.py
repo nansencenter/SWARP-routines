@@ -1,7 +1,8 @@
 import ESMF
+import numpy as np
 
 #########################################################################
-def create_ESMF_grid(centres,corners,areas=None,mask=None,\
+def create_ESMF_grid(centres,corners,AREA=None,MASK=None,\
       coordTypeKind='r8',coordsys=0,numPeriDims=0):
    """
    create_ESMF_grid(centres,corners,mask=None,\
@@ -19,7 +20,7 @@ def create_ESMF_grid(centres,corners,areas=None,mask=None,\
       coordSys=ESMF.CoordSys.CART #x,y,z   
       
 
-   maxIndex       = np.array(centres[0].shape)-1 # no of centres
+   maxIndex       = np.array(centres[0].shape) # no of centres
    Ndim           = len(maxIndex)
    staggerlocs    = [ESMF.StaggerLoc.CORNER,ESMF.StaggerLoc.CENTER]
 
@@ -28,17 +29,11 @@ def create_ESMF_grid(centres,corners,areas=None,mask=None,\
    # localPet, petCount = ESMF.ESMP_VMGet(vm)
 
    print('\ncreate_ESMF_grid\n')
-   Egrid = ESMF.Grid(maxIndex, numPeriDims=numPeriDims, coordSys=coordSys,\
-                     coordTypeKind=coordTypeKind, staggerlocs=staggerlocs)
-
-
-   # ========================================================
-   # CORNERS
-   # get the coordinate pointers and set the coordinates
-   for x in range(Ndim):
-      gridCorner        = Egrid.get_coords(x, ESMF.StaggerLoc.CORNER)
-      gridCorner[:,:]   = corners[x]
-   # ========================================================
+   Egrid = ESMF.Grid(maxIndex,\
+           num_peri_dims=numPeriDims,\
+           coord_sys=coordSys,\
+           staggerloc=staggerlocs)#,\
+           # TypeKind=coordTypeKind)
 
 
    # ========================================================
@@ -46,25 +41,40 @@ def create_ESMF_grid(centres,corners,areas=None,mask=None,\
    # get the coordinate pointers and set the coordinates
    for x in range(Ndim):
       gridCenter        = Egrid.get_coords(x, ESMF.StaggerLoc.CENTER)
+      # print('centre array: '+str(x))
+      # print(centres[x].shape)
+      # print(gridCenter[:,:].shape)
       gridCenter[:,:]   = centres[x]
    # ========================================================
 
 
    # ========================================================
-   if areas is not None:
+   # CORNERS
+   # get the coordinate pointers and set the coordinates
+   for x in range(Ndim):
+      gridCorner        = Egrid.get_coords(x, ESMF.StaggerLoc.CORNER)
+      # print('corner array: '+str(x))
+      # print(corners[x].shape)
+      # print(gridCorner[:,:].shape)
+      gridCorner[:,:]   = corners[x]
+   # ========================================================
+
+
+   # ========================================================
+   if AREA is not None:
      # add areas of grid cells
-     grid.add_item(ESMF.GridItem.AREA)
+     Egrid.add_item(ESMF.GridItem.AREA)
      area      = Egrid.get_item(ESMF.GridItem.AREA) # pointer
-     area[:,:] = self.land_mask(inner_points=True)
+     area[:,:] = AREA
    # ========================================================
 
 
    # ========================================================
-   if mask is not None:
+   if MASK is not None:
      # set up the grid mask
-     grid.add_item(ESMF.GridItem.MASK)
+     Egrid.add_item(ESMF.GridItem.MASK)
      mask      = Egrid.get_item(ESMF.GridItem.MASK) # pointer
-     mask[:,:] = self.land_mask(inner_points=True)
+     mask[:,:] = MASK
    # ========================================================
    
    return Egrid
