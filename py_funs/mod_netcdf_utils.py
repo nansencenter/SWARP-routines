@@ -214,6 +214,8 @@ class nc_getinfo:
          self.datetimes              = []
          for tval in self.timevalues:
             self.datetimes.append(self.timeval_to_datetime(tval))
+      else:
+         self.datetimes = None
       ########################################################
 
 
