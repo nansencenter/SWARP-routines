@@ -2507,7 +2507,7 @@ class MIZ_info_list:
    
    ######################################################
    def save_shapefile(self,filename):
-      save_shapefile(self)
+      save_shapefile(self,filename)
       return
    ######################################################
 
