@@ -190,5 +190,7 @@ for i,ofil in enumerate(olist):
    print('Saving '+figdir+'/'+figname)
    po.fig.savefig(figdir+'/'+figname)
    po.ax.cla()
+   tso  = mr.time_series(datetimes[:i+1],ts_data,\
+           filename=figdir+'/thickness_error.txt',overwrite=True)
    # sys.exit()
 plt.close(po.fig)

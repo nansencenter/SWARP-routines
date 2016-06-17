@@ -35,7 +35,7 @@ class AOD_output:
 class time_series:
 
    ############################################
-   def __init__(self,dates,data,units=None,filename=None):
+   def __init__(self,dates,data,units=None,filename=None,overwrite=False):
       self.dates                 = dates
       self.data                  = data
       self.units                 = units
@@ -43,7 +43,7 @@ class time_series:
       self.number_of_dates       = len(dates)
       self.number_of_variables   = len(data.keys())
       
-      if not os.path.exists(filename):
+      if not os.path.exists(filename) or overwrite:
          print('Saving time series to '+filename)
          self.write_file(filename)
 
