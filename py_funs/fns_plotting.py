@@ -262,8 +262,8 @@ def finish_map(bm,**kwargs):
    # *bm is a basemap
 
    # coast/land
-   bm.drawcoastlines()
-   bm.fillcontinents(color='gray')
+   bm.drawcoastlines(**kwargs)
+   bm.fillcontinents(color='gray',**kwargs)
 
    # draw parallels and meridians.
    merids   = get_nice_meridians(bm.lonmin,bm.lonmax)
