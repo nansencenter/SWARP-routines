@@ -1037,20 +1037,25 @@ def plot_var(fobj,var_opts,time_index=0,\
       plt.show(fig)
    
    # date label
-   dtmo     = fobj.datetimes[time_index]
-   datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-
    if fobj.HYCOM_region=='TP4':
       xyann = (0.05,.925)
    else:
       xyann = (0.4,.925)
 
-   if date_label==1:
-      tlabel   = dtmo.strftime('%d %b %Y')
+   if type(date_label)==type('hi'):
+      tlabel   = date_label
       pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-   elif date_label==2:
-      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+   elif fobj.datetimes is not None:
+      dtmo     = fobj.datetimes[time_index]
+      datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
+      tlabel   = None
+      if date_label==1:
+         tlabel   = dtmo.strftime('%d %b %Y')
+      elif date_label==2:
+         tlabel   = dtmo.strftime('%d %b %Y %H:%M')
+
+      if tlabel is not None:
+         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
 
    return pobj,bmap
 ###########################################################
@@ -1098,6 +1103,9 @@ def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
    else:
       time_index  = kwargs['time_index']
 
+   # pass on date_label to plot_var
+   kwargs.update({'date_label':date_label})
+
    if 'show' in kwargs:
       show           = kwargs['show']
       kwargs['show'] = False
@@ -1105,21 +1113,6 @@ def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
    else:
       show        = False
       pobj,bmap   = fobj.plot_var(var_opts,pobj=pobj,bmap=bmap,show=False,**kwargs)
-
-   dtmo     = fobj.datetimes[time_index]
-   datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-
-   if fobj.HYCOM_region=='TP4':
-      xyann = (0.05,.925)
-   else:
-      xyann = (0.4,.925)
-
-   if date_label==1:
-      tlabel   = dtmo.strftime('%d %b %Y')
-      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-   elif date_label==2:
-      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
 
    if pobj.axpos is not None:
       # try to make sure axes don't move round
@@ -1168,7 +1161,12 @@ def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
          Fname = vname.strip('taux')+'_stress_dirn'
 
    Fname    = Fname.strip('_')
-   figname  = figdir+'/'+fobj.basename+'_'+Fname+datestr+'.png'
+   if fobj.datetimes is None:
+      figname  = figdir+'/'+fobj.basename+'_'+Fname+'.png'
+   else:
+      datestr  = fobj.datetimes[time_index].strftime('%Y%m%dT%H%M%SZ')
+      figname  = figdir+'/'+fobj.basename+'_'+Fname+datestr+'.png'
+
    if not os.path.exists(figdir):
       os.mkdir(figdir)
 
@@ -1206,6 +1204,9 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
    else:
       time_index  = kwargs['time_index']
 
+   # pass on date_label to plot_var
+   kwargs.update({'date_label':date_label})
+
    if 'show' in kwargs:
       show           = kwargs['show']
       kwargs['show'] = False
@@ -1217,20 +1218,6 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
             pobj=pobj,bmap=bmap,show=False,**kwargs)
 
    fig,ax,cbar = pobj.get()
-
-   dtmo     = fobj.datetimes[time_index]
-   datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
-   if fobj.HYCOM_region=='TP4':
-      xyann = (0.05,.925)
-   else:
-      xyann = (0.4,.925)
-
-   if date_label==1:
-      tlabel   = dtmo.strftime('%d %b %Y')
-      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
-   elif date_label==2:
-      tlabel   = dtmo.strftime('%d %b %Y %H:%M')
-      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
 
 
    # ==================================================================
@@ -1257,7 +1244,12 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
          Fname = vname.strip('taux')+'_stress_dirn'
 
    Fname    = Fname.strip('_')
-   figname  = figdir+'/'+fobj.basename+'_'+Fname+datestr+'.png'
+   if fobj.datetimes is None:
+      figname  = figdir+'/'+fobj.basename+'_'+Fname+'.png'
+   else:
+      datestr  = fobj.datetimes[time_index].strftime('%Y%m%dT%H%M%SZ')
+      figname  = figdir+'/'+fobj.basename+'_'+Fname+datestr+'.png'
+
    if not os.path.exists(figdir):
       os.mkdir(figdir)
 
@@ -1842,23 +1834,24 @@ def areas_of_disagreement(fobj,time_index=0,\
 
 
 ###########################################################
-def average(fobj,varname,start_date=None,end_date=None,**kwargs):
+def time_average(fobj,varname,start_date=None,end_date=None,**kwargs):
 
-      if not os.path.exists(outdir):
-         os.mkdir(outdir)
 
       # ==================================================
-      # set dates to analyse, check for missing dates
+      # set dates to analyse
       if start_date is not None:
-         dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
       else:
          dto0  = fobj.datetimes[0]
 
       if end_date is not None:
-         dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
       else:
          dto1  = fobj.datetimes[-1]
+      # ==================================================
 
+
+      # ==================================================
       N     = 0
       Vav   = 0
       for dt in fobj.datetimes:
@@ -1867,9 +1860,79 @@ def average(fobj,varname,start_date=None,end_date=None,**kwargs):
             V     = fobj.get_var(varname,time_index=idx,**kwargs)
             Vav  += V.values
             N    += 1
+      # ==================================================
 
       Vav   = (1./N)*Vav
       return Vav
+###########################################################
+
+
+###########################################################
+def smooth(lon,lat,V,radius,mask=None,resolution=None):
+    import time
+
+    nx,ny   = lon.shape
+    Vav     = np.zeros((nx,ny))
+
+    if resolution is None:
+        # determine approx resolution
+        lons        = np.array([lon[0,0],lon[0,1],lon[1,1],lon[1,0]])
+        lats        = np.array([lat[0,0],lat[0,1],lat[1,1],lat[1,0]])
+        area        = GS.area_polygon_ellipsoid(lons,lats)
+        resolution  = np.sqrt(area)
+
+    if mask is None:
+        mask    = np.logical_not(np.isnan(V))
+
+    irng    = int(np.ceil(1.5*radius/resolution))
+
+    start = time.time()
+    print('Start smoothing (radius(km),res(km),i-j range)')
+    print(radius/1.e3,resolution/1.e3,irng)
+
+    for i in range(nx):
+        for j in range(ny):
+            v       = 0.
+            N       = 0
+            lon1    = lon[i,j]
+            lat1    = lat[i,j]
+            if not mask[i,j]:
+
+                # preselect region to search over
+                i0  = max(0,i-irng)
+                i1  = min(nx-1,i+irng+1)
+                j0  = max(0,j-irng)
+                j1  = min(ny-1,j+irng+1)
+                #print(i0)
+                #print(i1)
+                #print(j0)
+                #print(j1)
+
+                # search the area to see if distance < radius
+                for i_ in range(i0,i1):
+                    for j_ in range(j0,j1):
+                        lon2    = lon[i_,j_]
+                        lat2    = lat[i_,j_]
+                        dist    = GS.greatcircledist(lat1, lon1, lat2, lon2,radians=False)
+                        if dist<=radius:
+                            v  += V[i_,j_]
+                            N  += 1
+                        # print(i,j,dist,radius,v,N)
+                # sys.exit()
+                # print(i,j,v,N)
+
+                # take average
+                Vav[i,j]    = v/float(N)
+            else:
+                Vav[i,j]    = np.nan
+
+    end = time.time()
+    print ('Smoothing time (mins):')
+    print ((end - start)/60.)
+
+    Vav = np.ma.array(Vav,mask=np.isnan(Vav))
+
+    return Vav
 ###########################################################
 
 
@@ -2244,6 +2307,13 @@ class file_list:
 
 
    ###########################################################
+   def get_var(self,varname,time_index=0,**kwargs):
+      out   = self.objects[time_index].get_var(varname,**kwargs)
+      return out
+   ###########################################################
+
+
+   ###########################################################
    def plot_var(self,var_opts,time_index=0,**kwargs):
       out   = plot_var(self.objects[time_index],\
                   var_opts,**kwargs)
@@ -2311,8 +2381,8 @@ class file_list:
 
 
    ###########################################################
-   def average(self,**kwargs):
-      out   = average(self,**kwargs)
+   def time_average(self,varname,**kwargs):
+      out   = time_average(self,varname,**kwargs)
       return out
    ###########################################################
 
