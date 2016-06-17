@@ -416,9 +416,9 @@ class HYCOM_grid_info:
       """
       import ESMF_utils as EU
 
-      corners  = self.get_corners() #(qlon,qlat)
-      centres  = self.get_centres() #(plon,plat)
-      areas    = self.get_areas()   # scvx*scuy
+      corners  = self.get_corners()                  #(qlon,qlat)
+      centres  = self.get_centres(inner_points=True) #(plon,plat)
+      areas    = self.get_areas  (inner_points=True) # scvx*scuy
 
       # ========================================================
       mask  = None
@@ -427,7 +427,7 @@ class HYCOM_grid_info:
         mask = self.land_mask(inner_points=True)
       # ========================================================
       
-      Egrid = EU.create_ESMF_grid(centres,corners,areas=areas,mask=mask)
+      Egrid = EU.create_ESMF_grid(centres,corners,AREA=areas,MASK=mask)
       return Egrid
       ###################################################################
 
@@ -583,7 +583,7 @@ class HYCOM_binary_info:
 
 
    #######################################################################
-   def get_var(self,vname,time_index=None):
+   def get_var(self,vname,time_index=None,inner_points=False):
       """
       vbl=get_var(vname,time_index=None) - vname is a string of 2d variable name (surface variable name,layer=0)
       vbl=get_var([vname,layer],time_index=None) - vname is a string of 2d or 3d variable name (layer=0 is surface, layer=1 to kdm are ocean layers)
@@ -644,6 +644,13 @@ class HYCOM_binary_info:
             print(self.afile+': '+str(vbl.min()) )
             print(self.bfile+': '+str(xmin)      )
             raise ValueError()
+      ########################################################
+
+
+      ########################################################
+      if inner_points:
+         extra_atts  = [['dimensions'],['i','j']]
+         vbl         = MR.var_object(vbl[:-1,:-1],extra_atts=extra_atts)
       ########################################################
 
       return vbl
