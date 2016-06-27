@@ -277,3 +277,37 @@ def finish_map(bm,**kwargs):
 
    return
 ############################################################################
+
+
+############################################################################
+def plot_anomaly(lon,lat,anom,anom_fig,text=None,\
+      HYCOM_region='Arctic',clim=None,clabel=None):
+
+   pobj     = plot_object()
+   bmap     = start_HYCOM_map(HYCOM_region)
+
+   if clim is None: 
+      vmin  = None
+      vmax  = None
+   else:
+      vmin,vmax   = clim
+
+   PC       = bmap.pcolor(lon,lat,anom,latlon=True,ax=pobj.ax,vmin=vmin,vmax=vmax)
+   cbar     = pobj.fig.colorbar(PC)
+   if clabel is not None:
+      cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+
+   if text is not None:
+      if HYCOM_region=='TP4':
+         xyann = (0.05,.925)
+      else:
+         xyann = (0.4,.925)
+      pobj.ax.annotate(text,xy=xyann,xycoords='axes fraction',fontsize=18)
+
+   finish_map(bmap)
+   pobj.fig.savefig(anom_fig)
+
+   print('Saving '+anom_fig+'\n')
+   plt.close(pobj.fig)
+   return
+############################################################################
