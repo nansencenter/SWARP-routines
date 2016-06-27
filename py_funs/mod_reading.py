@@ -20,13 +20,20 @@ def basemap_OSISAF():
 
 ##########################################################
 class AOD_output:
-  def __init__(self,summary_files,tfiles,shapefiles,types,regions,dto):
+  def __init__(self,summary_files,tfiles,shapefiles,types,regions,dto,anomaly_file=None):
      self.summary_files      = summary_files
      self.shapefiles         = shapefiles
      self.text_files         = tfiles
      self.regions_analysed   = regions
      self.datetime           = dto
      self.types              = types
+     
+     if anomaly_file is not None:
+        anom_fil  = os.path.splitext(anomaly_file)[0]
+        #
+        self.anomaly_file_npz = anom_fil+'.npz'
+        self.anomaly_file_txt = anom_fil+'.txt'
+
      return
 ##########################################################
 
@@ -1612,6 +1619,8 @@ def areas_of_disagreement(fobj,time_index=0,\
    PRINT_INFO  = 1
 
    dtmo  = fobj.datetimes[time_index]
+   cdate = dtmo.strftime('%Y%m%d')
+
    if obs_type == 'OSISAF':
       var_name = 'fice'
       bmap     = basemap_OSISAF()
@@ -1622,7 +1631,7 @@ def areas_of_disagreement(fobj,time_index=0,\
 	 obs_option='multi'
       obsfil   = obs_path+\
             '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
-            dtmo.strftime('%Y%m%d')+'1200.nc'
+            cdate+'1200.nc'
    else:
       raise ValueError('Wrong selection variable for areas_of_disagreement')
 
@@ -1658,6 +1667,66 @@ def areas_of_disagreement(fobj,time_index=0,\
 
    # add the mask for Arr to Zref
    Zref  = np.ma.array(Zref.data,mask=Arr.mask)
+
+
+   # ==================================================================
+   # calc RMSE and bias
+   cdiff       = Arr-Zref
+   good        = np.logical_not(Arr.mask)
+
+   # 1st estimate (lower bound)
+   # - only consider pixels with ice in both datasets
+   both_ice       = np.copy(good)
+   both_ice[good] = np.logical_and(Arr[good]>0.,Zref[good]>0.)
+   RMSEb          = np.sqrt(np.mean(cdiff[both_ice]**2))
+   BIASb          = np.mean(cdiff[both_ice])
+
+   # 2nd estimate (upper bound)
+   # - consider pixels with ice in one of the datasets
+   either_ice        = np.copy(good)
+   either_ice[good]  = np.logical_or(Arr[good]>0.,Zref[good]>0.)
+   RMSEe             = np.sqrt(np.mean(cdiff[either_ice]**2))
+   BIASe             = np.mean(cdiff[either_ice])
+
+   if 'outdir' in kwargs:
+      outdir   = kwargs['outdir']
+   else:
+      outdir   = '.'
+   if not os.path.exists(outdir):
+      os.mkdir(outdir)
+
+   anom_fil = outdir+'/conc_anomaly_'+obs_type+'_'+cdate+'.npz'
+   print('Saving '+anom_fil+'\n')
+   np.savez(anom_fil,lon=lon2,lat=lat2,\
+         anomaly=cdiff.data,mask=cdiff.mask)
+
+   # write RMSE and BIAS (global variables - not regional) to summary files
+   sumname  = anom_fil.replace('.npz','.txt')
+   fid      = open(sumname,'w')
+   fid.write('RMSE_both_ice   : '+str(RMSEb)+'\n')
+   fid.write('Bias_both_ice   : '+str(BIASb)+'\n')
+   fid.write('RMSE_either_ice : '+str(RMSEe)+'\n')
+   fid.write('Bias_either_ice : '+str(BIASe))
+   fid.close()
+
+   if plotting:
+      # plot anomoly
+      anom_fig = anom_fil.replace('.npz','.png')
+      cmax     = .5
+      clabel   = 'Concentration anomaly'
+
+      if fobj.HYCOM_region=='TP4':
+         HYCreg   = 'Arctic'
+      else:
+         HYCreg   = fobj.HYCOM_region
+
+      # mask "not good" region
+      cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
+      Fplt.plot_anomaly(lon2,lat2,cdiff,anom_fig,text=cdate,\
+            HYCOM_region=HYCreg,\
+            clim=[-cmax,cmax],clabel=clabel)
+   # ==================================================================
+
 
    MPdict         = {'Over':{},'Under':{}}
    tfiles         = {'Over':{},'Under':{}}
@@ -1823,13 +1892,15 @@ def areas_of_disagreement(fobj,time_index=0,\
       if PLOTTING:
          plt.close(fig)
 
+
    # define outputs
    return AOD_output(summary_files,\
                   tfiles,\
                   shapefiles,\
                   ['Over','Under'],\
                   regions,\
-                  fobj.datetimes[time_index])
+                  fobj.datetimes[time_index],\
+                  anomaly_file=anom_fil)
 ###########################################################
 
 
