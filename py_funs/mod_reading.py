@@ -336,7 +336,7 @@ def check_names(vname,variables):
             if vbl in variables:
                return vbl
 
-   raise ValueError(vname+'not in variable list')
+   raise ValueError(vname+' not in variable list')
    return
 ###########################################################
 
@@ -1612,8 +1612,8 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
 ###########################################################
 def areas_of_disagreement(fobj,time_index=0,\
       obs_type='OSISAF',obs_path=None,obs_option='multi',\
-      do_sort=True,EastOnly=True,plotting=True,**kwargs):
-   # kwargs: outdir='.',do_sort=True
+      regions=None,do_sort=True,EastOnly=True,\
+      plotting=True,**kwargs):
 
    import MIZchar as mc
    PRINT_INFO  = 1
@@ -1743,19 +1743,24 @@ def areas_of_disagreement(fobj,time_index=0,\
       plt.show(fig)
       return Xint,Yint,Zint,Xref,Yref,Zref
 
-   if do_sort:
-      # possible regions are:
-      regions  = ['gre','bar','beau','lab','balt','les','can']
+   if regions is not None:
+      do_sort  = True
 
-      if EastOnly:
-         # concentrate on the eastern Arctic
-         # (and forget Baltic Sea)
-         regions.remove('balt' )
-         regions.remove('les' )
-         regions.remove('can' )
-         regions.remove('beau')
-      else:
-         regions.remove('balt' )
+   if do_sort:
+
+      if regions is None:
+         # possible regions are:
+         regions  = ['gre','bar','beau','lab','balt','les','can']
+
+         if EastOnly:
+            # concentrate on the eastern Arctic
+            # (and forget Baltic Sea)
+            regions.remove('balt' )
+            regions.remove('les' )
+            regions.remove('can' )
+            regions.remove('beau')
+         else:
+            regions.remove('balt' )
 
       # for reg in ['bar']:
       for reg in regions:
