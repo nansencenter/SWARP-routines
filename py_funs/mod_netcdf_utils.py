@@ -1,13 +1,7 @@
 import numpy as np
-from matplotlib import pyplot as plt
-from mpl_toolkits.basemap import Basemap
 from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
-import fns_plotting as Fplt
-from scipy.interpolate import griddata as grd
 import os,sys
-import shapely.geometry as shg
-import geometry_sphere as GS
 import mod_reading as MR
 
 
@@ -27,7 +21,7 @@ def lonlat_names(ncfil):
 ##########################################################
 def nc_get_var(ncfil,vblname,time_index=None):
    """
-   vbl=nc_get_var(ncfil,vblname,time_index=None):
+   vbl=nc_get_var(ncfil,vblname,time_index=None)
    *ncfil is string (filename)
    *vname is string (variable name)
    *time_index is record number to get
@@ -78,22 +72,20 @@ def nc_get_var(ncfil,vblname,time_index=None):
 ########################################################
 class nc_getinfo:
 
+   import os
    #####################################################
    def __init__(self,ncfil,time_index=None,lonlat_file=None):
 
       ##################################################
       self.filename  = ncfil
       if ncfil[0]=='/':
-         self.basedir   = '/'
+         bn             = os.path.basename(ncfil)
+         self.basedir   = ncfil.strip(bn)
       else:
-         import os
+         bn             = ncfil
          self.basedir   = os.getcwd()+'/'
 
-      ss = ncfil.split('/')
-      for i in range(len(ss)-1):
-         self.basedir   = self.basedir+'/'
-
-      self.basename     = ss[-1].strip('.nc')
+      self.basename     = os.path.splitext(bn)[0]
       self.filetype     = 'netcdf'
       self.object_type  = 'netcdf'
 
