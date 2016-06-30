@@ -341,12 +341,14 @@ def get_region_v2(llc=None):
       pobj  = mr.plot_object()
 
       # plot OSISAF concentration for 1 day:
+      # cdate = '20150801'
+      cdate = '20150307'
       ncfil = '/work/shared/nersc/msc/OSI-SAF/2015_nh_polstere/'+\
-               'ice_conc_nh_polstere-100_multi_201508011200.nc'
+               'ice_conc_nh_polstere-100_multi_'+cdate+'1200.nc'
 
       nci      = mr.nc_getinfo(ncfil)
       var_opt  = mr.make_plot_options('fice',conv_fac=.01,ice_mask=True)
-      nci.plot_var(var_opt,bmap=bmap,pobj=pobj,clabel='OSISAF SIC',show=False)
+      nci.plot_var(var_opt,bmap=bmap,pobj=pobj,clabel='Ice concentration (OSISAF)',show=False)
       
       # plot regions
       fig   = pobj.fig
@@ -452,11 +454,11 @@ def get_region_v2(llc=None):
       ax.text(x,y,'CAN',color='r',fontsize=fsz)
       ############################################################
 
-      pwd      = os.getcwd()
-      figname  = pwd+'/MIZregions.png'
+      figname  = 'MIZregions.png'
       print('\nSaving to '+figname)
       fig.savefig(figname)
-      fig.show()
+      # fig.show()
+      plt.close(fig)
       return
 #################################################################
 
