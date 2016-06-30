@@ -1511,6 +1511,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          return MPdict
 
    else:
+      # not do_sort:
       reg   = 'all'
       mp    = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,vertices=vertices)
       MPdict.update({reg:mp})
@@ -1535,18 +1536,13 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       ##########################################################
 
 
+      ##########################################################
+      # basemap for plotting
       if vertices is None:
-         ##########################################################
          if do_sort:
             mapreg   = reg
          else:
             mapreg   = fobj.HYCOM_region
-         ##########################################################
-
-
-         ##########################################################
-         # process each text file to get MIZ width etc
-         print("MIZchar.single_file: "+tfil+"\n")
          bmap     = Fplt.start_HYCOM_map(mapreg)
       else:
          vlons,vlats = np.array(vertices).transpose()
@@ -1564,7 +1560,10 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
                                  width=width,height=height,\
                                  resolution='i')
+      ##########################################################
 
+      # process each text file to get MIZ width etc
+      print("MIZchar.single_file: "+tfil+"\n")
       # Psolns   = mc.single_file(tfil,MK_PLOT=False,METH=5)
       tfo      = mc.single_file(tfil)
       Psolns   = tfo.get_solutions(METH=5)
@@ -1597,6 +1596,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          PLOTTING = True
 
          if vertices is not None:
+            # add corners of rectangle
             bmap.plot(loncnr,latcnr,latlon=True,ax=ax,color='g',linewidth=2.5)
 
          for MIZi in Psolns.MIZ_info_objects:
@@ -1642,8 +1642,21 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
 ###########################################################
 def areas_of_disagreement(fobj,time_index=0,\
       obs_type='OSISAF',obs_path=None,obs_option='multi',\
-      regions=None,do_sort=True,EastOnly=True,\
+      vertices=None,regions=None,\
+      do_sort=True,EastOnly=True,\
       plotting=True,**kwargs):
+   """
+   areas_of_disagreement(fobj,time_index=0,\
+      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      vertices=None,regions=None,\
+      do_sort=True,EastOnly=True,\
+      plotting=True,**kwargs)
+
+      **kwargs to be passed onto MIZchar.get_MIZ_poly:
+         outdir='.' - where to save results
+         mask_corners=None - can mask out smaller region
+                           - corners = [lons,lats], where lons=[DL,DR,UR,UL]
+   """
 
    import MIZchar as mc
    PRINT_INFO  = 1
@@ -1773,7 +1786,11 @@ def areas_of_disagreement(fobj,time_index=0,\
       plt.show(fig)
       return Xint,Yint,Zint,Xref,Yref,Zref
 
-   if regions is not None:
+   if (vertices is not None) and (regions is not None):
+      raise ValueError('Cannot pass in both vertices and regions')
+   elif vertices is not None:
+      do_sort  = False
+   elif regions is not None:
       do_sort  = True
 
    if do_sort:
@@ -1815,11 +1832,13 @@ def areas_of_disagreement(fobj,time_index=0,\
          MPdict['Under'][reg].show_maps()
          return MPdict
    else:
+      # not do_sort:
       regions  = ['all']
       reg      = 'all'
       if PRINT_INFO:
          print('Locating AODs for all regions...')
-      Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref)
+      Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,\
+                                       vertices=vertices)
       MPdict['Over'] .update({reg:Over})
       MPdict['Under'].update({reg:Under})
 
@@ -1864,17 +1883,35 @@ def areas_of_disagreement(fobj,time_index=0,\
 
 
          ##########################################################
-         if do_sort:
-            mapreg   = reg
+         # basemap for plotting
+         if vertices is None:
+            if do_sort:
+               mapreg   = reg
+            else:
+               mapreg   = fobj.HYCOM_region
+            bmap     = Fplt.start_HYCOM_map(mapreg)
          else:
-            mapreg   = fobj.HYCOM_region
+            vlons,vlats = np.array(vertices).transpose()
+            vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+            xy_verts    = [(vx[i],vy[i]) for i in range(len(vx))]
+
+            # get approximate centre and limits for basemap
+            vP          = shg.Polygon(xy_verts)
+            width       = 5*np.sqrt(vP.area)
+            height      = 5*np.sqrt(vP.area)
+            xcen,ycen   = vP.centroid.coords.xy
+            lonc,latc   = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),\
+                           NH=True,inverse=True)
+            # make basemap
+            bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
+                                    width=width,height=height,\
+                                    resolution='i')
          ##########################################################
 
 
          ##########################################################
          # process each text file to get MIZ width etc
          print("MIZchar.single_file: "+tfil+"\n")
-         bmap     = Fplt.start_HYCOM_map(mapreg)
          tfo      = mc.single_file(tfil)
          Psolns   = tfo.get_solutions(METH=5)
          Pdict[OU].update({reg:Psolns})
@@ -1882,6 +1919,16 @@ def areas_of_disagreement(fobj,time_index=0,\
          # Save summary & shapefile
          mc.save_summary  (Psolns,sumname)
          mc.save_shapefile(Psolns,filename=shpname)
+
+         if vertices is not None:
+            # add total area to sumname
+            loncnr,latcnr  = np.array(vertices).transpose()
+            tot_area       = GS.area_polygon_ellipsoid(loncnr,latcnr)
+
+            # append to file
+            fid   = open(sumname,'a')
+            fid.write('total_area_of_rectangle : '+str(tot_area))
+            fid.close()
          ##########################################################
 
          
@@ -1898,6 +1945,10 @@ def areas_of_disagreement(fobj,time_index=0,\
                # add observation ice edge
                bmap.contour(lon2,lat2,conv_fac*Zobs.values,[.15],lat_lon=True,\
                               colors='g',linewidths=2,ax=ax,latlon=True)
+
+            if vertices is not None:
+               # add corners of rectangle
+               bmap.plot(loncnr,latcnr,latlon=True,ax=ax,color='g',linewidth=2.5)
 
             for MIZi in Psolns.MIZ_info_objects:
                # plot outlines of polygons

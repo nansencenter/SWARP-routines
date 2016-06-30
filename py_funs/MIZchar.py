@@ -1061,7 +1061,7 @@ def get_MIZ_poly(ZM,lon,lat,fice,var_name='dmax',region=None,vertices=None):
 
 
 ############################################################################
-def get_AOD_polys(Zmod,Zobs,lon,lat,region=None):
+def get_AOD_polys(Zmod,Zobs,lon,lat,region=None,vertices=None):
    ZM = np.ma.array(Zmod,mask=1-np.isfinite(Zmod))
 
    var_name    = 'fice'
@@ -1070,11 +1070,17 @@ def get_AOD_polys(Zmod,Zobs,lon,lat,region=None):
       # over.icemap  is 0: both water; 1: model ice/obs water;    2: both ice; NaN: land
       # under.icemap is 0: both water; 1: obs ice  /model water;  2: both ice; NaN: land
 
-   if region is not None:
-      over  = mask_region(over,lon,lat,region)
-      under = mask_region(under,lon,lat,region)
+   if (vertices is not None) and (region is not None):
+      raise ValueError('Cannot pass in both vertices and region')
+   elif vertices is not None:
+      over  = mask_region(over,lon,lat,vertices=vertices)
+      under = mask_region(under,lon,lat,vertices=vertices)
+   elif region is not None:
+      over  = mask_region(over,lon,lat,region=region)
+      under = mask_region(under,lon,lat,region=region)
 
-   return MIZ_poly(over,lon,lat,region=region),MIZ_poly(under,lon,lat,region=region)
+   return MIZ_poly(over,lon,lat,region=region),\
+          MIZ_poly(under,lon,lat,region=region)
       # objects with contours of AODs and some methods 
       # - eg plot the binaries, get or write poly stats
 ############################################################################
