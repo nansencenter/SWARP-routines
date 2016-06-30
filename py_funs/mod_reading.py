@@ -1412,7 +1412,8 @@ def compare_ice_edge_obs_all(fobj,HYCOMreg=None,figdir='.',**kwargs):
 
 
 ###########################################################
-def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
+def MIZmap(fobj,var_name='dmax',time_index=0,\
+      vertices=None,regions=None,\
       do_sort=False,EastOnly=True,plotting=True,**kwargs):
    """
    Call  : fobj.MIZmap(var_name='dmax',vertices=None,\
@@ -1429,21 +1430,31 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
    import MIZchar as mc
 
    vname = check_names(var_name,fobj.variables)
+   fname = check_names('fice',fobj.variables)   # need fice for ice mask
    if var_name == 'dmax':
       # FSD MIZarray(1-
       Arr         = GetVar(fobj,vname,time_index=time_index)
       clim        = [0,300]# for plotting
       lower_limit = .1     # for plotting
+      fice        = GetVar(fobj,fname,time_index=time_index)
    elif var_name == 'fice':
       # conc MIZ
       Arr         = GetVar(fobj,vname,time_index=time_index)
       clim        = [0,1]  # for plotting
       lower_limit = .15    # for plotting
+      fice        = Arr
    elif var_name == 'hice':
       # thin ice areas
       Arr         = GetVar(fobj,vname,time_index=time_index)
       clim        = [0,2.] # for plotting
       lower_limit = .01    # for plotting
+      fice        = GetVar(fobj,fname,time_index=time_index)
+   elif var_name == 'swh':
+      # waves-in-ice areas
+      Arr         = GetVar(fobj,vname,time_index=time_index)
+      clim        = [0,4.] # for plotting
+      lower_limit = .01    # for plotting
+      fice        = GetVar(fobj,fname,time_index=time_index)
    else:
       raise ValueError('Wrong selection variable for MIZmap')
 
@@ -1454,26 +1465,40 @@ def MIZmap(fobj,var_name='dmax',time_index=0,vertices=None,\
    summary_files  = {}
    shapefiles     = {}
 
-   if vertices is not None:
+   if (vertices is not None) and (regions is not None):
+      raise ValueError('Cannot pass in both vertices and regions')
+   elif vertices is not None:
       do_sort  = False
+   elif regions is not None:
+      do_sort  = True
    
    if do_sort:
-      # possible regions are:
-      regions  = ['gre','bar','beau','lab','balt','les','can']
 
-      if EastOnly:
-         # concentrate on the eastern Arctic
-         # (and forget Baltic Sea)
-         regions.remove('balt')
-         regions.remove('les' )
-         regions.remove('can' )
-         regions.remove('beau')
+      # ==================================================================
+      # possible regions are:
+      def_regions = ['gre','bar','beau','lab','balt','les','can']
+      if regions is not None:
+         # check regions are OK
+         for reg in regions:
+            if reg not in def_regions:
+               raise ValueError('Unknown region: '+reg)
       else:
-         # forget Baltic Sea
-         regions.remove('balt')
+
+         regions  = 1*def_regions
+         if EastOnly:
+            # concentrate on the eastern Arctic
+            # (and forget Baltic Sea)
+            regions.remove('balt')
+            regions.remove('les' )
+            regions.remove('can' )
+            regions.remove('beau')
+         else:
+            # forget Baltic Sea
+            regions.remove('balt')
+      # ==================================================================
 
       for reg in regions:
-         mp = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,region=reg)
+         mp = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,region=reg)
          MPdict.update({reg:mp})
 
          fname0   = fobj.basename+'_'+var_name +'_'+reg

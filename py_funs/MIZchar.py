@@ -935,24 +935,36 @@ def plot_regions_v2():
 
 
 ###############################################################################
-def array2binaries(data,threshm,threshM,var_name='dmax'):
+def array2binaries(data,threshm,threshM,ice_mask,var_name='dmax'):
    # takes in an array and min/max threshholds
    # returns MIZmask,ICEmask, PACKmask
 
-   good     = np.isfinite(data)
-   nans     = np.logical_not(good)
-   ICEmask  = np.ones(data.shape)
-   PACKmask = np.ones(data.shape)
+   ICEmask  = np.array(ice_mask,dtype='float')
+   MIZmask  = np.zeros(ICEmask.shape,dtype='float')
 
-   # OLD method where ice-ice = ocean-ocean = 0
-   Data                       = 1+0*data[good] #stop errors from NaNs
-   Data[data[good]<threshm]   = 0
-   ICEmask [good]             = 1*Data # 0: <threshm (eg water)    ; 1: >=threshm (eg ice)
-   Data[data[good]<threshM]   = 0
-   PACKmask[good]             = 1*Data # 0: <threshM (eg water+MIZ); 1: >=threshM (eg pack)
+   # TODO error if ice_mask overlaps nans
+   nans  = np.isnan(data)
+   stop  = np.logical_and(nans,ice_mask).any()
+   if stop:
+      raise ValueError('data infinite/nan inside ice_mask')
 
-   # Difference ICE-PACK
-   MIZmask        = ICEmask - PACKmask  # 1: MIZ (ice-pack); 0: water,pack,land(nans)
+   # ==================================================
+   # MAKE MIZ MASK
+   Data  = 1.+0*data[ice_mask] # start 1 where ice
+
+   if threshm is not None:
+      # remove data that is below the threshold
+      Data[data[ice_mask]<threshm]   = 0.
+
+   if threshM is not None:
+      # remove data that is above the threshold
+      Data[data[ice_mask]>threshM]  = 0.
+
+   MIZmask[ice_mask] = Data # 0: <threshM (eg water+MIZ); 1: >=threshM (eg pack)
+   # ==================================================
+
+   # PACK = ICE-MIZ
+   PACKmask       = ICEmask - MIZmask  # 1: MIZ (ice-pack); 0: water,pack,land(nans)
    ICEmask [nans] = np.nan #restore the nans
    PACKmask[nans] = np.nan #restore the nans
 
@@ -998,27 +1010,43 @@ def arrays2binary_diff(Zmod,Zobs,threshm):
 
 
 ############################################################################
-def get_MIZ_poly(ZM,lon,lat,var_name='dmax',region=None,vertices=None):
+def get_MIZ_poly(ZM,lon,lat,fice,var_name='dmax',region=None,vertices=None):
    """
    get_MIZ_poly(ZM,var_name='dmax')
    *ZM is a masked array
    *var_name='dmax','fice','hice'
    """
 
+   fmin           = .15 # min conc
+   good           = np.logical_not(fice.mask) # only water/ice
+   wtr_mask       = np.copy(good)
+   wtr_mask[good] = (fice.data[good]<fmin)
+   ice_mask       = np.copy(good)
+   ice_mask[good] = (fice.data[good]>=fmin)
+   
+   # mask out water
+   ZM                = 1*ZM
+   ZM.mask           = np.logical_or(ZM.mask,wtr_mask)
+   ZM.data[ZM.mask]  = np.nan # make sure masked val's corresp to nan's in data
+
    if var_name == 'fice':
       # conc MIZ
-      thresh_min   = .15
-      thresh_max   = .8
+      thresh_min  = None # already applied with wtr_mask
+      thresh_max  = .8
    elif var_name == 'hice':
       # thin ice (compare to SMOS)
-      thresh_min   = .025
-      thresh_max   = .45
+      thresh_min  = None # already applied with wtr_mask
+      thresh_max  = .45
    elif var_name == 'dmax':
       # FSD MIZ
-      thresh_min   = 1.
+      thresh_min  = None # already applied with wtr_mask
       thresh_max   = 250.
+   elif var_name == 'swh':
+      # waves-in-ice MIZ
+      thresh_min  = .05
+      thresh_max  = None # not needed
 
-   MIZbins  = array2binaries(ZM,thresh_min,thresh_max,var_name)
+   MIZbins  = array2binaries(ZM,thresh_min,thresh_max,ice_mask,var_name=var_name)
       # icemap is 0: water; 1: MIZ; 2: pack; NaN: land
 
    if vertices is not None:
