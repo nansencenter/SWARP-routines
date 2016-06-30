@@ -1280,6 +1280,11 @@ def make_png_pair(fobj,var_opts1,var_opts2,\
 def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
       obs_type='OSISAF',obs_path=None,obs_option='multi',\
       date_label=1,figname=None,**kwargs):
+   """
+   compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
+      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      date_label=1,figname=None,**kwargs)
+   """
 
    var_opts1   = make_plot_options('ficem',\
       vec_opt=0,conv_fac=1,wave_mask=False,ice_mask=True,dir_from=True)
@@ -2436,8 +2441,15 @@ class file_list:
 
 
    ###########################################################
-   def compare_ice_edge_obs_all(self,**kwargs):
+   def compare_ice_edge_obs(self,**kwargs):
       out   = compare_ice_edge_obs(self,**kwargs)
+      return out
+   ###########################################################
+
+
+   ###########################################################
+   def compare_ice_edge_obs_all(self,**kwargs):
+      out   = compare_ice_edge_obs_all(self,**kwargs)
       return out
    ###########################################################
 
