@@ -1513,7 +1513,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
    else:
       # not do_sort:
       reg   = 'all'
-      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,var_name=var_name,vertices=vertices)
+      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices)
       MPdict.update({reg:mp})
       #
       fname0   = fobj.basename+'_'+var_name
