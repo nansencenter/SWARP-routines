@@ -33,6 +33,8 @@ srs='+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45'+\
     ' +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 """
 
+TEST_INIT   = 0 # test 1st day instead of weekly average
+
 
 # directories
 compname  = os.getenv('HOSTNAME')
@@ -142,19 +144,28 @@ for i,ofil in enumerate(olist):
    print('Calculating weekly average')
    print(cdate1+' - '+cdate2+'\n')
 
-   # time average
-   hav_m    = flist.time_average('hice',\
-                start_date=cdate1+'T120000Z',\
-                end_date=cdate2+'T120000Z',\
-                inner_points=False)
+   if TEST_INIT==0:
+      # time average
+      hav_m    = flist.time_average('hice',\
+                   start_date=cdate1+'T120000Z',\
+                   end_date=cdate2+'T120000Z',\
+                   inner_points=False)
+   else:
+      # test 1st day
+      hav_m = flist.get_var('hice',time_index=0).values # masked array
 
    # spatial smoothing
    if 0:
       radius   = 20.e3
       hav_m    = mr.smooth(mlon,mlat,hav_m.data,radius,mask=hav_m.mask)
       figname  = 'TP4weekly_'+cdate1+'_smoothed.png'
-   else:
+   elif TEST_INIT==0:
       figname  = 'TP4weekly_'+cdate1+'.png'
+   else:
+      figname  = 'TP4test1st_'+cdate1+'.png'
+      print(flist.datetimes[0])
+      print(flist.file_list[0])
+      print(figname)
 
    # interpolate onto observation grid
    hav_m2   = mr.reproj_mod2obs(mX,mY,hav_m,oX,oY,mask=1*hobs.values.mask)
