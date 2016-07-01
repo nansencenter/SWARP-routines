@@ -1391,7 +1391,7 @@ def compare_ice_edge_obs_all(fobj,HYCOMreg=None,figdir='.',**kwargs):
       os.mkdir(figdir)
 
    N  = len(fobj.objects)
-   for i,obj in enumerate(self.objects):
+   for i,obj in enumerate(fobj.objects):
 
       dtmo              = obj.datetime
       # datestr           = dtmo.strftime('%Y%m%dT%H%M%SZ')
@@ -2094,6 +2094,178 @@ def smooth(lon,lat,V,radius,mask=None,resolution=None):
 
 
 ###########################################################
+class MIZmap_all:
+   def __init__(self,fobj,outdir='.',start_date=None,end_date=None,step=None,dir_info=None,**kwargs):
+      """
+      mod_reading.MIZmap_all(fobj,outdir='.',start_date=None,end_date=None,step=1,dir_info=None,**kwargs)
+         fobj a file list object or multi-record netcdf object
+      """
+
+      if not os.path.exists(outdir):
+         os.mkdir(outdir)
+
+      if step is None:
+         Nrec  = fobj.number_of_time_records
+         if Nrec>1:
+            # time step in days
+            step  = (fobj.datetimes[1]-fobj.datetimes[0]).total_seconds()/(24.*3600)
+         else:
+            step  = 1. #not used
+
+
+      # ==================================================
+      # set dates to analyse, check for missing dates
+      if start_date is not None:
+         dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         DTO   = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+      else:
+         dto0  = fobj.datetimes[0]
+         DTO   = fobj.datetimes[0]
+
+      if end_date is not None:
+         dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+      else:
+         dto1  = fobj.datetimes[-1]
+
+
+      self.times_to_analyse  = [dto0]
+      self.missing_times     = []
+      while DTO<dto1:
+         DTO   = DTO+timedelta(step)
+         self.times_to_analyse.append(DTO)
+         if DTO not in fobj.datetimes:
+            self.missing_times.append(DTO)
+
+      Ntimes   = len(self.times_to_analyse)
+      self.number_of_times_analysed = Ntimes
+      self.number_of_results        = 0
+      # ==================================================
+
+     
+      # ==================================================
+      # loop over times:
+      Init  = True
+      for it,dto in enumerate(self.times_to_analyse):
+         
+         # restrict analysis dates
+         if dto in self.missing_times:
+            continue
+         
+         idx      = fobj.datetimes.index(dto)
+         cdate    = dto.strftime('%Y%m%dT%H%M%SZ')
+         outdir2  = outdir+'/'+cdate
+         if not os.path.exists(outdir2):
+            os.mkdir(outdir2)
+
+         if dir_info is None:
+            # run MIZ analysis
+            print('Running MIZ analysis for '+cdate)
+            out   = fobj.MIZmap(outdir=outdir2,time_index=idx,**kwargs)
+         else:
+            print('Getting summary info from '+outdir2)
+            # MIZ analysis already done
+            # - get summary files
+            out   = summary_info(outdir2,dir_info)
+
+         # ===================================================================
+         # check if any answers present
+         empty = True
+         regs  = out.summary_files.keys()
+         if regs is not None:
+            empty    = False
+
+            if Init:
+               reg      = regs[0]
+               sumfile  = out.summary_files[reg] # full path
+               print('Initialising variable list from '+sumfile+'...')
+
+               sfo      = read_MIZpoly_summary(sumfile)
+               # EG OF SUMMARY FILE
+               # Total_perimeter :          1146733
+               # Total_area :      16769683265
+               # Mean_intersecting_width :            41668
+               # Mean_total_width :            41828
+               # Maximum_intersecting_width :           107207
+               # Maximum_total_width :           107207
+
+               v  = vars(sfo)
+               del(v['info'])
+               var_names   = v.keys()
+
+               print('\nVariables')
+               for v in var_names:
+                  print(v)
+
+               print('\n')
+
+         if empty:
+            # move to next date
+            continue
+         else:
+            self.number_of_results += 1
+         # ===================================================================
+
+
+         # ===================================================================
+         if Init:
+            Init                    = False # don't need to do this again
+            self.types              = out.types
+            self.regions_analysed   = out.regions_analysed
+
+            data  = {} # data will be data[OU][reg][variable]
+            for reg in out.regions_analysed:
+               data.update({reg:{}})
+
+               var_names2  = {}
+               for vbl in var_names:
+                  # v  = vbl+'_AOD' # change name variable is stored under
+                  v  = vbl # keep name of variable
+                  var_names2.update({vbl:v}) # map to the new name
+                  data[reg].update({v:np.nan*np.zeros((Ntimes,))})
+         # ===================================================================
+
+
+         # ===================================================================
+         # read all summary files to add to time series
+         for reg in out.regions_analysed:
+
+            if reg in out.summary_files:
+               sumfile  = out.summary_files[reg]
+               sfo      = read_MIZpoly_summary(sumfile)
+               # EG OF SUMMARY FILE
+               # Total_perimeter :          1146733
+               # Total_area :      16769683265
+               # Mean_intersecting_width :            41668
+               # Mean_total_width :            41828
+               # Maximum_intersecting_width :           107207
+               # Maximum_total_width :           107207
+
+               for vbl in var_names:
+                  v  = var_names2[vbl]
+                  data[reg][v][it]  = getattr(sfo,vbl)
+      # ===================================================================
+
+
+      # ===================================================================
+      # convert data to time_series object
+      # - gives plotting options etc
+      self.time_series  = {}
+      outdir3  = outdir+'/time_series'
+      if not os.path.exists(outdir3):
+         os.mkdir(outdir3)
+
+      ctype = out.types[0]
+      for reg in out.regions_analysed:
+         ofil  = outdir3+'/time_series_'+ctype+'_'+reg+'.txt'
+         self.time_series.update({reg:[]})
+         self.time_series[reg]  = time_series(self.times_to_analyse,data[reg],filename=ofil)
+      # ===================================================================
+
+      return
+###########################################################
+
+
+###########################################################
 class AODs_all:
    def __init__(self,fobj,outdir='.',start_date=None,end_date=None,step=1,dir_info=None,**kwargs):
 
@@ -2540,6 +2712,20 @@ class file_list:
    ###########################################################
    def AODs_all(self,**kwargs):
       out   = AODs_all(self,**kwargs)
+      return out
+   ###########################################################
+
+
+   ###########################################################
+   def MIZmap(self,time_index=0,**kwargs):
+      out   = self.objects[time_index].MIZmap(time_index=0,**kwargs)
+      return out
+   ###########################################################
+
+
+   ###########################################################
+   def MIZmap_all(self,**kwargs):
+      out   = MIZmap_all(self,**kwargs)
       return out
    ###########################################################
 
