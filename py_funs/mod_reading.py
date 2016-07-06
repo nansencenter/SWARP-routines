@@ -321,7 +321,8 @@ def check_names(vname,variables):
 
    # ice conc alt names
    lists.append(['ficem','fice','ice_conc','icec',\
-                  'concentration','sea_ice_concentration'])
+                  'concentration','sea_ice_concentration',\
+                  'ice fraction'])
 
    # ice thick alt names
    lists.append(['hicem','hice','ice_thick','icetk',\
@@ -329,6 +330,9 @@ def check_names(vname,variables):
 
    # floe size alt names
    lists.append(['dfloe','dmax','Dfloe','Dmax'])
+
+   # H_s alt names
+   lists.append(['swh','Hs','hs'])
 
    for names in lists:
       if vname in names:
@@ -342,9 +346,9 @@ def check_names(vname,variables):
 
 
 ###########################################################
-def check_var_opts(var_opts,variables):
+def check_var_opts(var_opts,variables=None):
    """
-   var_opts = check_var_opts(var_opts,variables)
+   var_opts = check_var_opts(var_opts,variables=None)
    *var_opts can be a string with variable name
     or a mod_reading.make_plot_options object
    *variables is a list of the variables in a file 
@@ -387,10 +391,11 @@ def check_var_opts(var_opts,variables):
                +",ice_mask=False,dir_from=True)")
       var_opts = make_plot_options(vname,layer=layer)
 
-   vname       = check_names(var_opts.name,variables)
-   var_opts2   = new_var_opts(var_opts,vname)
+   if variables is not None:
+      vname       = check_names(var_opts.name,variables)
+      var_opts    = new_var_opts(var_opts,vname)
 
-   return var_opts2
+   return var_opts
 ###########################################################
 
 
@@ -1476,7 +1481,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
 
       # ==================================================================
       # possible regions are:
-      def_regions = ['gre','bar','beau','lab','balt','les','can']
+      def_regions = ['gre','bar','beau','lab','balt','les','can','Antarctic']
       if regions is not None:
          # check regions are OK
          for reg in regions:
@@ -1495,6 +1500,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          else:
             # forget Baltic Sea
             regions.remove('balt')
+            regions.remove('Antarctic')
       # ==================================================================
 
       for reg in regions:
@@ -1541,8 +1547,10 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       if vertices is None:
          if do_sort:
             mapreg   = reg
-         else:
+         elif fobj.HYCOM_region is not None:
             mapreg   = fobj.HYCOM_region
+         else:
+            mapreg   = 'Arctic'
          bmap     = Fplt.start_HYCOM_map(mapreg)
       else:
          vlons,vlats = np.array(vertices).transpose()
@@ -2475,10 +2483,45 @@ class summary_info:
       return
 ###########################################################
 
+def get_range_animation(fobj,var_opts,bmap,percentile_min=0,percentile_max=95):
+
+   # boundaries of bmap
+   lon0     = bmap.boundarylons.min()
+   lon1     = bmap.boundarylons.max()
+   lat0     = bmap.boundarylats.min()
+   lat1     = bmap.boundarylats.max()
+   print('\nlon/lat range for plotting')
+   print(lon0,lon1,lat0,lat1)
+   print('\n')
+
+   # points inside bmap
+   lon,lat  = fobj.get_lonlat()
+   inside   = np.logical_and(lon>lon0,lon<lon1)
+   inside   = np.logical_and(lat>lat0,inside)
+   inside   = np.logical_and(lat<lat1,inside)
+   del lon,lat
+
+   N  = fobj.number_of_time_records
+   vmin  = 1e30
+   vmax  = -1e30
+   clim  = None
+   for i in range(N):
+      V     = fobj.get_var(var_opts.name,time_index=i)
+      good  = np.logical_not(V.values.mask)
+      OK    = np.logical_and(good,inside)
+      if np.any(OK):
+         Vok   = V[OK]
+         vmin  = min(vmin,np.percentile(V[OK],percentile_min))
+         vmax  = max(vmax,np.percentile(V[OK],percentile_max))
+         clim  = vmin,vmax
+
+   return clim
 
 ###########################################################
-def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',**kwargs):
+def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',\
+      percentile_min=0,percentile_max=95,**kwargs):
 
+   var_opts    = check_var_opts(var_opts)
    pobj        = plot_object()
    fig,ax,cbar = pobj.get()
 
@@ -2490,7 +2533,19 @@ def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',**kwargs):
    bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
    N     = fobj.number_of_time_records
 
-   ############################################################
+   # =====================================================
+   if 'clim' not in kwargs:
+      clim  = get_range_animation(fobj,var_opts,bmap,\
+            percentile_min=percentile_min,percentile_max=percentile_max)
+      if clim is not None:
+         print('\nSetting variable range:')
+         print(clim)
+         print('\n')
+         kwargs.update({'clim':clim})
+   # =====================================================
+
+
+   # =====================================================
    # loop over time records
    for i in range(N):
       pobj,bmap   = fobj.make_png(var_opts,time_index=i,pobj=pobj,\
@@ -2505,7 +2560,7 @@ def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',**kwargs):
          pobj.cbar.ax.clear()   # cbar.ax.clear()
 
       print('\n'+str(i+1)+' records done out of '+str(N))
-   ############################################################
+   # =====================================================
 
    plt.close(pobj.fig)
    return
@@ -2514,7 +2569,8 @@ def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',**kwargs):
 
 ###########################################################
 def make_png_pair_all(fobj,var_opts1,var_opts2,\
-      HYCOMreg=None,figdir='.',**kwargs):
+      HYCOMreg=None,figdir='.',\
+      percentile_min=0,percentile_max=95,**kwargs):
 
    pobj        = plot_object()
    fig,ax,cbar = pobj.get()
@@ -2526,6 +2582,17 @@ def make_png_pair_all(fobj,var_opts1,var_opts2,\
 
    bmap  = Fplt.start_HYCOM_map(HYCOMreg,cres='i')
    N     = fobj.number_of_time_records
+
+   # =====================================================
+   if 'clim' not in kwargs:
+      clim  = get_range_animation(fobj,var_opts,bmap,\
+            percentile_min=percentile_min,percentile_max=percentile_max)
+      if clim is not None:
+         print('\nSetting variable range:')
+         print(clim)
+         print('\n')
+         kwargs.update({'clim':clim})
+   # =====================================================
 
    ############################################################
    # loop over time records
