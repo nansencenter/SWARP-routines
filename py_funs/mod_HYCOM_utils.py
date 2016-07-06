@@ -512,6 +512,18 @@ class HYCOM_binary_info:
       bid.close()
 
       self.reference_date  = datetime(1900,12,31)
+      if (self.time_value==0) and ('archv_wav' in self.basename):
+         # bug in output of archv_wav at first time step
+         # - determine time from basename
+         idx      = self.basename.find('.')+1
+         yr       = int(self.basename[idx:idx+4])
+         jday     = int(self.basename[idx+5:idx+8])
+         refdate  = datetime(yr,1,1)+timedelta(jday)
+         cdate    = refdate.strftime('%Y%m%dT')+self.basename[idx+9:idx+15]+'Z'
+         #
+         self.datetime     = datetime.strptime(cdate,'%Y%m%dT%H%M%SZ')
+         self.time_value   = (self.datetime-self.reference_date).total_seconds()/(24.*3600.)
+
       if 'DAILY' in self.basename:
          # file written at end of day - change to midday
          self.time_value   = self.time_value -.5 # model time (days)
