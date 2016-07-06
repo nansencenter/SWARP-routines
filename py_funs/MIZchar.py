@@ -293,7 +293,11 @@ def get_region_v2(llc=None):
       lonc,latc   = llc
 
       #########################################
-      if lonc<lon5 or lonc>lon4:
+      if latc<0:
+         # Antarctic
+         region   = 'Antarctic'
+
+      elif lonc<lon5 or lonc>lon4:
          # Beaufort
          region = 'beau'
 
@@ -470,13 +474,15 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
    var_name    = MIZbins.var_name
    sitn_type   = MIZbins.sitn_type
 
+   TEST_PLOT   = 0
+   if TEST_PLOT:
+      fig   = plt.figure()
+      ax    = fig.add_subplot(1,1,1)
+      ax.imshow(MIZbins.icemap,origin='lower')
+      fig.show()
    MIZmask     = MIZbins.MIZmask .reshape(sz)
    ICEmask     = MIZbins.ICEmask .reshape(sz)
    PACKmask    = MIZbins.PACKmask.reshape(sz)
-
-   # fig   = plt.figure()
-   # ax1   = fig.add_subplot(1,2,1)
-   # # ax1.imshow(MIZmask.reshape(shp).transpose(),origin='lower')
 
    lons  = lon.reshape(sz)
    lats  = lat.reshape(sz)
@@ -491,20 +497,21 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
       IM = MIZmask[jMIZ]
       PM = MIZmask[jMIZ]
 
-      # simple (fast) stereographic projection
-      xMIZ,yMIZ   = GS.polar_stereographic_simple(MIZlons,MIZlats,NH=True,inverse=False)
-      # ax1.plot(xMIZ,yMIZ,'.')
-      
-      # Mask out points not inside the polygon
+      # vertices
       vlons,vlats = np.array(vertices).transpose()
-      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+      NH          = (np.mean(vlats)>0)
+      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=NH,inverse=False)
       xyverts     = [(vx[i],vy[i]) for i in range(len(vx))]
-
       # make sure polygon is closed
       if xyverts[0] != xyverts[-1]:
          print('- closing polygon')
          xyverts.append(xyverts[0])
 
+      # simple (fast) stereographic projection
+      xMIZ,yMIZ   = GS.polar_stereographic_simple(MIZlons,MIZlats,NH=NH,inverse=False)
+      # ax1.plot(xMIZ,yMIZ,'.')
+      
+      # Mask out points not inside the polygon
       inside   = GP.maskgrid_outside_polygon(xMIZ,yMIZ,xyverts) #true if inside poly
       outside  = np.logical_not(inside)
       # ax1.plot(xMIZ[inside],yMIZ[inside],'or')
@@ -519,13 +526,6 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
       ICEmask [jMIZ] = IM
       PACKmask[jMIZ] = PM
 
-      # ax2   = fig.add_subplot(1,2,2)
-      # # ax2.imshow(MIZmask.reshape(shp).transpose(),origin='lower')
-      # # ax2.imshow(ICEmask.reshape(shp).transpose(),origin='lower')
-      # ax2.imshow(PACKmask.reshape(shp).transpose(),origin='lower')
-      # plt.show(fig)
-      # raise ValueError('HEY!')
-     
    elif region is None:
       raise ValueError('Need to provide vertices or name of region')
    else:
@@ -534,7 +534,8 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
          # - if not set MIZ=0,ICE,PACK=NaN
          # - effectively this is land, so these boundaries become "unknown"
          llc   = (lons[i],lats[i])
-         if get_region_v2(llc)!=region:
+         Preg  = get_region_v2(llc)
+         if Preg!=region:
             MIZmask [i] = 0
             ICEmask [i] = np.nan
             PACKmask[i] = np.nan
@@ -543,7 +544,14 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
    ICEmask  = ICEmask .reshape(shp)
    PACKmask = PACKmask.reshape(shp)
 
-   return MIZbinaries(MIZmask,ICEmask,PACKmask,var_name=var_name,sitn_type=sitn_type,region=region)
+   if TEST_PLOT:
+      fig2  = plt.figure()
+      ax2   = fig2.add_subplot(1,1,1)
+      ax2.imshow(MIZmask,origin='lower')
+      plt.show(fig2)
+
+   return MIZbinaries(MIZmask,ICEmask,PACKmask,\
+         var_name=var_name,sitn_type=sitn_type,region=region)
 ################################################################################
 
 ################################################################################
@@ -850,11 +858,11 @@ def ij2xy(cont,X,Y):
       # bilinear interp to get x,y curves from X,Y arrays
       # -i:
       i_ = cont[n,0]
-      if i_<0:
+      if i_<=0:
          i0    = 0
          i1    = 0
          ifac  = 0
-      elif i_>ni-1:
+      elif i_>=ni-1:
          i0    = ni-1
          i1    = ni-1
          ifac  = 0
@@ -866,11 +874,11 @@ def ij2xy(cont,X,Y):
       # bilinear interp to get x,y curves from X,Y arrays
       # -j:
       j_ = cont[n,1]
-      if j_<0:
+      if j_<=0:
          j0    = 0
          j1    = 0
          jfac  = 0
-      elif j_>nj-1:
+      elif j_>=nj-1:
          j0    = nj-1
          j1    = nj-1
          jfac  = 0
@@ -1211,7 +1219,8 @@ class MIZ_poly:
    def get_poly_stat(self,number=0,**kwargs):
       cont  = self.MIZcont[number]
       kwargs.update({'number':number})
-      PS    = poly_stat(cont,self.MIZbinaries.icemap,self.lon,self.lat,**kwargs)
+
+      PS = poly_stat(cont,self.MIZbinaries.icemap,self.lon,self.lat,**kwargs)
       return PS
    #############################################################
 
@@ -1232,7 +1241,7 @@ class MIZ_poly:
          ##########################################################
          # write to regional text files:
          # Nreg        = {'gre':0,'bar':0,'ncb':0,'les':0,'lab':0}
-         Nreg        = {'gre':0,'bar':0,'can':0,'beau':0,'lab':0,'les':0,'balt':0}
+         Nreg        = {'gre':0,'bar':0,'can':0,'beau':0,'lab':0,'les':0,'balt':0,'Antarctic':0}
          reg_list    = Nreg.keys()
          tfil_list   = {}
          tfiles      = {}
@@ -1258,6 +1267,7 @@ class MIZ_poly:
       for num,cont in enumerate(self.MIZcont):
          PS = poly_stat(cont,self.MIZbinaries.icemap,\
                         self.lon,self.lat,number=num)
+
          if do_sort:
             reg   = PS.region
          else:
@@ -1293,7 +1303,6 @@ class poly_stat:
 
       self.number    = number #get the number
       self.latlon    = (basemap is None)
-      # self.latlon    = latlon
       self.ij_list   = cont #get the contour
       self.class_def() #calculate class from contour (big,medium etc)
 
@@ -1303,6 +1312,7 @@ class poly_stat:
             # already lon,lat coords
             self.ll_list   = 1*xy_list
             lonl,latl      = xy_list.transpose()
+            print('HEY')
          else:
             xl             = xy_list[:,0]
             yl             = xy_list[:,1]
@@ -1310,11 +1320,13 @@ class poly_stat:
             self.ll_list   = np.array([lonl,latl]).transpose()
       else:
          if self.latlon:
+            # lat,lon given
             # project to x,y coords (lon is discts)
             # - GS.polar_stereographic_simple is faster than a basemap
+            NH    = (np.mean(Y)>0)
             shp   = X.shape
             X,Y   = GS.polar_stereographic_simple(X[:],Y[:],\
-                        NH=True,radius=6371.e3,inverse=False)# routine outputs vectors
+                        NH=NH,radius=6371.e3,inverse=False)# routine outputs vectors
 
             # find x,y on boundaries of cont's
             X        = np.reshape(X,shp)
@@ -1325,7 +1337,7 @@ class poly_stat:
 
             # transform back to lon,lat
             lonl,latl      = GS.polar_stereographic_simple(xl,yl,\
-                                 NH=True,radius=6371.e3,inverse=True)# routine outputs vectors
+                                 NH=NH,radius=6371.e3,inverse=True)# routine outputs vectors
             self.ll_list   = np.array([lonl,latl]).transpose()
          else:
             # already projected coords (with basemap)
