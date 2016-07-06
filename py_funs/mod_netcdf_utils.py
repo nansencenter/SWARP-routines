@@ -69,6 +69,37 @@ def nc_get_var(ncfil,vblname,time_index=None):
 ########################################################
 
 
+##########################################################
+def nc_get_dim(ncfil,vblname):
+   """
+   vbl=nc_get_var(ncfil,vblname,time_index=None)
+   *ncfil is string (filename)
+   *vname is string (variable name)
+   *vbl   is a mod_reading.var_object instance
+   """
+
+   nc    = ncopen(ncfil)
+
+   if vblname in nc.variables:
+      vbl0  = nc.variables[vblname]
+
+      # get the netcdf attributes
+      attlist   = vbl0.ncattrs()
+      attvals  = []
+      for att in attlist:
+         attval   = getattr(vbl0,att)
+         attvals.append(attval)
+      Xatts = [attlist,attvals]
+
+      vals  = vbl0[:]
+      nc.close()
+
+      return MR.var_object(vals,extra_atts=Xatts)
+   else:
+      raise ValueError(vbl_name+' not given as an array')
+########################################################
+
+
 ########################################################
 class nc_getinfo:
 
@@ -373,22 +404,15 @@ class nc_getinfo:
 
    ###########################################################
    def get_var(self,vname,time_index=None):
+      """
+      Call: self.get_var(vname,time_index=None)
+      Inputs:
+      vname = string (name of variable)
+      time_index = integer: if time_index 
+      Returns: mod_reading.var_object instance
+      """
 
-      # conc can have multiple names
-      vlist    = self.variables
-      cnames   = ['fice','ficem','icec','ice_conc']
-      if vname in cnames:
-         for vi in cnames:
-            if vi in vlist:
-               vname = vi
-
-      # thickness can have multiple names
-      hnames   = ['hice','hicem','icetk']
-      if vname in hnames:
-         for vi in hnames:
-            if vi in vlist:
-               vname = vi
-
+      vname = MR.check_names(vname,self.variables)
       vbl   = nc_get_var(self.filename,vname,time_index=time_index)
 
       return vbl
@@ -396,6 +420,21 @@ class nc_getinfo:
 
 
    ###########################################################
+   def get_dim(self,dname):
+      """
+      call: self.get_dim(dname)
+      inputs:
+      dname = string (name of dimension)
+      returns: mod_reading.var_object instance
+      """
+
+      vname = MR.check_names(dname,self.dimensions)
+      vbl   = nc_get_dim(self.filename,dname)
+
+      return vbl
+   ###########################################################
+
+
    #######################################################################
    def imshow(self,var_opts,**kwargs):
       """
