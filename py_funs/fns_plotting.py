@@ -57,6 +57,18 @@ def start_HYCOM_map(region,cres='i'):
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
+   elif region=='Antarctic':
+      lonc     = 180.
+      latc     = -90.
+      lat_ts   = latc
+      rad      = 60 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
    elif region=='TP4':
       lonc     = -45.
       latc     = 85.
