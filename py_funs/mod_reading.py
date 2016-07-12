@@ -2703,6 +2703,20 @@ class file_list:
 
 
    ###########################################################
+   def nearestDate(self, pivot):
+      """
+      dto,time_index = self.nearestDate(dto0)
+      dto0  = datetime.datetime objects
+      dto   = datetime.datetime objects - nearest value in self.datetimes to dto0
+      time_index: dto=self.datetimes[time_index]
+      """
+      dto         = min(self.datetimes, key=lambda x: abs(x - pivot))
+      time_index  = self.datetimes.index(dto)
+      return dto,time_index
+   ###########################################################
+
+
+   ###########################################################
    def get_var(self,varname,time_index=0,**kwargs):
       out   = self.objects[time_index].get_var(varname,**kwargs)
       return out

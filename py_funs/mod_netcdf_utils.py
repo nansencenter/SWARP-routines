@@ -145,7 +145,14 @@ class nc_getinfo:
       Nkeys = len(vkeys)
 
       # is time a dimension?
-      self.time_dim     = ('time' in self.dimensions)
+      time_names     = ['time','time_counter'] # NEMO outputs call time "time_counter"
+      self.time_dim  = False
+      for time_name in time_names:
+         if time_name in self.dimensions:
+            self.time_dim  = True
+            self.time_name = time_name
+            break
+
 
       # get global netcdf attributes
       class ncatts:
@@ -162,7 +169,7 @@ class nc_getinfo:
       # time info:
       if self.time_dim:
 
-         time        = nc.variables['time']
+         time        = nc.variables[self.time_name]
          Nt          = len(time[:])
          reftime_u   = time[0] # hours since refpoint
          time_info   = time.units.split()
@@ -357,6 +364,21 @@ class nc_getinfo:
       nc.close()
       return
    ###########################################################
+
+   
+   ###########################################################
+   def nearestDate(self, pivot):
+      """
+      dto,time_index = self.nearestDate(dto0)
+      dto0  = datetime.datetime objects
+      dto   = datetime.datetime objects - nearest value in self.datetimes to dto0
+      time_index: dto=self.datetimes[time_index]
+      """
+      dto         = min(self.datetimes, key=lambda x: abs(x - pivot))
+      time_index  = self.datetimes.index(dto)
+      return dto,time_index
+   ###########################################################
+
 
 
    ###########################################################
