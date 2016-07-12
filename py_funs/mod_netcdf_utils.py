@@ -168,82 +168,8 @@ class nc_getinfo:
       ########################################################
       # time info:
       if self.time_dim:
-
-         time        = nc.variables[self.time_name]
-         Nt          = len(time[:])
-         reftime_u   = time[0] # hours since refpoint
-         time_info   = time.units.split()
-
-         time_info[0]   = time_info[0].strip('s') # 1st word gives units
-         if time_info[0]=='econd':
-            time_info[0]   = 'second'
-
-         tu    = time.units
-         if ('T' in tu) and ('Z' in tu):
-            # using the T...Z format for time
-            # eg hyc2proj (this is the standard)
-            split1   = tu.split('T')
-            ctime    = split1[1].split('Z')[0]
-            cdate    = split1[0].split()[2]
-         else:
-            # eg WAMNSEA product from met.no
-            split1   = tu.split()
-            cdate    = split1[2]
-            ctime    = split1[3]
-
-         if '-' in cdate:
-            # remove '-'
-            # - otherwise assume YYYYMMDD format
-            split2   = cdate.split('-')
-            for loop_i in range(1,3):
-               if len(split2[loop_i])==1:
-                  split2[loop_i] = '0'+split2[loop_i]
-            cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
-
-         if len(cdate)<8:
-            cdate = (8-len(cdate))*'0'+cdate
-
-         if ':' in ctime:
-            # remove ':'
-            # - otherwise assume HHMMSS format
-            split2   = ctime.split(':')
-            for loop_i in range(0,3):
-               if (split2[loop_i])==1:
-                  split2[loop_i] = '0'+split2[loop_i]
-            ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
-
-         year0    = int(cdate[:4])
-         mon0     = int(cdate[4:6])
-         day0     = int(cdate[6:8])
-         hr0      = int(ctime[:2])
-         min0     = int(ctime[2:4])
-         sec0     = int(float(ctime[4:]))
-         refpoint = datetime(year0,mon0,day0,hr0,min0,sec0)
-
-         # check format of time
-         i32   = np.array([0],dtype='int32')
-         if type(i32[0])==type(reftime_u):
-            reftime_u   = int(reftime_u)
-
-         if time_info[0]=='second':
-            self.reftime = refpoint+timedelta(seconds=reftime_u)
-         elif time_info[0]=='hour':
-            self.reftime = refpoint+timedelta(hours=reftime_u)
-         elif time_info[0]=='day':
-            self.reftime = refpoint+timedelta(reftime_u) #NB works for fraction of days also
-
-         if time_info[0]=='second':
-            # convert time units to hours for readability of the messages:
-            self.timeunits  = 'hour'
-            self.timevalues = [int((time[i]-time[0])/3600.) for i in range(Nt)]
-         else:
-            self.timeunits  = time_info[0]
-            self.timevalues = [time[i]-time[0] for i in range(Nt)]
-
-         self.number_of_time_records = Nt
-         self.datetimes              = []
-         for tval in self.timevalues:
-            self.datetimes.append(self.timeval_to_datetime(tval))
+         time  = nc.variables[self.time_name]
+         self.get_time_info(time)
       else:
          self.datetimes = None
       ########################################################
@@ -365,20 +291,124 @@ class nc_getinfo:
       return
    ###########################################################
 
+
+   ###########################################################
+   def get_time_info(self,time):
+
+      from netcdftime import netcdftime as NCT
+
+      tu          = time.units
+      time_info   = tu.split()
+
+      ################################################################
+      # determine time format of reference point:
+      Unit  = time_info[0]# 1st word gives units
+      Unit  = Unit.strip('s')
+      if Unit=='econd':
+         Unit  = 'second'
+
+      time_info.remove(time_info[0])
+      time_info.remove(time_info[0]) # 'since'
+
+      # rest is date and time of reference point
+      if len(time_info)==2:
+         cdate,ctime = time_info
+      else:
+         if ('T' in time_info[0]) and ('Z' in time_info[0]):
+            # cdate+T...Z format for time
+            split1   = tu.split('T')
+            ctime    = split1[1].strip('Z')
+            cdate    = split1[0].split()[2]
+         
+      # reformat cdate to YYYYMMDD
+      if '-' in cdate:
+         # remove '-'
+         # - otherwise assume YYYYMMDD format
+         split2   = cdate.split('-')
+         for loop_i in range(1,3):
+            if len(split2[loop_i])==1:
+               split2[loop_i] = '0'+split2[loop_i]
+         cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
+      if len(cdate)<8:
+         cdate = (8-len(cdate))*'0'+cdate
+
+
+      # reformat ctime to HHMMSS
+      if ':' in ctime:
+         # remove ':'
+         # - otherwise assume HHMMSS format
+         split2   = ctime.split(':')
+         for loop_i in range(0,3):
+            if (split2[loop_i])==1:
+               split2[loop_i] = '0'+split2[loop_i]
+         ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
+      ################################################################
+
+
+      ################################################################
+      # now can make new string where format is known
+      # - this is to pass into netcdftime.utime
+      year0          = int(cdate[:4])
+      mon0           = int(cdate[4:6])
+      day0           = int(cdate[6:8])
+      hr0            = int(ctime[:2])
+      min0           = int(ctime[2:4])
+      sec0           = int(float(ctime[4:]))
+      self.reftime   = datetime(year0,mon0,day0,hr0,min0,sec0)
+
+      fmt         = '%Y-%m-%d %H:%M:%S'
+      init_string = Unit+'s since '+self.reftime.strftime(fmt)
+
+      ncatts   = time.ncattrs()
+      if 'calendar' in ncatts:
+         Utime    = NCT.utime(init_string,calendar=time.calendar)
+      else:
+         Utime    = NCT.utime(init_string)
+
+      arr               = time[:] #time values
+      self.datetimes    = []
+      self.timevalues   = []
+
+      i32   = np.array([0],dtype='int32')[0]
+      for i,tval in enumerate(arr):
+         if type(i32)==type(tval):
+            # can be problems if int32 format
+            tval  = int(tval)
+         cdate = Utime.num2date(tval).strftime(fmt)
+         dto   = datetime.strptime(cdate,fmt)       # now a proper datetime object
+         self.datetimes.append(dto)
+
+         if i==0:
+            self.reftime  = dto
+
+         tdiff = (dto-self.reftime).total_seconds()
+         if Unit=='second':
+            self.timevalues.append(tdiff/3600.)       # convert to hours for readability
+            self.timeunits = 'hour'
+         elif Unit=='hour':
+            self.timevalues.append(tdiff/3600.)       # keep as hours
+            self.timeunits = 'hour'
+         elif Unit=='day':
+            self.timevalues.append(tdiff/3600./24.)   # keep as days
+            self.timeunits = 'day'
+         
+      self.number_of_time_records   = len(self.datetimes)
+      return
+   ###########################################################
+
    
    ###########################################################
    def nearestDate(self, pivot):
       """
       dto,time_index = self.nearestDate(dto0)
-      dto0  = datetime.datetime objects
-      dto   = datetime.datetime objects - nearest value in self.datetimes to dto0
+      dto0  = datetime.datetime object
+      dto   = datetime.datetime object - nearest value in self.datetimes to dto0
       time_index: dto=self.datetimes[time_index]
       """
       dto         = min(self.datetimes, key=lambda x: abs(x - pivot))
       time_index  = self.datetimes.index(dto)
       return dto,time_index
    ###########################################################
-
 
 
    ###########################################################
