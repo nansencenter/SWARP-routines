@@ -6,9 +6,20 @@ ydate=`date -d "yesterday" '+%Y%m%d'`
 
 # where the conc files are stored
 hex_dir=/work/shared/nersc/msc/OSI-SAF
+ME=`readlink -f $0`
+Vdir=`dirname $ME`
 
-# where the files are stored in the myocean portal 
-mo_dir0='SIW-TAC/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/conc/'
+CMEMS=1
+if [ $CMEMS -eq 1 ]
+then
+   # where the files are stored in the CMEMS portal
+   mo_dir0="Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/"
+   LNAME=cmems_ncftp # name of bookmark
+else
+   # where the files are stored in the myocean portal
+   mo_dir0='SIW-TAC/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/conc/'
+   LNAME=myocean # name of bookmark
+fi
 
 # check the last 5 days
 for day in `seq 0 5`
@@ -40,7 +51,7 @@ do
 # (can't handle too many at once it seems)
 # make a text file (between "<<EOF" and "EOF")
   cat > ncftp.in<<EOF
-open myocean 
+open $LNAME
 get $LIST
 set confirm-close no
 bye
@@ -56,7 +67,5 @@ done
 #########################################################################
 # Launch validation script
 # - compares today's observation to relevant forecasts
-ME=`readlink -f $0`
-Vdir=`dirname $ME`
-$Vdir/ice_edge_OSISAF_1obs.sh $ydate
+# $Vdir/ice_edge_OSISAF_1obs.sh $ydate
 #########################################################################
