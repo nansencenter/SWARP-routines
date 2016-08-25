@@ -1077,15 +1077,19 @@ def plot_var(fobj,var_opts,time_index=0,\
    Fplt.finish_map(bmap,ax=ax)
    
    # date label
-   if (fobj.HYCOM_region=='TP4') or (date_label==2):
+   if (fobj.HYCOM_region=='TP4'):
       xyann = (0.05,.925)
    else:
       xyann = (0.4,.925)
+   # xyann = (0.60,.932)
 
    if type(date_label)==type('hi'):
       tlabel   = date_label
       pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',\
             fontsize=18,color=date_color)
+            # horizontalalignment='center',\
+            # fontsize=18,color=date_color)
+
    elif fobj.datetimes is not None:
       dtmo     = fobj.datetimes[time_index]
       datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
@@ -1097,7 +1101,9 @@ def plot_var(fobj,var_opts,time_index=0,\
 
       if tlabel is not None:
          pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',\
-               fontsize=18,color=date_color)
+            fontsize=18,color=date_color)
+            # horizontalalignment='center',\
+            # fontsize=28,color=date_color)
 
    if show:
       # fig.show()
