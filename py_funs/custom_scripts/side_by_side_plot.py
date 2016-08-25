@@ -4,15 +4,16 @@ import mod_reading as mr
 import numpy as np
 
 nci   = mr.nc_getinfo('SWARPwavesice_WW3_forecast_start20151216T000000Z.nc')
-fig   = plt.figure()
+fig   = plt.figure(figsize=(20,20))
 gs    = GrdSpc.GridSpec(1,2)
-gs.update(left=0.075, right=0.9, wspace=0.45)
+gs.update(left=0.075, right=0.9, wspace=0.25)
 
 Hs_max   = 6
 dH       = 1
 Dmax_max = 250
 dD       = 50
 reg      = 'FR1' # 'gre'
+dtl      = 2
 
 for idx in range(nci.number_of_time_records):
 
@@ -22,10 +23,12 @@ for idx in range(nci.number_of_time_records):
    if 0:
       mon   = dto.strftime('%b')
       cdt2  = cdt2.replace(mon,mon.upper())
-   fig.text(.5,.77,cdt2,\
-         horizontalalignment='center',\
-         fontsize=18,\
-         color='k')
+
+   if dtl==0:
+      fig.text(.5,.77,cdt2,\
+            horizontalalignment='center',\
+            fontsize=18,\
+            color='k')
 
    ax1      = fig.add_subplot(gs[0,0])
    po1      = mr.plot_object(fig=fig,ax=ax1)
@@ -33,7 +36,7 @@ for idx in range(nci.number_of_time_records):
                clabel='Significant wave height, m',\
                clim=[0,Hs_max],\
                smoothing=0,\
-               date_label=0,date_color='m',\
+               date_label=dtl,date_color='r',\
                HYCOMreg=reg,show=False)
    po1.cbar.set_ticks(np.arange(0,Hs_max+dH,dH)) 
 
@@ -43,7 +46,7 @@ for idx in range(nci.number_of_time_records):
                clabel='Maximum floe size, m',\
                clim=[0,Dmax_max],\
                smoothing=0,\
-               date_label=0,date_color='b',\
+               date_label=dtl,date_color='b',\
                HYCOMreg=reg,show=False)
    po2.cbar.set_ticks(np.arange(0,Dmax_max+dD,dD))
 
