@@ -796,7 +796,8 @@ def imshow(fobj,var_opts,pobj=None,\
 #######################################################################
 def plot_var(fobj,var_opts,time_index=0,\
       pobj=None,bmap=None,HYCOMreg=None,\
-      date_label=0,\
+      date_label=0,date_color='k',\
+      smoothing=0,\
       clim=None,add_cbar=True,clabel=None,show=True,\
       test_lonlats=None):
 
@@ -998,6 +999,27 @@ def plot_var(fobj,var_opts,time_index=0,\
    ################################################################## 
    # pcolor plot
    if Marr is not None:
+      if smoothing>0:
+         import scipy.ndimage as NDI
+
+         # smooth by avg over neighbours
+         if smoothing==1:
+            kernel   = np.array([[1, 1, 1],
+                                 [1, 0, 1],
+                                 [1, 1, 1]],dtype='float')
+         elif smoothing==2:
+            kernel   = np.array([[1, 1, 1, 1],
+                                 [1, 0, 0, 1],
+                                 [1, 0, 0, 1],
+                                 [1, 1, 1, 1]],dtype='float')
+
+         DT                = NDI.convolve(Marr.data, kernel/kernel.sum(), mode='constant', cval=0.0)
+         kernel[kernel==0] = 1.
+         MSK               = NDI.convolve(np.array(Marr.mask,dtype='float'), kernel/kernel.sum(), mode='constant', cval=1.0) 
+         MSK[MSK>0]        = 1.
+
+         Marr  = np.ma.array(DT,mask=np.array(MSK,dtype='bool'))
+         del DT,MSK
 
       #########################################################################
       # add additional masking
@@ -1017,10 +1039,14 @@ def plot_var(fobj,var_opts,time_index=0,\
       PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
       if add_cbar:
 
-         if cbar is None:
-            cbar  = fig.colorbar(PC)
-         else:
-            cbar  = fig.colorbar(PC,cax=cbar.ax)
+         # if cbar is None:
+         #    cbar  = fig.colorbar(PC)
+         # else:
+         #    cbar  = fig.colorbar(PC,cax=cbar.ax)
+         from mpl_toolkits.axes_grid1 import make_axes_locatable
+         divider  = make_axes_locatable(ax)
+         cax      = divider.append_axes("right", size="5%", pad=0.15)
+         cbar     = fig.colorbar(PC,cax=cax)
 
          pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
          if clabel is not None:
@@ -1049,19 +1075,17 @@ def plot_var(fobj,var_opts,time_index=0,\
          bmap.plot(lont,latt,'^m',markersize=5,latlon=True,ax=ax)
 
    Fplt.finish_map(bmap,ax=ax)
-   if show:
-      # fig.show()
-      plt.show(fig)
    
    # date label
-   if fobj.HYCOM_region=='TP4':
+   if (fobj.HYCOM_region=='TP4') or (date_label==2):
       xyann = (0.05,.925)
    else:
       xyann = (0.4,.925)
 
    if type(date_label)==type('hi'):
       tlabel   = date_label
-      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+      pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',\
+            fontsize=18,color=date_color)
    elif fobj.datetimes is not None:
       dtmo     = fobj.datetimes[time_index]
       datestr  = dtmo.strftime('%Y%m%dT%H%M%SZ')
@@ -1072,7 +1096,12 @@ def plot_var(fobj,var_opts,time_index=0,\
          tlabel   = dtmo.strftime('%d %b %Y %H:%M')
 
       if tlabel is not None:
-         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',fontsize=18)
+         pobj.ax.annotate(tlabel,xy=xyann,xycoords='axes fraction',\
+               fontsize=18,color=date_color)
+
+   if show:
+      # fig.show()
+      plt.show(fig)
 
    return pobj,bmap
 ###########################################################
