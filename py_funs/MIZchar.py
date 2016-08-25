@@ -18,9 +18,14 @@ import fns_plotting as Fplt
 
 # MORPH = 'Open','Close' or None
 # - 'Close' seems best
-MORPH = 'Close'
+# MORPH = 'Close'
+MORPH = None
 
 
+#########################################################
+def get_Arctic_regions():
+   return ['gre','bar','beau','lab','les']
+#########################################################
 #########################################################
 def read_txt_file_polys(fname):
 
@@ -264,7 +269,7 @@ class poly_info:
 #################################################################
 def get_region_v2(llc=None):
    """
-   region = get_region_v2(llc=None):
+   region = get_region_v2(llc=None)
    if llc is given:
    - output region of polygon (string)
    else:
@@ -528,6 +533,22 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
 
    elif region is None:
       raise ValueError('Need to provide vertices or name of region')
+
+   elif region == 'Arctic':
+      for i in np.where(MIZmask==1)[0]:
+         # where there is MIZ, check if it's in the region
+         # - if not set MIZ=0,ICE,PACK=NaN
+         # - effectively this is land, so these boundaries become "unknown"
+         llc         = (lons[i],lats[i])
+         Preg        = get_region_v2(llc)
+         gd_regions  = get_Arctic_regions()
+            # discard Baltic Sea,
+            # Canadian Archipelago and Hudson Bay,
+            # Antarctic
+         if Preg not in gd_regions:
+            MIZmask [i] = 0
+            ICEmask [i] = np.nan
+            PACKmask[i] = np.nan
    else:
       for i in np.where(MIZmask==1)[0]:
          # where there is MIZ, check if it's in the region
@@ -1241,7 +1262,7 @@ class MIZ_poly:
          ##########################################################
          # write to regional text files:
          # Nreg        = {'gre':0,'bar':0,'ncb':0,'les':0,'lab':0}
-         Nreg        = {'gre':0,'bar':0,'can':0,'beau':0,'lab':0,'les':0,'balt':0,'Antarctic':0}
+         Nreg        = {'gre':0,'bar':0,'can':0,'beau':0,'lab':0,'les':0,'balt':0,'Antarctic':0,'Arctic':0}
          reg_list    = Nreg.keys()
          tfil_list   = {}
          tfiles      = {}
@@ -1269,7 +1290,11 @@ class MIZ_poly:
                         self.lon,self.lat,number=num)
 
          if do_sort:
-            reg   = PS.region
+            if self.region=='Arctic':
+               # already been sorted to not analyse non-Arctic
+               reg   = 'Arctic'
+            else:
+               reg   = PS.region
          else:
             reg   = 'all'
 
