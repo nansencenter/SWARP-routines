@@ -586,6 +586,11 @@ def GetVar(fobj,vname,layer=0,time_index=0):
 def imshow(fobj,var_opts,pobj=None,\
       clim=None,add_cbar=True,clabel=None,show=True,\
       test_ijs=None,time_index=0):
+   """
+   pobj   = imshow(fobj,var_opts,time_index=0,pobj=None,\
+        clim=None,add_cbar=True,clabel=None,show=True,\
+        test_ijs=None)
+   """
 
    from mpl_toolkits.basemap import Basemap
    from matplotlib import cm
@@ -1421,15 +1426,20 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       vertices=None,regions=None,\
       do_sort=False,EastOnly=True,plotting=True,**kwargs):
    """
-   Call  : fobj.MIZmap(var_name='dmax',vertices=None,\
+   Call  : fobj.MIZmap(var_name='dmax',time_index=0,
+               vertices=None,,regions=None,
                do_sort=False,EastOnly=True,plotting=True,**kwargs)
+
    Inputs:
       var_name is variable to find MIZ from
-      **kwargs to be passed onto MIZchar.get_MIZ_poly:
+      - 'dmax' (<250m), 'fice' (<.8), 'swh' (>5cm), 'hice' (<45cm)
+      - MIZ is determined from above condition AND (fice>.15)
+      **kwargs to be passed onto MIZchar.get_MIZ_poly.write_poly_stats:
          outdir='.' - where to save results
-         mask_corners=None - can mask out smaller region
-                           - corners = [lons,lats], where lons=[DL,DR,UR,UL]
-   Returns: MIZchar.MIZpoly object
+
+   Returns:
+      mod_reading.AOD_output object,
+      which contains locations of output files, and some other info
    """
 
    import MIZchar as mc
@@ -1509,8 +1519,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
 
          fname0   = fobj.basename+'_'+var_name +'_'+reg
          tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-         if 'all' in tfile.keys():
-            tfiles.update({reg:tfile['all']})
+         tfiles.update({reg:tfile['all']})
 
       if 0:
          MPdict['gre'].show_maps()
@@ -1518,14 +1527,14 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
 
    else:
       # not do_sort:
-      reg   = 'all'
-      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices)
+      # - do whole Arctic
+      reg   = 'Arctic'
+      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices,region='Arctic')
       MPdict.update({reg:mp})
       #
-      fname0   = fobj.basename+'_'+var_name
+      fname0   = fobj.basename+'_'+var_name +'_'+reg
       tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-      if 'all' in tfile.keys():
-         tfiles.update({reg:tfile['all']})
+      tfiles.update({reg:tfile['all']})
 
    Pdict    = {}
    PLOTTING = False
@@ -1627,7 +1636,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          Fplt.finish_map(bmap)
          print('Saving '+figname)
          fig.savefig(figname)
-         # plt.show(fig)
+         plt.show(fig)
          ax.cla()
          fig.clear()
          # finished region
@@ -1643,7 +1652,6 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
                   ['MIZ_'+var_name],\
                   regions,\
                   fobj.datetimes[time_index])
-   return mp,Pdict,tfiles
 ###########################################################
 
 
@@ -1652,13 +1660,15 @@ def areas_of_disagreement(fobj,time_index=0,\
       obs_type='OSISAF',obs_path=None,obs_option='multi',\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
-      plotting=True,**kwargs):
+      forecast_day=None,\
+      plotting=2,**kwargs):
    """
    areas_of_disagreement(fobj,time_index=0,\
       obs_type='OSISAF',obs_path=None,obs_option='multi',\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
-      plotting=True,**kwargs)
+      forecast_day=None,\
+      plotting=2,**kwargs)
 
       **kwargs to be passed onto MIZchar.get_MIZ_poly:
          outdir='.' - where to save results
@@ -1672,6 +1682,13 @@ def areas_of_disagreement(fobj,time_index=0,\
    dtmo  = fobj.datetimes[time_index]
    cdate = dtmo.strftime('%Y%m%d')
 
+   if forecast_day is None:
+      DTlabel  = 1
+   else:
+      dtm_start   = dtmo-timedelta(forecast_day)
+      DTlabel     = dtm_start.strftime('%d %b %Y')+\
+         ' +%i days' %(forecast_day)
+
    if obs_type == 'OSISAF':
       var_name = 'fice'
       bmap     = basemap_OSISAF()
@@ -1680,15 +1697,16 @@ def areas_of_disagreement(fobj,time_index=0,\
             dtmo.strftime('%Y')+'_nh_polstere/'
       if obs_option is None:
 	 obs_option='multi'
-      obsfil   = obs_path+\
-            '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
-            cdate+'1200.nc'
+      obsfil   = obs_path+'/ice_conc_nh_polstere-100_'+\
+                  obs_option+'_'+cdate+'1200.nc'
    else:
       raise ValueError('Wrong selection variable for areas_of_disagreement')
 
    # observation grid & compared quantity
    if PRINT_INFO:
+      print('Observation file:')
       print(obsfil)
+      print('\n')
 
    nci         = nc_getinfo(obsfil)
    lon2,lat2   = nci.get_lonlat()
@@ -1709,33 +1727,33 @@ def areas_of_disagreement(fobj,time_index=0,\
       #Zref,Zint should be np.ma.array
       lon_ref,lat_ref   = lon2,lat2
       Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
-      Xint,Yint,Zint    = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
+      Xin,Yin,Zin       = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
 
-   # add the mask for the ref to output (Arr)
+   # add the mask for the obs (ref) to interpolated model results (Zout)
    if PRINT_INFO:
       print('Reprojecting model...')
-   Arr   = reproj_mod2obs(Xint,Yint,Zint,Xref,Yref,mask=1*Zref.mask)
+   Zout   = reproj_mod2obs(Xin,Yin,Zin,Xref,Yref,mask=1*Zref.mask)
 
-   # add the mask for Arr to Zref
-   Zref  = np.ma.array(Zref.data,mask=Arr.mask)
+   # add the mask for Zout to Zref
+   Zref  = np.ma.array(Zref.data,mask=Zout.mask)
 
 
    # ==================================================================
    # calc RMSE and bias
-   cdiff       = Arr-Zref
-   good        = np.logical_not(Arr.mask)
+   cdiff       = Zout-Zref
+   good        = np.logical_not(Zout.mask)
 
    # 1st estimate (lower bound)
    # - only consider pixels with ice in both datasets
    both_ice       = np.copy(good)
-   both_ice[good] = np.logical_and(Arr[good]>0.,Zref[good]>0.)
+   both_ice[good] = np.logical_and(Zout[good]>0.,Zref[good]>0.)
    RMSEb          = np.sqrt(np.mean(cdiff[both_ice]**2))
    BIASb          = np.mean(cdiff[both_ice])
 
    # 2nd estimate (upper bound)
    # - consider pixels with ice in one of the datasets
    either_ice        = np.copy(good)
-   either_ice[good]  = np.logical_or(Arr[good]>0.,Zref[good]>0.)
+   either_ice[good]  = np.logical_or(Zout[good]>0.,Zref[good]>0.)
    RMSEe             = np.sqrt(np.mean(cdiff[either_ice]**2))
    BIASe             = np.mean(cdiff[either_ice])
 
@@ -1760,22 +1778,42 @@ def areas_of_disagreement(fobj,time_index=0,\
    fid.write('Bias_either_ice : '+str(BIASe))
    fid.close()
 
-   if plotting:
-      # plot anomoly
-      anom_fig = anom_fil.replace('.npz','.png')
-      cmax     = .5
-      clabel   = 'Concentration anomaly'
-
+   if plotting>0:
       if fobj.HYCOM_region=='TP4':
          HYCreg   = 'Arctic'
       else:
          HYCreg   = fobj.HYCOM_region
 
+      # =================================================================
+      # plot model + ice edge
+      cdate    = fobj.datetimes[time_index].strftime('%Y%m%dT%H%M%SZ')
+      figname  = outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png'
+      fobj.compare_ice_edge_obs(obs_type=obs_type,obs_path=obs_path,obs_option=obs_option,\
+            HYCOMreg=HYCreg,figname=figname,\
+            date_label=DTlabel,clabel='Sea ice concentration')
+
+      # plot obs
+      var_opts = make_plot_options('fice',ice_mask=True)
+      nci.make_png(var_opts,figdir=outdir,HYCOMreg=HYCreg,\
+            date_label=1,clabel='Sea ice concentration')
+      # =================================================================
+
+         
+      # =================================================================
+      # plot anomoly
+      anom_fig = anom_fil.replace('.npz','.png')
+      cmax     = .5
+      clabel   = 'Concentration anomaly'
+
       # mask "not good" region
       cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
-      Fplt.plot_anomaly(lon2,lat2,cdiff,anom_fig,text=cdate,\
+      Fplt.plot_anomaly(lon2,lat2,cdiff,anom_fig,\
+            # text=cdate,\
+            text=DTlabel,\
             HYCOM_region=HYCreg,\
             clim=[-cmax,cmax],clabel=clabel)
+      # =================================================================
+
    # ==================================================================
 
 
@@ -1788,11 +1826,11 @@ def areas_of_disagreement(fobj,time_index=0,\
       # test interpolation and matching of masks
       fig   = plt.figure()
       ax1   = fig.add_subplot(1,2,1)
-      ax1.imshow(Arr.transpose(),origin='upper')
+      ax1.imshow(Zout.transpose(),origin='upper')
       ax2   = fig.add_subplot(1,2,2)
       ax2.imshow(Zref.transpose(),origin='upper')
       plt.show(fig)
-      return Xint,Yint,Zint,Xref,Yref,Zref
+      return Xin,Yin,Zin,Xref,Yref,Zref
 
    if (vertices is not None) and (regions is not None):
       raise ValueError('Cannot pass in both vertices and regions')
@@ -1820,10 +1858,10 @@ def areas_of_disagreement(fobj,time_index=0,\
       # for reg in ['bar']:
       for reg in regions:
 
-         # Arr,Zref are np.ma.array objects
+         # Zout,Zref are np.ma.array objects
          if PRINT_INFO:
             print('Locating AODs for region '+reg+'...')
-         Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,region=reg)
+         Over,Under  = mc.get_AOD_polys(Zout,Zref,lon_ref,lat_ref,region=reg)
          MPdict['Over'] .update({reg:Over})
          MPdict['Under'].update({reg:Under})
 
@@ -1845,7 +1883,7 @@ def areas_of_disagreement(fobj,time_index=0,\
       reg      = 'all'
       if PRINT_INFO:
          print('Locating AODs for all regions...')
-      Over,Under  = mc.get_AOD_polys(Arr,Zref,lon_ref,lat_ref,\
+      Over,Under  = mc.get_AOD_polys(Zout,Zref,lon_ref,lat_ref,\
                                        vertices=vertices)
       MPdict['Over'] .update({reg:Over})
       MPdict['Under'].update({reg:Under})
@@ -1940,7 +1978,7 @@ def areas_of_disagreement(fobj,time_index=0,\
          ##########################################################
 
          
-         if plotting:
+         if plotting==2:
             ##########################################################
             # Make plot
             var_opts = make_plot_options('fice',ice_mask=True)
@@ -2723,8 +2761,26 @@ class file_list:
    ###########################################################
 
 
+   #######################################################################
+   def imshow(self,var_opts,**kwargs):
+      """
+      pobj   = self.imshow(var_opts,time_index=0,pobj=None,\
+           clim=None,add_cbar=True,clabel=None,show=True,\
+           test_ijs=None)
+      """
+
+      return imshow(self,var_opts,**kwargs)
+   #######################################################################
+
+
    ###########################################################
    def plot_var(self,var_opts,time_index=0,**kwargs):
+      """
+      pobj,bmap = self.plot_var(var_opts,time_index=0,\
+         pobj=None,bmap=None,HYCOMreg='TP4',\
+         clim=None,add_cbar=True,clabel=None,show=True,\
+         test_lonlats=None,date_label=0):
+      """
       out   = plot_var(self.objects[time_index],\
                   var_opts,**kwargs)
       return out
@@ -2733,6 +2789,9 @@ class file_list:
 
    ###########################################################
    def plot_var_pair(self,var_opts1,var_opts2,time_index=0,**kwargs):
+      """
+      pobj,bmap=self.plot_var_pair(var_opts1,var_opts2,pobj=None,bmap=None,**kwargs)
+      """
       out   = plot_var_pair(self.objects[time_index],\
                   var_opts1,var_opts2,**kwargs)
       return out
@@ -2741,6 +2800,9 @@ class file_list:
 
    ###########################################################
    def make_png(self,var_opts,time_index=0,**kwargs):
+      """
+      pobj,bmap=self.make_png(var_opts,pobj=None,bmap=None,figdir='.',time_index=0,date_label=2,**kwargs)
+      """
       out   = make_png(self.objects[time_index],\
                   var_opts,**kwargs)
       return out
@@ -2749,6 +2811,10 @@ class file_list:
 
    ###########################################################
    def make_png_pair(self,var_opts1,var_opts2,time_index=0,**kwargs):
+      """
+      pobj,bmap = self.make_png_pair(var_opts1,var_opts2,\
+         pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
+      """
       out   = make_png_pair(self.objects[time_index],\
                   var_opts1,var_opts2,**kwargs)
       return out
@@ -2757,6 +2823,9 @@ class file_list:
 
    ###########################################################
    def make_png_all(self,var_opts,**kwargs):
+      """
+      self.make_png_all(var_opts,HYCOMreg=None,figdir='.')
+      """
       out   = make_png_all(self,var_opts,**kwargs)
       return out
    ###########################################################
@@ -2764,6 +2833,9 @@ class file_list:
 
    ###########################################################
    def make_png_pair_all(self,var_opts1,var_opts2,**kwargs):
+      """
+      self.make_png_pair_all(var_opts1,var_opts2,HYCOMreg=None,figdir='.')
+      """
       out   = make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
       return out
    ###########################################################
@@ -2771,6 +2843,10 @@ class file_list:
 
    ###########################################################
    def compare_ice_edge_obs(self,**kwargs):
+      """
+      pobj,bmap,obsfil = self.compare_ice_edge_obs(pobj=None,bmap=None,time_index=0,\
+         obs_type='OSISAF',date_label=1,figname=None,**kwargs)
+      """
       out   = compare_ice_edge_obs(self,**kwargs)
       return out
    ###########################################################
@@ -2785,6 +2861,18 @@ class file_list:
 
    ###########################################################
    def areas_of_disagreement(self,time_index=0,**kwargs):
+      """
+      self.areas_of_disagreement(time_index=0,\
+         obs_type='OSISAF',obs_path=None,obs_option='multi',\
+         vertices=None,regions=None,\
+         do_sort=True,EastOnly=True,\
+         plotting=True,**kwargs)
+
+         **kwargs to be passed onto MIZchar.get_MIZ_poly:
+            outdir='.' - where to save results
+            mask_corners=None - can mask out smaller region
+                              - corners = [lons,lats], where lons=[DL,DR,UR,UL]
+      """
       out   = self.objects[time_index].areas_of_disagreement(time_index=0,**kwargs)
       return out
    ###########################################################
