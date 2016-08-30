@@ -43,7 +43,10 @@ def plot_patches(ax,MPlist,col):
    return
 
 class MIZ_from_shapefile:
-   def __init__(self,fname_full,match_all_crits=False):
+   def __init__(self,fname_full,MIZ_criteria="FA_only"):
+      """
+      MIZshp   = MIZ_from_shapefile(fname_full,MIZ_criteria="FA_only")
+      """
       sf    = shapefile.Reader(fname_full)
       print('Processing '+fname_full+'...')
 
@@ -65,14 +68,26 @@ class MIZ_from_shapefile:
 
       # ================================================================================
       # MIZ definition stuff
-      form_cats_MIZ        = ['FA','FB','FC']
-      form_vals            = SFU.DMI_form_dictionary()
-      MIZthresh            = 4
-      self.match_all_crits = match_all_crits
-         # if self.match_all_crits:
-         #  in MIZ if (FA<=MIZthresh) and (FB<=MIZthresh) and (FC<=MIZthresh)
-         # else:
-         #  in MIZ if (FA<=MIZthresh) or (FB<=MIZthresh) or (FC<=MIZthresh)
+      if MIZ_criteria=="FA_only":
+         form_cats_MIZ     = ['FA']
+         match_all_crits   = True
+         #  in MIZ if (FA<=MIZthresh)
+      else:
+         form_cats_MIZ  = ['FA','FB','FC']
+         if MIZ_criteria=="all_Fcats_small":
+            match_all_crits   = True
+            #  in MIZ if (FA<=MIZthresh) and (FB<=MIZthresh) and (FC<=MIZthresh)
+         elif MIZ_criteria=="any_Fcats_small":
+            match_all_crits   = False
+            #  in MIZ if (FA<=MIZthresh) or (FB<=MIZthresh) or (FC<=MIZthresh)
+         else:
+            raise ValueError("unknown option for 'MIZ_criteria' "+\
+                              "- valid options: 'FA_only', 'all_Fcats_small' or "+\
+                              "'any_Fcats_small'")
+
+      form_vals         = SFU.DMI_form_dictionary()
+      MIZthresh         = 4
+      self.MIZ_criteria = MIZ_criteria
       # ================================================================================
 
 
@@ -97,7 +112,7 @@ class MIZ_from_shapefile:
             
             bools[i] = val<=MIZthresh
 
-         if self.match_all_crits:
+         if match_all_crits:
             # define MIZ if all of the forms are <= threshhold
             isMIZ = np.all(bools)
          else:
@@ -500,14 +515,14 @@ for fname in fnames:
 # MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
 
 
-match_all_crits   = True
 for fname in snames:
    fname_full  = indir+"/"+fname+'.shp'
    print('\nOpening '+fname_full+'...')
    
-   MIZshp   = MIZ_from_shapefile(fname_full,match_all_crits=match_all_crits)
+   MIZshp   = MIZ_from_shapefile(fname_full,MIZ_criteria="FA_only")
 
    # ==================================================================
+   #  make a figure
    cdate = fname[:8]
    Fname = outdir+'/'+cdate+'/'+fname
    if not os.path.exists(outdir):
