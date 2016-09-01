@@ -19,6 +19,25 @@ import shapely.ops      as shops
 
 import shapefile_utils  as SFU
 import fns_plotting     as Mplt
+from getopt import getopt
+
+indir          = None
+outdir         = None
+MIZ_criteria   = "FA_only"
+
+opts,args   = getopt(sys.argv[1:],"",["MIZ_criteria=","indir=","outdir="])
+for opt,arg in opts:
+   if opt=='--indir':
+      indir = arg
+   if opt=='--outdir':
+      outdir   = arg
+   if opt=='--MIZ_criteria':
+      MIZ_criteria   = arg
+
+if indir is None:
+   raise ValueError('Specify input dir with --indir=')
+if outdir is None:
+   raise ValueError('Specify output dir with --outdir=')
 
 class shapes:
    def __init__(self,sf_info):
@@ -72,6 +91,14 @@ class MIZ_from_shapefile:
          form_cats_MIZ     = ['FA']
          match_all_crits   = True
          #  in MIZ if (FA<=MIZthresh)
+      elif MIZ_criteria=="FB_only":
+         form_cats_MIZ     = ['FB']
+         match_all_crits   = True
+         #  in MIZ if (FB<=MIZthresh)
+      elif MIZ_criteria=="FC_only":
+         form_cats_MIZ     = ['FB']
+         match_all_crits   = True
+         #  in MIZ if (FC<=MIZthresh)
       else:
          form_cats_MIZ  = ['FA','FB','FC']
          if MIZ_criteria=="all_Fcats_small":
@@ -81,9 +108,9 @@ class MIZ_from_shapefile:
             match_all_crits   = False
             #  in MIZ if (FA<=MIZthresh) or (FB<=MIZthresh) or (FC<=MIZthresh)
          else:
-            raise ValueError("unknown option for 'MIZ_criteria' "+\
-                              "- valid options: 'FA_only', 'all_Fcats_small' or "+\
-                              "'any_Fcats_small'")
+            raise ValueError("unknown option for 'MIZ_criteria'\n"+\
+                              "- valid options: 'FA_only', 'FB_only', 'FC_only',\n"+\
+                              " 'all_Fcats_small' or 'any_Fcats_small'")
 
       form_vals         = SFU.DMI_form_dictionary()
       MIZthresh         = 4
@@ -297,7 +324,7 @@ class MIZ_from_shapefile:
       count          = 0
       for poly in self.MPlist_MIZ:
          count += 1
-         print("Progress: ",count,N_MIZ_merged)
+         print("Progress: "+str(count)+"/"+str(N_MIZ_merged))
          llc            = list(poly.exterior.coords)
          lonc,latc      = poly.exterior.coords.xy
          Nc             = len(llc)
@@ -435,6 +462,12 @@ class MIZ_from_shapefile:
       y1 = max(y1,Y1)
       ax.set_xlim([x0,x1])
       ax.set_ylim([y0,y1])
+      ax.set_xlabel('Longitude, $^\circ$E',fontsize=18)
+      ax.set_ylabel('Latitude, $^\circ$N',fontsize=18)
+      for li in ax.get_xticklabels():
+         li.set_fontsize(18)
+      for li in ax.get_yticklabels():
+         li.set_fontsize(18)
       # ====================================================
 
 
@@ -492,12 +525,12 @@ class MIZ_from_shapefile:
       return
 
 ############################################################################
-indir    = 'test_inputs'
+# indir    = 'test_inputs'
 # indir    = 'test_inputs2'
 fnames   = os.listdir(indir)
 snames   = []
 
-outdir   = 'test_outputs'
+# outdir   = 'test_outputs'
 if not os.path.exists(outdir):
    os.mkdir(outdir)
 
@@ -519,7 +552,7 @@ for fname in snames:
    fname_full  = indir+"/"+fname+'.shp'
    print('\nOpening '+fname_full+'...')
    
-   MIZshp   = MIZ_from_shapefile(fname_full,MIZ_criteria="FA_only")
+   MIZshp   = MIZ_from_shapefile(fname_full,MIZ_criteria=MIZ_criteria)
 
    # ==================================================================
    #  make a figure
@@ -542,189 +575,3 @@ for fname in snames:
    tfil1 = Fname+'_MIZpolys_out.txt'
    MIZshp.write_text_file(tfil1,MIZtype='outer')
    # ============================================================
-
-   sys.exit()
-
-
-   ####################################################
-
-   Nmiz  = len(MIZ_forms)
-   print('Number of good polygons: '+str(Nmiz))
-   if Nmiz==0:
-      print('No polygons in MIZ are found')
-      break
-   elif 0:
-      # test:
-      for m in range(Nmiz):
-         n     = MIZ_forms[m][0]
-         rec   = recs[n].record
-         ind_n = sdct['POLY_TYPE']
-         print('\nPOLY_TYPE: '+rec[ind_n])
-         print('Forms:')
-         print(MIZ_forms[m][1])
-      #return
-
-   ####################################################
-   # plot outlines of polygons (colour-coded)
-   # for key in form_cats_MIZ:
-   for key in ['FC']:
-
-      print('\nPlotting MIZ according to '+key+'...')
-      fig   = plt.figure()
-
-      PLOT_ALL = 1
-      if PLOT_ALL==0:
-         # only plot single polygon as a test
-         PLOT_COMBINED  = 0
-
-         # tval     = 0#n=0
-         # tval     = 10#n=14
-         # tval     = 14#n=33
-         tval     = 28#n=72 #has holes (islands)
-         # tval     = 29#n=73
-         to_plot  = [tval]
-         n        = MIZ_forms[tval][0]
-         dct      = MIZ_forms[tval][1]
-
-         figname  = Fname+'_MIZpoly'+str(n)+'.png'
-
-         ttl   = 'Polygon '+str(n)+': '
-         for key in dct.keys():
-            ttl   = ttl+key+'='
-            val   = dct[key]
-            if val>=0:
-               ttl   = ttl+str(val)+', '
-            else:
-               ttl   = ttl+"'X', "
-         ttl   = ttl[:-2]
-
-         # bounding box of the single shape
-         bbox  = sf.shape(n).bbox
-         bm    = Mplt.start_map(bbox,cres='f')
-         print('bbox=')
-         print(bbox)
-
-      else:
-         # plot all polygons in MIZ
-         to_plot  = range(len(MIZ_forms))
-
-         PLOT_COMBINED  = 1 # merge neighbouring MIZ polygons together
-         if PLOT_COMBINED==0:
-            figname  = Fname+'_MIZ_'+key+'.png'
-         else:
-            figname  = Fname+'_MIZ_'+key+'2.png'
-         ttl      = 'All polygons in MIZ - using '+key
-
-         # set plot domain from overall bbox
-         bbox  = sf.bbox # [lonmin,latmin,lonmax,latmax]
-         bm    = Mplt.start_map(bbox)
-      ####################################################
-   
-      ####################################################
-      Ncols = len(MIZcols)
-      x_all = []
-      y_all = []
-
-      MPlist   = []
-      for m in to_plot:
-         n     = MIZ_forms[m][0]
-         fdct  = MIZ_forms[m][1]
-         val   = fdct[key]
-
-         #########################################################
-         if val<=MIZthresh:
-            col   = MIZcols[val+1] # colour corresponding to this value
-            poly  = sf_info[n][0]
-            #
-            if PLOT_COMBINED==0:
-               SFU.plot_poly(poly,pobj=bm,plot_holes=True,color=col,latlon=True)
-               #plot_coords(bm,pts,color=col,latlon=True)
-            else:
-               # merge polygons
-               MPlist.append(poly)
-               # print('appending poly')
-               # print(len(MPlist))
-               # if 0:
-               #    # test unary union
-               #    uu = shops.unary_union(MPlist)
-               #    print('unary union ok')
-         #########################################################
-
-      #########################################################
-      if PLOT_COMBINED==1:
-         MP = shops.unary_union(MPlist) # merge neighbouring polygons (dissolve holes)
-         if not hasattr(MP,'geoms'):
-            MP = shgeom.MultiPolygon(MP)
-         print('len(MP)='+str(len(MP.geoms)))
-
-         print("Doing plot now...")
-         Ngrps = len(MP.geoms)
-         
-         ####################################################
-         cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
-         for m in range(Ngrps):
-            Ninner   = len(MP.geoms[m].interiors)
-            print('No of interior regions')
-            print([m,Ninner])
-            #
-            m_ = np.mod(m,len(cols))
-            SFU.plot_poly(MP.geoms[m],pobj=bm,color=cols[m_],plot_holes=True,latlon=True)
-         ####################################################
-      else:
-         ####################################################
-         # Draw legend
-         # MIZvals     = ['X','0','1','2','3','4'] # values of forms which will be in MIZ (floe size < 500m)
-         # MIZcols     = ['c','k','g','m','b','r'] # colours corresponding to each form categatory 
-         Ncols    = len(MIZcols)
-         handles  = Ncols*[0]
-         for m in range(Ncols):
-            handles[m]  = mlines.Line2D([], [], color=MIZcols[m],label=MIZvals[m]) # also eg marker='*',markersize='15'
-         plt.legend(handles=handles)
-         ####################################################
-   
-      Mplt.finish_map(bm)
-      plt.title(ttl,y='1.06')
-      plt.savefig(figname)
-      plt.close()
-      fig.clf()
-      print('Saving figure to '+figname)
-      #########################################################
-
-      if PLOT_COMBINED==1:
-         # save MP to shapefile
-         ofil  = 'test_outputs/test.shp'
-         print('\nSaving MultiPolygon to shapefile: '+ofil+'\n')
-         SFU.MultiPolygon2ShapeFile(MP,ofil)
-
-         if 1:
-            #########################################################
-            # test shapefile
-            print('Testing write to '+ofil+'...')
-            sf2      = shapefile.Reader(ofil)
-            sf2_info = SFU.extract_shapefile_info(sf2,get_holes=True)
-            #
-            fig2  = plt.figure()
-            bm2   = Mplt.start_map(sf2.bbox)
-            cols  = ['c','b','g','m','r'] # colours corresponding to each group of MIZ ice
-
-            for m in range(sf2.numRecords):
-               poly  = sf2_info[m][0]
-               rec   = sf2_info[m][1]
-
-               print('Looking at polygon '+str(m))
-               for key2 in rec.keys():
-                  print(key2+' = '+str(rec[key2]))
-
-               Ninner   = len(poly.interiors)
-               print('No of interior regions: '+str(Ninner)+'\n')
-               m_    = np.mod(m,len(cols))
-               col   = cols[m_]
-               SFU.plot_poly(poly,pobj=bm2,plot_holes=True,color=col,latlon=True)
-
-            Mplt.finish_map(bm2)
-            figname2 = 'test_outputs/test_shp.png'
-            plt.savefig(figname2)
-            plt.close()
-            fig2.clf()
-            print('Saving figure to '+figname2+'\n')
-            #########################################################
