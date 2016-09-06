@@ -323,3 +323,19 @@ def plot_anomaly(lon,lat,anom,anom_fig,text=None,\
    plt.close(pobj.fig)
    return
 ############################################################################
+
+
+############################################################################
+def plot_patches(ax,MPlist,col):
+   from matplotlib import patches,cm,collections
+   patch_list  = []
+
+   for poly in MPlist:
+      ccl   = list(poly.exterior.coords)
+      patch_list.append(patches.Polygon(ccl,True))
+
+   pc = collections.PatchCollection(patch_list, cmap=cm.jet, alpha=.5)
+   pc.set_facecolor(col)
+   ax.add_collection(pc)
+   return
+############################################################################
