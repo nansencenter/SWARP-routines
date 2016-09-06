@@ -8,8 +8,11 @@ indir          = None
 outdir         = None
 MIZ_criteria   = "FA_only"
 chart_source   = "DMI"
+overwrite      = False
 
-opts,args   = getopt(sys.argv[1:],"",["MIZ_criteria=","indir=","outdir=","chart_source="])
+opts,args   = getopt(sys.argv[1:],"",\
+      ["MIZ_criteria=","indir=","outdir=","chart_source=",\
+      "overwrite="])
 for opt,arg in opts:
    if opt=='--indir':
       indir = arg
@@ -19,6 +22,8 @@ for opt,arg in opts:
       MIZ_criteria   = arg
    if opt=='--chart_source':
       chart_source   = arg
+   if opt=='--overwrite':
+      overwrite   = arg
 
 if indir is None:
    raise ValueError('Specify input dir with --indir=')
@@ -66,26 +71,26 @@ if not os.path.exists(txtdir):
 
 for fname in snames:
    fname_full  = indir+"/"+fname+'.shp'
+   figname     = figdir+'/'+fname+'.png'
+   txtname     = txtdir+'/'+fname+'_MIZpolys.txt'
+
+   if os.path.exists(figname) and os.path.exists(txtname) and (not overwrite):
+      print('\nSkipping '+fname_full+'...')
+      continue
+
    print('\nOpening '+fname_full+'...')
    
    MIZshp   = SFU.MIZ_from_shapefile(fname_full,MIZ_criteria=MIZ_criteria)
 
    # ==================================================================
    #  make a figure
-   cdate = fname[:8]
-   Fname = figdir+'/'+fname
-   MIZshp.test_plot(figname=Fname+'.png')
+   MIZshp.test_plot(figname=figname)
    # ==================================================================
 
 
    # ============================================================
-   # write text files
-   Fname = txtdir+'/'+fname
-   # tfil1 = Fname+'_MIZpolys_all.txt'
-   # MIZshp.write_text_file(tfil1)
-
-   tfil1 = Fname+'_MIZpolys.txt'
-   MIZshp.write_text_file(tfil1,MIZtype='outer')
+   # write text file
+   MIZshp.write_text_file(txtname,MIZtype='outer')
    # ============================================================
 
    # sys.exit()
