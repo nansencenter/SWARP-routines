@@ -60,7 +60,7 @@ figdir   = outdir+'/png'
 if not os.path.exists(figdir):
    os.mkdir(figdir)
 txtdir   = outdir+'/MIZ_polys_classified'
-if not os.path.exists(figdir):
+if not os.path.exists(txtdir):
    os.mkdir(txtdir)
 
 
