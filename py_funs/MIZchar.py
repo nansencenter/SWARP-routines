@@ -164,6 +164,7 @@ class poly_info:
    ################################################################
    def plot(self,pobj=None,latlon=False,show=True,**kwargs):
 
+      import mod_reading as MR
       if pobj is None:
          pobj  = MR.plot_object()
 
@@ -2688,6 +2689,30 @@ class poly_info_list:
       else:
          return
       # ===============================================================
+
+
+   def plot_all(self,**kwargs):
+
+      init  = 0
+      if "pobj" not in kwargs:
+         init  = 1
+
+      if "show" in kwargs:
+         show           = kwargs["show"]
+         kwargs["show"] = False
+
+      for PI in self.poly_info_objects:
+         if init:
+            init  = 0
+            pobj  = PI.plot(**kwargs)
+            kwargs.update({"pobj":pobj})
+         else:
+            pobj  = PI.plot(**kwargs)
+
+      if show:
+         plt.show(pobj.fig)
+
+      return pobj
 
 
 #########################################################
