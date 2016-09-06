@@ -162,19 +162,28 @@ class poly_info:
 
 
    ################################################################
-   def plot(self,pobj=None,latlon=False,show=True,**kwargs):
+   def plot(self,pobj=None,latlon=False,show=True,check_flags=False,**kwargs):
 
       import mod_reading as MR
       if pobj is None:
          pobj  = MR.plot_object()
 
+      
       if latlon:
          lon,lat  = np.array(self.ll_coords).transpose()
          pobj.ax.plot(lon,lat,**kwargs)
+         if check_flags:
+            FV = np.array(self.func_vals)
+            pobj.ax.plot(lon[FV==1],lat[FV==1],'^',**kwargs)
+            pobj.ax.plot(lon[FV==0],lat[FV==0],'o',**kwargs)
       else:
          lon,lat  = np.array(self.ll_coords).transpose()
          x,y      = self.map(lon,lat)
          pobj.ax.plot(x,y,**kwargs)
+         if check_flags:
+            FV = np.array(self.func_vals)
+            pobj.ax.plot(x[FV==1],y[FV==1],'^',**kwargs)
+            pobj.ax.plot(x[FV==0],y[FV==0],'o',**kwargs)
 
       if show:
          plt.show(pobj.fig)
