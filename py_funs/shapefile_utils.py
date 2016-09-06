@@ -638,7 +638,7 @@ class MIZ_from_shapefile:
 
       Nwater                  = len(self.MPlist_WTR)
       self.WTR_areas         = np.zeros((Nwater))
-      self.WTR_forms_sorted  = Npack*[[]]
+      self.WTR_forms_sorted  = Nwater*[[]]
       for i,Poly in enumerate(self.MPlist_WTR):
          for n in self.WTR_forms:
             poly  = self.shapes.polygons[n]
