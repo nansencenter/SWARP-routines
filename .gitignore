@@ -44,7 +44,7 @@ validation/SWARP*
 validation/ice_charts/test_outputs/*
 validation/ice_charts/test_inputs/*
 !validation/ice_charts/test_inputs/*.imz
-!validation/ice_charts/test_inputs/*.txt
+!validation/ice_charts/test_inputs/README.txt
 validation/ice_charts/test_inputs2/*
 validation/thickness_comparison_ifremer/figs/*
 validation/thickness_comparison_ifremer/out/*
