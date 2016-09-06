@@ -39,7 +39,10 @@ for fname in fnames:
    ext   = os.path.splitext(fname)
    if ext[1]=='.shp':
       snames.append(ext[0])
-      cdate = ext[0][:8]
+      if chart_source=='DMI':
+         cdate = ext[0][:8]
+      else:
+         raise ValueError('unknown chart type')
       cdates.append(int(cdate))
 
 
