@@ -69,10 +69,17 @@ if not os.path.exists(txtdir):
    os.mkdir(txtdir)
 
 
-for fname in snames:
-   fname_full  = indir+"/"+fname+'.shp'
-   figname     = figdir+'/'+fname+'.png'
-   txtname     = txtdir+'/'+fname+'_MIZpolys.txt'
+for i,fname in enumerate(snames):
+   cdate = str(cdates[i])
+   cyear = cdate[:4]
+
+   fname_full  = indir +"/"+cyear+'/'+fname+'.shp'
+   if not os.path.exists(figdir+'/'+cyear):
+      os.mkdir(figdir+'/'+cyear)
+   figname  = figdir+'/'+cyear+'/'+fname+'.png'
+   if not os.path.exists(txtdir+'/'+cyear):
+      os.mkdir(txtdir+'/'+cyear)
+   txtname  = txtdir+'/'+cyear+'/'+fname+'_MIZpolys.txt'
 
    if os.path.exists(figname) and os.path.exists(txtname) and (not overwrite):
       print('\nSkipping '+fname_full+'...')
