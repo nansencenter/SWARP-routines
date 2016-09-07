@@ -17,7 +17,7 @@ def DMI_form_dictionary():
 def AARI_form_dictionary():
 
    # dictionary to map from strings to integers
-   form_vals      = {'X':-1,'-9':np.NaN}
+   form_vals      = {'X':-1,'-9':np.NaN,'99':np.NaN}
    form_vals_max  = 10
    for n in range(form_vals_max+1):
       form_vals.update({"%2.2d" %(n):n})
@@ -398,6 +398,11 @@ class MIZ_from_shapefile:
       write_text_file(self,textfil,MIZtype=None)
       MIZtype='inner','outer' or None (both in/out)
       """
+
+      if self.N_MIZ==0:
+         print("No MIZ polygons - not writing text file")
+         return
+
       # ============================================================
       # write text files
       # tfil2 = Fname+'_MIZpolys_info.txt'
@@ -473,8 +478,16 @@ class MIZ_from_shapefile:
       Npack       = len(self.PACK_forms)
 
       print('Merging '+str(Npack)+' pack polygons...')
+      bad   = []
       for n in self.PACK_forms:
-         MPlist_PACK.append(self.shapes.polygons[n])
+         P  = self.shapes.polygons[n]
+         if P.is_valid:
+            MPlist_PACK.append(P)
+         else:
+            bad.append(n)
+
+      for n in bad:
+         self.PACK_forms.remove(n)
 
       self.MP_PACK  = shops.unary_union(MPlist_PACK)
          # merge neighbouring polygons (dissolve holes)
@@ -488,7 +501,8 @@ class MIZ_from_shapefile:
          for poly in self.MP_PACK.geoms:
             self.MPlist_PACK.append(poly)
 
-      print(str(len(self.MPlist_PACK))+ ' pack polygons after merging\n')
+      self.N_PACK = len(self.MPlist_PACK)
+      print(str(self.N_PACK)+ ' pack polygons after merging\n')
       # ============================================================
 
 
@@ -498,8 +512,16 @@ class MIZ_from_shapefile:
       Nwtr        = len(self.WTR_forms)
 
       print('Merging '+str(Nwtr)+' water polygons...')
+      bad   = []
       for n in self.WTR_forms:
-         MPlist_WTR.append(self.shapes.polygons[n])
+         P  = self.shapes.polygons[n]
+         if P.is_valid:
+            MPlist_WTR.append(P)
+         else:
+            bad.append(n)
+
+      for n in bad:
+         self.WTR_forms.remove(n)
 
       self.MP_WTR = shops.unary_union(MPlist_WTR)
          # merge neighbouring polygons (dissolve holes)
@@ -513,7 +535,8 @@ class MIZ_from_shapefile:
          for poly in self.MP_WTR.geoms:
             self.MPlist_WTR.append(poly)
 
-      print(str(len(self.MPlist_WTR))+ ' water polygons after merging\n')
+      self.N_WTR  = len(self.MPlist_WTR)
+      print(str(self.N_WTR)+ ' water polygons after merging\n')
       # ============================================================
 
 
@@ -523,8 +546,16 @@ class MIZ_from_shapefile:
       N_MIZ       = len(self.MIZ_forms)
 
       print('Merging '+str(N_MIZ)+' MIZ polygons...')
+      bad   = []
       for n,fdct in self.MIZ_forms:
-         MPlist_MIZ.append(self.shapes.polygons[n])
+         P  = self.shapes.polygons[n]
+         if P.is_valid:
+            MPlist_MIZ.append(P)
+         else:
+            bad.append([n,fdct])
+
+      for nd in bad:
+         self.MIZ_forms.remove(nd)
 
       self.MP_MIZ = shops.unary_union(MPlist_MIZ)
          # merge neighbouring polygons (dissolve holes)
@@ -537,7 +568,8 @@ class MIZ_from_shapefile:
          for poly in self.MP_MIZ.geoms:
             self.MPlist_MIZ.append(poly)
 
-      print(str(len(self.MPlist_MIZ))+ ' MIZ polygons after merging\n')
+      self.N_MIZ  = len(self.MPlist_MIZ)
+      print(str(self.N_MIZ)+ ' MIZ polygons after merging\n')
       # ===============================================================
       return
    
@@ -550,6 +582,9 @@ class MIZ_from_shapefile:
       print('Sorting '+str(N_MIZ_merged)+' MIZ polygons...\n')
 
       self.MIZclass  = []
+      if N_MIZ_merged==0:
+         return
+
       count          = 0
       for poly in self.MPlist_MIZ:
          count += 1
@@ -657,7 +692,7 @@ class MIZ_from_shapefile:
                self.PACK_forms_sorted[i].append(n)
 
 
-      Nwater                  = len(self.MPlist_WTR)
+      Nwater                 = len(self.MPlist_WTR)
       self.WTR_areas         = np.zeros((Nwater))
       self.WTR_forms_sorted  = Nwater*[[]]
       for i,Poly in enumerate(self.MPlist_WTR):
@@ -687,12 +722,13 @@ class MIZ_from_shapefile:
       x0 = min(x0,X0)
       y0 = min(y0,Y0)
       x1 = max(x1,X1)
-      y1 = max(y1,Y1)
-      X0,Y0,X1,Y1 = self.MP_MIZ.bounds
-      x0 = min(x0,X0)
-      y0 = min(y0,Y0)
-      x1 = max(x1,X1)
-      y1 = max(y1,Y1)
+      if self.N_MIZ>0:
+         y1 = max(y1,Y1)
+         X0,Y0,X1,Y1 = self.MP_MIZ.bounds
+         x0 = min(x0,X0)
+         y0 = min(y0,Y0)
+         x1 = max(x1,X1)
+         y1 = max(y1,Y1)
       ax.set_xlim([x0,x1])
       ax.set_ylim([y0,y1])
       ax.set_xlabel('Longitude, $^\circ$E',fontsize=18)

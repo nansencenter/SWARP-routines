@@ -83,8 +83,9 @@ for i,fname in enumerate(snames):
       os.mkdir(txtdir+'/'+cyear)
    txtname  = txtdir+'/'+cyear+'/'+fname+'_MIZpolys.txt'
 
-   if os.path.exists(figname) and os.path.exists(txtname) and (not overwrite):
-      print('\nSkipping '+fname_full+'...')
+   if os.path.exists(figname) and (not overwrite):
+      print('\n'+figname+' exists')
+      print('-skipping '+fname_full+'...')
       continue
 
    print('\nOpening '+fname_full+'...')
@@ -92,15 +93,15 @@ for i,fname in enumerate(snames):
    MIZshp   = SFU.MIZ_from_shapefile(fname_full,\
          MIZ_criteria=MIZ_criteria,chart_source=chart_source)
 
-   # ==================================================================
-   #  make a figure
-   MIZshp.test_plot(figname=figname)
-   # ==================================================================
-
-
    # ============================================================
    # write text file
    MIZshp.write_text_file(txtname,MIZtype='outer')
    # ============================================================
+
+
+   # ==================================================================
+   #  make a figure
+   MIZshp.test_plot(figname=figname)
+   # ==================================================================
 
    # sys.exit()
