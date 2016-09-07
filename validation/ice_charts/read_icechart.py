@@ -2,6 +2,7 @@ import os,sys
 import shapefile_utils  as SFU
 from getopt import getopt
 import matplotlib
+import datetime as dtm
 matplotlib.use('Agg')
 
 indir          = None
@@ -33,30 +34,30 @@ if outdir is None:
 
 
 ############################################################################
-fnames   = os.listdir(indir)
-snames   = []
+fnames      = os.listdir(indir)
+snames      = []
+datetimes   = []
 
 if not os.path.exists(outdir):
    os.mkdir(outdir)
 
-cdates   = []
 for fname in fnames:
    ext   = os.path.splitext(fname)
    if ext[1]=='.shp':
       snames.append(ext[0])
       if chart_source=='DMI':
          cdate = ext[0][:8]
+      elif chart_source=='AARI':
+         cdate = ext[0][9:17]
       else:
          raise ValueError('unknown chart type')
-      cdates.append(int(cdate))
+      datetimes.append(dtm.datetime.strptime(cdate,"%Y%m%d"))
 
 
 # sort in order of increasing date
-dummy    = sorted([(e,i) for i,e in enumerate(cdates)])
-snames_  = [snames[i] for e,i in dummy]
-snames   = 1*snames_
-del(cdates)
-del(snames_)
+dummy       = sorted([(e,i) for i,e in enumerate(datetimes)])
+snames      = [snames[i] for e,i in dummy]
+datetimes   = [e for e,i in dummy]
 del(dummy)
 
 if not os.path.exists(outdir):
@@ -70,10 +71,11 @@ if not os.path.exists(txtdir):
 
 
 for i,fname in enumerate(snames):
-   cdate = str(cdates[i])
-   cyear = cdate[:4]
+   # print(fname,datetimes[i])
+   dto   = datetimes[i]
+   cyear = dto.strftime("%Y")
 
-   fname_full  = indir +"/"+cyear+'/'+fname+'.shp'
+   fname_full  = indir+'/'+fname+'.shp'
    if not os.path.exists(figdir+'/'+cyear):
       os.mkdir(figdir+'/'+cyear)
    figname  = figdir+'/'+cyear+'/'+fname+'.png'
@@ -87,7 +89,8 @@ for i,fname in enumerate(snames):
 
    print('\nOpening '+fname_full+'...')
    
-   MIZshp   = SFU.MIZ_from_shapefile(fname_full,MIZ_criteria=MIZ_criteria)
+   MIZshp   = SFU.MIZ_from_shapefile(fname_full,\
+         MIZ_criteria=MIZ_criteria,chart_source=chart_source)
 
    # ==================================================================
    #  make a figure

@@ -12,6 +12,19 @@ def DMI_form_dictionary():
    return form_vals
 ############################################################################
 
+
+############################################################################
+def AARI_form_dictionary():
+
+   # dictionary to map from strings to integers
+   form_vals      = {'X':-1,'-9':np.NaN}
+   form_vals_max  = 10
+   for n in range(form_vals_max+1):
+      form_vals.update({"%2.2d" %(n):n})
+   
+   return form_vals
+############################################################################
+
 ############################################################################
 def xy2list(x,y):
    
@@ -261,10 +274,15 @@ class shapes:
 
 ############################################################################
 class MIZ_from_shapefile:
-   def __init__(self,fname_full,MIZ_criteria="FA_only"):
+   def __init__(self,fname_full,MIZ_criteria="FA_only",chart_source="DMI"):
       """
       MIZshp   = MIZ_from_shapefile(fname_full,MIZ_criteria="FA_only")
       """
+
+      # for info
+      self.shapefile    = fname_full
+      self.chart_source = chart_source
+      self.MIZ_criteria = MIZ_criteria
 
       import shapefile
       sf    = shapefile.Reader(fname_full)
@@ -313,7 +331,10 @@ class MIZ_from_shapefile:
                               "- valid options: 'FA_only', 'FB_only', 'FC_only',\n"+\
                               " 'all_Fcats_small' or 'any_Fcats_small'")
 
-      form_vals         = DMI_form_dictionary()
+      if chart_source=="DMI":
+         form_vals         = DMI_form_dictionary()
+      else:
+         form_vals         = AARI_form_dictionary()
       MIZthresh         = 4
       self.MIZ_criteria = MIZ_criteria
       # ================================================================================
@@ -620,7 +641,7 @@ class MIZ_from_shapefile:
             poly  = self.shapes.polygons[n]
             lut   = self.shapes.records[n]
             if poly.within(Poly):
-               self.MIZ_areas[i]   += lut['AREA']
+               self.MIZ_areas[i]   += float(lut['AREA'])
                self.MIZ_forms_sorted[i].append(n)
 
 
@@ -632,7 +653,7 @@ class MIZ_from_shapefile:
             poly  = self.shapes.polygons[n]
             lut   = self.shapes.records[n]
             if poly.within(Poly):
-               self.PACK_areas[i]   += lut['AREA']
+               self.PACK_areas[i]   += float(lut['AREA'])
                self.PACK_forms_sorted[i].append(n)
 
 
@@ -644,7 +665,7 @@ class MIZ_from_shapefile:
             poly  = self.shapes.polygons[n]
             lut   = self.shapes.records[n]
             if poly.within(Poly):
-               self.WTR_areas[i]   += lut['AREA']
+               self.WTR_areas[i]   += float(lut['AREA'])
                self.WTR_forms_sorted[i].append(n)
 
       return
