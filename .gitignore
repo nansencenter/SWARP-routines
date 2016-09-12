@@ -55,6 +55,10 @@ validation/outputs/*
 validation/Manual_MIZ_Maps/out/*
 validation/ODL/out/*
 #
+jons_script/PCA/*.mat
+jons_script/PCA/*.png
+jons_script/PCA/Figures/*
+#
 giacomo_stuff/*
 forecast_scripts/hindcast/TP4a0.12/ice_only/logs
 forecast_scripts/hindcast/TP4a0.12/wavesice/logs
