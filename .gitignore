@@ -53,6 +53,7 @@ validation/thickness_comparison_ifremer/epsg
 validation/data/*
 validation/outputs/*
 validation/Manual_MIZ_Maps/out/*
+validation/ODL/out/*
 #
 giacomo_stuff/*
 forecast_scripts/hindcast/TP4a0.12/ice_only/logs
