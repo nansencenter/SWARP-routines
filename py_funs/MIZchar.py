@@ -2634,6 +2634,26 @@ class poly_info_list:
       # get polys as "poly_info" objects
       self.poly_info_objects  = 1*poly_infos
       self.cdate              = cdate
+      
+
+      # make a local stereographic projection
+      from pyproj import Proj
+
+      # start with NP stere
+      map   = Proj(proj='stere',ellps='WGS84',lon_0=-45,lat_0=90,lat_ts=70)
+      X,Y   = [],[]
+      for pio in self.poly_info_objects:
+         lons,lats   = np.array(pio.ll_coords).transpose()
+         x,y         = map(lons,lats,inverse=False)#,NH=True)
+         X.extend(list(x))
+         Y.extend(list(y))
+
+      # make a new proj centered around the mean coords
+      xav         = np.mean(X)
+      yav         = np.mean(Y)
+      lon_0,lat_0 = map(xav,yav,inverse=True)
+      self.map    = Proj(proj='stere',ellps='WGS84',\
+                         lon_0=lon_0,lat_0=lat_0,lat_ts=lat_0)
 
       return
    ############################################################
@@ -2659,7 +2679,7 @@ class poly_info_list:
       # ===============================================================
       # get info about vertices
       vlons,vlats = np.array(vertices).transpose()
-      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+      vx,vy       = self.map(vlons,vlats,inverse=False)
       xyverts     = [(vx[i],vy[i]) for i in range(len(vx))]
 
       # make sure polygon is closed
@@ -2669,18 +2689,29 @@ class poly_info_list:
       # ===============================================================
 
 
+      # # test plot
+      # fig   = plt.figure()
+      # ax    = fig.add_subplot(1,1,1)
+      # vx,vy = np.array(xyverts).transpose()
+      # ax.plot(vx,vy,'r',linewidth=2)
+
+
       # ===============================================================
       # test individual polygons to see if they are inside the vertices
       pil_new  = []
       for pi_old in self.poly_info_objects:
+         # print(pi_old.ll_coords)
          lons,lats   = np.array(pi_old.ll_coords).transpose()
-         x,y         = GS.polar_stereographic_simple(lons,lats,NH=True,inverse=False)
+         x,y         = self.map(lons,lats,inverse=False)
          fvals       = np.array(pi_old.func_vals)
          inside      = GP.maskgrid_outside_polygon(x,y,xyverts) #true if inside poly
 
+         # add to test plot
+         # ax.plot(x,y)
+
          # if any points inside, check size and add to new list
          if np.any(inside):
-            lons,lats   = GS.polar_stereographic_simple(x[inside],y[inside],NH=True,inverse=True)
+            lons,lats   = self.map(x[inside],y[inside],inverse=True)
             fvals       = 1*fvals[inside]
             N           = len(fvals)
 
@@ -2689,14 +2720,22 @@ class poly_info_list:
                llc      = [(lons[i],lats[i]) for i in range(N)]
                pi_new   = poly_info(llc,func_vals=fvals)
                pil_new.append(pi_new)
+         # else:
+         #    print(lons.min(),lons.max(),lats.min(),lats.max())
+         #    print('not inside')
+
+
       # ===============================================================
 
+      # show test plot
+      # plt.show(fig)
 
       # ===============================================================
       if len(pil_new)>0:# convert to poly_info_list object and return
          return poly_info_list(pil_new)
       else:
-         return
+         print('Reduced set of polygons is empty\n')
+         return None
       # ===============================================================
 
 
