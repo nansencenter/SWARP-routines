@@ -1458,7 +1458,7 @@ def compare_ice_edge_obs_all(fobj,HYCOMreg=None,figdir='.',**kwargs):
 
 ###########################################################
 def MIZmap(fobj,var_name='dmax',time_index=0,\
-      vertices=None,regions=None,\
+      vertices=None,regions=None,no_width=False,\
       do_sort=False,EastOnly=True,plotting=True,**kwargs):
    """
    Call  : fobj.MIZmap(var_name='dmax',time_index=0,
@@ -1564,12 +1564,19 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       # not do_sort:
       # - do whole Arctic
       reg   = 'Arctic'
-      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices,region='Arctic')
+      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices,region=reg)
       MPdict.update({reg:mp})
       #
-      fname0   = fobj.basename+'_'+var_name +'_'+reg
+      if vertices is None:
+         fname0   = fobj.basename+'_'+var_name +'_'+reg
+      else:
+         fname0   = fobj.basename+'_'+var_name
+
       tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
       tfiles.update({reg:tfile['all']})
+
+   if no_width:
+      return tfiles
 
    Pdict    = {}
    PLOTTING = False
