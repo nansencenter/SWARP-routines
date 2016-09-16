@@ -332,7 +332,6 @@ class nc_getinfo:
       if len(cdate)<8:
          cdate = (8-len(cdate))*'0'+cdate
 
-
       # reformat ctime to HHMMSS
       if ':' in ctime:
          # remove ':'
@@ -348,16 +347,26 @@ class nc_getinfo:
       ################################################################
       # now can make new string where format is known
       # - this is to pass into netcdftime.utime
-      year0          = int(cdate[:4])
-      mon0           = int(cdate[4:6])
-      day0           = int(cdate[6:8])
-      hr0            = int(ctime[:2])
-      min0           = int(ctime[2:4])
-      sec0           = int(float(ctime[4:]))
+      # - NB can't always use strftime/strptime since it only works after 1900
+      cyear0         = cdate[:4]
+      cmon0          = cdate[4:6]
+      cday0          = cdate[6:8]
+      chr0           = ctime[:2]
+      cmin0          = ctime[2:4]
+      csec0          = ctime[4:]
+      #
+      year0          = int(cyear0)
+      mon0           = int(cmon0)
+      day0           = int(cday0)
+      hr0            = int(chr0)
+      min0           = int(cmin0)
+      sec0           = int(float(csec0))
       self.reftime   = datetime(year0,mon0,day0,hr0,min0,sec0)
 
       fmt         = '%Y-%m-%d %H:%M:%S'
-      init_string = Unit+'s since '+self.reftime.strftime(fmt)
+      init_string = Unit+'s since '+\
+            cyear0+'-'+cmon0+'-'+cday0+' '+\
+            chr0+'-'+cmin0+'-'+csec0[:2]
 
       ncatts   = time.ncattrs()
       if 'calendar' in ncatts:
