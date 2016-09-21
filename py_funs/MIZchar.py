@@ -2482,7 +2482,7 @@ def save_summary(MIZpolys,filename,wt_meth='A'):
       w.write(S[fld]+' : %16.0f\n' %(R[fld]))
    w.close()
 
-   return
+   return R,S
 # ===========================================================================================
 
 
@@ -2604,8 +2604,7 @@ class MIZ_info_list:
       MIZpolys.save_summary(filename,**kwargs)
       returns MIZchar.save_summary(MIZpolys,filename,**kwargs)
       """
-      save_summary(self,filename,**kwargs)
-      return
+      return save_summary(self,filename,**kwargs)
    ######################################################
 
 
@@ -2615,8 +2614,7 @@ class MIZ_info_list:
       MIZpolys.get_summary(**kwargs)
       returns MIZchar.get_summary(MIZpolys,**kwargs)
       """
-      get_summary(self,**kwargs)
-      return
+      return get_summary(self,**kwargs)
    ######################################################
 
 #########################################################

@@ -59,6 +59,8 @@ jons_script/PCA/*.mat
 jons_script/PCA/*.png
 jons_script/PCA/Figures/*
 #
+validation/ice_charts/comp_model/out/*
+#
 giacomo_stuff/*
 forecast_scripts/hindcast/TP4a0.12/ice_only/logs
 forecast_scripts/hindcast/TP4a0.12/wavesice/logs

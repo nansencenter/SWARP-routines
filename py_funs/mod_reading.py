@@ -2959,3 +2959,94 @@ class file_list:
    ###########################################################
 
 ######################################################################
+class polygon_file_list:
+   def __init__(self,directory,prefix='TP4archv_wav.',suffix='_dmax.txt',date_format='%Y%m%dT%H%M%SZ',add_day=False):
+      import os
+
+      self.object_type  = 'polygon_file_list'
+      self.directory    = directory
+
+      lst         = os.listdir(directory)
+      file_list   = []
+      datetimes   = []
+      for fil in lst:
+
+         if not ((suffix in fil) and (prefix in fil)):
+            continue
+
+         cdate = fil.strip(suffix).strip(prefix)
+         dto   = datetime.strptime(cdate,date_format)
+
+         if add_day:
+            # model has julian day starting at 0
+            # - may sts need to add 1 day
+            dto  += timedelta(1)
+
+         file_list.append(fil)
+         datetimes.append(dto)
+
+      self.number_of_time_records   = len(file_list)
+      if self.number_of_time_records==0:
+         return
+
+      self.reference_date  = min(datetimes)
+      self.timeunits       = 'hours'
+      timevalues           = [(dt-self.reference_date).total_seconds()/3600. for dt in datetimes]
+
+      # sort the time values (1st record is earliest)
+      # - also reorder objects, datetimes, file_list
+      TV                   = sorted([(e,i) for i,e in enumerate(timevalues)])
+      self.timevalues,ii   = np.array(TV).transpose()
+      self.datetimes       = [datetimes[int(i)] for i in ii]
+      self.file_list       = [self.directory+'/'+file_list[int(i)] for i in ii]
+
+      return
+   ###########################################################
+
+
+   ###########################################################
+   def nearestDate(self, pivot):
+      """
+      dto,time_index = self.nearestDate(dto0)
+      dto0  = datetime.datetime objects
+      dto   = datetime.datetime objects - nearest value in self.datetimes to dto0
+      time_index: dto=self.datetimes[time_index]
+      """
+      dto         = min(self.datetimes, key=lambda x: abs(x - pivot))
+      time_index  = self.datetimes.index(dto)
+      return dto,time_index
+   ###########################################################
+
+
+   ###########################################################
+   def read_file(self, time_index=0,vertices=None):
+      """
+      pil = self.read_file(time_index=0)
+      pil is a poly_info_list object
+      """
+      import MIZchar as mc
+      tfil  = self.file_list[time_index]
+      pil   = mc.single_file(tfil)
+
+      if vertices is None:
+         return pil
+      else:
+         return pil.reduce_area(vertices)
+   ###########################################################
+
+
+   ###########################################################
+   def get_solutions(self, time_index=0,vertices=None,**kwargs):
+      """
+      mil = self.get_solutions(time_index=0,vertices=None,**kwargs)
+      mil is a MIZ_info_list object
+      **kwargs are for MIZchar.poly_info_list.get_solutions
+      """
+      import MIZchar as mc
+      tfil  = self.file_list[time_index]
+      pil   = mc.single_file(tfil)
+
+      if vertices is not None:
+         pil   = pil.reduce_area(vertices)
+      return pil.get_solutions(**kwargs)
+   ###########################################################
