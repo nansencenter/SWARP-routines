@@ -13,11 +13,10 @@ def average_area_model(cdate,vertices,fcdir0,outdir='.'):
    # average MIZ area for a given date
    # use binary files since more likely to be there
    # returns -100 if nothing there
-   TotArea  = -100
+
    fcdir    = fcdir0+'/'+cdate+'/'
    if not os.path.exists(fcdir):
-	   TotArea=-100
-	   return TotArea
+      return
    lst      = os.listdir(fcdir)
    if cdate in lst:
       # check if need to add another cdate
@@ -34,7 +33,7 @@ def average_area_model(cdate,vertices,fcdir0,outdir='.'):
    # - treat in same way as multi-record netcdf
    fli   = mr.file_list(bindir,'archv_wav','.a')
    if fli.number_of_time_records==0:
-      return TotArea
+      return
 
 
    # loop over 6-h intervals:
@@ -64,12 +63,13 @@ def average_area_model(cdate,vertices,fcdir0,outdir='.'):
          print('\nTot area: '+str(tot_area)+'\n')
          daily_areas.append(tot_area)
 
-   if len(daily_areas)>0:
+   if len(daily_areas)==0:
+      return
+   else:
       # take daily average
       TotArea  = np.mean(daily_areas)
       print('\nAvg tot area: '+str(TotArea)+'\n')
-
-   return TotArea
+      return TotArea
 # ============================================================================= 
    
    
@@ -97,8 +97,8 @@ for odir in [outdir,outdir_m]:
       os.mkdir(odir)
 # =====================================================================================
 
-
-w = open(outdir+'/test_area.txt','w')
+TSfil = outdir+'/test_area.txt'
+w     = open(TSfil,'w')
 w.write('date\tmodel_area\tchart_area\t max_swh\n')
 
 vertices    = [(-50,50),(20,50),(20,84),(-50,84)] # region of analysis (gre)
@@ -126,7 +126,7 @@ for day in dates:
 
         # model area
 	model_area = average_area_model(day.strftime("%Y%m%d"),vertices,FCdir,outdir=outdir_m)
-	if model_area<0:
+	if model_area is None:
 	   print('skipping date '+day.strftime("%Y%m%d")+' no model output')
            # sys.exit()
            continue
@@ -186,3 +186,50 @@ for day in dates:
 	
 	
 w.close()
+
+
+# load time series file & plot
+print('Saved time series to '+TSfil)
+
+def convert_datetime(dto,info):
+   if info['time_units']=='days':
+      xfac  = 24*3600. # seconds in 1 day
+   elif info['time_units']=='hours':
+      xfac  = 3600. # seconds in 1h
+   elif info['time_units']=='minutes':
+      xfac  = 60. # seconds in 1min
+   else:
+      xfac  = 1. # seconds in 1min
+
+   return (dto-info['refdate']).total_seconds()/xfac
+
+ts       = mr.read_time_series(TSfil)
+yscaling = 1.e-6 # m^2 -> km^2
+
+lines       = []
+po,lin,info = ts.plot('model_area',time_units='days',yscaling=yscaling)
+lines.append(lin)
+po,lin,info = ts.plot('chart_area',time_units='days',yscaling=yscaling,pobj=po)
+lines.append(lin)
+
+
+
+# po.ax.set_xlabel('Date')
+po.ax.set_ylabel('MIZ area, km$^2$')
+po.ax.legend(lines,['Model','Chart'])
+
+# xticks
+xt = []
+XT = []
+for mon in range(1,13):
+   if mon>starting_date.month:
+      dto   = datetime.datetime(int(cyear),mon,1)
+      xt.append(convert_datetime(dto,info))
+      XT.append(dto.strftime('%d %b'))
+
+po.ax.set_xticks(xt)#,rotation='vertical')
+po.ax.set_xticklabels(XT,rotation='vertical')
+
+TSfig = TSfil.replace('.txt','.png')
+print('Saved time series to '+TSfig)
+po.fig.savefig(TSfig,bbox_inches='tight')

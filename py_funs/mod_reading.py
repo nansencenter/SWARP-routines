@@ -59,15 +59,15 @@ class time_series:
    ############################################
 
    ############################################
-   def plot(self,var_name,refdate=None,timeunits='days',yscaling=1.,pobj=None,**kwargs):
+   def plot(self,var_name,refdate=None,time_units='days',yscaling=1.,pobj=None,**kwargs):
       if pobj is None:
          pobj  = plot_object()
 
-      if timeunits=='days':
+      if time_units=='days':
          xfac  = 24*3600. # seconds in 1 day
-      elif timeunits=='hours':
+      elif time_units=='hours':
          xfac  = 3600. # seconds in 1h
-      elif timeunits=='minutes':
+      elif time_units=='minutes':
          xfac  = 60. # seconds in 1min
       else:
          xfac  = 1. # seconds in 1min
@@ -78,7 +78,9 @@ class time_series:
       y  = self.data[var_name]*yscaling
 
       lin  ,= pobj.ax.plot(x,y,**kwargs)
-      return pobj,lin
+
+      info  = {'time_data':x,'refdate':refdate,'time_units':'days'}
+      return pobj,lin,info
    ############################################
 
 
@@ -160,8 +162,14 @@ def read_time_series(tfil):
    # read dates and data
    dates = []
    for lin in lines:
-      ss = lin.split()
-      dates.append(datetime.strptime(ss[0],'%Y%m%dT%H%M%SZ'))
+      ss    = lin.split()
+      cdate = ss[0]
+
+      if len(cdate)==8:
+         cdate+= 'T120000Z'
+
+      dates.append(datetime.strptime(cdate,'%Y%m%dT%H%M%SZ'))
+
       for i,vname in enumerate(vnames):
          data[vname].append(float(ss[i+1]))
    #########################################
