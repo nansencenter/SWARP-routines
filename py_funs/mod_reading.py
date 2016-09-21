@@ -2716,6 +2716,10 @@ class file_list:
          if (fext==extension) and (pattern in fname):
             file_list.append(fil)
 
+      self.number_of_time_records   = len(file_list)
+      if self.number_of_time_records==0:
+         return
+
       # print(file_list)
       # print(directory)
       wsn            = '/work/shared/nersc/msc/ModelInput'
@@ -2759,7 +2763,6 @@ class file_list:
       self.file_list       = [file_list[int(i)] for i in ii]
 
       #set some extra variables to work with eg make_png_all
-      self.number_of_time_records   = len(ii)
       self.basename                 = self.objects[0].basename
       self.variables                = self.objects[0].variables    
       self.variables3d              = self.objects[0].variables3d  

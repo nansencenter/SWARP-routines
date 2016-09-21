@@ -2401,40 +2401,36 @@ def save_shapefile(MIZpolys,filename='test.shp'):
 
 
 ################################################################################################
-def save_summary(MIZpolys,filename,wt_meth='A'):
+def get_summary(MIZpolys,wt_meth='A'):
 
-
-   ###############################################################################
-   # short names -> values
-   R  = {}
-   R.update({'int_width_mean':0})
-   R.update({'tot_width_mean':0})
-   R.update({'int_width_max' :0})
-   R.update({'tot_width_max' :0})
-   R.update({'tot_perim'     :0})
-   R.update({'tot_area'      :0})
-
+   # =============================================================================
+   # Initialise outputs:
 
    # short names -> long names
-   S  = {}
-   S.update({'int_width_mean':'Mean_intersecting_width'})
-   S.update({'tot_width_mean':'Mean_total_width'})
-   S.update({'int_width_max' :'Maximum_intersecting_width'})
-   S.update({'tot_width_max' :'Maximum_total_width'})
-   S.update({'tot_perim'     :'Total_perimeter'})
-   S.update({'tot_area'      :'Total_area'})
-   ###############################################################
+   long_names  = {}
+   long_names.update({'int_width_mean':'Mean_intersecting_width'})
+   long_names.update({'tot_width_mean':'Mean_total_width'})
+   long_names.update({'int_width_max' :'Maximum_intersecting_width'})
+   long_names.update({'tot_width_max' :'Maximum_total_width'})
+   long_names.update({'tot_perim'     :'Total_perimeter'})
+   long_names.update({'tot_area'      :'Total_area'})
+
+   # short names -> values
+   summ  = {}
+   for key in long_names.keys():
+      summ.update({key:0})
+   # =============================================================================
 
 
-   ###############################################################
+   # =============================================================================
    # Do analysis
    tot_perim   = 0.
    tot_area    = 0.
    for mp in MIZpolys.MIZ_info_objects:
       P           = mp.perimeter
       A           = mp.area
-      tot_perim   = tot_perim +P
-      tot_area    = tot_area  +A
+      tot_perim  += P
+      tot_area   += A
 
       if wt_meth=='P':
          # use polygon perimeter as weight
@@ -2445,8 +2441,8 @@ def save_summary(MIZpolys,filename,wt_meth='A'):
          wt = A
 
       # mean widths
-      R['int_width_mean']  = R['int_width_mean']+wt*mp.int_width_mean #sum of means
-      R['tot_width_mean']  = R['tot_width_mean']+wt*mp.tot_width_mean #sum of means
+      summ['int_width_mean'] += wt*mp.int_width_mean #sum of means
+      summ['tot_width_mean'] += wt*mp.tot_width_mean #sum of means
 
       # max widths
       if 0:
@@ -2454,33 +2450,40 @@ def save_summary(MIZpolys,filename,wt_meth='A'):
          print(mp.int_width_max/1.e3)
          print(mp.tot_width_percentile95/1.e3)
          print(mp.tot_width_max/1.e3)
-      R['int_width_max']   = np.max([R['int_width_max'],mp.int_width_max])
-      R['tot_width_max']   = np.max([R['tot_width_max'],mp.tot_width_max])
+      summ['int_width_max']   = np.max([summ['int_width_max'],mp.int_width_max])
+      summ['tot_width_max']   = np.max([summ['tot_width_max'],mp.tot_width_max])
 
-   R['tot_perim'] = tot_perim
-   R['tot_area']  = tot_area
+   summ['tot_perim'] = tot_perim
+   summ['tot_area']  = tot_area
    if len(MIZpolys.MIZ_info_objects)>0:
       if wt_meth=='P':
          wt = float(tot_perim)
       else:
          wt = float(tot_area)
 
-      R['int_width_mean']  = R['int_width_mean']/wt #divide sum of means by total perim/area to get mean of means
-      R['tot_width_mean']  = R['tot_width_mean']/wt #divide sum of means by total perim/area to get mean of means
-   ###############################################################
+      summ['int_width_mean'] /= wt #divide sum of means by total perim/area to get mean of means
+      summ['tot_width_mean'] /= wt #divide sum of means by total perim/area to get mean of means
+
+   return summ,long_names
+# ===========================================================================================
 
 
-   ###############################################################
+# ===========================================================================================
+def save_summary(MIZpolys,filename,wt_meth='A'):
+
+   # get summary info
+   R,S   = get_summary(MIZpolys,wt_meth=wt_meth)
+
    # write to file
    print('\nWriting summary to '+filename+'...\n')
+
    w  = open(filename,'w')
    for fld in ['tot_perim','tot_area','int_width_mean','tot_width_mean','int_width_max','tot_width_max']:
       w.write(S[fld]+' : %16.0f\n' %(R[fld]))
    w.close()
-   ###############################################################
 
    return
-################################################################################################
+# ===========================================================================================
 
 
 #########################################################
@@ -2596,8 +2599,23 @@ class MIZ_info_list:
 
 
    ######################################################
-   def save_summary(self,filename):
-      save_summary(self,filename)
+   def save_summary(self,filename,**kwargs):
+      """
+      MIZpolys.save_summary(filename,**kwargs)
+      returns MIZchar.save_summary(MIZpolys,filename,**kwargs)
+      """
+      save_summary(self,filename,**kwargs)
+      return
+   ######################################################
+
+
+   ######################################################
+   def get_summary(self,**kwargs):
+      """
+      MIZpolys.get_summary(**kwargs)
+      returns MIZchar.get_summary(MIZpolys,**kwargs)
+      """
+      get_summary(self,**kwargs)
       return
    ######################################################
 
