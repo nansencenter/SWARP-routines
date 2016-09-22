@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import MIZchar as mc
 import mod_reading as mr
 import matplotlib.pyplot as plt
@@ -97,90 +100,94 @@ for odir in [outdir,outdir_m,outdir_c]:
 # =====================================================================================
 
 TSfil = outdir+'/test_width.txt'
-w     = open(TSfil,'w')
 
-ADD_WAVES   = 0
-if ADD_WAVES:
-   w.write('date\tmodel_width\tchart_width\t max_swh\n')
-else:
-   w.write('date\tmodel_width\tchart_width\n')
-w.close()
+# =====================================================================================
+# computations
+if 0:
+   w     = open(TSfil,'w')
 
-vertices    = [(-50,50),(20,50),(20,84),(-50,84)] # region of analysis (gre)
-dates       = []
-flist       = os.listdir(chartdir)
-nci         = mr.nc_getinfo(wavefile)
-wlon,wlat   = nci.get_lonlat() #lon,lat of wave grid
-mask        = GP.maskgrid_outside_polygon(wlon,wlat,vertices) # if True, these are wave points inside vertices
+   ADD_WAVES   = 0
+   if ADD_WAVES:
+      w.write('date\tmodel_width\tchart_width\t max_swh\n')
+   else:
+      w.write('date\tmodel_width\tchart_width\n')
+   w.close()
 
-chart_list  = mr.polygon_file_list(chartdir,prefix='',\
-                                   suffix='_Greenland_WA_MIZpolys.txt',\
-                                   date_format='%Y%m%d%H%M')
-model_list  = mr.polygon_file_list(FCdir,prefix='TP4archv_wav.',\
-                                   suffix='_dmax.txt',
-                                   date_format="%Y_%j_%H%M%S",add_day=True)
+   vertices    = [(-50,50),(20,50),(20,84),(-50,84)] # region of analysis (gre)
+   dates       = []
+   flist       = os.listdir(chartdir)
+   nci         = mr.nc_getinfo(wavefile)
+   wlon,wlat   = nci.get_lonlat() #lon,lat of wave grid
+   mask        = GP.maskgrid_outside_polygon(wlon,wlat,vertices) # if True, these are wave points inside vertices
+
+   chart_list  = mr.polygon_file_list(chartdir,prefix='',\
+                                      suffix='_Greenland_WA_MIZpolys.txt',\
+                                      date_format='%Y%m%d%H%M')
+   model_list  = mr.polygon_file_list(FCdir,prefix='TP4archv_wav.',\
+                                      suffix='_dmax.txt',
+                                      date_format="%Y_%j_%H%M%S",add_day=True)
 
 
-for day in chart_list.datetimes:
-	if day < starting_date: 
-		continue
-	print("\n")
-	print day
+   for day in chart_list.datetimes:
+           if day < starting_date: 
+                   continue
+           print("\n")
+           print day
 
-        # model area
-	out = average_width_model(day.strftime("%Y%m%d"),model_list,outdir=outdir_m)
-	if out is not None:
-           model_width,model_area  = out
-        else:
-	   print('skipping date '+day.strftime("%Y%m%d")+' no model output')
-           # sys.exit()
+           # model area
+           out = average_width_model(day.strftime("%Y%m%d"),model_list,outdir=outdir_m)
+           if out is not None:
+              model_width,model_area  = out
+           else:
+              print('skipping date '+day.strftime("%Y%m%d")+' no model output')
+              # sys.exit()
+              continue
+
+           # ========================================================================================================
+           # chart area
+           chart_width,chart_area   = get_width_chart(day,chart_list,vertices,outdir=outdir_c)
+           # ========================================================================================================
+
+
+           if ADD_WAVES:
+              # ========================================================================================================
+              # max swh
+              DT,idx=nci.nearestDate(day)
+              swh_max=[]
+              #w.write(day.strftime("%Y%m%d")+'\t'+str(tot_area)+'\t')
+              
+              for i in range(before,after):
+                      
+                      print swh_max
+                      swh=nci.get_var('swh',time_index=idx+i)
+                      good=np.logical_not(swh.values.mask) # swh.values is masked array
+                      good=np.logical_and(good,mask)       # restricts to area from vertices
+                      #swh_max=max(swh.values.data[good].max(),swh_max)	
+                      swh_max=swh.values.data[good].max()
+                      #w.write(str(swh_max)+'\t')
+              #w.write('\n')
+
+              ss  = day.strftime("%Y%m%d")+'\t'+str(model_width)+'\t'+str(chart_width)+'\t'+str(swh_max)+'\n'
+              # ========================================================================================================
+           else:
+              ss  = day.strftime("%Y%m%d")+'\t'+str(model_width)+'\t'+str(chart_width)+'\n'
+              
+              
+           print('date/model/chart')
+           print(ss)
+           w  = open(TSfil,'a')
+           w.write(ss)
+           w.close()
+
            continue
-
-        # ========================================================================================================
-        # chart area
-        chart_width,chart_area   = get_width_chart(day,chart_list,vertices,outdir=outdir_c)
-        # ========================================================================================================
-
-
-        if ADD_WAVES:
-           # ========================================================================================================
-           # max swh
-           DT,idx=nci.nearestDate(day)
-           swh_max=[]
-           #w.write(day.strftime("%Y%m%d")+'\t'+str(tot_area)+'\t')
-           
-           for i in range(before,after):
-                   
-                   print swh_max
-                   swh=nci.get_var('swh',time_index=idx+i)
-                   good=np.logical_not(swh.values.mask) # swh.values is masked array
-                   good=np.logical_and(good,mask)       # restricts to area from vertices
-                   #swh_max=max(swh.values.data[good].max(),swh_max)	
-                   swh_max=swh.values.data[good].max()
-                   #w.write(str(swh_max)+'\t')
-           #w.write('\n')
-
-           ss  = day.strftime("%Y%m%d")+'\t'+str(model_width)+'\t'+str(chart_width)+'\t'+str(swh_max)+'\n'
-           # ========================================================================================================
-        else:
-           ss  = day.strftime("%Y%m%d")+'\t'+str(model_width)+'\t'+str(chart_width)+'\n'
-           
-           
-        print('date/model/chart')
-        print(ss)
-        w  = open(TSfil,'a')
-        w.write(ss)
-        w.close()
-
-	continue
-	# break
-	
-	
+           # break
 # sys.exit()
+# =====================================================================================
 
 
+# =====================================================================================
 # load time series file & plot
-print('Saved time series to '+TSfil)
+print('Time series in '+TSfil)
 
 def convert_datetime(dto,info):
    if info['time_units']=='days':
@@ -200,7 +207,7 @@ yscaling = 1.e-3 # m -> km
 lines       = []
 po,lin,info = ts.plot('model_width',time_units='days',yscaling=yscaling)
 lines.append(lin)
-po,lin,info = ts.plot('chart_width',time_units='days',yscaling=yscaling,pobj=po)
+po,lin,info = ts.plot('chart_width',time_units='days',yscaling=yscaling,pobj=po,color='r')
 lines.append(lin)
 
 
@@ -216,11 +223,12 @@ for mon in range(1,13):
    if mon>starting_date.month:
       dto   = datetime.datetime(int(cyear),mon,1)
       xt.append(convert_datetime(dto,info))
-      XT.append(dto.strftime('%d %b'))
+      XT.append(dto.strftime('%D'))
 
 po.ax.set_xticks(xt)#,rotation='vertical')
 po.ax.set_xticklabels(XT,rotation='vertical')
 
 TSfig = TSfil.replace('.txt','.png')
-print('Saved time series to '+TSfig)
+print('Saved time series plot to '+TSfig)
 po.fig.savefig(TSfig,bbox_inches='tight')
+# =====================================================================================
