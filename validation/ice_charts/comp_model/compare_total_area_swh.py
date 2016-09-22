@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import MIZchar as mc
 import mod_reading as mr
 import matplotlib.pyplot as plt
