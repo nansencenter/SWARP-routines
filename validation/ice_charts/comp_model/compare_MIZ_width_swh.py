@@ -103,7 +103,7 @@ TSfil = outdir+'/test_width.txt'
 
 # =====================================================================================
 # computations
-if 0:
+if 1:
    w     = open(TSfil,'w')
 
    ADD_WAVES   = 0
