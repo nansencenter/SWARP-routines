@@ -58,6 +58,49 @@ class time_series:
       return
    ############################################
 
+
+   ###########################################################
+   def nearestDate(self, pivot):
+      """
+      dto,time_index = self.nearestDate(dto0)
+      dto0  = datetime.datetime objects
+      dto   = datetime.datetime objects - nearest value in self.datetimes to dto0
+      time_index: dto=self.dates[time_index]
+      """
+      dto         = min(self.dates, key=lambda x: abs(x - pivot))
+      time_index  = self.dates.index(dto)
+      return dto,time_index
+   ###########################################################
+
+
+   ###########################################################
+   def max(self, vname):
+      """
+      vmax,time_index = self.max(vname)
+      *vname is in self.data.keys():
+      * vmax=self.data[vname].max()
+      * self.data[vname][time_index]=vmax
+      """
+      vmax        = self.data[vname].max()
+      time_index  = list(self.data[vname]).index(vmax)
+      return vmax,time_index
+   ###########################################################
+
+
+   ###########################################################
+   def min(self, vname):
+      """
+      vmin,time_index = self.min(vname)
+      *vname is in self.data.keys():
+      * vmin=self.data[vname].min()
+      * self.data[vname][time_index]=vmin
+      """
+      vmin        = self.data[vname].min()
+      time_index  = list(self.data[vname]).index(vmin)
+      return vmin,time_index
+   ###########################################################
+
+
    ############################################
    def plot(self,var_name,refdate=None,time_units='days',yscaling=1.,pobj=None,**kwargs):
       if pobj is None:
@@ -2975,7 +3018,9 @@ class polygon_file_list:
             continue
 
          cdate = fil.strip(suffix).strip(prefix)
+         print(cdate)
          dto   = datetime.strptime(cdate,date_format)
+
 
          if add_day:
             # model has julian day starting at 0
@@ -2987,6 +3032,7 @@ class polygon_file_list:
 
       self.number_of_time_records   = len(file_list)
       if self.number_of_time_records==0:
+         print('file list empty')
          return
 
       self.reference_date  = min(datetimes)
