@@ -28,7 +28,7 @@ def AARI_form_dictionary():
 
 
 ############################################################################
-def form_cols():
+def form_cols(cmapname=None):
    """
    make a dictionary mapping form to rgba color
    """
@@ -37,9 +37,11 @@ def form_cols():
    import matplotlib.colors as colors
 
    NUM_COLORS = 15
-
-   cm          = plt.get_cmap('jet')
-   # cm          = plt.get_cmap('gist_rainbow')
+   if cmapname is None:
+      # see http://matplotlib.org/examples/color/colormaps_reference.html
+      # for a full list of colormaps
+      cmapname = 'Set1'
+   cm          = plt.get_cmap(cmapname)
    cNorm       = colors.Normalize(vmin=0, vmax=NUM_COLORS-1)
    scalarMap   = mplcm.ScalarMappable(norm=cNorm, cmap=cm)
    col_list    = [scalarMap.to_rgba(i) for i in range(NUM_COLORS)]
@@ -351,7 +353,7 @@ class shapefile_info:
 
 
    # ============================================================
-   def test_plot(self,figname=None):
+   def test_plot(self,figname=None,cmapname=None):
 
       from matplotlib import pyplot as plt
       import fns_plotting as Fplt
@@ -373,7 +375,7 @@ class shapefile_info:
 
 
       # ====================================================
-      clist = form_cols()
+      clist = form_cols(cmapname=cmapname)
       for n,poly in enumerate(self.shapes.polygons):
          rec   = self.shapes.records[n]
          if rec['POLY_TYPE']=='W':
