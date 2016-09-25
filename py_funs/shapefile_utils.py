@@ -1,4 +1,5 @@
 import numpy as np
+import shapefile
 
 ############################################################################
 def DMI_form_dictionary():
@@ -24,6 +25,34 @@ def AARI_form_dictionary():
    
    return form_vals
 ############################################################################
+
+
+############################################################################
+def form_cols():
+   """
+   make a dictionary mapping form to rgba color
+   """
+   import matplotlib.pyplot as plt
+   import matplotlib.cm as mplcm
+   import matplotlib.colors as colors
+
+   NUM_COLORS = 15
+
+   cm          = plt.get_cmap('jet')
+   # cm          = plt.get_cmap('gist_rainbow')
+   cNorm       = colors.Normalize(vmin=0, vmax=NUM_COLORS-1)
+   scalarMap   = mplcm.ScalarMappable(norm=cNorm, cmap=cm)
+   col_list    = [scalarMap.to_rgba(i) for i in range(NUM_COLORS)]
+
+   i     = 0
+   cols  = {np.nan:col_list[i]}
+   for j in range(-1,11):
+      i    += 1
+      cols.update({j:col_list[i]})
+
+   return cols
+############################################################################
+
 
 ############################################################################
 def xy2list(x,y):
@@ -271,6 +300,119 @@ class shapes:
       return
 ############################################################################
 
+class shapefile_info:
+   def __init__(self,fname_full,MIZ_criteria="FA_only",chart_source="DMI"):
+
+      # for info
+      self.shapefile    = fname_full
+      self.chart_source = chart_source
+      if chart_source=='DMI':
+         self.form_dict = DMI_form_dictionary()
+      elif chart_source=='AARI':
+         self.form_dict = AARI_form_dictionary()
+      
+      import shapefile
+      sf    = shapefile.Reader(fname_full)
+      print('Processing '+fname_full+'...')
+
+      # ============================================================
+      # get shapes and records from shapefile
+      # self.shapes.records[n]
+      # self.shapes.polygons[n]
+      # give the info for the n-th shape
+      # *poly is a shapely polygon
+      # *record is the metadata
+      sf_info     = extract_shapefile_info(sf,get_holes=True)
+      self.shapes = shapes(sf_info)
+      self.Npolys = len(sf_info)
+
+      print('\nExample record:')
+      print(self.shapes.records[0])
+      print('\n')
+      # ============================================================
+
+
+      # ============================================================
+      # bounds: mostly for plotting
+      for i,P in enumerate(self.shapes.polygons):
+         lon0,lat0,lon1,lat1  = P.bounds
+         if i==0:
+            self.lon_min,self.lat_min,\
+                  self.lon_max,self.lat_max  = lon0,lat0,lon1,lat1
+         else:
+            self.lon_min  = min(self.lon_min,lon0)
+            self.lat_min  = min(self.lat_min,lat0)
+            self.lon_max  = max(self.lon_max,lon1)
+            self.lat_max  = max(self.lat_max,lat1)
+      # ============================================================
+
+      return
+   # ============================================================
+
+
+   # ============================================================
+   def test_plot(self,figname=None):
+
+      from matplotlib import pyplot as plt
+      import fns_plotting as Fplt
+
+      fig      = plt.figure(figsize=(12,12))
+      ax       = fig.add_subplot(111)
+
+      # ====================================================
+      # limits of figure (not automatic with patches)
+      ax.set_xlim([self.lon_min,self.lon_max])
+      ax.set_ylim([self.lat_min,self.lat_max])
+      ax.set_xlabel('Longitude, $^\circ$E',fontsize=18)
+      ax.set_ylabel('Latitude, $^\circ$N',fontsize=18)
+      for li in ax.get_xticklabels():
+         li.set_fontsize(18)
+      for li in ax.get_yticklabels():
+         li.set_fontsize(18)
+      # ====================================================
+
+
+      # ====================================================
+      clist = form_cols()
+      for n,poly in enumerate(self.shapes.polygons):
+         rec   = self.shapes.records[n]
+         if rec['POLY_TYPE']=='W':
+            Fplt.plot_patches(ax,[poly],'c')
+         else:
+            key   = self.form_dict[rec['FA']]
+            col   = clist[key]
+            Fplt.plot_patches(ax,[poly],col)
+      # ====================================================
+      
+
+      # ====================================================
+      # legend
+      import matplotlib.patches as mpatches
+      Patches  = [mpatches.Patch(color='c', label='W')]
+      for key in sorted(clist):
+         col   = clist[key]
+         if np.isnan(key):
+            lab   = '-'
+         elif key==-1:
+            lab   = 'X'
+         else:
+            lab   = str(key)
+         Patches.append(mpatches.Patch(color=col,label=lab))
+
+      ax.legend(handles=Patches,loc='lower right')
+      # ====================================================
+
+
+      # ====================================================
+      # show or save fig
+      if figname is None:
+         plt.show(fig)
+      else:
+         fig.savefig(figname,bbox_inches='tight')
+      # ====================================================
+
+
+   # ============================================================
 
 ############################################################################
 class MIZ_from_shapefile:
@@ -284,7 +426,6 @@ class MIZ_from_shapefile:
       self.chart_source = chart_source
       self.MIZ_criteria = MIZ_criteria
 
-      import shapefile
       sf    = shapefile.Reader(fname_full)
       print('Processing '+fname_full+'...')
 
