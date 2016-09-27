@@ -2,6 +2,11 @@
 # python ice_edge_OSISAF_1obs.py --date=20160821 --outdir=/work/timill/RealTime_Models/validation//TP4a0.12/ice_only/20160821/OSISAF --FC_rootdir=/work/timill/RealTime_Models/results//TP4a0.12/ice_only
 import os,sys,matplotlib
 matplotlib.use('Agg')
+
+# SR = os.getenv('SWARP_ROUTINES')
+# if SR+'/py_funs' not in sys.path:
+#    sys.path.append(SR+'/py_funs')
+
 import mod_reading   as mr
 import MIZchar       as mc
 from getopt import getopt

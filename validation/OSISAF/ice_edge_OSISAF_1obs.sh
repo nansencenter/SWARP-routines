@@ -9,11 +9,20 @@ else
 fi
 
 regions="TP4a0.12 BS1a0.045 FR1a0.03"
+# regions="TP4a0.12"
 # regions="BS1a0.045 FR1a0.03"
 FCtypes="ice_only"
 basedir="$RTmods/results/"
 valdir="$RTmods/validation/"
 mkdir -p $valdir
+
+ME=`readlink -f $0`
+Vdir=`dirname $ME`
+
+# load python
+[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
+module load python/2.7.9-dso
+export PYTHONPATH=$PYTHONPATH:$SWARP_ROUTINES/py_funs
 
 for reg in $regions
 do
@@ -35,8 +44,11 @@ do
       echo "Data from   : $FC_rootdir"
       echo "Results to  : $outdir"
       echo " "
-      echo $python $SWARP_ROUTINES/validation/ice_edge_OSISAF_1obs.py --date=$cdate --outdir=$outdir --FC_rootdir=$FC_rootdir
-      $python $SWARP_ROUTINES/validation/ice_edge_OSISAF_1obs.py --date=$cdate --outdir=$outdir --FC_rootdir=$FC_rootdir
+      if [ 1 -eq 1 ]
+      then
+         echo $python $Vdir/ice_edge_OSISAF_1obs.py --date=$cdate --outdir=$outdir --FC_rootdir=$FC_rootdir
+         $python $Vdir/ice_edge_OSISAF_1obs.py --date=$cdate --outdir=$outdir --FC_rootdir=$FC_rootdir
+      fi
 
 
       # ==============================================
@@ -49,12 +61,19 @@ do
       Ndirs=${#ddirs[@]}
       N=$Ndirs
 
-      for dd in FC_*days
+      for dd in FC*days
       do
-         ln -s $dd/*IceEdge_OSISAF*.png fig$N.png
+         f=$dd/*IceEdge_OSISAF*.png
+         # echo $f
+         if [ -f $f ]
+         then
+            # echo ln -s $f fig$N.png
+            ln -s $f fig$N.png
+         fi
          N=$((N-1))
       done
 
+      # ls -lh
       gfil=IceEdge_OSISAF${cdate}.gif
       convert -delay 75 -loop 0 fig*.png $gfil
       mv $gfil $figdir
@@ -72,9 +91,13 @@ do
       Ndirs=${#ddirs[@]}
       N=$Ndirs
 
-      for dd in FC_*days
+      for dd in FC*days
       do
-         ln -s $dd/conc_anomaly_OSISAF*.png fig$N.png
+         f=$dd/conc_anomaly_OSISAF*.png
+         if [ -f $f ]
+         then
+            ln -s $f fig$N.png
+         fi
          N=$((N-1))
       done
 
