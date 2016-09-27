@@ -89,6 +89,7 @@ ncrename -v hice,icetk  $ofil #ice thickness
 
 # change time:units
 ncatted -O -h -a units,time,m,c,"seconds since 1970-01-01T00:00:00Z" $ofil
+ncatted -O -h -a calendar,time,m,c,"standard"                        $ofil
 #########################################################################
 
 ###########################################################################################
