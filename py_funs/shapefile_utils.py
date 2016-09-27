@@ -315,7 +315,7 @@ class shapefile_info:
       
       import shapefile
       sf    = shapefile.Reader(fname_full)
-      print('Processing '+fname_full+'...')
+      print('Reading '+fname_full+'...')
 
       # ============================================================
       # get shapes and records from shapefile
@@ -410,6 +410,7 @@ class shapefile_info:
       if figname is None:
          plt.show(fig)
       else:
+         print('\nSaving '+figname+'...\n')
          fig.savefig(figname,bbox_inches='tight')
       # ====================================================
 
