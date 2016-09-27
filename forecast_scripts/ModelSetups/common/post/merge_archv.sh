@@ -71,8 +71,8 @@ done
 echo " "                                              >> $log
 echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
-ncatted -O -a _FillValue,,o,f,-32767      tmp.nc
-ncatted -O -a missing_value,,o,f,-32767   tmp.nc
+ncatted -O -a _FillValue,,o,s,-32767      tmp.nc
+ncatted -O -a missing_value,,o,s,-32767   tmp.nc
 
 #set name of output file
 ofil=${FC_OUTPUT}_start${tday}T000000Z.nc
@@ -165,7 +165,7 @@ ncatted -O -h -a project_references,global,c,c,"swarp.nersc.no"               $o
 ncatted -O -h -a distribution_statement,global,c,c,"No restrictions"          $ofil
 ncatted -O -h -a operational_status,global,c,c,"test"                         $ofil
 #
-ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=format (also f=float)
+ncatted -O -h -a title,global,o,c,"SWARP sea ice forecast"               $ofil # o=overwrite/create, c=char (also s=short,f=float)
 # ncatted -O -h -a history,global,o,c,"NERSC-HYCOM output->hyc2proj->ncrcat"    $ofil
 
 # Restart file date

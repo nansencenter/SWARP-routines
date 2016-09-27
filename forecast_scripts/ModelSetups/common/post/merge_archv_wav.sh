@@ -68,6 +68,9 @@ done
 echo " "                                              >> $log
 echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
+ncatted -O -a _FillValue,,o,s,-32767      tmp.nc
+ncatted -O -a missing_value,,o,s,-32767   tmp.nc
+
 
 #set name of output file
 ofil=${FC_OUTPUT}_start${tday}T000000Z.nc
