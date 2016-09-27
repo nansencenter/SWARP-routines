@@ -1,5 +1,7 @@
 #!/bin/bash
 # each day this script gets yesterday's OSISAF concentration from myocean
+ME=`readlink -f $0`
+Vdir=`dirname $ME`
 
 cd /work/timill/DMI_tmp
 rm -r *
@@ -20,12 +22,17 @@ do
    echo $f
    cyear=${f:0:4}
    unzip ../$f
+
+   #########################################################################
+   # Launch script to extract MIZ
+   # - compares today's observation to relevant forecasts
+   $Vdir/DMI_process.sh $cyear
+
+   # TODO plot on top of relevant FC?
+   # TODO calc MIZ area/width?
+   #########################################################################
+
    echo mv * $DMIdir/$cyear
    mv * $DMIdir/$cyear
 done
 
-# #########################################################################
-# # Launch validation script
-# # - compares today's observation to relevant forecasts
-# $Vdir/ice_edge_OSISAF_1obs.sh $ydate
-# #########################################################################
