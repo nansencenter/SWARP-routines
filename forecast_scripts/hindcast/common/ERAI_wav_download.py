@@ -20,50 +20,53 @@ from ecmwfapi import ECMWFDataServer
 if 0:
    grid  = "0.5/0.5"
 else:
-   grid  = "1/1"
+   grid  = "1/1" # 1 degree
 
-# Set date and time 
-if 0:
-   year  = "2016"
-   date  = str(year+"-01-01/to/"+year+"-03-31")
-else:
-   year  = "2015"
-   date  = str(year+"-01-01/to/"+year+"-12-31")
+# dictionary of variable id's
+varnos   = {'MWD':'230.140',
+            'MWP':'232.140',
+            'SWH':'229.140'}
 
-type="an"
-step="0"
-time="00:00:00/06:00:00/12:00:00/18:00:00"
+varnames = ["MWD","MWP","SWH"] # variables to get
+
+server   = ECMWFDataServer()
+
+for nyear in range(2007,2015):
+   # Set date and time 
+   year  = str(nyear)
+   if year == 2016:
+      date  = str(year+"-01-01/to/"+year+"-03-31")
+   else:
+      date  = str(year+"-01-01/to/"+year+"-12-31")
+
+   type="an"
+   step="0"
+   time="00:00:00/06:00:00/12:00:00/18:00:00"
 
 
-## WAVE VARIABLES
-varnos   = ['230.140','232.140','229.140']
-varnames = ["MWD","MWP","SWH"]
+   ## WAVE VARIABLES
+   for varname in varnames:
+      target   = varname+"_"+year+".nc"
+      varno    = str(varnos[varname])
 
-for i,varname in enumerate(varnames):
-   target   = varname+"_"+year+".nc"
-   varno    = str(varnos[i])
-   
-   server   = ECMWFDataServer()
-   
-   print ""
-   print i
-   print varname
-   print varno
-   print target
-   print ""
-   
-   server.retrieve({
-      "class": "ei",
-      "dataset": "interim",
-      "date": date,
-      "expver": "1",
-      "grid": grid,
-      "levtype": "sfc",
-      "param": varno,
-      "step": step,
-      "stream": "wave",
-      "time": "00:00:00/06:00:00/12:00:00/18:00:00",
-      "type": type,
-      "format": "netcdf",
-      "target": target,
-   })
+      print ""
+      print varname
+      print varno
+      print target
+      print ""
+
+      server.retrieve({
+         "class": "ei",
+         "dataset": "interim",
+         "date": date,
+         "expver": "1",
+         "grid": grid,
+         "levtype": "sfc",
+         "param": varno,
+         "step": step,
+         "stream": "wave",
+         "time": "00:00:00/06:00:00/12:00:00/18:00:00",
+         "type": type,
+         "format": "netcdf",
+         "target": target,
+         })
