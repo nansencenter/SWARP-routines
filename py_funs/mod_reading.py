@@ -2256,7 +2256,6 @@ class MIZmap_all:
          else:
             step  = 1. #not used
 
-
       # ==================================================
       # set dates to analyse, check for missing dates
       if start_date is not None:
@@ -2772,8 +2771,8 @@ class file_list:
          if (fext==extension) and (pattern in fname):
             file_list.append(fil)
 
-      self.number_of_time_records   = len(file_list)
-      if self.number_of_time_records==0:
+      self.number_of_files          = len(file_list)
+      if self.number_of_files==0:
          return
 
       # print(file_list)
@@ -2806,23 +2805,32 @@ class file_list:
          objects.append(obj)
          datetimes.append(obj.datetimes[0])
 
-      self.reference_date  = min(datetimes)
-      self.timeunits       = 'hours'
-      timevalues           = [(dt-self.reference_date).total_seconds()/3600. for dt in datetimes]
-
       # sort the time values (1st record is earliest)
       # - also reorder objects, datetimes, file_list
-      TV                   = sorted([(e,i) for i,e in enumerate(timevalues)])
-      self.timevalues,ii   = np.array(TV).transpose()
-      self.objects         = [objects  [int(i)] for i in ii]
-      self.datetimes       = [datetimes[int(i)] for i in ii]
-      self.file_list       = [file_list[int(i)] for i in ii]
+      lst               = sorted([(e,i) for i,e in enumerate(datetimes)])
+      self.filetimes    = np.array( [e  for e,i in lst])
+      self.objects      = [objects  [i] for e,i in lst]
+      self.file_list    = [file_list[i] for e,i in lst]
+
+      self.datetimes    = []
+      self.file_indices = []
+      for i,fobj in enumerate(self.objects):
+         lst   = fobj.datetimes
+         self.datetimes.extend(lst)
+         for j,dto in enumerate(lst):
+            self.file_indices.append((i,j))
+
+      self.number_of_time_records   = len(self.datetimes)
+      self.reference_date           = min(self.datetimes)
+      self.timeunits                = 'hours'
+      timevalues                    = [(dt-self.reference_date).total_seconds()/3600. for dt in datetimes]
+
 
       #set some extra variables to work with eg make_png_all
-      self.basename                 = self.objects[0].basename
-      self.variables                = self.objects[0].variables    
-      self.variables3d              = self.objects[0].variables3d  
-      self.all_variables            = self.objects[0].all_variables
+      self.basename        = self.objects[0].basename
+      self.variables       = self.objects[0].variables    
+      self.variables3d     = self.objects[0].variables3d  
+      self.all_variables   = self.objects[0].all_variables
 
       self.date_strings = []
       self.time_strings = []
@@ -2832,8 +2840,8 @@ class file_list:
 
       # add some methods inherited from individual objects
       self.get_lonlat   = self.objects[0].get_lonlat
-      self.get_corners  = self.objects[0].get_corners
       if HB:
+         self.get_corners        = self.objects[0].get_corners
          self.get_depths         = self.objects[0].get_depths
          self.create_ESMF_grid   = self.objects[0].create_ESMF_grid
 
@@ -2857,20 +2865,21 @@ class file_list:
 
    ###########################################################
    def get_var(self,varname,time_index=0,**kwargs):
-      out   = self.objects[time_index].get_var(varname,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return self.objects[file_index].get_var(varname,time_index=sub_index,**kwargs)
    ###########################################################
 
 
    #######################################################################
-   def imshow(self,var_opts,**kwargs):
+   def imshow(self,var_opts,time_index=0,**kwargs):
       """
       pobj   = self.imshow(var_opts,time_index=0,pobj=None,\
            clim=None,add_cbar=True,clabel=None,show=True,\
            test_ijs=None)
       """
-
-      return imshow(self,var_opts,**kwargs)
+      file_index,sub_index = self.file_indices[time_index]
+      return imshow(self.objects[file_index],\
+            var_opts,time_index=sub_index,**kwargs)
    #######################################################################
 
 
@@ -2882,9 +2891,9 @@ class file_list:
          clim=None,add_cbar=True,clabel=None,show=True,\
          test_lonlats=None,date_label=0):
       """
-      out   = plot_var(self.objects[time_index],\
-                  var_opts,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return plot_var(self.objects[file_index],var_opts,\
+                  time_index=sub_index,**kwargs)
    ###########################################################
 
 
@@ -2893,9 +2902,9 @@ class file_list:
       """
       pobj,bmap=self.plot_var_pair(var_opts1,var_opts2,pobj=None,bmap=None,**kwargs)
       """
-      out   = plot_var_pair(self.objects[time_index],\
-                  var_opts1,var_opts2,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return plot_var_pair(self.objects[file_index],var_opts1,var_opts2,\
+            time_index=sub_index,**kwargs)
    ###########################################################
 
 
@@ -2904,9 +2913,9 @@ class file_list:
       """
       pobj,bmap=self.make_png(var_opts,pobj=None,bmap=None,figdir='.',time_index=0,date_label=2,**kwargs)
       """
-      out   = make_png(self.objects[time_index],\
-                  var_opts,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return make_png(self.objects[file_index],var_opts,\
+                  time_index=sub_index,**kwargs)
    ###########################################################
 
 
@@ -2916,9 +2925,9 @@ class file_list:
       pobj,bmap = self.make_png_pair(var_opts1,var_opts2,\
          pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
       """
-      out   = make_png_pair(self.objects[time_index],\
-                  var_opts1,var_opts2,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return make_png_pair(self.objects[file_index],var_opts1,var_opts2,\
+            time_index=sub_index,**kwargs)
    ###########################################################
 
 
@@ -2948,15 +2957,14 @@ class file_list:
       pobj,bmap,obsfil = self.compare_ice_edge_obs(pobj=None,bmap=None,time_index=0,\
          obs_type='OSISAF',date_label=1,figname=None,**kwargs)
       """
-      out   = compare_ice_edge_obs(self,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return compare_ice_edge_obs(self.objects[file_index],time_index=sub_index,**kwargs)
    ###########################################################
 
 
    ###########################################################
    def compare_ice_edge_obs_all(self,**kwargs):
-      out   = compare_ice_edge_obs_all(self,**kwargs)
-      return out
+      return compare_ice_edge_obs_all(self,**kwargs)
    ###########################################################
 
 
@@ -2974,8 +2982,8 @@ class file_list:
             mask_corners=None - can mask out smaller region
                               - corners = [lons,lats], where lons=[DL,DR,UR,UL]
       """
-      out   = self.objects[time_index].areas_of_disagreement(time_index=0,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return self.objects[file_index].areas_of_disagreement(time_index=sub_index,**kwargs)
    ###########################################################
 
 
@@ -2988,8 +2996,8 @@ class file_list:
 
    ###########################################################
    def MIZmap(self,time_index=0,**kwargs):
-      out   = self.objects[time_index].MIZmap(time_index=0,**kwargs)
-      return out
+      file_index,sub_index = self.file_indices[time_index]
+      return self.objects[file_index].MIZmap(time_index=sub_index,**kwargs)
    ###########################################################
 
 
@@ -3002,9 +3010,14 @@ class file_list:
 
    ###########################################################
    def time_average(self,varname,**kwargs):
-      out   = time_average(self,varname,**kwargs)
-      return out
+      return time_average(self,varname,**kwargs)
    ###########################################################
+
+   # TODO for list of multi-record files:
+   # time_average
+   # AODs_all
+   # MIZmap_all
+   # make_png_all
 
 ######################################################################
 class polygon_file_list:
