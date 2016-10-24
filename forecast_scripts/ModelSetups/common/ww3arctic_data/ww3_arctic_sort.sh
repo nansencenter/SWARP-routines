@@ -11,11 +11,10 @@ print_info=0
 [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
 module load nco
 
-if [ $# -lt 3 ]
+if [ $# -lt 2 ]
 then
-   echo "Usage: ww3_arctic_sort.sh [date] [cycle] [sort_EF]"
-   echo "*date in yyyymmdd format"
-   echo "*cycle = 1 (1200 cycle) or 2 (0000 cycle)"
+   echo "Usage: ww3_arctic_sort.sh [date] [sort_EF]"
+   echo "*yesterday's date in yyyymmdd format"
    echo "*sort_EF = 1 (sort the EF files) or 0 (don't sort the EF files)"
    exit
 fi
@@ -28,8 +27,7 @@ fdate=$1
 fyear=${fdate:0:4}
 fdir0=${fdate}00
 
-cycle=$2
-sort_EF=$3
+sort_EF=$2
 
 #main folders
 WW3A="/work/shared/nersc/msc/WAVES_INPUT/WW3_ARCTIC"
@@ -46,8 +44,6 @@ ww3dir0=$ww3dir/originals
 mkdir -p $ww3dir0
 ww3dir1=$ww3dir/analysis_m1
 mkdir -p $ww3dir1
-ww3dir2=$ww3dir/analysis_m2
-mkdir -p $ww3dir2
 ww3dir3=$ww3dir/forecast
 mkdir -p $ww3dir3
 
@@ -56,28 +52,11 @@ ww3dirEF0=$ww3dirEF/originals
 mkdir -p $ww3dirEF0
 ww3dirEF1=$ww3dirEF/analysis_m1
 mkdir -p $ww3dirEF1
-ww3dirEF2=$ww3dirEF/analysis_m2
-mkdir -p $ww3dirEF2
 ww3dirEF3=$ww3dirEF/forecast
 mkdir -p $ww3dirEF3
 
-if [ $cycle -eq 1 ]
-then
-   do_m1=1   #-1 result
-   do_m2=1   #-2 result
-   n2=6
-elif [ $cycle -eq 2 ]
-then
-   do_m1=1   #-1 result
-   do_m2=1   #-2 result
-   n2=7
-elif [ $cycle -eq 3 ]
-then
-   # just process hind cast
-   do_m1=1   #-1 result
-   do_m2=1   #-2 result
-   n2=0
-fi
+do_m1=1   #-1 result
+n2=6
 
 dir0=$ww3dir0/${fdate}00
 dir1=$ww3dirEF0/${fdate}00
@@ -88,60 +67,6 @@ else
    Mlist="0 1" # sort EF and non-EF files
 fi
 
-# =================================================================================
-# an-2:
-if [ $do_m2 -eq 1 ]
-then
-   n=-1
-   dd=`date --date="$fdate ${n}day" "+%Y%m%d"`
-   ff=($dir0/SWARP_WW3_ARCTIC-12K_${dd}.nc $dir1/SWARP_WW3_ARCTIC-12K_${dd}_ef.nc)
-   dir2s=($ww3dir2 $ww3dirEF2)
-
-   for m in $Mlist
-   do
-      dir2=${dir2s[$m]}
-      f1=${ff[$m]}
-      if [ $print_info -eq 1 ]
-      then
-         echo $f1
-      fi
-
-      # unpack & change fill value
-      cd $dir2
-      pwd
-
-      f=`basename $f1`
-      g=U$f
-
-      if [ $m -eq 1 ]
-      then
-         # ef
-         if [ $print_info -eq 1 ]
-         then
-            echo "ncpdq -U $f1 -o $g"
-         fi
-         ncpdq -U $f1 -o $g
-      else
-         # normal - don't extract all var's
-         if [ $print_info -eq 1 ]
-         then
-            echo "ncpdq -U -v $Vlist $f1 -o $g"
-         fi
-         ncpdq -U -v $Vlist $f1 -o $g
-      fi
-      ncatted -O -a _FillValue,,o,f,-32767 $g
-            
-      # repack, reformat
-      if [ $print_info -eq 1 ]
-      then
-         echo "ncpdq $opts -o $f $g"
-      fi
-      # ncpdq $opts -o $f $g
-      ncpdq $opts -o $f $g
-      rm $g
-   done
-fi
-# # =================================================================================
 
 
 # =================================================================================
