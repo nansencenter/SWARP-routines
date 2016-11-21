@@ -10,34 +10,28 @@ opts="--fl_fmt=classic" #netcdf3 classic
 [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
 module load nco
 
-if [ $# -lt 2 ]
+if [ $# -lt 1 ]
 then
-   echo "Usage: ww3_arctic_download.sh [date] [cycle]"
+   echo "Usage: ww3_arctic_download.sh [date]"
    echo "*date in yyyymmdd format"
-   echo "*cycle = 1 (1200 cycle) or 2 (0000 cycle)"
    exit
 fi
 
-fdate=$1
+yday=$1                             # input yesterday's date
+yyear=${yday:0:4}
+fdate=`date --date="$yday +1day" "+%Y%m%d"`   # convert to today's date
 fyear=${fdate:0:4}
-fdir0=${fdate}00
+fdir0=${yday}00
+Fdir0=${fdate}T00
 
-cycle=$2
-if [ $cycle -eq 3 ]
-then
-   # hindcasts
-   idir="ftp://ftp.ifremer.fr/ifremer/cersat/products/gridded/wavewatch3"
-   ftpsite="$idir/HINDCAST/ARCTIC"
-else
-   # forecasts (cleaned each month)
-   ftpsite="ftp://ftp.ifremer.fr/ifremer/ww3/HINDCAST/ARCTIC_REALTIME/"
-fi
-fdir="$ftpsite/$fyear/$fdir0"
+# forecasts
+ftpsite="ftp://ftp.ifremer.fr/ifremer/ww3/FORECAST/ARCTIC/" # link updated 19/10/2016
+fdir="$ftpsite/$fyear/$Fdir0"
 
 #main folders
 WW3A="/work/shared/nersc/msc/WAVES_INPUT/WW3_ARCTIC"
-ww3dir="$WW3A/${fyear}"
-ww3dirEF="$WW3A/${fyear}_ef"
+ww3dir="$WW3A/${yyear}"
+ww3dirEF="$WW3A/${yyear}_ef"
 mkdir -p $ww3dir
 mkdir -p $ww3dirEF
 
@@ -58,22 +52,10 @@ ww3dirEF0=$ww3dirEF/originals
 mkdir -p $ww3dirEF0
 mkdir -p $ww3dirEF0/$fdir0
 
-if [ $cycle -eq 1 ]
-then
-   n2=6
-elif [ $cycle -eq 2 ]
-then
-   n2=7
-elif [ $cycle -eq 3 ]
-then
-   # just get hindcasts
-   n2=0
-fi
 
-
-for n in `seq -1 $n2`   #all files
+for n in `seq -1 6`   #all files
 #for n in `seq -1 0`    #just analysis files
-#for n in `seq 1 $n2`   #just forecast files
+#for n in `seq 1 6`   #just forecast files
 do
    dd=`date --date="$fdate ${n}day" "+%Y%m%d"`
    f1=SWARP_WW3_ARCTIC-12K_${dd}.nc

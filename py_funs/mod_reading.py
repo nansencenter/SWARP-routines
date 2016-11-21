@@ -1090,14 +1090,19 @@ def plot_var(fobj,var_opts,time_index=0,\
       PC = bmap.pcolor(lon,lat,Marr,latlon=True,ax=ax,vmin=vmin,vmax=vmax)
       if add_cbar:
 
-         # if cbar is None:
-         #    cbar  = fig.colorbar(PC)
-         # else:
-         #    cbar  = fig.colorbar(PC,cax=cbar.ax)
-         from mpl_toolkits.axes_grid1 import make_axes_locatable
-         divider  = make_axes_locatable(ax)
-         cax      = divider.append_axes("right", size="5%", pad=0.15)
-         cbar     = fig.colorbar(PC,cax=cax)
+         if 1:
+            # old way - works for multiple plots
+            if cbar is None:
+               cbar  = fig.colorbar(PC)
+            else:
+               cbar  = fig.colorbar(PC,cax=cbar.ax)
+         else:
+            # new way - doesn't work for multiple plots
+            # - worked for side-by-side plots
+            from mpl_toolkits.axes_grid1 import make_axes_locatable
+            divider  = make_axes_locatable(ax)
+            cax      = divider.append_axes("right", size="5%", pad=0.15)
+            cbar     = fig.colorbar(PC,cax=cax)
 
          pobj  = plot_object(fig=fig,ax=ax,cbar=cbar,axpos=pobj.axpos)
          if clabel is not None:
