@@ -12,8 +12,10 @@
 # 2) forecast version, same as folder name, tex "ice_only"
 # 3) fictive current date set to YYYYMMDD  (if not def. the current date is assumed)
 # OUTPUT
-# save files to NorStore tape, file name of first day in week
+# save files to NorStore tape, file name of FIRST DATE IN WEEK!!
 # outfile=YYYYMMDD_weekly.tar.gz
+# write weekly text file in $path1/WriteToTape_list, list of existing daily files
+# write weekly text file in $path1/NOT_WriteToTape_list, list of NOT existing daily files
 # TODO do we need a replicate of the backup on a different tape??
 
 thisdate=`date`
@@ -66,6 +68,7 @@ weekdir=${date1}_week
 # check for files the last week (assume Sunday, so last 7 days)
 filelist=""
 datelist=""
+notfilelist=""
 for i in {0..6}
 do
    idate=`date +"%Y%m%d" -d "$cdate-$i days"`
@@ -77,24 +80,35 @@ do
       filelist="$filelist $file"
       datelist="$datelist $idate"
    else
-      errormessage="file for $idate DO NOT exist:"
+      errormessage="file for $idate DOES NOT exist:"
       echo $errormessage 1>&2
+      notfilelist="$notfilelist $file"
       #echo "   $file"
    fi
 done
 
 datelist=($datelist)
 filelist=($filelist)
+notfilelist=($notfilelist)
 
 echo "DATELIST:"
 echo "${datelist[@]}"
 echo "FILELIST:"
 echo "${filelist[@]}"
+echo "NOTFILELIST:"
+echo "${notfilelist[@]}"
 
-# collect files into week folder and sub date folders, untar day files and then tar week file 
-# TODO check if weekdir or newdir exist, but if then what?
-if [[ ! -z $filelist ]]
+# if some daily files is missing then write a list with the week name 
+if [[ ${#notfilelist} -gt 0 ]]
 then
+   mkdir -p $path1/NOT_WriteToTape_list
+   printf "%s\n" "${notfilelist[@]}" > $path1/NOT_WriteToTape_list/${weekdir}_notfilelist.txt
+fi
+# collect files into week folder and sub date folders, untar day files and then tar into week file 
+if [[ ${#filelist} -gt 0 ]]
+then
+   mkdir -p $path1/WriteToTape_list
+   printf "%s\n" "${filelist[@]}" > $path1/WriteToTape_list/${weekdir}_filelist.txt
    mkdir -p $path2/$weekdir
    nr=${#filelist[@]}
    ind=`expr $nr - 1`
@@ -104,10 +118,13 @@ then
    do 
       datedir=${datelist[$i]}
       file="${filelist[$i]}" 
-      mkdir -p $path2/$weekdir/$datedir
-      echo "untar $path1/$file to $path2/$weekdir/$datedir"
-      tar -xzf $path1/$file -C $path2/$weekdir/$datedir > /dev/null
-      #TODO when rm files from project/..? rm $path1/$file
+      if [ -s "$path1/$file" ]
+      then
+         mkdir -p $path2/$weekdir/$datedir
+         echo "untar $path1/$file to $path2/$weekdir/$datedir"
+         tar -xzf $path1/$file -C $path2/$weekdir/$datedir > /dev/null
+         # rm files from project/..? rm $path1/$file => done in IfOnTapeThenDelete.sh
+      fi
    done
    outfile=${weekdir}.tar.gz
    echo "tar $path2/$weekdir into $path2/$outfile"
@@ -130,7 +147,7 @@ echo "Save to Tape: /tape/$proj/$path3"
 
 # write to tape (need replica? then add --replicate)
 # TODO! DO NOT remove outfile before it is saved to tape, need to check this with lst? 
- yes | /norstore_osl/diverse/bin/WriteToTape $path2/$outfile $proj $path3
+yes | /norstore_osl/diverse/bin/WriteToTape $path2/$outfile $proj $path3
 if [[ "$?" == "0" ]]; then
  echo "Writing to tape is succesful"
 elif [ "$?" == "1" ]; then
