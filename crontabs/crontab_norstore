@@ -1,0 +1,24 @@
+MAILTO="timothy.williams@nersc.no"
+SWARP_ROUTINES=/norstore_osl/home/timill/SWARP-routines
+FORECAST=/norstore_osl/home/timill/SWARP-routines/forecast_scripts
+COMMONSTORE=/norstore_osl/home/timill/SWARP-routines/forecast_scripts/ModelSetups/common/NorStore
+LOGTP4io=/norstore_osl/home/timill/crontab_logs/SWARP_FC/tape_backup/SWARP_TP4a0.12_ice_only_LOG_`date +\%Y\%m\%d`.log
+LOGBS1io=/norstore_osl/home/timill/crontab_logs/SWARP_FC/tape_backup/SWARP_BS1a0.045_ice_only_LOG_`date +\%Y\%m\%d`.log
+LOGFR1io=/norstore_osl/home/timill/crontab_logs/SWARP_FC/tape_backup/SWARP_FR1a0.03_ice_only_LOG_`date +\%Y\%m\%d`.log
+LOGTP4ww3a=/norstore_osl/home/timill/crontab_logs/SWARP_FC/tape_backup/SWARP_TP4a0.12_wavesice_ww3arctic_LOG_`date +\%Y\%m\%d`.log
+LOGBS1ww3a=/norstore_osl/home/timill/crontab_logs/SWARP_FC/tape_backup/SWARP_BS1a0.045_wavesice_ww3arctic_LOG_`date +\%Y\%m\%d`.log
+LOGFR1ww3a=/norstore_osl/home/timill/crontab_logs/SWARP_FC/tape_backup/SWARP_FR1a0.03_wavesice_ww3arctic_LOG_`date +\%Y\%m\%d`.log
+
+00 12 * * 7 $COMMONSTORE/swarp_fc_tape_backup.sh TP4a0.12   ice_only             >> $LOGTP4io
+00 12 * * 7 $COMMONSTORE/swarp_fc_tape_backup.sh TP4a0.12   wavesice_ww3arctic   >> $LOGTP4ww3a
+00 12 * * 7 $COMMONSTORE/swarp_fc_tape_backup.sh BS1a0.045  ice_only             >> $LOGBS1io
+00 12 * * 7 $COMMONSTORE/swarp_fc_tape_backup.sh BS1a0.045  wavesice_ww3arctic   >> $LOGBS1ww3a
+00 12 * * 7 $COMMONSTORE/swarp_fc_tape_backup.sh FR1a0.03   ice_only             >> $LOGFR1io
+00 12 * * 7 $COMMONSTORE/swarp_fc_tape_backup.sh FR1a0.03   wavesice_ww3arctic   >> $LOGFR1ww3a
+
+# 00 12 * * 1 $COMMONSTORE/IfOnTapeThenDelete.sh TP4 ice_only             >> $LOGTP4io
+# 00 12 * * 1 $COMMONSTORE/IfOnTapeThenDelete.sh TP4 wavesice_ww3arctic   >> $LOGTP4ww3a
+# 00 12 * * 1 $COMMONSTORE/IfOnTapeThenDelete.sh BS1 ice_only             >> $LOGBS1io
+# 00 12 * * 1 $COMMONSTORE/IfOnTapeThenDelete.sh BS1 wavesice_ww3arctic   >> $LOGBS1ww3a
+# 00 12 * * 1 $COMMONSTORE/IfOnTapeThenDelete.sh FR1 ice_only             >> $LOGFR1io
+# 00 12 * * 1 $COMMONSTORE/IfOnTapeThenDelete.sh FR1 wavesice_ww3arctic   >> $LOGFR1ww3a

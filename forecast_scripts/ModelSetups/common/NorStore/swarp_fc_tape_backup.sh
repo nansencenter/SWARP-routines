@@ -104,6 +104,7 @@ then
    mkdir -p $path1/NOT_WriteToTape_list
    printf "%s\n" "${notfilelist[@]}" > $path1/NOT_WriteToTape_list/${weekdir}_notfilelist.txt
 fi
+
 # collect files into week folder and sub date folders, untar day files and then tar into week file 
 if [[ ${#filelist} -gt 0 ]]
 then
@@ -134,14 +135,16 @@ else
    echo $errormessage 2>&1
    exit
 fi
+
 # if new week.tar.gz exist rm weekdir
 if [ -f $path2/$outfile ]; then
    echo "rm folder after compressed week folder: $path2/$weekdir"
    rm -r $path2/$weekdir
    chmod 644 $path2/$outfile
 fi
+
 echo ""
-echo "Collecting $FCtype daily files from $path1"
+echo "Collecting $FCtype daily forecasts from $path1"
 echo "Compress into new week file: $path2/$outfile"
 echo "Save to Tape: /tape/$proj/$path3"
 
@@ -155,7 +158,7 @@ elif [ "$?" == "1" ]; then
  echo "$errormessage" 2>&1
  exit
 fi
-   
+
 ## echo "**** WRITE TO TAPE ****"
 ## echo "yes | WriteToTape $path2/$outfile $proj $path3" 
 
