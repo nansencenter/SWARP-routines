@@ -288,7 +288,7 @@ def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
    # determine resolution of source grid
    X1d   = X1.reshape(X1.size)
    Y1d   = Y1.reshape(Y1.size)
-   Z1d   = Z1.reshape(Z1.size).data
+   Z1d   = Z1.reshape(Z1.size).data.astype(float)
    dx    = abs(X1d[1]-X1d[0])
    dy    = abs(Y1d[1]-Y1d[0])
    res   = np.sqrt(dx**2+dy**2)
@@ -3011,6 +3011,20 @@ class file_list:
       """
       out   = make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
       return out
+   ###########################################################
+
+
+   ###########################################################
+   def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+      """
+      data = self.compare_ice_edge_obs(varname,target_lonlats,\
+            time_index=0,mapping=None,**kwargs)
+      INPUTS:
+      target_lonlats = (tlon,tlat) = 2-tuple of numpy arrays
+      mapping = basemap or pyproj.Proj instance
+      kwargs: mask=None = mask to apply to interpolated data
+      """
+      return interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
    ###########################################################
 
 
