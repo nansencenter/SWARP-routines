@@ -280,22 +280,45 @@ class read_MIZpoly_summary:
 
 ############################################################################
 # Function that reprojects model into observational grid
-def reproj_mod2obs(X1,Y1,Z1,X2,Y2,mask=None):
+def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
+   # input coords from X1,Y1; Z1 is array to interp; X2,Y2 are output matrices
 
-   # getting ready for reprojection
-   Z1d            = 1*Z1.data
-   Z1d[Z1.mask]   = np.nan
 
-   X1vec = X1.reshape(X1.size)
-   Y1vec = Y1.reshape(Y1.size)
-   Z1vec = Z1.reshape(Z1.size)
-   Z1vec = Z1d.reshape(Z1.size)
-   C = [X1vec,Y1vec]
-   C = np.array(C)
-   C = C.T # input coords from X1,Y1; Z1 is array to interp; X2,Y2 are output matrices
+   # ========================================
+   # determine resolution of source grid
+   X1d   = X1.reshape(X1.size)
+   Y1d   = Y1.reshape(Y1.size)
+   Z1d   = Z1.reshape(Z1.size).data.astype(float)
+   dx    = abs(X1d[1]-X1d[0])
+   dy    = abs(Y1d[1]-Y1d[0])
+   res   = np.sqrt(dx**2+dy**2)
+   Z1d[Z1.reshape(Z1.size).mask] = np.nan
+   # ========================================
 
-   # Interpolation can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
-   Z2    = grd(C,Z1vec,(X2,Y2),method='linear')
+
+   # ========================================
+   # reduce size of source grid
+   xmin     = np.min(X2)-2*res
+   ymin     = np.min(Y2)-2*res
+   xmax     = np.max(X2)+2*res
+   ymax     = np.max(Y2)+2*res
+   needed   = np.logical_and(X1d>=xmin,X1d<=xmax)
+   needed   = np.logical_and(needed,Y1d<=ymax)
+   needed   = np.logical_and(needed,Y1d>=ymin)
+   X1d      = X1d[needed]
+   Y1d      = Y1d[needed]
+   Z1d      = Z1d[needed]
+   # ========================================
+
+
+   # ========================================
+   # Interpolation 
+   # - can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
+   C     = np.array([X1d,Y1d]).T
+   Z2    = grd(C,Z1d,(X2,Y2),method=method)
+   # ========================================
+
+   # check output and add mask
    mask2 = np.isnan(Z2)
    if mask is not None:
       # apply union of mask and model nans
@@ -890,6 +913,46 @@ def imshow(fobj,var_opts,pobj=None,\
 ###########################################################
 
 
+###########################################################
+def interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+
+   lon,lat  = fobj.get_lonlat()
+
+   # ===============================================================================
+   # do interpolation in stereographic projection
+   if mapping is None:
+      import pyproj
+      souths   = lat[lat<0]
+      lat_0    = 90.
+      lon_0    = -45.
+      if len(souths)==len(lat):
+         # only use south pole projection if all points in southern hemisphere
+         lat_0    = -90.
+
+      srs   =  '+proj=stere'     \
+               +' +lon_0='+str(lon_0)  \
+               +' +lat_0='+str(lat_0)  \
+               +' +lat_ts='+str(lat_0) \
+               +' +ellps=WGS84'
+
+      mapping  = pyproj.Proj(srs)
+   # ===============================================================================
+
+   #source
+   X,Y   = mapping(lon,lat)
+   Z     = fobj.get_var(varname,time_index=time_index).values #numpy masked array
+
+   #target
+   lons,lats   = target_lonlats
+   x,y         = mapping(lons,lats)
+
+   # do interpolation
+   fvals = reproj_mod2obs(X,Y,Z,x,y,**kwargs) #numpy masked array
+
+   return fvals
+#######################################################################
+
+
 #######################################################################
 def plot_var(fobj,var_opts,time_index=0,\
       pobj=None,bmap=None,HYCOMreg=None,\
@@ -1174,7 +1237,7 @@ def plot_var(fobj,var_opts,time_index=0,\
 
    if test_lonlats is not None:
       for lont,latt in test_lonlats:
-         bmap.plot(lont,latt,'^m',markersize=5,latlon=True,ax=ax)
+         bmap.plot(lont,latt,'^m',markersize=10,latlon=True,ax=ax)
 
    Fplt.finish_map(bmap,ax=ax)
    
@@ -3028,6 +3091,20 @@ class file_list:
       """
       out   = make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
       return out
+   ###########################################################
+
+
+   ###########################################################
+   def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+      """
+      data = self.compare_ice_edge_obs(varname,target_lonlats,\
+            time_index=0,mapping=None,**kwargs)
+      INPUTS:
+      target_lonlats = (tlon,tlat) = 2-tuple of numpy arrays
+      mapping = basemap or pyproj.Proj instance
+      kwargs: mask=None = mask to apply to interpolated data
+      """
+      return interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
    ###########################################################
 
 

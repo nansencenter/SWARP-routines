@@ -560,6 +560,19 @@ class nc_getinfo:
 
 
    ###########################################################
+   def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+      """
+      data = self.compare_ice_edge_obs(varname,target_lonlats,\
+            time_index=0,mapping=None,**kwargs)
+      INPUTS:
+      target_lonlats = (tlon,tlat) = 2-tuple of numpy arrays
+      mapping = basemap or pyproj.Proj instance
+      kwargs: mask=None = mask to apply to interpolated data
+      """
+      return MR.interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
+   ###########################################################
+
+   ###########################################################
    def MIZmap(self,**kwargs):
       """
       Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs)
