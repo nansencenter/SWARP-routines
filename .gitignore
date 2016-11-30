@@ -37,6 +37,7 @@ forecast_scripts/ModelSetups/common/logs/
 crontabs/crontab_dump
 #
 py_funs/out/*
+py_funs/custom_scripts/out/*
 PythonTutorial/out
 PythonTutorial/eg_TP4files
 validation/SWARP*
