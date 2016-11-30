@@ -3,6 +3,15 @@
 
 # get yesterday's date
 ydate=`date -d "yesterday" '+%Y%m%d'`
+ndays=5
+if [ $# -ge 1 ]
+then
+   ydate=$1
+fi
+if [ $# -ge 2 ]
+then
+   ndays=$2
+fi
 
 # where the conc files are stored
 hex_dir=/work/shared/nersc/msc/OSI-SAF
@@ -22,7 +31,7 @@ else
 fi
 
 # check the last 5 days
-for day in `seq 0 5`
+for day in `seq 0 $ndays`
 do
    cdate=`date -d "$ydate -${day}days" +%Y%m%d`
    cyear=`date -d "$cdate" '+%Y'`
@@ -61,7 +70,6 @@ EOF
 #########################################################################
 
    fi
-
 done
 
 #########################################################################
