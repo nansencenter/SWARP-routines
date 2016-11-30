@@ -77,7 +77,7 @@ class time_series:
    def max(self, vname):
       """
       vmax,time_index = self.max(vname)
-      *vname is in self.data.keys():
+      *vname is in self.data.keys()
       * vmax=self.data[vname].max()
       * self.data[vname][time_index]=vmax
       """
@@ -91,7 +91,7 @@ class time_series:
    def min(self, vname):
       """
       vmin,time_index = self.min(vname)
-      *vname is in self.data.keys():
+      *vname is in self.data.keys()
       * vmin=self.data[vname].min()
       * self.data[vname][time_index]=vmin
       """
@@ -118,7 +118,7 @@ class time_series:
          refdate  = self.dates[0]
 
       x  = np.array([(dt-refdate).total_seconds()/xfac for dt in self.dates])
-      y  = self.data[var_name]*yscaling
+      y  = np.array(self.data[var_name])*yscaling
 
       lin  ,= pobj.ax.plot(x,y,**kwargs)
 
@@ -631,6 +631,52 @@ def GetVar(fobj,vname,layer=0,time_index=0):
       vbl   = fobj.get_var(vname,time_index=time_index)
 
    return vbl
+######################################################################
+
+
+######################################################################
+def CompVar(fobj1,fobj2,vname,layer=0,time_index=0):
+
+   if fobj1.filetype=='HYCOM_binary':
+      if layer==0:
+         vbl1   = fobj1.get_var(vname,time_index=time_index)
+         vbl2   = fobj2.get_var(vname,time_index=time_index)
+      else:
+         vbl1   = fobj1.get_var([vname,layer],time_index=time_index)
+         vbl2   = fobj2.get_var([vname,layer],time_index=time_index)
+   elif fobj.filetype=='netcdf':
+      vbl1   = fobj1.get_var(vname,time_index=time_index)
+      vbl2   = fobj2.get_var(vname,time_index=time_index)
+
+   dv = vbl2.values-vbl1.values
+   print('Range 1: %f,%f' %(vbl1.min(),vbl1.max()))
+   print('Range 2: %f,%f' %(vbl2.min(),vbl2.max()))
+   print('Min diff = '+str(dv.min()))
+   print('Max diff = '+str(dv.max()))
+
+   fig1  = plt.figure()
+   fig2  = plt.figure()
+   fig3  = plt.figure()
+   ax1   = fig1.add_subplot(111)
+   ax2   = fig2.add_subplot(111)
+   ax3   = fig3.add_subplot(111)
+   vmin  = min(vbl1.min(),vbl2.min())
+   vmax  = max(vbl1.max(),vbl2.max())
+   print(vmin,vmax)
+
+   p1 = ax1.imshow(vbl1.values.T,vmin=vmin,vmax=vmax,origin='lower')
+   fig1.colorbar(p1)
+   fig1.show()
+
+   p2 = ax2.imshow(vbl2.values.T,vmin=vmin,vmax=vmax,origin='lower')
+   fig2.colorbar(p2)
+   fig2.show()
+
+   p3 = ax3.imshow(dv.T,origin='lower')
+   fig3.colorbar(p3)
+   fig3.show()
+
+   return vbl1,vbl2
 ######################################################################
 
 #######################################################################
@@ -2141,14 +2187,18 @@ def time_average(fobj,varname,start_date=None,end_date=None,**kwargs):
       # ==================================================
       # set dates to analyse
       if start_date is not None:
-         dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         if type(start_date)==type("hey"):
+            # convert from string to datetime object
+            start_date  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
       else:
-         dto0  = fobj.datetimes[0]
+         start_date  = fobj.datetimes[0]
 
       if end_date is not None:
-         dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         if type(end_date)==type("hey"):
+            # convert from string to datetime object
+            end_date  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
       else:
-         dto1  = fobj.datetimes[-1]
+         end_date  = fobj.datetimes[-1]
       # ==================================================
 
 
@@ -2156,7 +2206,7 @@ def time_average(fobj,varname,start_date=None,end_date=None,**kwargs):
       N     = 0
       Vav   = 0
       for dt in fobj.datetimes:
-         if dt>=dto0 and dt<=dto1:
+         if dt>=start_date and dt<=end_date:
             idx   = fobj.datetimes.index(dt)
             V     = fobj.get_var(varname,time_index=idx,**kwargs)
             Vav  += V.values
@@ -2654,7 +2704,9 @@ def get_range_animation(fobj,var_opts,bmap,percentile_min=0,percentile_max=95):
 
 ###########################################################
 def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',\
-      percentile_min=0,percentile_max=95,**kwargs):
+      percentile_min=0,percentile_max=95,\
+      start_date=None,end_date=None,\
+      *kwargs):
 
    var_opts    = check_var_opts(var_opts)
    pobj        = plot_object()
@@ -2682,7 +2734,20 @@ def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',\
 
    # =====================================================
    # loop over time records
-   for i in range(N):
+   i0 = 0
+   i1 = N-1
+   if start_date is not None:
+      if type(start_date)==type("hey"):
+         # convert from string to datetime object
+         start_date  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+      dto_,i0  = fobj.nearestDate(start_date)
+   if end_date is not None:
+      if type(end_date)==type("hey"):
+         # convert from string to datetime object
+         end_date  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+      dto_,i1  = fobj.nearestDate(end_date)
+
+   for i in range(i0,i1+1):
       pobj,bmap   = fobj.make_png(var_opts,time_index=i,pobj=pobj,\
             HYCOMreg=HYCOMreg,figdir=figdir,**kwargs)
 
@@ -2705,7 +2770,9 @@ def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',\
 ###########################################################
 def make_png_pair_all(fobj,var_opts1,var_opts2,\
       HYCOMreg=None,figdir='.',\
-      percentile_min=0,percentile_max=95,**kwargs):
+      percentile_min=0,percentile_max=95,\
+      start_date=None,end_date=None,\
+      *kwargs):
 
    pobj        = plot_object()
    fig,ax,cbar = pobj.get()
@@ -2731,7 +2798,20 @@ def make_png_pair_all(fobj,var_opts1,var_opts2,\
 
    ############################################################
    # loop over time records
-   for i in range(N):
+   i0 = 0
+   i1 = N-1
+   if start_date is not None:
+      if type(start_date)==type("hey"):
+         # convert from string to datetime object
+         start_date  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+      dto_,i0  = fobj.nearestDate(start_date)
+   if end_date is not None:
+      if type(end_date)==type("hey"):
+         # convert from string to datetime object
+         end_date  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+      dto_,i1  = fobj.nearestDate(end_date)
+
+   for i in range(i0,i1+1):
       pobj,bmap   = fobj.make_png_pair(var_opts1,var_opts2,time_index=i,pobj=pobj,\
             HYCOMreg=HYCOMreg,figdir=figdir,**kwargs)
 
