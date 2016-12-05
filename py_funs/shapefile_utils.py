@@ -495,33 +495,37 @@ class MIZ_from_shapefile:
       print('\nTesting if polygons are in the MIZ...')
       for n,lut in enumerate(self.shapes.records):
 
-         # ========================================================
-         # Try to define MIZ:
-         fdct  = {}
-         bools = np.zeros((len(form_cats_MIZ)))
-         for i,key in enumerate(form_cats_MIZ):
-            sval  = lut[key]        # string 
-            val   = form_vals[sval] # integer from form_vals dictionary 
-            fdct.update({key:val})
-            
-            bools[i] = val<=MIZthresh
-
-         if match_all_crits:
-            # define MIZ if all of the forms are <= threshhold
-            isMIZ = np.all(bools)
-         else:
-            # define MIZ if any of the forms are <= threshhold
-            isMIZ = np.any(bools)
-         # ========================================================
-
-         if isMIZ:
-            self.MIZ_forms.append([n,fdct])
-         elif lut['POLY_TYPE']=='I':
-            # not MIZ but ice
-            self.PACK_forms.append(n)
-         else:
-            # not ice
+         # print(lut)
+         if lut['POLY_TYPE']=='W':
+            # water
             self.WTR_forms.append(n)
+            # print(n,lut)
+         else:
+            # ========================================================
+            # Try to define MIZ:
+            fdct  = {}
+            bools = np.zeros((len(form_cats_MIZ)))
+            for i,key in enumerate(form_cats_MIZ):
+               sval  = lut[key]        # string 
+               val   = form_vals[sval] # integer from form_vals dictionary 
+               fdct.update({key:val})
+               
+               bools[i] = val<=MIZthresh
+
+            if match_all_crits:
+               # define MIZ if all of the forms are <= threshhold
+               isMIZ = np.all(bools)
+            else:
+               # define MIZ if any of the forms are <= threshhold
+               isMIZ = np.any(bools)
+            # ========================================================
+
+            if isMIZ:
+               self.MIZ_forms.append([n,fdct])
+               # print(n,lut)
+            else:
+               # not MIZ but ice
+               self.PACK_forms.append(n)
       # ============================================================
 
 
@@ -862,20 +866,33 @@ class MIZ_from_shapefile:
 
       # ====================================================
       # limits of figure (not automatic with patches)
-      x0,y0,x1,y1 = self.MP_WTR .bounds
-      X0,Y0,X1,Y1 = self.MP_PACK.bounds
-      x0 = min(x0,X0)
-      y0 = min(y0,Y0)
-      x1 = max(x1,X1)
+      X0 = []
+      X1 = []
+      Y0 = []
+      Y1 = []
+      if self.N_WTR>0:
+         x0,y0,x1,y1 = self.MP_WTR.bounds
+         X0.append(x0)
+         X1.append(x1)
+         Y0.append(y0)
+         Y1.append(y1)
+
+      if self.N_PACK>0:
+         x0,y0,x1,y1 = self.MP_PACK.bounds
+         X0.append(x0)
+         X1.append(x1)
+         Y0.append(y0)
+         Y1.append(y1)
+
       if self.N_MIZ>0:
-         y1 = max(y1,Y1)
-         X0,Y0,X1,Y1 = self.MP_MIZ.bounds
-         x0 = min(x0,X0)
-         y0 = min(y0,Y0)
-         x1 = max(x1,X1)
-         y1 = max(y1,Y1)
-      ax.set_xlim([x0,x1])
-      ax.set_ylim([y0,y1])
+         x0,y0,x1,y1 = self.MP_MIZ.bounds
+         X0.append(x0)
+         X1.append(x1)
+         Y0.append(y0)
+         Y1.append(y1)
+
+      ax.set_xlim([np.min(X0),np.max(X1)])
+      ax.set_ylim([np.min(Y0),np.max(Y1)])
       ax.set_xlabel('Longitude, $^\circ$E',fontsize=18)
       ax.set_ylabel('Latitude, $^\circ$N',fontsize=18)
       for li in ax.get_xticklabels():
