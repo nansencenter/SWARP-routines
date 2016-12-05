@@ -43,8 +43,17 @@ class time_series:
 
    ############################################
    def __init__(self,dates,data,units=None,filename=None,overwrite=False):
-      self.dates                 = dates
-      self.data                  = data
+
+      # ==================================================================
+      # sort dates and data
+      DI          = sorted([(e,i) for i,e in enumerate(dates)])
+      self.dates  = [e for e,i in DI]
+      self.data   = {}
+      for vbl in data:
+         V  = [data[vbl][i] for e,i in DI]
+         self.data.update({vbl:np.array(V)})
+      # ==================================================================
+
       self.units                 = units
       self.variables             = data.keys()
       self.number_of_dates       = len(dates)
@@ -234,9 +243,11 @@ class read_MIZpoly_summary:
       
       ########################################################
       self.info   = {'filename'    :tfil,\
+                     'fields'      :[],\
                      'datetime'    :None,\
                      'time_in_days':None,\
                      'datetime_ref':datetime(1901,1,1)}
+
       if (cdate is not None) and (ctime is not None):
          self.info['datetime']   = datetime.strptime(cdate+' '+ctime,'%Y%m%d %H%M%S')
       elif (cdate is not None):
@@ -259,7 +270,7 @@ class read_MIZpoly_summary:
             else:
                raise ValueError('date in '+tfil+' has wrong format')
 
-            if self.info.datetime is not None:
+            if self.info['datetime'] is not None:
                if self.info['datetime'] != dtm:
                   raise ValueError('date in '+tfil+' not consistent with inputs cdate,ctime')
             else:
@@ -267,6 +278,7 @@ class read_MIZpoly_summary:
          else:
             val   = float(sp[1].strip())
             setattr(self,att,val)
+            self.info['fields'].append(att)
 
       if self.info['datetime'] is not None:
          dt                         = self.info['datetime']-self.info['datetime_ref']
@@ -1624,7 +1636,8 @@ def compare_ice_edge_obs_all(fobj,HYCOMreg=None,figdir='.',**kwargs):
 ###########################################################
 def MIZmap(fobj,var_name='dmax',time_index=0,\
       vertices=None,regions=None,no_width=False,\
-      do_sort=False,EastOnly=True,plotting=True,**kwargs):
+      do_sort=False,EastOnly=True,\
+      plotting=True,show=True,**kwargs):
    """
    Call  : fobj.MIZmap(var_name='dmax',time_index=0,
                vertices=None,,regions=None,
@@ -1684,6 +1697,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       raise ValueError('Cannot pass in both vertices and regions')
    elif vertices is not None:
       do_sort  = False
+      regions  = ['custom']
    elif regions is not None:
       do_sort  = True
    
@@ -1712,37 +1726,32 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
             regions.remove('balt')
             regions.remove('Antarctic')
       # ==================================================================
+   elif regions is None:
+      regions  = ['Arctic']
 
-      for reg in regions:
-         mp = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,region=reg)
-         MPdict.update({reg:mp})
+   # ==================================================================
+   # loop over regions to classify polygons
+   for reg in regions:
+      mp = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,region=reg,vertices=vertices)
+      MPdict.update({reg:mp})
 
-         fname0   = fobj.basename+'_'+var_name +'_'+reg
-         tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+      fname0   = fobj.basename+'_'+var_name +'_'+reg
+      tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+      if 'all' in tfile:
          tfiles.update({reg:tfile['all']})
 
-      if 0:
-         MPdict['gre'].show_maps()
-         return MPdict
+   if 0: #'gre' in MPdict.keys():
+      MPdict['gre'].show_maps()
+      return MPdict
 
-   else:
-      # not do_sort:
-      # - do whole Arctic
-      reg   = 'Arctic'
-      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices,region=reg)
-      MPdict.update({reg:mp})
-      #
-      if vertices is None:
-         fname0   = fobj.basename+'_'+var_name +'_'+reg
-      else:
-         fname0   = fobj.basename+'_'+var_name
-
-      tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-      tfiles.update({reg:tfile['all']})
 
    if no_width:
       return tfiles
+   # ==================================================================
 
+
+   # ==================================================================
+   # calc MIZ widths
    Pdict    = {}
    PLOTTING = False
    for reg in tfiles.keys():
@@ -1843,7 +1852,8 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          Fplt.finish_map(bmap)
          print('Saving '+figname)
          fig.savefig(figname)
-         plt.show(fig)
+         if show:
+            plt.show(fig)
          ax.cla()
          fig.clear()
          # finished region
@@ -2372,20 +2382,28 @@ class MIZmap_all:
       # ==================================================
       # set dates to analyse, check for missing dates
       if start_date is not None:
-         dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
-         DTO   = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         if type(start_date)==type("hey"):
+            # convert from string to datetime object
+            dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto0  = start_date
       else:
          dto0  = fobj.datetimes[0]
-         DTO   = fobj.datetimes[0]
 
       if end_date is not None:
-         dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         if type(end_date)==type("hey"):
+            # convert from string to datetime object
+            dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto1  = end_date
       else:
          dto1  = fobj.datetimes[-1]
 
 
       self.times_to_analyse  = [dto0]
       self.missing_times     = []
+
+      DTO   = dto0
       while DTO<dto1:
          DTO   = DTO+timedelta(step)
          self.times_to_analyse.append(DTO)
@@ -2400,7 +2418,11 @@ class MIZmap_all:
      
       # ==================================================
       # loop over times:
-      Init  = True
+      Init     = True
+      outdir3  = outdir+'/time_series' # directory for time series files
+      if not os.path.exists(outdir3):
+         os.mkdir(outdir3)
+
       for it,dto in enumerate(self.times_to_analyse):
          
          # restrict analysis dates
@@ -2427,7 +2449,7 @@ class MIZmap_all:
          # check if any answers present
          empty = True
          regs  = out.summary_files.keys()
-         if regs is not None:
+         if len(regs)>0:
             empty    = False
 
             if Init:
@@ -2435,7 +2457,7 @@ class MIZmap_all:
                sumfile  = out.summary_files[reg] # full path
                print('Initialising variable list from '+sumfile+'...')
 
-               sfo      = read_MIZpoly_summary(sumfile)
+               sfo   = read_MIZpoly_summary(sumfile)
                # EG OF SUMMARY FILE
                # Total_perimeter :          1146733
                # Total_area :      16769683265
@@ -2467,10 +2489,12 @@ class MIZmap_all:
             Init                    = False # don't need to do this again
             self.types              = out.types
             self.regions_analysed   = out.regions_analysed
+            self.time_series        = {}
 
             data  = {} # data will be data[OU][reg][variable]
             for reg in out.regions_analysed:
                data.update({reg:{}})
+               self.time_series.update({reg:[]})
 
                var_names2  = {}
                for vbl in var_names:
@@ -2499,22 +2523,18 @@ class MIZmap_all:
                for vbl in var_names:
                   v  = var_names2[vbl]
                   data[reg][v][it]  = getattr(sfo,vbl)
-      # ===================================================================
 
+            # convert data to time_series object
+            # - text file updated each time step
+            ctype = out.types[0]
+            ofil  = outdir3+'/time_series_'+ctype+'_'+reg+'.txt'
+            self.time_series[reg]  = time_series(self.times_to_analyse,\
+                  data[reg],filename=ofil,overwrite=True)
 
-      # ===================================================================
-      # convert data to time_series object
-      # - gives plotting options etc
-      self.time_series  = {}
-      outdir3  = outdir+'/time_series'
-      if not os.path.exists(outdir3):
-         os.mkdir(outdir3)
+            continue # end loop over regions
+         # ===================================================================
 
-      ctype = out.types[0]
-      for reg in out.regions_analysed:
-         ofil  = outdir3+'/time_series_'+ctype+'_'+reg+'.txt'
-         self.time_series.update({reg:[]})
-         self.time_series[reg]  = time_series(self.times_to_analyse,data[reg],filename=ofil)
+         continue # end loop over times
       # ===================================================================
 
       return
@@ -2531,20 +2551,33 @@ class AODs_all:
       # ==================================================
       # set dates to analyse, check for missing dates
       if start_date is not None:
-         dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
-         DTO   = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         if type(start_date)==type("hey"):
+            # convert from string to datetime object
+            if len(start_date)==8:
+               dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+            else:
+               dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto0  = start_date
       else:
          dto0  = fobj.datetimes[0]
-         DTO   = fobj.datetimes[0]
 
       if end_date is not None:
-         dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         if type(end_date)==type("hey"):
+            # convert from string to datetime object
+            if len(end_date)==8:
+               dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+            else:
+               dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto1  = end_date
       else:
          dto1  = fobj.datetimes[-1]
 
 
       self.times_to_analyse  = [dto0]
       self.missing_times     = []
+      DTO   = dto0
       while DTO<dto1:
          DTO   = DTO+timedelta(step)
          self.times_to_analyse.append(DTO)
@@ -3178,32 +3211,38 @@ class file_list:
 
 ######################################################################
 class polygon_file_list:
-   def __init__(self,directory,prefix='TP4archv_wav.',suffix='_dmax.txt',date_format='%Y%m%dT%H%M%SZ',add_day=False):
+   def __init__(self,file_info=None,directory=None,prefix='TP4archv_wav.',suffix='_dmax.txt',date_format='%Y%m%dT%H%M%SZ',add_day=False):
       import os
 
       self.object_type  = 'polygon_file_list'
-      self.directory    = directory
+      if file_info is not None:
+         file_list   = file_info['files']
+         datetimes   = file_info['dates']
+         for i,f in enumerate(file_list):
+            file_list[i]   = os.path.abspath(f)
 
-      lst         = os.listdir(directory)
-      file_list   = []
-      datetimes   = []
-      for fil in lst:
+      else:
 
-         if not ((suffix in fil) and (prefix in fil)):
-            continue
+         lst         = os.listdir(directory)
+         file_list   = []
+         datetimes   = []
+         for fil in lst:
 
-         cdate = fil.strip(suffix).strip(prefix)
-         print(cdate)
-         dto   = datetime.strptime(cdate,date_format)
+            if not ((suffix in fil) and (prefix in fil)):
+               continue
+
+            cdate = fil.strip(suffix).strip(prefix)
+            print(cdate)
+            dto   = datetime.strptime(cdate,date_format)
 
 
-         if add_day:
-            # model has julian day starting at 0
-            # - may sts need to add 1 day
-            dto  += timedelta(1)
+            if add_day:
+               # model has julian day starting at 0
+               # - may sts need to add 1 day
+               dto  += timedelta(1)
 
-         file_list.append(fil)
-         datetimes.append(dto)
+            file_list.append(directory+'/'+fil)
+            datetimes.append(dto)
 
       self.number_of_time_records   = len(file_list)
       if self.number_of_time_records==0:
@@ -3219,7 +3258,7 @@ class polygon_file_list:
       TV                   = sorted([(e,i) for i,e in enumerate(timevalues)])
       self.timevalues,ii   = np.array(TV).transpose()
       self.datetimes       = [datetimes[int(i)] for i in ii]
-      self.file_list       = [self.directory+'/'+file_list[int(i)] for i in ii]
+      self.file_list       = [file_list[int(i)] for i in ii]
 
       return
    ###########################################################
