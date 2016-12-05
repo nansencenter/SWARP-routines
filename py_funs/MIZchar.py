@@ -1094,7 +1094,7 @@ def get_MIZ_poly(ZM,lon,lat,fice,var_name='dmax',region=None,vertices=None):
 
    if vertices is not None:
       MIZbins  = mask_region(MIZbins,lon,lat,vertices=vertices)
-   if region is not None:
+   elif region is not None:
       MIZbins  = mask_region(MIZbins,lon,lat,region=region)
    
    return MIZ_poly(MIZbins,lon,lat,region=region)
@@ -2471,7 +2471,7 @@ def get_summary(MIZpolys,wt_meth='A'):
 
 
 # ===========================================================================================
-def save_summary(MIZpolys,filename,wt_meth='A'):
+def save_summary(MIZpolys,filename,date_time=None,wt_meth='A'):
 
    # get summary info
    R,S   = get_summary(MIZpolys,wt_meth=wt_meth)
@@ -2480,8 +2480,15 @@ def save_summary(MIZpolys,filename,wt_meth='A'):
    print('\nWriting summary to '+filename+'...\n')
 
    w  = open(filename,'w')
+   if date_time is not None:
+      if type(date_time) == type('hey'):
+         w.write('Date : '+date_time+'\n')
+      else:
+         w.write('Date : '+date_time.strftime('%Y%m%dT%H%M%SZ')+'\n')
+
    for fld in ['tot_perim','tot_area','int_width_mean','tot_width_mean','int_width_max','tot_width_max']:
       w.write(S[fld]+' : %16.0f\n' %(R[fld]))
+
    w.close()
 
    return R,S
