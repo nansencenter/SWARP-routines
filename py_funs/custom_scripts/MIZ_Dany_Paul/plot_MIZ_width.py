@@ -7,8 +7,10 @@ from matplotlib import pyplot as plt
 rootdir  = '/work/timill/DANY_PAUL_tests'
 
 # DMI ice charts
+# - 1st need to merge DMI time-series 2005,2006 manually
+# - yearly time series are in /work/shared/nersc/msc/DMI_ice_charts/MIZ_FA/MIZ_polys_classified/[YEAR]/time_series
 TS = {}
-ts = mr.read_time_series(rootdir+'/time_series_DMI_2005_2006.txt') # DMI time-series 2005-2006 merged
+ts = mr.read_time_series(rootdir+'/time_series_DMI_2005_2006.txt')
 TS.update({'DMI':ts})
 # print(ts.variables)
 
