@@ -292,11 +292,13 @@ def finish_map(bm,**kwargs):
 
 
 ############################################################################
-def plot_anomaly(lon,lat,anom,anom_fig,text=None,\
-      HYCOM_region='Arctic',clim=None,clabel=None):
+def plot_scalar(lon,lat,V,figname=None,text=None,\
+      mask_lower_than=None,\
+      HYCOM_region='Arctic',bmap=None,clim=None,clabel=None):
 
-   pobj     = plot_object()
-   bmap     = start_HYCOM_map(HYCOM_region)
+   pobj  = plot_object()
+   if bmap is None:
+      bmap  = start_HYCOM_map(HYCOM_region)
 
    if clim is None: 
       vmin  = None
@@ -304,7 +306,17 @@ def plot_anomaly(lon,lat,anom,anom_fig,text=None,\
    else:
       vmin,vmax   = clim
 
-   PC       = bmap.pcolor(lon,lat,anom,latlon=True,ax=pobj.ax,vmin=vmin,vmax=vmax)
+   if mask_lower_than is not None:
+      import numpy as np
+      good        = np.logical_not(V.mask)
+      mask1       = np.zeros(V.shape,dtype='bool')
+      mask1[good] = (V[good]<mask_lower_than)   # water
+      mask1       = np.logical_or(V.mask,mask1)    # water or NaN
+      V_          = np.ma.array(V.data,mask=mask1) # new array so we don't change V
+   else:
+      V_ = V # just pointer to V
+
+   PC       = bmap.pcolor(lon,lat,V_,latlon=True,ax=pobj.ax,vmin=vmin,vmax=vmax)
    cbar     = pobj.fig.colorbar(PC)
    if clabel is not None:
       cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
@@ -317,11 +329,14 @@ def plot_anomaly(lon,lat,anom,anom_fig,text=None,\
       pobj.ax.annotate(text,xy=xyann,xycoords='axes fraction',fontsize=18)
 
    finish_map(bmap)
-   pobj.fig.savefig(anom_fig)
 
-   print('Saving '+anom_fig+'\n')
-   plt.close(pobj.fig)
-   return
+   if figname is not None:
+      pobj.fig.savefig(figname)
+
+      print('Saving '+figname+'\n')
+      plt.close(pobj.fig)
+
+   return pobj,bmap
 ############################################################################
 
 
