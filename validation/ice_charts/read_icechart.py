@@ -25,11 +25,10 @@ for opt,arg in opts:
    if opt=='--chart_source':
       chart_source   = arg
    if opt=='--overwrite':
-      if arg.lower() in ['true','yes','1','t']:
+      if arg.lower() in ['true','t','yes','y','1']:
          overwrite   = True
-      elif arg.lower() not in ['false','no','0','f']:
+      elif arg.lower() not in ['false','f','no','n','0']:
          raise ValueError('Unknown value for overwrite: '+arg+'- use eg T or F')
-      print(overwrite)
 
 if indir is None:
    raise ValueError('Specify input dir with --indir=')
