@@ -1,8 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from mpl_toolkits.basemap import Basemap
 from datetime import datetime,timedelta
-from netCDF4 import Dataset as ncopen
 import fns_plotting as Fplt
 from scipy.interpolate import griddata as grd
 import os,sys
@@ -11,10 +9,21 @@ import geometry_sphere as GS
 
 
 ##########################################################
-def basemap_OSISAF():
-    bmap = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
-               projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
-    return bmap
+def map_OSISAF(map_type="pyproj"):
+   a  = 6378273
+   b  = 6356889.44891
+   lon0  = -45
+   lat0  = 90
+   lat1  = 70
+   if map_type=="pyproj":
+      import pyproj
+      return pyproj.Proj(proj='stere',a=a,b=b,\
+                         lat_ts=lat1,lat_0=lat0,lon_0=lon0)
+   elif map_type=="basemap":
+      from mpl_toolkits.basemap import Basemap
+      return Basemap(width=7600000,height=11200000,resolution='i',\
+                     rsphere=(a,b),projection='stere',\
+                     lat_ts=lat1,lat_0=lat0,lon_0=lon0)
 ##########################################################
 
 
@@ -821,10 +830,11 @@ def imshow(fobj,var_opts,pobj=None,\
       Marr  = np.hypot(vbl.values.data,vbl2.values.data)
       Marr  = np.ma.array(conv_fac*Marr,mask=mask)
 
-   elif (vec_opt==2) or (vec_opt==3):
+   elif (vec_opt==2) or (vec_opt==3) or (vec_opt==5):
       # 2: plot vector magnitude + direction (unit vectors)
       # 3: plot vector direction only
-      raise ValueError('vec_opt==2,3 disabled for imshow')
+      # 5: vbl is a direction - convert to vector
+      raise ValueError('vec_opt==2,3,5 disabled for imshow')
 
    elif vec_opt==4:
 
@@ -851,20 +861,6 @@ def imshow(fobj,var_opts,pobj=None,\
          # direction-to
          dir[dir>180]   = dir[dir>180]-360
          Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
-
-   elif vec_opt==5:
-      #vbl is a direction - convert to vector
-      Marr  = None
-      dir   = 90-vbl.values.data
-      if dir_from:
-         dir   = np.pi/180*(dir+180)
-      else:
-         dir   = np.pi/180*dir
-
-      # rotate unit vectors
-      U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
-      U     = np.ma.array(U,mask=mask)
-      V     = np.ma.array(V,mask=mask)
    ################################################################## 
 
 
@@ -973,7 +969,6 @@ def plot_var(fobj,var_opts,time_index=0,\
       clim=None,add_cbar=True,clabel=None,show=True,\
       test_lonlats=None):
 
-   from mpl_toolkits.basemap import Basemap
    from matplotlib import cm
 
    var_opts    = check_var_opts(var_opts,fobj.all_variables)
@@ -1767,7 +1762,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       ##########################################################
 
 
-      ##########################################################
+      # ========================================================
       # basemap for plotting
       if vertices is None:
          if do_sort:
@@ -1790,10 +1785,11 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          lonc,latc   = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),\
                         NH=True,inverse=True)
          # make basemap
-         bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
-                                 width=width,height=height,\
-                                 resolution='i')
-      ##########################################################
+         from mpl_toolkits.basemap import Basemap
+         bmap  = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
+                         width=width,height=height,\
+                         resolution='i')
+      # ========================================================
 
       # process each text file to get MIZ width etc
       print("MIZchar.single_file: "+tfil+"\n")
@@ -1871,6 +1867,99 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
                   fobj.datetimes[time_index])
 ###########################################################
 
+def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,fig_info=None):
+   """
+   get_anomaly(lon,lat,ZZ,anom_fil_start,fig_info=None)
+   ZZ = [Z_mod,Z_obs] = list of masked arrays with same mask
+   outputs:
+      anom_fil_start+"_"+cdate+".npz" : save arrays to numpy binary file
+      anom_fil_start+"_"+cdate+".txt" : save RMSE and bias to this text file
+   """
+
+   # ==================================================================
+   # calc RMSE and bias
+   j_mod = 0
+   j_obs = 1
+   cdiff = ZZ[j_mod]-ZZ[j_obs]
+   good  = np.logical_not(ZZ[j_mod].mask)
+   cmin  = 0.01 # more conservative than 0.15 for plotting
+
+   # 1st estimate (lower bound)
+   # - only consider pixels with ice in both datasets
+   both_ice       = np.copy(good)
+   both_ice[good] = np.logical_and(ZZ[j_mod][good]>cmin,ZZ[j_obs][good]>cmin)
+   RMSEb          = np.sqrt(np.mean(cdiff[both_ice]**2))
+   BIASb          = np.mean(cdiff[both_ice])
+
+   # 2nd estimate (upper bound)
+   # - consider pixels with ice in one of the datasets
+   either_ice        = np.copy(good)
+   either_ice[good]  = np.logical_or(ZZ[j_mod][good]>cmin,ZZ[j_obs][good]>cmin)
+   RMSEe             = np.sqrt(np.mean(cdiff[either_ice]**2))
+   BIASe             = np.mean(cdiff[either_ice])
+
+   anom_fil = anom_fil_start+"_"+cdate+".npz"
+   print('Saving '+anom_fil+'\n')
+   np.savez(anom_fil,lon=lon,lat=lat,\
+         anomaly=cdiff.data,mask=cdiff.mask)
+
+   # write RMSE and BIAS (global variables - not regional) to summary files
+   sumname  = anom_fil.replace('.npz','.txt')
+   fid      = open(sumname,'w')
+   fid.write('Date            : '+cdate+'\n')
+   fid.write('RMSE_both_ice   : '+str(RMSEb)+'\n')
+   fid.write('Bias_both_ice   : '+str(BIASb)+'\n')
+   fid.write('RMSE_either_ice : '+str(RMSEe)+'\n')
+   fid.write('Bias_either_ice : '+str(BIASe))
+   fid.close()
+
+   if fig_info is not None:
+
+      # =================================================================
+      # plot model + ice edge
+      pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_mod],\
+            text=fig_info['text'][j_mod],\
+            mask_lower_than=cmin,\
+            HYCOM_region=fig_info['HYCOM_region'],\
+            clim=[0,1],clabel='Sea ice concentration')
+
+      bmap.contour(lon,lat,ZZ[j_obs][:,:],[.15],colors='g',\
+            linewidths=2,ax=pobj.ax,latlon=True)
+
+      figname  = fig_info['fignames'][j_mod]
+      print('Saving '+figname+'\n')
+      pobj.fig.savefig(figname)
+      pobj.ax.cla()
+      plt.close(pobj.fig)
+      # =================================================================
+
+
+      # =================================================================
+      # plot obs
+      pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_obs],\
+            text=fig_info['text'][j_obs],\
+            mask_lower_than=0.01,\
+            figname=fig_info['fignames'][j_obs],\
+            bmap=bmap,clim=[0,1],\
+            HYCOM_region=fig_info['HYCOM_region'],\
+            clabel='Sea ice concentration')
+      # =================================================================
+
+         
+      # =================================================================
+      # plot anomoly
+      anom_fig = anom_fil.replace('.npz','.png')
+
+      # mask "neither ice" region
+      cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
+      Fplt.plot_scalar(lon,lat,cdiff,figname=anom_fig,\
+            text=fig_info['text'][j_mod],\
+            HYCOM_region=fig_info['HYCOM_region'],\
+            clim=[-.5,.5],clabel='Concentration anomaly')
+      # =================================================================
+
+   return anom_fil
+
 
 ###########################################################
 def areas_of_disagreement(fobj,time_index=0,\
@@ -1908,7 +1997,9 @@ def areas_of_disagreement(fobj,time_index=0,\
 
    if obs_type == 'OSISAF':
       var_name = 'fice'
-      bmap     = basemap_OSISAF()
+      # bmap     = basemap_OSISAF()
+      mapping  = map_OSISAF(map_type="pyproj")
+
       if obs_path is None:
       	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
             dtmo.strftime('%Y')+'_nh_polstere/'
@@ -1925,55 +2016,28 @@ def areas_of_disagreement(fobj,time_index=0,\
       print(obsfil)
       print('\n')
 
-   nci         = nc_getinfo(obsfil)
-   lon2,lat2   = nci.get_lonlat()
-   Xobs,Yobs   = bmap(lon2,lat2)
-   Zobs        = GetVar(nci,var_name,time_index=0)
-
-   # model grid & compared quantity
-   Zmod        = GetVar(fobj,var_name,time_index=time_index)
-   lon,lat     = fobj.get_lonlat()
-   Xmod,Ymod   = bmap(lon,lat)
-
+   # =================================================================
+   # observed conc
+   nci               = nc_getinfo(obsfil)
+   lon_ref,lat_ref   = nci.get_lonlat()
+   Zobs              = GetVar(nci,var_name,time_index=0)
    if '%' in Zobs.units:
       conv_fac = .01
    else:
       conv_fac = 1
+   Zref  = conv_fac*Zobs.values
 
-   if 1:
-      #Zref,Zint should be np.ma.array
-      lon_ref,lat_ref   = lon2,lat2
-      Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
-      Xin,Yin,Zin       = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
-
-   # add the mask for the obs (ref) to interpolated model results (Zout)
-   if PRINT_INFO:
-      print('Reprojecting model...')
-   Zout   = reproj_mod2obs(Xin,Yin,Zin,Xref,Yref,mask=1*Zref.mask)
+   # interpolate model grid & compared quantity onto observation grid
+   # - also add the Nan mask for the observations to the model
+   Zout  = interp2points(fobj,var_name,[lon_ref,lat_ref],time_index=time_index,\
+            mapping=mapping,mask=1*Zref.mask)
 
    # add the mask for Zout to Zref
    Zref  = np.ma.array(Zref.data,mask=Zout.mask)
+   # =================================================================
 
 
-   # ==================================================================
-   # calc RMSE and bias
-   cdiff       = Zout-Zref
-   good        = np.logical_not(Zout.mask)
-
-   # 1st estimate (lower bound)
-   # - only consider pixels with ice in both datasets
-   both_ice       = np.copy(good)
-   both_ice[good] = np.logical_and(Zout[good]>0.,Zref[good]>0.)
-   RMSEb          = np.sqrt(np.mean(cdiff[both_ice]**2))
-   BIASb          = np.mean(cdiff[both_ice])
-
-   # 2nd estimate (upper bound)
-   # - consider pixels with ice in one of the datasets
-   either_ice        = np.copy(good)
-   either_ice[good]  = np.logical_or(Zout[good]>0.,Zref[good]>0.)
-   RMSEe             = np.sqrt(np.mean(cdiff[either_ice]**2))
-   BIASe             = np.mean(cdiff[either_ice])
-
+   # =================================================================
    if 'outdir' in kwargs:
       outdir   = kwargs['outdir']
    else:
@@ -1981,59 +2045,33 @@ def areas_of_disagreement(fobj,time_index=0,\
    if not os.path.exists(outdir):
       os.mkdir(outdir)
 
-   anom_fil = outdir+'/conc_anomaly_'+obs_type+'_'+cdate+'.npz'
-   print('Saving '+anom_fil+'\n')
-   np.savez(anom_fil,lon=lon2,lat=lat2,\
-         anomaly=cdiff.data,mask=cdiff.mask)
-
-   # write RMSE and BIAS (global variables - not regional) to summary files
-   sumname  = anom_fil.replace('.npz','.txt')
-   fid      = open(sumname,'w')
-   fid.write('RMSE_both_ice   : '+str(RMSEb)+'\n')
-   fid.write('Bias_both_ice   : '+str(BIASb)+'\n')
-   fid.write('RMSE_either_ice : '+str(RMSEe)+'\n')
-   fid.write('Bias_either_ice : '+str(BIASe))
-   fid.close()
-
+   anom_fil_start = outdir+'/conc_anomaly_'+obs_type
+   fig_info       = None
    if plotting>0:
+
+      # HYCOM region
+      fig_info = {}
       if fobj.HYCOM_region=='TP4':
-         HYCreg   = 'Arctic'
+         fig_info.update({'HYCOM_region':'Arctic'})
       else:
-         HYCreg   = fobj.HYCOM_region
+         fig_info.update({'HYCOM_region':fobj.HYCOM_region})
 
-      # =================================================================
-      # plot model + ice edge
-      cdate    = fobj.datetimes[time_index].strftime('%Y%m%dT%H%M%SZ')
-      figname  = outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png'
-      fobj.compare_ice_edge_obs(obs_type=obs_type,obs_path=obs_path,obs_option=obs_option,\
-            HYCOMreg=HYCreg,figname=figname,\
-            date_label=DTlabel,clabel='Sea ice concentration')
+      # figure file names
+      fig_info.update({'fignames':\
+            [outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png',\
+             outdir+'/'+nci.basename+'_'+obs_type+'_'+cdate+'.png']})
 
-      # plot obs
-      var_opts = make_plot_options('fice',ice_mask=True)
-      nci.make_png(var_opts,figdir=outdir,HYCOMreg=HYCreg,\
-            date_label=1,clabel='Sea ice concentration')
-      # =================================================================
+      # figure annotations
+      if DTlabel==1:
+         fig_info.update({'text':[cdate,cdate]})
+      else:
+         fig_info.update({'text':[DTlabel,cdate]})
 
-         
-      # =================================================================
-      # plot anomoly
-      anom_fig = anom_fil.replace('.npz','.png')
-      cmax     = .5
-      clabel   = 'Concentration anomaly'
-
-      # mask "not good" region
-      cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
-      Fplt.plot_anomaly(lon2,lat2,cdiff,anom_fig,\
-            # text=cdate,\
-            text=DTlabel,\
-            HYCOM_region=HYCreg,\
-            clim=[-cmax,cmax],clabel=clabel)
-      # =================================================================
-
+   anom_fil = get_conc_anomaly(lon_ref,lat_ref,[Zout,Zref],anom_fil_start,cdate,fig_info=fig_info)
    # ==================================================================
 
 
+   # ==================================================================
    MPdict         = {'Over':{},'Under':{}}
    tfiles         = {'Over':{},'Under':{}}
    summary_files  = {'Over':{},'Under':{}}
@@ -2043,11 +2081,11 @@ def areas_of_disagreement(fobj,time_index=0,\
       # test interpolation and matching of masks
       fig   = plt.figure()
       ax1   = fig.add_subplot(1,2,1)
-      ax1.imshow(Zout.transpose(),origin='upper')
+      ax1.imshow(Zout,origin='upper')
       ax2   = fig.add_subplot(1,2,2)
-      ax2.imshow(Zref.transpose(),origin='upper')
+      ax2.imshow(Zref,origin='upper')
       plt.show(fig)
-      return Xin,Yin,Zin,Xref,Yref,Zref
+      return
 
    if (vertices is not None) and (regions is not None):
       raise ValueError('Cannot pass in both vertices and regions')
@@ -2166,9 +2204,10 @@ def areas_of_disagreement(fobj,time_index=0,\
             lonc,latc   = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),\
                            NH=True,inverse=True)
             # make basemap
-            bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
-                                    width=width,height=height,\
-                                    resolution='i')
+            from mpl_toolkits.basemap import Basemap
+            bmap  = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
+                            width=width,height=height,\
+                            resolution='i')
          ##########################################################
 
 
@@ -2206,7 +2245,7 @@ def areas_of_disagreement(fobj,time_index=0,\
 
             if 1:
                # add observation ice edge
-               bmap.contour(lon2,lat2,conv_fac*Zobs.values,[.15],lat_lon=True,\
+               bmap.contour(lon_ref,lat_ref,conv_fac*Zobs.values,[.15],lat_lon=True,\
                               colors='g',linewidths=2,ax=ax,latlon=True)
 
             if vertices is not None:
