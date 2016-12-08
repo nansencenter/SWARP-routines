@@ -2,24 +2,81 @@ import os,sys
 import numpy as np
 import geometry_planar as GP
 import geometry_sphere as GS
-import shapely.geometry as shg
-from matplotlib import pyplot as plt
-from skimage import measure as msr
-from skimage import morphology as morph
-import rtree.index	as Rindex
 
-# statchart:
-import matplotlib.gridspec as gridspec
-import matplotlib.lines    as mlines
 
-# custom
-import fns_plotting as Fplt
 
 
 # MORPH = 'Open','Close' or None
 # - 'Close' seems best
 # MORPH = 'Close'
 MORPH = None
+
+# ======================================================
+def augment_contour_ij(cont):
+   # msr.contour only returns u,v points
+   # - here we add the q points
+
+   # ==================================================
+   def get_loc(i,j):
+      # determine if u or v point
+      if i-np.floor(i)>.25:
+         # u points have half-values for i
+         return 'u'
+      elif j-np.floor(j)>.25:
+         # v points have half-values for j
+         return 'v'
+   # ==================================================
+
+   Cont  = []
+   Locs  = []
+   N     = len(cont)
+   for k in range(N-1):
+      #closed curves repeat 1st point - so this works for open and closed
+
+      # get current point
+      c0    = cont[k]
+      i,j   = c0
+      loc   = get_loc(i,j)
+      Cont.append(c0)
+      
+      # get next point
+      kp1   = np.mod(k+1,N)
+      i1,j1 = cont[kp1]
+      loc1  = get_loc(i1,j1)
+      if loc=='u' and loc1=='u':
+         # vertical average
+         i2 = i
+         j2 = .5*(j+j1)
+      elif loc=='v' and loc1=='v':
+         # horizontal average
+         j2 = j
+         i2 = .5*(i+i1)
+      elif loc=='u' and loc1=='v':
+         # horizontally aligned with the v point (1),
+         # vertically aligned with the u point   (0)
+         # (nearest corner)
+         i2 = i
+         j2 = j1
+      elif loc=='v' and loc1=='u':
+         # horizontally aligned with the v point (0),
+         # vertically aligned with the u point   (1)
+         # (nearest corner)
+         i2 = i1
+         j2 = j
+
+      # next point will always be a "q" (corner) point
+      Cont.append((i2,j2))
+      Locs.extend([loc,'q'])
+
+   # add last point
+   # if closed, this re-closes
+   # - else gets the last point
+   # TODO - do something more complicated at the array boundary?
+   Cont.append((i1,j1))
+   Locs.append(loc1)
+
+   return Cont,Locs
+# ======================================================
 
 
 #########################################################
@@ -74,6 +131,8 @@ class poly_info:
    make object with helpful info about polygons
    """
    def __init__(self,ll_coords,func_vals=None,cdate=None,**kwargs):
+
+      import rtree.index as Rindex
 
       if type(cdate)==type('string'):
          self.datetime  = datetime.strptime(cdate,'%Y%m%d')
@@ -167,6 +226,8 @@ class poly_info:
    def plot(self,pobj=None,latlon=False,show=True,check_flags=False,**kwargs):
 
       import mod_reading as MR
+      from matplotlib import pyplot as plt
+
       if pobj is None:
          pobj  = MR.plot_object()
 
@@ -213,6 +274,8 @@ class poly_info:
       basemap.plot(lon,lat,latlon=True,**kwargs)
 
       if show and pobj is not None:
+         from matplotlib import pyplot as plt
+         import fns_plotting as Fplt
          Fplt.finish_map(basemap)
          plt.show(pobj.fig)
 
@@ -358,6 +421,8 @@ def get_region_v2(llc=None):
    else:
       # plot Arctic indicating different regions
       import mod_reading as mr
+      import fns_plotting as Fplt
+      from matplotlib import pyplot as plt
       bmap  = Fplt.start_HYCOM_map('Arctic')
       pobj  = mr.plot_object()
 
@@ -479,6 +544,7 @@ def get_region_v2(llc=None):
       print('\nSaving to '+figname)
       fig.savefig(figname)
       # fig.show()
+
       plt.close(fig)
       return
 #################################################################
@@ -493,6 +559,7 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
 
    TEST_PLOT   = 0
    if TEST_PLOT:
+      from matplotlib import pyplot as plt
       fig   = plt.figure()
       ax    = fig.add_subplot(1,1,1)
       ax.imshow(MIZbins.icemap,origin='lower')
@@ -593,6 +660,7 @@ def shrink_poly(cont,thresh):
    cont=[(i0,j0),(i1,j1),...]
    """
    import rtree
+   import shapely.geometry as shg
 
    L  = len(cont)
    N  = np.ceil(L/float(thresh)) # no of new polygons
@@ -675,6 +743,7 @@ def shrink_poly(cont,thresh):
 
 ################################################################################
 def closing(data):
+   from skimage import morphology as morph
    # apply closing to avoid small polynyas and clean up a little
    # - erosion then dilation of MIZ
    kernel = np.ones((3,3),np.uint8)
@@ -685,6 +754,7 @@ def closing(data):
 
 ################################################################################
 def opening(data):
+   from skimage import morphology as morph
    # apply opening to avoid small polynyas and clean up a little
    # - dilation then erosion of MIZ
    kernel   = np.ones((3,3),np.uint8)
@@ -735,6 +805,7 @@ class MIZbinaries:
 
       self.icemap = 2*self.ICEmask+0*self.PACKmask # this has either nans or a mask (land/missing vals)
       if 0:
+         from matplotlib import pyplot as plt
          print(self.ICEmask)
          fig   = plt.figure()
          ax1   = fig.add_subplot(2,2,1)
@@ -809,6 +880,7 @@ def convert2mizmap(MODmask,OBSmask):
 
    test_plot   = 0
    if test_plot:
+      from matplotlib import pyplot as plt
       # plot original binaries
       fig   = plt.figure()
       ax1   = fig.add_subplot(3,2,1)
@@ -1053,23 +1125,28 @@ def arrays2binary_diff(Zmod,Zobs,threshm):
 
 
 ############################################################################
-def get_MIZ_poly(ZM,lon,lat,fice,var_name='dmax',region=None,vertices=None):
+def get_MIZ_poly(Z,lon,lat,fice=None,var_name='dmax',region=None,vertices=None):
    """
    get_MIZ_poly(ZM,var_name='dmax')
    *ZM is a masked array
    *var_name='dmax','fice','hice'
    """
 
+   if fice is None:
+      if var_name=='fice':
+         fice  = Z
+      else:
+         raise ValueError('please pass in "fice" masked array for determination of ice edge')
+
    fmin           = .15 # min conc
    good           = np.logical_not(fice.mask) # only water/ice
    wtr_mask       = np.copy(good)
-   wtr_mask[good] = (fice.data[good]<fmin)
    ice_mask       = np.copy(good)
+   wtr_mask[good] = (fice.data[good]<fmin)
    ice_mask[good] = (fice.data[good]>=fmin)
    
    # mask out water
-   ZM                = 1*ZM
-   ZM.mask           = np.logical_or(ZM.mask,wtr_mask)
+   ZM                = np.ma.array(Z.data,mask=np.logical_or(Z.mask,wtr_mask))
    ZM.data[ZM.mask]  = np.nan # make sure masked val's corresp to nan's in data
 
    if var_name == 'fice':
@@ -1163,26 +1240,35 @@ class MIZ_poly:
    def poly_maker(self):
       # finding contours from the MIZ map
       # (i,j) coords (not always integers though)
-      MIZcont        = msr.find_contours(self.MIZbinaries.MIZmask,.5)
-      MIZcont        = sorted(MIZcont, key=len)
+      from skimage import measure as msr
+      MIZcont  = msr.find_contours(self.MIZbinaries.MIZmask,.5)
+      MIZcont  = sorted(MIZcont, key=len)
+      shape    = self.Nx,self.Ny
       #
-      self.MIZcont   = []
-      self.MIZholes  = []
+      self.MIZcont            = []
+      self.MIZholes           = []
+      self.MIZcont_locations  = []
+      self.MIZhole_locations  = []
       for cont in MIZcont[::-1]:
-         i,j   = np.array(cont).transpose()
-         A     = GP.area_polygon_euclidean(i,j) # area of polygon in pixels (can be <0)
+         ii,jj = np.array(cont).transpose()
+         A     = GP.area_polygon_euclidean(ii,jj) # area of polygon in pixels (can be <0)
+
+         # we use opposite convention to msr.contour
+         # * anticlockwise: external boundary
+         #   - reverse order so these have positive areas
+         # * clockwise: internal boundary
+         #   - reverse order so these have negative areas
+         Cont,grid_locs  = augment_contour_ij(cont[::-1])
          if A<0:
-            # anticlockwise: external boundary
-            # reverse order so these have positive areas
-            self.MIZcont.append(cont[::-1])
+            self.MIZcont.append(Cont)
+            self.MIZcont_locations.append(grid_locs)
          else:
-            # clockwise: internal boundary
-            # reverse order so these have negative areas
-            self.MIZholes.append(cont[::-1])
+            self.MIZholes.append(Cont)
+            self.MIZhole_locations.append(grid_locs)
 
       # determine which poly each hole is inside
       self.MIZhole_indices = []
-      for hole in self.MIZholes:
+      for jh,hole in enumerate(self.MIZholes):
          for ci,cont in enumerate(self.MIZcont):
             inside   = msr.points_in_poly(hole[0:1],cont)
             if inside[0]:
@@ -1226,6 +1312,7 @@ class MIZ_poly:
    #############################################################
    def show_maps(self):
       # simple plotter of the different masks
+      from matplotlib import pyplot as plt
       ttl   = ['icemap','MIZmask','ICEmask','PACKmask']
       fig   = plt.figure()
 
@@ -1560,6 +1647,10 @@ class poly_stat:
    #########################################################
    # Function stat chart
    def stat_chart(self,save=False,METH=5):
+      import fns_plotting as Fplt
+      from matplotlib import pyplot as plt
+      import matplotlib.gridspec as gridspec
+      import matplotlib.lines    as mlines
       # The Statistical Chart is an output that tries to compress as many informations
       # as possible in a single figure.
       # The figure is:
@@ -2015,6 +2106,7 @@ def covering_polygon(poly):
    ###################################################################
    test = 0
    def test_plot(poly,fdi,poly0=None,figname=None):
+      from matplotlib import pyplot as plt
       x,y = np.array(poly.exterior.coords).transpose()
       plt.plot(x,y)
 
@@ -2183,6 +2275,7 @@ class pca_mapper:
       """
       gets MIZ lines for a polygon
       """
+      import shapely.geometry as shg
       #
       X0 = self.X.min()
       X1 = self.X.max()
@@ -2539,6 +2632,8 @@ class MIZ_info_list:
       """
       MIZchar.MIZ_info_list.plot_solutions(basemap,pobj=None,figname=None)
       """
+      from matplotlib import pyplot as plt
+      import fns_plotting as Fplt
 
       bmap  = basemap
       if pobj is None:
@@ -2583,8 +2678,7 @@ class MIZ_info_list:
 
       #########################################################
       # finish map and close before returning
-      import fns_plotting as FP
-      FP.finish_map(bmap)
+      Fplt.finish_map(bmap)
 
       if figname is None:
          # fig.show()
@@ -2783,6 +2877,7 @@ class poly_info_list:
             pobj  = PI.plot(**kwargs)
 
       if show:
+         from matplotlib import pyplot as plt
          plt.show(pobj.fig)
 
       return pobj
