@@ -162,9 +162,14 @@ def get_record_numbers_HYCOM(bfile):
 
 
    bid   = open(bfile,'r')
-   word  = bid.readline().split()[0] # 1st word in line 
-   while word!='field':
+   if 'restart' not in bfile:
       word  = bid.readline().split()[0] # 1st word in line 
+      while word!='field':
+         word  = bid.readline().split()[0] # 1st word in line 
+   else:
+      # restart file: just read 1st 2 lines
+      for i in range(2):
+         bid.readline()
 
    # have found table title
    n     = 0
@@ -180,8 +185,8 @@ def get_record_numbers_HYCOM(bfile):
       n     = n+1
       word  = lin.split()[0]        # 1st word in line 
       layer = int(lin.split()[4])   # layer number (5th entry)
-      xmin  = float(lin.split()[6]) # min where defined
-      xmax  = float(lin.split()[7]) # max where defined
+      xmin  = float(lin.split()[-2]) # min where defined
+      xmax  = float(lin.split()[-1]) # max where defined
 
       if layer==0:
          # surface/2D var
@@ -210,6 +215,7 @@ def get_record_numbers_HYCOM(bfile):
    return [lut2d,min2d,max2d],[lut3d,min3d,max3d]
    ######################################################################
 
+
 ######################################################################
 class HYCOM_grid_info:
 
@@ -224,10 +230,11 @@ class HYCOM_grid_info:
       hgi.get_areas      (scux*scvy)   - option to only have p-points that are surrounded by q-points
       """
 
+      self.gridpath     = gridpath
       self.afile        = gridpath+'/regional.grid.a'
       self.bfile        = gridpath+'/regional.grid.b'
-      self.afile_depth  = gridpath+'/regional.depths.a'
-      self.bfile_depth  = gridpath+'/regional.depths.b'
+      self.afile_depth  = gridpath+'/regional.depth.a'
+      self.bfile_depth  = gridpath+'/regional.depth.b'
 
       # get grid size & record numbers
       self._read_bfile()
@@ -239,6 +246,21 @@ class HYCOM_grid_info:
    ###################################################################
    def _read_bfile(self):
       bid   = open(self.bfile,'r')
+
+      # # ==============================================
+      # # get grid size
+      # line  = bid.readline()
+      # while 'idm' not in line:
+      #    line  = bid.readline()
+      # nx    = int( line.split()[0] )
+
+      # line  = bid.readline()
+      # while 'jdm' not in line:
+      #    line  = bid.readline()
+      # ny    = int( line.split()[0] )
+      # bid.close()
+      # # ==============================================
+
       lines = bid.readlines()
       bid.close()
 
@@ -246,10 +268,10 @@ class HYCOM_grid_info:
       self.Nx  = int(lines[0].split()[0])
       self.Ny  = int(lines[1].split()[0])
 
-      R     = {}
+      R  = {}
       for i,lin in enumerate(lines[3:]):
-         word  = lin.split()[0] # 1st word in line 
-         R.update({word,i})
+         word  = lin.split()[0].strip(':') # 1st word in line 
+         R.update({word:i+1})
 
       self.record_numbers  = R
       return
@@ -280,7 +302,7 @@ class HYCOM_grid_info:
       """
       call self.get_centres(inner_points=False)
 
-      grid is arranged (Arakawa C-grid):
+      grid is arranged (Arakawa C-grid)
       i=-0.5   : q-v-q-v-q-...v-q-v-q-v
       i=0      : u-p-u-p-u-...p-u-p-u-p
       i=0.5    : q-v-q-v-q-...v-q-v-q-v
@@ -308,11 +330,11 @@ class HYCOM_grid_info:
 
 
    ###################################################################
-   def get_grid_sizes(self,inner_points=False):
+   def get_grid_sizes(self,loc='p',inner_points=False):
       """
       call self.get_centres(inner_points=False)
 
-      grid is arranged (Arakawa C-grid):
+      grid is arranged (Arakawa C-grid)
       i=-0.5   : q-v-q-v-q-...v-q-v-q-v
       i=0      : u-p-u-p-u-...p-u-p-u-p
       i=0.5    : q-v-q-v-q-...v-q-v-q-v
@@ -329,20 +351,23 @@ class HYCOM_grid_info:
       else:
          return scux,scvy                    # ie grid sizes corresponding to all p-points
       """
-      scux  = self.get_array('scux')
-      scvy  = self.get_array('scvy')
+      if loc not in ['p','q','u','v']:
+         raise ValueError('Unkwown value for "loc": '+loc)
+
+      dx = self.get_array('sc'+loc+'x')
+      dy = self.get_array('sc'+loc+'y')
       if inner_points:
-         return scux[:-1,:-1],scvy[:-1,:-1]
+         return dx[:-1,:-1],dy[:-1,:-1]
       else:
-         return scux,scvy
+         return dx,dy
    ###################################################################
 
    ###################################################################
-   def get_areas(self,inner_points=False):
+   def get_areas(self,**kwargs):
       """
-      call self.get_centres(inner_points=False)
+      call self.get_areas(inner_points=False)
 
-      grid is arranged (Arakawa C-grid):
+      grid is arranged (Arakawa C-grid)
       i=-0.5   : q-v-q-v-q-...v-q-v-q-v
       i=0      : u-p-u-p-u-...p-u-p-u-p
       i=0.5    : q-v-q-v-q-...v-q-v-q-v
@@ -359,81 +384,60 @@ class HYCOM_grid_info:
       else:
          return scux,scvy                    # ie grid sizes corresponding to all p-points
       """
-      scux,scvy   = self.get_grid_sizes(inner_points=inner_points)
-      return scux*scvy
+      dx,dy   = self.get_grid_sizes(loc='p',**kwargs)
+      return dx*dy
    ###################################################################
 
 
    ###################################################################
-   def get_depth(self,inner_points=False):
-     dep = get_array_from_HYCOM_binary(self.afile_depth,1)
-     if inner_points:
-        return dep[:-1,:-1]
-     else:
-        return dep
+   def get_depths(self,inner_points=False):
+      dep = get_array_from_HYCOM_binary(self.afile_depth,1,grid_dir=self.gridpath)
+      if inner_points:
+         return dep[:-1,:-1]
+      else:
+         return dep
    ###################################################################
 
 
    ###################################################################
-   def land_mask(self,inner_points=False):
-      dep   = self.get_depth(self,inner_points=inner_points)
+   def land_mask(self,**kwargs):
+      """
+      self.land_mask(**kwargs)
+      **kwargs for self.get_depth: inner_points=True/False
+      returns:
+      Boolean matrix size of full/"inner grid"
+      """
+      dep   = self.get_depths(**kwargs)
       return (dep==0.) # mask land out
    ###################################################################
 
 
-   ###################################################################
-   def create_ESMF_grid(self,do_mask):
-      import ESMF
-      maxIndex       = [self.Nx-1,self.Ny-1] # no of centres
-      coordTypeKind  = 'r8'                  # real double
-      coordSys       = ESMF.CoordSys.SPH_DEG      # lon,lat (degrees) or SPH_DEG or CART
-      numPeriDims    = 1                     # no of periodic dimensions (lon)
-      staggerlocs    = [ESMF.StaggerLoc.CORNER,ESMF.StaggerLoc.CENTER]
+   #########################################################################
+   def create_ESMF_grid(self,do_mask=True):
+      """
+      create_ESMF_grid(centres,corners,mask=None,\
+         coordTypeKind='r8',coordSys=0,numPeriDims=0
+      inputs:
+      *coordSys=0:lon,lat (degrees); 1:lon,lat (radians); 2:x,y,z
+      *coordTypeKind eg 'r8':real double
+      *numPeriDims = number of periodic dimensions
+      """
+      import ESMF_utils as EU
 
-      Egrid = ESMF.Grid(maxIndex, numPeriDims=numPeriDims, coordSys=coordSys,\
-                        coordTypeKind=coordTypeKind, staggerlocs=staggerlocs)
-
-      # # VM - needed?
-      # vm = ESMF.ESMP_VMGetGlobal()
-      # localPet, petCount = ESMF.ESMP_VMGet(vm)
-  
-      # ========================================================
-      # CORNERS
-      # get the coordinate pointers and set the coordinates
-      [x,y]       = [0, 1]
-      gridXCorner = Egrid.get_coords(x, ESMF.StaggerLoc.CORNER)
-      gridYCorner = Egrid.get_coords(y, ESMF.StaggerLoc.CORNER)
-
-      qlon,qlat         = self.get_corners()
-      gridXCorner[:,:]  = qlon
-      gridYCorner[:,:]  = qlat
-      # ========================================================
-  
-  
-      # ========================================================
-      # CENTERS
-      # get the coordinate pointers and set the coordinates
-      [x,y]       = [0, 1]
-      gridXCenter = Egrid.get_coords(x, ESMF.StaggerLoc.CENTER)
-      gridYCenter = Egrid.get_coords(y, ESMF.StaggerLoc.CENTER)
-  
-      plon,plat         = self.get_centres(inner_points=True)
-      gridXCenter[:,:]  = plon
-      gridYCenter[:,:]  = plat
-      # ========================================================
-
+      corners  = self.get_corners()                  #(qlon,qlat)
+      centres  = self.get_centres(inner_points=True) #(plon,plat)
+      areas    = self.get_areas  (inner_points=True) # scvx*scuy
 
       # ========================================================
+      mask  = None
       if do_mask:
         # set up the grid mask
-        grid.add_item(ESMF.GridItem.MASK)
-        mask      = Egrid.get_item(ESMF.GridItem.MASK) # pointer
-        mask[:,:] = self.land_mask()
+        mask = self.land_mask(inner_points=True)
       # ========================================================
       
-
+      Egrid = EU.create_ESMF_grid(centres,corners,AREA=areas,MASK=mask)
       return Egrid
-   ###################################################################
+      ###################################################################
 
 ######################################################################
 
@@ -481,17 +485,20 @@ class HYCOM_binary_info:
                            'TP4':wsn+'/../REANALYSIS/topo'}
          self.gridpath = gridpath_lut[self.HYCOM_region]
 
-      # get grid size
-      bid   = open(self.gridpath+'/regional.grid.b','r')
-      line  = bid.readline()
-      while 'idm' not in line:
-         line  = bid.readline()
-      nx    = int( line.split()[0] )
+      self.HYCOM_grid_info = HYCOM_grid_info(self.gridpath)
+      nx,ny = self.HYCOM_grid_info.Nx,self.HYCOM_grid_info.Ny
+      # # get grid size
+      # bid   = open(self.gridpath+'/regional.grid.b','r')
+      # line  = bid.readline()
+      # while 'idm' not in line:
+      #    line  = bid.readline()
+      # nx    = int( line.split()[0] )
 
-      line  = bid.readline()
-      while 'jdm' not in line:
-         line  = bid.readline()
-      ny    = int( line.split()[0] )
+      # line  = bid.readline()
+      # while 'jdm' not in line:
+      #    line  = bid.readline()
+      # ny    = int( line.split()[0] )
+      # bid.close()
 
       self.dims   = [nx,ny]
       self.Nx     = nx
@@ -501,18 +508,36 @@ class HYCOM_binary_info:
 
       #######################################################################
       # date
-      bid   = open(self.bfile)
+      bid   = open(self.bfile,'r')
       line  = bid.readline()
-      its   = 0
-      while 'model day' not in line and its<1200:
-         its   = its+1
-         line  = bid.readline()
+      EOF   = (line=='')
+      if 'restart' not in self.bfile:
+         while 'model day' not in line and not EOF:
+            line  = bid.readline()
+            EOF   = (line=='')
 
-      line              = bid.readline()
-      self.time_value   = float(line.split()[-5]) # model time (days)
-      bid.close()
+         line              = bid.readline()
+         self.time_value   = float(line.split()[-5]) # model time (days)
+         bid.close()
+      else:
+         line              = bid.readline()
+         self.time_value   = float(line.split()[-2])
+         bid.close()
+
 
       self.reference_date  = datetime(1900,12,31)
+      if (self.time_value==0) and ('archv_wav' in self.basename):
+         # bug in output of archv_wav at first time step
+         # - determine time from basename
+         idx      = self.basename.find('.')+1
+         yr       = int(self.basename[idx:idx+4])
+         jday     = int(self.basename[idx+5:idx+8])
+         refdate  = datetime(yr,1,1)+timedelta(jday)
+         cdate    = refdate.strftime('%Y%m%dT')+self.basename[idx+9:idx+15]+'Z'
+         #
+         self.datetime     = datetime.strptime(cdate,'%Y%m%dT%H%M%SZ')
+         self.time_value   = (self.datetime-self.reference_date).total_seconds()/(24.*3600.)
+
       if 'DAILY' in self.basename:
          # file written at end of day - change to midday
          self.time_value   = self.time_value -.5 # model time (days)
@@ -523,28 +548,27 @@ class HYCOM_binary_info:
       self.time_units      = 'days'
       #######################################################################
 
+      gi = self.HYCOM_grid_info
+      self.create_ESMF_grid   = gi.create_ESMF_grid
+      self.get_lonlat         = gi.get_centres
+      self.get_corners        = gi.get_corners
+      self.get_depths         = gi.get_depths
+      # self.get_fixed_lonlat   = gi.get_corners
+
       return # __init__
    #######################################################################
 
 
    #######################################################################
-   def get_lonlat(self):
-
-      gfil  = self.gridpath+'/regional.grid.a'
-      plon  = get_array_from_HYCOM_binary(gfil,1,\
-                  dims=self.dims,grid_dir=self.gridpath)
-      plat  = get_array_from_HYCOM_binary(gfil,2,\
-                  dims=self.dims,grid_dir=self.gridpath)
-
-      return plon,plat
-   #######################################################################
-
-
-   #######################################################################
    def get_fixed_lonlat(self,bmap):
-      gfil     = self.gridpath+'/regional.grid.a'
 
       if 1:
+         # get qlon,qlat
+         lon,lat  = self.HYCOM_grid_info.get_corners()
+
+      elif 1:
+         print('hay')
+         gfil     = self.gridpath+'/regional.grid.a'
          # get ulon,vlat
          lon   = get_array_from_HYCOM_binary(gfil,5,\
                      dims=self.dims,grid_dir=self.gridpath)
@@ -552,6 +576,8 @@ class HYCOM_binary_info:
                      dims=self.dims,grid_dir=self.gridpath)
 
       else:
+         gfil     = self.gridpath+'/regional.grid.a'
+
          # try to fix plon,plat with scpx,scpy
          lon,lat  = self.get_lonlat()
          X,Y      = bmap(lon,lat)
@@ -583,18 +609,7 @@ class HYCOM_binary_info:
 
 
    #######################################################################
-   def get_depths(self):
-
-      dfil     = self.gridpath+'/regional.depth.a'
-      depths   = get_array_from_HYCOM_binary(dfil,1,\
-                     dims=self.dims,grid_dir=self.gridpath)
-
-      return depths
-   #######################################################################
-
-
-   #######################################################################
-   def get_var(self,vname,time_index=None):
+   def get_var(self,vname,time_index=None,inner_points=False):
       """
       vbl=get_var(vname,time_index=None) - vname is a string of 2d variable name (surface variable name,layer=0)
       vbl=get_var([vname,layer],time_index=None) - vname is a string of 2d or 3d variable name (layer=0 is surface, layer=1 to kdm are ocean layers)
@@ -602,19 +617,36 @@ class HYCOM_binary_info:
       *vbl is a mod_reading.var_opt class (vbl.values is type np.ma.array - eg land is masked)
       """
 
-      if type(vname)!=type([]):
+      if type(vname)==type("hi"):
          # 2d var
          layer = 0
-         vname = MR.check_names(vname,self.variables)
-         recno = self.record_numbers[vname]
-         xmin  = self.minvals2d[vname]
-         xmax  = self.maxvals2d[vname]
-         #
-         vbl   = get_array_from_HYCOM_binary(self.afile,recno,\
-                     dims=self.dims)
-         mask  = np.array(1-np.isfinite(vbl),dtype='bool')
-      else:
-         # 3d var
+         if vname!="Volume":
+            vname = MR.check_names(vname,self.variables)
+            recno = self.record_numbers[vname]
+            xmin  = self.minvals2d[vname]
+            xmax  = self.maxvals2d[vname]
+            #
+            vbl   = get_array_from_HYCOM_binary(self.afile,recno,\
+                        dims=self.dims)
+            mask  = np.array(1-np.isfinite(vbl),dtype='bool')
+         else:
+            vc    = MR.check_names('fice',self.variables)
+            crec  = self.record_numbers[vc]
+            vh    = MR.check_names('hice',self.variables)
+            hrec  = self.record_numbers[vh]
+            #xmin  = self.minvals2d[vc]
+            #xmax  = self.maxvals2d[vc]
+            #
+            fice  = get_array_from_HYCOM_binary(self.afile,crec,\
+                        dims=self.dims)
+            hice  = get_array_from_HYCOM_binary(self.afile,hrec,\
+                        dims=self.dims)
+
+            vbl   = fice*hice
+            mask  = np.array(1-np.isfinite(fice),dtype='bool')
+
+      elif type(vname)==type([]):
+         # 3d var if list
          vname,layer = vname
          vname       = MR.check_names(vname,self.variables3d)
          recno       = self.record_numbers3d[vname][layer]
@@ -655,6 +687,13 @@ class HYCOM_binary_info:
             print(self.afile+': '+str(vbl.min()) )
             print(self.bfile+': '+str(xmin)      )
             raise ValueError()
+      ########################################################
+
+
+      ########################################################
+      if inner_points:
+         extra_atts  = [['dimensions'],['i','j']]
+         vbl         = MR.var_object(vbl[:-1,:-1],extra_atts=extra_atts)
       ########################################################
 
       return vbl
@@ -722,6 +761,20 @@ class HYCOM_binary_info:
          obs_type='OSISAF',date_label=1,figname=None,**kwargs)
       """
       return MR.compare_ice_edge_obs(self,**kwargs)
+   ###########################################################
+
+
+   ###########################################################
+   def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+      """
+      data = self.compare_ice_edge_obs(varname,target_lonlats,\
+            time_index=0,mapping=None,**kwargs)
+      INPUTS:
+      target_lonlats = (tlon,tlat) = 2-tuple of numpy arrays
+      mapping = basemap or pyproj.Proj instance
+      kwargs: mask=None = mask to apply to interpolated data
+      """
+      return MR.interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
    ###########################################################
 
 

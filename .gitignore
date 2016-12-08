@@ -37,6 +37,7 @@ forecast_scripts/ModelSetups/common/logs/
 crontabs/crontab_dump
 #
 py_funs/out/*
+py_funs/custom_scripts/out/*
 PythonTutorial/out
 PythonTutorial/eg_TP4files
 validation/SWARP*
@@ -44,12 +45,22 @@ validation/SWARP*
 validation/ice_charts/test_outputs/*
 validation/ice_charts/test_inputs/*
 !validation/ice_charts/test_inputs/*.imz
-!validation/ice_charts/test_inputs/*.txt
+!validation/ice_charts/test_inputs/README.txt
 validation/ice_charts/test_inputs2/*
+validation/thickness_comparison_ifremer/figs/*
+validation/thickness_comparison_ifremer/out/*
+validation/thickness_comparison_ifremer/epsg
 #
 validation/data/*
 validation/outputs/*
 validation/Manual_MIZ_Maps/out/*
+validation/ODL/out/*
+#
+jons_script/PCA/*.mat
+jons_script/PCA/*.png
+jons_script/PCA/Figures/*
+#
+validation/ice_charts/comp_model/out/*
 #
 giacomo_stuff/*
 forecast_scripts/hindcast/TP4a0.12/ice_only/logs
@@ -57,3 +68,5 @@ forecast_scripts/hindcast/TP4a0.12/wavesice/logs
 forecast_scripts/hindcast/FR1a0.03/ice_only/logs
 forecast_scripts/hindcast/BS1a0.045/ice_only/logs
 giacomo_hexagon/MIZ_BS1_FR1/outputs/*
+giacomo_hexagon/single_analysis/outputs/*
+giacomo_hexagon/var_stat/outputs/*

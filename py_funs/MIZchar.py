@@ -18,7 +18,14 @@ import fns_plotting as Fplt
 
 # MORPH = 'Open','Close' or None
 # - 'Close' seems best
-MORPH = 'Close'
+# MORPH = 'Close'
+MORPH = None
+
+
+#########################################################
+def get_Arctic_regions():
+   return ['gre','bar','beau','lab','les']
+#########################################################
 
 
 #########################################################
@@ -157,18 +164,28 @@ class poly_info:
 
 
    ################################################################
-   def plot(self,pobj=None,latlon=False,show=True,**kwargs):
+   def plot(self,pobj=None,latlon=False,show=True,check_flags=False,**kwargs):
 
+      import mod_reading as MR
       if pobj is None:
          pobj  = MR.plot_object()
 
+      
       if latlon:
          lon,lat  = np.array(self.ll_coords).transpose()
          pobj.ax.plot(lon,lat,**kwargs)
+         if check_flags:
+            FV = np.array(self.func_vals)
+            pobj.ax.plot(lon[FV==1],lat[FV==1],'^',**kwargs)
+            pobj.ax.plot(lon[FV==0],lat[FV==0],'o',**kwargs)
       else:
          lon,lat  = np.array(self.ll_coords).transpose()
          x,y      = self.map(lon,lat)
          pobj.ax.plot(x,y,**kwargs)
+         if check_flags:
+            FV = np.array(self.func_vals)
+            pobj.ax.plot(x[FV==1],y[FV==1],'^',**kwargs)
+            pobj.ax.plot(x[FV==0],y[FV==0],'o',**kwargs)
 
       if show:
          plt.show(pobj.fig)
@@ -264,7 +281,7 @@ class poly_info:
 #################################################################
 def get_region_v2(llc=None):
    """
-   region = get_region_v2(llc=None):
+   region = get_region_v2(llc=None)
    if llc is given:
    - output region of polygon (string)
    else:
@@ -293,7 +310,11 @@ def get_region_v2(llc=None):
       lonc,latc   = llc
 
       #########################################
-      if lonc<lon5 or lonc>lon4:
+      if latc<0:
+         # Antarctic
+         region   = 'Antarctic'
+
+      elif lonc<lon5 or lonc>lon4:
          # Beaufort
          region = 'beau'
 
@@ -341,12 +362,14 @@ def get_region_v2(llc=None):
       pobj  = mr.plot_object()
 
       # plot OSISAF concentration for 1 day:
+      # cdate = '20150801'
+      cdate = '20150307'
       ncfil = '/work/shared/nersc/msc/OSI-SAF/2015_nh_polstere/'+\
-               'ice_conc_nh_polstere-100_multi_201508011200.nc'
+               'ice_conc_nh_polstere-100_multi_'+cdate+'1200.nc'
 
       nci      = mr.nc_getinfo(ncfil)
       var_opt  = mr.make_plot_options('fice',conv_fac=.01,ice_mask=True)
-      nci.plot_var(var_opt,bmap=bmap,pobj=pobj,clabel='OSISAF SIC',show=False)
+      nci.plot_var(var_opt,bmap=bmap,pobj=pobj,clabel='Ice concentration (OSISAF)',show=False)
       
       # plot regions
       fig   = pobj.fig
@@ -452,11 +475,11 @@ def get_region_v2(llc=None):
       ax.text(x,y,'CAN',color='r',fontsize=fsz)
       ############################################################
 
-      pwd      = os.getcwd()
-      figname  = pwd+'/MIZregions.png'
+      figname  = 'MIZregions.png'
       print('\nSaving to '+figname)
       fig.savefig(figname)
-      fig.show()
+      # fig.show()
+      plt.close(fig)
       return
 #################################################################
 
@@ -468,13 +491,15 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
    var_name    = MIZbins.var_name
    sitn_type   = MIZbins.sitn_type
 
+   TEST_PLOT   = 0
+   if TEST_PLOT:
+      fig   = plt.figure()
+      ax    = fig.add_subplot(1,1,1)
+      ax.imshow(MIZbins.icemap,origin='lower')
+      fig.show()
    MIZmask     = MIZbins.MIZmask .reshape(sz)
    ICEmask     = MIZbins.ICEmask .reshape(sz)
    PACKmask    = MIZbins.PACKmask.reshape(sz)
-
-   # fig   = plt.figure()
-   # ax1   = fig.add_subplot(1,2,1)
-   # # ax1.imshow(MIZmask.reshape(shp).transpose(),origin='lower')
 
    lons  = lon.reshape(sz)
    lats  = lat.reshape(sz)
@@ -489,20 +514,21 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
       IM = MIZmask[jMIZ]
       PM = MIZmask[jMIZ]
 
-      # simple (fast) stereographic projection
-      xMIZ,yMIZ   = GS.polar_stereographic_simple(MIZlons,MIZlats,NH=True,inverse=False)
-      # ax1.plot(xMIZ,yMIZ,'.')
-      
-      # Mask out points not inside the polygon
+      # vertices
       vlons,vlats = np.array(vertices).transpose()
-      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+      NH          = (np.mean(vlats)>0)
+      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=NH,inverse=False)
       xyverts     = [(vx[i],vy[i]) for i in range(len(vx))]
-
       # make sure polygon is closed
       if xyverts[0] != xyverts[-1]:
          print('- closing polygon')
          xyverts.append(xyverts[0])
 
+      # simple (fast) stereographic projection
+      xMIZ,yMIZ   = GS.polar_stereographic_simple(MIZlons,MIZlats,NH=NH,inverse=False)
+      # ax1.plot(xMIZ,yMIZ,'.')
+      
+      # Mask out points not inside the polygon
       inside   = GP.maskgrid_outside_polygon(xMIZ,yMIZ,xyverts) #true if inside poly
       outside  = np.logical_not(inside)
       # ax1.plot(xMIZ[inside],yMIZ[inside],'or')
@@ -517,22 +543,32 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
       ICEmask [jMIZ] = IM
       PACKmask[jMIZ] = PM
 
-      # ax2   = fig.add_subplot(1,2,2)
-      # # ax2.imshow(MIZmask.reshape(shp).transpose(),origin='lower')
-      # # ax2.imshow(ICEmask.reshape(shp).transpose(),origin='lower')
-      # ax2.imshow(PACKmask.reshape(shp).transpose(),origin='lower')
-      # plt.show(fig)
-      # raise ValueError('HEY!')
-     
    elif region is None:
       raise ValueError('Need to provide vertices or name of region')
+
+   elif region == 'Arctic':
+      for i in np.where(MIZmask==1)[0]:
+         # where there is MIZ, check if it's in the region
+         # - if not set MIZ=0,ICE,PACK=NaN
+         # - effectively this is land, so these boundaries become "unknown"
+         llc         = (lons[i],lats[i])
+         Preg        = get_region_v2(llc)
+         gd_regions  = get_Arctic_regions()
+            # discard Baltic Sea,
+            # Canadian Archipelago and Hudson Bay,
+            # Antarctic
+         if Preg not in gd_regions:
+            MIZmask [i] = 0
+            ICEmask [i] = np.nan
+            PACKmask[i] = np.nan
    else:
       for i in np.where(MIZmask==1)[0]:
          # where there is MIZ, check if it's in the region
          # - if not set MIZ=0,ICE,PACK=NaN
          # - effectively this is land, so these boundaries become "unknown"
          llc   = (lons[i],lats[i])
-         if get_region_v2(llc)!=region:
+         Preg  = get_region_v2(llc)
+         if Preg!=region:
             MIZmask [i] = 0
             ICEmask [i] = np.nan
             PACKmask[i] = np.nan
@@ -541,7 +577,14 @@ def mask_region(MIZbins,lon,lat,region=None,vertices=None):
    ICEmask  = ICEmask .reshape(shp)
    PACKmask = PACKmask.reshape(shp)
 
-   return MIZbinaries(MIZmask,ICEmask,PACKmask,var_name=var_name,sitn_type=sitn_type,region=region)
+   if TEST_PLOT:
+      fig2  = plt.figure()
+      ax2   = fig2.add_subplot(1,1,1)
+      ax2.imshow(MIZmask,origin='lower')
+      plt.show(fig2)
+
+   return MIZbinaries(MIZmask,ICEmask,PACKmask,\
+         var_name=var_name,sitn_type=sitn_type,region=region)
 ################################################################################
 
 ################################################################################
@@ -848,11 +891,11 @@ def ij2xy(cont,X,Y):
       # bilinear interp to get x,y curves from X,Y arrays
       # -i:
       i_ = cont[n,0]
-      if i_<0:
+      if i_<=0:
          i0    = 0
          i1    = 0
          ifac  = 0
-      elif i_>ni-1:
+      elif i_>=ni-1:
          i0    = ni-1
          i1    = ni-1
          ifac  = 0
@@ -864,11 +907,11 @@ def ij2xy(cont,X,Y):
       # bilinear interp to get x,y curves from X,Y arrays
       # -j:
       j_ = cont[n,1]
-      if j_<0:
+      if j_<=0:
          j0    = 0
          j1    = 0
          jfac  = 0
-      elif j_>nj-1:
+      elif j_>=nj-1:
          j0    = nj-1
          j1    = nj-1
          jfac  = 0
@@ -935,24 +978,36 @@ def plot_regions_v2():
 
 
 ###############################################################################
-def array2binaries(data,threshm,threshM,var_name='dmax'):
+def array2binaries(data,threshm,threshM,ice_mask,var_name='dmax'):
    # takes in an array and min/max threshholds
    # returns MIZmask,ICEmask, PACKmask
 
-   good     = np.isfinite(data)
-   nans     = np.logical_not(good)
-   ICEmask  = np.ones(data.shape)
-   PACKmask = np.ones(data.shape)
+   ICEmask  = np.array(ice_mask,dtype='float')
+   MIZmask  = np.zeros(ICEmask.shape,dtype='float')
 
-   # OLD method where ice-ice = ocean-ocean = 0
-   Data                       = 1+0*data[good] #stop errors from NaNs
-   Data[data[good]<threshm]   = 0
-   ICEmask [good]             = 1*Data # 0: <threshm (eg water)    ; 1: >=threshm (eg ice)
-   Data[data[good]<threshM]   = 0
-   PACKmask[good]             = 1*Data # 0: <threshM (eg water+MIZ); 1: >=threshM (eg pack)
+   # TODO error if ice_mask overlaps nans
+   nans  = np.isnan(data)
+   stop  = np.logical_and(nans,ice_mask).any()
+   if stop:
+      raise ValueError('data infinite/nan inside ice_mask')
 
-   # Difference ICE-PACK
-   MIZmask        = ICEmask - PACKmask  # 1: MIZ (ice-pack); 0: water,pack,land(nans)
+   # ==================================================
+   # MAKE MIZ MASK
+   Data  = 1.+0*data[ice_mask] # start 1 where ice
+
+   if threshm is not None:
+      # remove data that is below the threshold
+      Data[data[ice_mask]<threshm]   = 0.
+
+   if threshM is not None:
+      # remove data that is above the threshold
+      Data[data[ice_mask]>threshM]  = 0.
+
+   MIZmask[ice_mask] = Data # 0: <threshM (eg water+MIZ); 1: >=threshM (eg pack)
+   # ==================================================
+
+   # PACK = ICE-MIZ
+   PACKmask       = ICEmask - MIZmask  # 1: MIZ (ice-pack); 0: water,pack,land(nans)
    ICEmask [nans] = np.nan #restore the nans
    PACKmask[nans] = np.nan #restore the nans
 
@@ -998,27 +1053,43 @@ def arrays2binary_diff(Zmod,Zobs,threshm):
 
 
 ############################################################################
-def get_MIZ_poly(ZM,lon,lat,var_name='dmax',region=None,vertices=None):
+def get_MIZ_poly(ZM,lon,lat,fice,var_name='dmax',region=None,vertices=None):
    """
    get_MIZ_poly(ZM,var_name='dmax')
    *ZM is a masked array
    *var_name='dmax','fice','hice'
    """
 
+   fmin           = .15 # min conc
+   good           = np.logical_not(fice.mask) # only water/ice
+   wtr_mask       = np.copy(good)
+   wtr_mask[good] = (fice.data[good]<fmin)
+   ice_mask       = np.copy(good)
+   ice_mask[good] = (fice.data[good]>=fmin)
+   
+   # mask out water
+   ZM                = 1*ZM
+   ZM.mask           = np.logical_or(ZM.mask,wtr_mask)
+   ZM.data[ZM.mask]  = np.nan # make sure masked val's corresp to nan's in data
+
    if var_name == 'fice':
       # conc MIZ
-      thresh_min   = .15
-      thresh_max   = .8
+      thresh_min  = None # already applied with wtr_mask
+      thresh_max  = .8
    elif var_name == 'hice':
       # thin ice (compare to SMOS)
-      thresh_min   = .025
-      thresh_max   = .45
+      thresh_min  = None # already applied with wtr_mask
+      thresh_max  = .45
    elif var_name == 'dmax':
       # FSD MIZ
-      thresh_min   = 1.
+      thresh_min  = None # already applied with wtr_mask
       thresh_max   = 250.
+   elif var_name == 'swh':
+      # waves-in-ice MIZ
+      thresh_min  = .05
+      thresh_max  = None # not needed
 
-   MIZbins  = array2binaries(ZM,thresh_min,thresh_max,var_name)
+   MIZbins  = array2binaries(ZM,thresh_min,thresh_max,ice_mask,var_name=var_name)
       # icemap is 0: water; 1: MIZ; 2: pack; NaN: land
 
    if vertices is not None:
@@ -1033,7 +1104,7 @@ def get_MIZ_poly(ZM,lon,lat,var_name='dmax',region=None,vertices=None):
 
 
 ############################################################################
-def get_AOD_polys(Zmod,Zobs,lon,lat,region=None):
+def get_AOD_polys(Zmod,Zobs,lon,lat,region=None,vertices=None):
    ZM = np.ma.array(Zmod,mask=1-np.isfinite(Zmod))
 
    var_name    = 'fice'
@@ -1042,11 +1113,17 @@ def get_AOD_polys(Zmod,Zobs,lon,lat,region=None):
       # over.icemap  is 0: both water; 1: model ice/obs water;    2: both ice; NaN: land
       # under.icemap is 0: both water; 1: obs ice  /model water;  2: both ice; NaN: land
 
-   if region is not None:
-      over  = mask_region(over,lon,lat,region)
-      under = mask_region(under,lon,lat,region)
+   if (vertices is not None) and (region is not None):
+      raise ValueError('Cannot pass in both vertices and region')
+   elif vertices is not None:
+      over  = mask_region(over,lon,lat,vertices=vertices)
+      under = mask_region(under,lon,lat,vertices=vertices)
+   elif region is not None:
+      over  = mask_region(over,lon,lat,region=region)
+      under = mask_region(under,lon,lat,region=region)
 
-   return MIZ_poly(over,lon,lat,region=region),MIZ_poly(under,lon,lat,region=region)
+   return MIZ_poly(over,lon,lat,region=region),\
+          MIZ_poly(under,lon,lat,region=region)
       # objects with contours of AODs and some methods 
       # - eg plot the binaries, get or write poly stats
 ############################################################################
@@ -1175,7 +1252,8 @@ class MIZ_poly:
    def get_poly_stat(self,number=0,**kwargs):
       cont  = self.MIZcont[number]
       kwargs.update({'number':number})
-      PS    = poly_stat(cont,self.MIZbinaries.icemap,self.lon,self.lat,**kwargs)
+
+      PS = poly_stat(cont,self.MIZbinaries.icemap,self.lon,self.lat,**kwargs)
       return PS
    #############################################################
 
@@ -1196,7 +1274,7 @@ class MIZ_poly:
          ##########################################################
          # write to regional text files:
          # Nreg        = {'gre':0,'bar':0,'ncb':0,'les':0,'lab':0}
-         Nreg        = {'gre':0,'bar':0,'can':0,'beau':0,'lab':0,'les':0,'balt':0}
+         Nreg        = {'gre':0,'bar':0,'can':0,'beau':0,'lab':0,'les':0,'balt':0,'Antarctic':0,'Arctic':0}
          reg_list    = Nreg.keys()
          tfil_list   = {}
          tfiles      = {}
@@ -1222,8 +1300,13 @@ class MIZ_poly:
       for num,cont in enumerate(self.MIZcont):
          PS = poly_stat(cont,self.MIZbinaries.icemap,\
                         self.lon,self.lat,number=num)
+
          if do_sort:
-            reg   = PS.region
+            if self.region=='Arctic':
+               # already been sorted to not analyse non-Arctic
+               reg   = 'Arctic'
+            else:
+               reg   = PS.region
          else:
             reg   = 'all'
 
@@ -1257,7 +1340,6 @@ class poly_stat:
 
       self.number    = number #get the number
       self.latlon    = (basemap is None)
-      # self.latlon    = latlon
       self.ij_list   = cont #get the contour
       self.class_def() #calculate class from contour (big,medium etc)
 
@@ -1267,6 +1349,7 @@ class poly_stat:
             # already lon,lat coords
             self.ll_list   = 1*xy_list
             lonl,latl      = xy_list.transpose()
+            print('HEY')
          else:
             xl             = xy_list[:,0]
             yl             = xy_list[:,1]
@@ -1274,11 +1357,13 @@ class poly_stat:
             self.ll_list   = np.array([lonl,latl]).transpose()
       else:
          if self.latlon:
+            # lat,lon given
             # project to x,y coords (lon is discts)
             # - GS.polar_stereographic_simple is faster than a basemap
+            NH    = (np.mean(Y)>0)
             shp   = X.shape
             X,Y   = GS.polar_stereographic_simple(X[:],Y[:],\
-                        NH=True,radius=6371.e3,inverse=False)# routine outputs vectors
+                        NH=NH,radius=6371.e3,inverse=False)# routine outputs vectors
 
             # find x,y on boundaries of cont's
             X        = np.reshape(X,shp)
@@ -1289,7 +1374,7 @@ class poly_stat:
 
             # transform back to lon,lat
             lonl,latl      = GS.polar_stereographic_simple(xl,yl,\
-                                 NH=True,radius=6371.e3,inverse=True)# routine outputs vectors
+                                 NH=NH,radius=6371.e3,inverse=True)# routine outputs vectors
             self.ll_list   = np.array([lonl,latl]).transpose()
          else:
             # already projected coords (with basemap)
@@ -2293,14 +2378,14 @@ def save_shapefile(MIZpolys,filename='test.shp'):
 
    ###############################################################################
    # define attributes
-   fields   = MIZpolys[0].record.keys()
+   fields   = MIZpolys.MIZ_info_objects[0].record.keys()
    for fld in fields:
       # create field in shapefile
       w.field(fld,'N','40') # name,type ('C'=character, 'N'=number), size (?)
    ###############################################################################
 
    ###############################################################################
-   for MIZi in MIZpolys:
+   for MIZi in MIZpolys.MIZ_info_objects:
       # add parts:
       parts = MIZi.parts()
       w.poly(parts=parts)
@@ -2318,53 +2403,48 @@ def save_shapefile(MIZpolys,filename='test.shp'):
 
 
 ################################################################################################
-def save_summary(MIZpolys,filename):
+def get_summary(MIZpolys,wt_meth='A'):
 
-
-   ###############################################################################
-   # short names -> values
-   R  = {}
-   R.update({'int_width_mean':0})
-   R.update({'tot_width_mean':0})
-   R.update({'int_width_max' :0})
-   R.update({'tot_width_max' :0})
-   R.update({'tot_perim'     :0})
-   R.update({'tot_area'      :0})
-
+   # =============================================================================
+   # Initialise outputs:
 
    # short names -> long names
-   S  = {}
-   S.update({'int_width_mean':'Mean_intersecting_width'})
-   S.update({'tot_width_mean':'Mean_total_width'})
-   S.update({'int_width_max' :'Maximum_intersecting_width'})
-   S.update({'tot_width_max' :'Maximum_total_width'})
-   S.update({'tot_perim'     :'Total_perimeter'})
-   S.update({'tot_area'      :'Total_area'})
-   ###############################################################
+   long_names  = {}
+   long_names.update({'int_width_mean':'Mean_intersecting_width'})
+   long_names.update({'tot_width_mean':'Mean_total_width'})
+   long_names.update({'int_width_max' :'Maximum_intersecting_width'})
+   long_names.update({'tot_width_max' :'Maximum_total_width'})
+   long_names.update({'tot_perim'     :'Total_perimeter'})
+   long_names.update({'tot_area'      :'Total_area'})
+
+   # short names -> values
+   summ  = {}
+   for key in long_names.keys():
+      summ.update({key:0})
+   # =============================================================================
 
 
-   ###############################################################
+   # =============================================================================
    # Do analysis
-   wt_meth     = 'P' # weight means by perimeter
    tot_perim   = 0.
    tot_area    = 0.
-   for mp in MIZpolys:
+   for mp in MIZpolys.MIZ_info_objects:
       P           = mp.perimeter
       A           = mp.area
-      tot_perim   = tot_perim +P
-      tot_area    = tot_area  +A
+      tot_perim  += P
+      tot_area   += A
 
       if wt_meth=='P':
          # use polygon perimeter as weight
          # TODO ice edge perimeter?
          wt = P
-      else:
+      elif wt_meth=='A':
          # use polygon area as weight
          wt = A
 
       # mean widths
-      R['int_width_mean']  = R['int_width_mean']+wt*mp.int_width_mean #sum of means
-      R['tot_width_mean']  = R['tot_width_mean']+wt*mp.tot_width_mean #sum of means
+      summ['int_width_mean'] += wt*mp.int_width_mean #sum of means
+      summ['tot_width_mean'] += wt*mp.tot_width_mean #sum of means
 
       # max widths
       if 0:
@@ -2372,33 +2452,40 @@ def save_summary(MIZpolys,filename):
          print(mp.int_width_max/1.e3)
          print(mp.tot_width_percentile95/1.e3)
          print(mp.tot_width_max/1.e3)
-      R['int_width_max']   = np.max([R['int_width_max'],mp.int_width_max])
-      R['tot_width_max']   = np.max([R['tot_width_max'],mp.tot_width_max])
+      summ['int_width_max']   = np.max([summ['int_width_max'],mp.int_width_max])
+      summ['tot_width_max']   = np.max([summ['tot_width_max'],mp.tot_width_max])
 
-   R['tot_perim'] = tot_perim
-   R['tot_area']  = tot_area
-   if len(MIZpolys)>0:
+   summ['tot_perim'] = tot_perim
+   summ['tot_area']  = tot_area
+   if len(MIZpolys.MIZ_info_objects)>0:
       if wt_meth=='P':
          wt = float(tot_perim)
       else:
          wt = float(tot_area)
 
-      R['int_width_mean']  = R['int_width_mean']/wt #divide sum of means by total perim/area to get mean of means
-      R['tot_width_mean']  = R['tot_width_mean']/wt #divide sum of means by total perim/area to get mean of means
-   ###############################################################
+      summ['int_width_mean'] /= wt #divide sum of means by total perim/area to get mean of means
+      summ['tot_width_mean'] /= wt #divide sum of means by total perim/area to get mean of means
+
+   return summ,long_names
+# ===========================================================================================
 
 
-   ###############################################################
+# ===========================================================================================
+def save_summary(MIZpolys,filename,wt_meth='A'):
+
+   # get summary info
+   R,S   = get_summary(MIZpolys,wt_meth=wt_meth)
+
    # write to file
    print('\nWriting summary to '+filename+'...\n')
+
    w  = open(filename,'w')
    for fld in ['tot_perim','tot_area','int_width_mean','tot_width_mean','int_width_max','tot_width_max']:
       w.write(S[fld]+' : %16.0f\n' %(R[fld]))
    w.close()
-   ###############################################################
 
-   return
-################################################################################################
+   return R,S
+# ===========================================================================================
 
 
 #########################################################
@@ -2442,6 +2529,9 @@ class MIZ_info_list:
 
    ######################################################
    def plot_solutions(self,basemap,pobj=None,figname=None):
+      """
+      MIZchar.MIZ_info_list.plot_solutions(basemap,pobj=None,figname=None)
+      """
 
       bmap  = basemap
       if pobj is None:
@@ -2505,15 +2595,28 @@ class MIZ_info_list:
    
    ######################################################
    def save_shapefile(self,filename):
-      save_shapefile(self.MIZ_info_objects)
+      save_shapefile(self,filename)
       return
    ######################################################
 
 
    ######################################################
-   def save_summary(self,filename):
-      save_summary(self.MIZ_info_objects,filename)
-      return
+   def save_summary(self,filename,**kwargs):
+      """
+      MIZpolys.save_summary(filename,**kwargs)
+      returns MIZchar.save_summary(MIZpolys,filename,**kwargs)
+      """
+      return save_summary(self,filename,**kwargs)
+   ######################################################
+
+
+   ######################################################
+   def get_summary(self,**kwargs):
+      """
+      MIZpolys.get_summary(**kwargs)
+      returns MIZchar.get_summary(MIZpolys,**kwargs)
+      """
+      return get_summary(self,**kwargs)
    ######################################################
 
 #########################################################
@@ -2549,6 +2652,26 @@ class poly_info_list:
       # get polys as "poly_info" objects
       self.poly_info_objects  = 1*poly_infos
       self.cdate              = cdate
+      
+
+      # make a local stereographic projection
+      from pyproj import Proj
+
+      # start with NP stere
+      map   = Proj(proj='stere',ellps='WGS84',lon_0=-45,lat_0=90,lat_ts=70)
+      X,Y   = [],[]
+      for pio in self.poly_info_objects:
+         lons,lats   = np.array(pio.ll_coords).transpose()
+         x,y         = map(lons,lats,inverse=False)#,NH=True)
+         X.extend(list(x))
+         Y.extend(list(y))
+
+      # make a new proj centered around the mean coords
+      xav         = np.mean(X)
+      yav         = np.mean(Y)
+      lon_0,lat_0 = map(xav,yav,inverse=True)
+      self.map    = Proj(proj='stere',ellps='WGS84',\
+                         lon_0=lon_0,lat_0=lat_0,lat_ts=lat_0)
 
       return
    ############################################################
@@ -2574,7 +2697,7 @@ class poly_info_list:
       # ===============================================================
       # get info about vertices
       vlons,vlats = np.array(vertices).transpose()
-      vx,vy       = GS.polar_stereographic_simple(vlons,vlats,NH=True,inverse=False)
+      vx,vy       = self.map(vlons,vlats,inverse=False)
       xyverts     = [(vx[i],vy[i]) for i in range(len(vx))]
 
       # make sure polygon is closed
@@ -2584,18 +2707,29 @@ class poly_info_list:
       # ===============================================================
 
 
+      # # test plot
+      # fig   = plt.figure()
+      # ax    = fig.add_subplot(1,1,1)
+      # vx,vy = np.array(xyverts).transpose()
+      # ax.plot(vx,vy,'r',linewidth=2)
+
+
       # ===============================================================
       # test individual polygons to see if they are inside the vertices
       pil_new  = []
       for pi_old in self.poly_info_objects:
+         # print(pi_old.ll_coords)
          lons,lats   = np.array(pi_old.ll_coords).transpose()
-         x,y         = GS.polar_stereographic_simple(lons,lats,NH=True,inverse=False)
+         x,y         = self.map(lons,lats,inverse=False)
          fvals       = np.array(pi_old.func_vals)
          inside      = GP.maskgrid_outside_polygon(x,y,xyverts) #true if inside poly
 
+         # add to test plot
+         # ax.plot(x,y)
+
          # if any points inside, check size and add to new list
          if np.any(inside):
-            lons,lats   = GS.polar_stereographic_simple(x[inside],y[inside],NH=True,inverse=True)
+            lons,lats   = self.map(x[inside],y[inside],inverse=True)
             fvals       = 1*fvals[inside]
             N           = len(fvals)
 
@@ -2604,15 +2738,47 @@ class poly_info_list:
                llc      = [(lons[i],lats[i]) for i in range(N)]
                pi_new   = poly_info(llc,func_vals=fvals)
                pil_new.append(pi_new)
+         # else:
+         #    print(lons.min(),lons.max(),lats.min(),lats.max())
+         #    print('not inside')
+
+
       # ===============================================================
 
+      # show test plot
+      # plt.show(fig)
 
       # ===============================================================
       if len(pil_new)>0:# convert to poly_info_list object and return
          return poly_info_list(pil_new)
       else:
-         return
+         print('Reduced set of polygons is empty\n')
+         return None
       # ===============================================================
+
+
+   def plot_all(self,**kwargs):
+
+      init  = 0
+      if "pobj" not in kwargs:
+         init  = 1
+
+      if "show" in kwargs:
+         show           = kwargs["show"]
+         kwargs["show"] = False
+
+      for PI in self.poly_info_objects:
+         if init:
+            init  = 0
+            pobj  = PI.plot(**kwargs)
+            kwargs.update({"pobj":pobj})
+         else:
+            pobj  = PI.plot(**kwargs)
+
+      if show:
+         plt.show(pobj.fig)
+
+      return pobj
 
 
 #########################################################

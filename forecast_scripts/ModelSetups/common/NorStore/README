@@ -1,0 +1,72 @@
+# Backup scripts to handle daily .tar.gz forecast files running at hexagon
+# For Norstore tape commands see:
+# https://www.norstore.no/services/tape-storage
+#
+# NOTE! All scripts use the general format for forecasts as:
+# HYCOMreg=$1 Regional model setup tex: TP4a0.12
+# FCtype=$2   Forecast type tex: ice_only or wavesice_ww3arctic or ...
+# Then general info for this forecast os sourced from:
+# source $modset/$HYCOMreg/$FCtype/inputs/THISFC.src
+# 
+# Several scripts have a optional input ($3) of date (if not current date is assumed)
+#
+# swarp_fc_tape_backup.sh
+# -----------------------------------------------------------------------------------
+# Backup SWARP forecast from /project/ to /tape area once a week
+# Run on Sundays, check all dates for the week, if not send error message
+# Untar all files and make a new "weekly" tar file
+# ASSUME input file type as:
+#  SWARP${FC_OUTPUT}_${idate}.tar.gz (SWARPiceonly_forecast_20150101.tar.gz)
+#  WriteToTape <filename> <projectname> [<relative_path_on_tape>] [--replicate]
+# INPUT
+# $1 HYCOMreg read in expt HYCOM region, to sort and get right paths 
+# $2 forecast version, same as folder name, text "ice_only" or "wavesice_ww3arctic"
+# $3 date (YYYYMMDD) - if not input, the current date is assumed
+# OUTPUT
+# save files to NorStore tape, file name of first day in week
+# outfile=YYYYMMDD_weekly.tar.gz
+# write weekly text file in $path1/WriteToTape_list, list of existing daily files
+# write weekly text file in $path1/NOT_WriteToTape_list, list of NOT existing daily files
+# TODO do we need a replicate of the backup on a different tape??
+
+# swarp_fc_mkdir.sh
+# -----------------------------------------------------------------------------------
+# Check if backup folders exist before moving 
+# #  SWARP forecast from /scratch to /project/ area
+# # INPUT
+# # 1) HYCOMreg, tex TP4a0.12, to get correct path and FCtype
+# # 2) forecast version, same as folder name, tex "ice_only"
+# # 3) date set to YYYYMMDD (if not def. the current date is assumed)
+
+
+# IfOnTapeThenDelete.sh
+# -----------------------------------------------------------------------------------
+# check weekly (day in week?) if week .tar.gz files are written to Tape and size is ok
+# # get current date define timespan to check for files!
+# # Read list of files in WriteToTape_list/yyyymmdd_week_filelist.txt
+# # Check if files are written to tape
+# # then clear all project/../daily and scratch/.../weekly files
+#
+# # INPUT
+# # 1) HYCOMreg read in expt HYCOM region, to sort and get right paths 
+# # 2) forecast version, same as folder name, tex "ice_only"
+
+
+# backup_and_delete_crontab
+# -----------------------------------------------------------------------------------
+# On Sundays, check last weeks files, untar and tar into new week file, save to /tape
+# 12 00 * * 7 $FORECAST/ModelSetups/common/NorStore/swarp_fc_tape_backup.sh TP4a0.12 ice_only
+# ...
+# On Mondays? Check if files are actually written to tape, if so delete these files 
+# on /project and /scratch area
+# 12 00 * * 1 $FORECAST/ModelSetups/common/NorStore/IfOnTapeThenDelete.sh TP4a0.12 ice_only
+# ...
+
+
+# IDEA ONLY STARTED CP FROM swarp_fc_tape_backup.sh: swarp_fc_tape_nesting_backup.sh
+# ----------------------------------------------------------------------------------
+## Backup SWARP nesting files from /project/ to /tape area ones a week (Wednesdays)
+## week nesting tar files are saved on tuesdays and copied to Norstore from Hexiagon
+##Use Norstore backup commands:
+## https://www.norstore.no/services/tape-storage
+##  WriteToTape <filename> <projectname> [<relative_path_on_tape>] [--replicate]

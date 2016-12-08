@@ -69,6 +69,22 @@ echo " "                                              >> $log
 echo "Combining unpacked files (ncrcat)..."           >> $log
 ncrcat tmp/*.nc tmp.nc
 
+# get 3d variables
+# - fix missing and fill values
+ncdump -h tmp.nc |grep "(time," > tmp.txt
+cat tmp.txt | while read line
+do
+   Line=($line)
+   v=${Line[1]}
+   v=${v%(*}
+   ncatted -O -a _FillValue,$v,o,s,-32767      tmp.nc
+   ncatted -O -a missing_value,$v,o,s,-32767   tmp.nc
+done
+rm tmp.txt
+
+ncatted -O -a _FillValue,model_depth,o,s,-32767 tmp.nc
+
+
 #set name of output file
 ofil=${FC_OUTPUT}_start${tday}T000000Z.nc
 
@@ -86,6 +102,7 @@ ncrename -v hice,icetk  $ofil #ice thickness
 
 # change time:units
 ncatted -O -h -a units,time,m,c,"seconds since 1970-01-01T00:00:00Z" $ofil
+ncatted -O -h -a calendar,time,c,c,"gregorian"                        $ofil
 #########################################################################
 
 ###########################################################################################

@@ -57,6 +57,18 @@ def start_HYCOM_map(region,cres='i'):
                    resolution='i',projection='stere',\
                    lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
+   elif region=='Antarctic':
+      lonc     = 180.
+      latc     = -90.
+      lat_ts   = latc
+      rad      = 60 # radius in deg
+      width    = 2*rad*111.e3
+      height   = 2*rad*111.e3
+      #
+      bm = Basemap(width=width,height=height,\
+                   resolution='i',projection='stere',\
+                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
    elif region=='TP4':
       lonc     = -45.
       latc     = 85.
@@ -262,8 +274,8 @@ def finish_map(bm,**kwargs):
    # *bm is a basemap
 
    # coast/land
-   bm.drawcoastlines()
-   bm.fillcontinents(color='gray')
+   bm.drawcoastlines(**kwargs)
+   bm.fillcontinents(color='gray',**kwargs)
 
    # draw parallels and meridians.
    merids   = get_nice_meridians(bm.lonmin,bm.lonmax)
@@ -275,5 +287,55 @@ def finish_map(bm,**kwargs):
          labels=[True,False,False,True],**kwargs)
    bm.drawmapboundary(**kwargs) # fill_color='aqua')
 
+   return
+############################################################################
+
+
+############################################################################
+def plot_anomaly(lon,lat,anom,anom_fig,text=None,\
+      HYCOM_region='Arctic',clim=None,clabel=None):
+
+   pobj     = plot_object()
+   bmap     = start_HYCOM_map(HYCOM_region)
+
+   if clim is None: 
+      vmin  = None
+      vmax  = None
+   else:
+      vmin,vmax   = clim
+
+   PC       = bmap.pcolor(lon,lat,anom,latlon=True,ax=pobj.ax,vmin=vmin,vmax=vmax)
+   cbar     = pobj.fig.colorbar(PC)
+   if clabel is not None:
+      cbar.set_label(clabel,rotation=270,labelpad=20,fontsize=16)
+
+   if text is not None:
+      if HYCOM_region=='TP4':
+         xyann = (0.05,.925)
+      else:
+         xyann = (0.4,.925)
+      pobj.ax.annotate(text,xy=xyann,xycoords='axes fraction',fontsize=18)
+
+   finish_map(bmap)
+   pobj.fig.savefig(anom_fig)
+
+   print('Saving '+anom_fig+'\n')
+   plt.close(pobj.fig)
+   return
+############################################################################
+
+
+############################################################################
+def plot_patches(ax,MPlist,col):
+   from matplotlib import patches,cm,collections
+   patch_list  = []
+
+   for poly in MPlist:
+      ccl   = list(poly.exterior.coords)
+      patch_list.append(patches.Polygon(ccl,True))
+
+   pc = collections.PatchCollection(patch_list, cmap=cm.jet, alpha=.5)
+   pc.set_facecolor(col)
+   ax.add_collection(pc)
    return
 ############################################################################

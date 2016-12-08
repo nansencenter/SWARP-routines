@@ -28,8 +28,8 @@ IOfc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_script
 IOfc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/ice_only/inputs/THISFC.src"
 
 # download/check wave data
-wamfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice"
-ww3fc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic"
+wamfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/common/wamnsea_data"
+ww3fc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/common/ww3arctic_data"
 
 #full paths to needed applications
 qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
@@ -40,7 +40,7 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # ===================================================================
 # TP4 restarts less urgent
-20 15 * * * $FORECAST/ModelSetups/common/pre/topaz_archive_restart.sh
+30 16 * * * $FORECAST/ModelSetups/common/pre/topaz_archive_restart.sh
 
 # run ice_only forecast as early as possible
 # (wind FC arrives just before 2400 previous day)
@@ -53,16 +53,16 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 # ===================================================================
 # get wamnsea waves as early as possible
 # NOTE the wamnsea products are usually uploaded just after 4 am
-00 * * * * $wamfc/wave_data/wamnsea_update.sh $wamfc_src
+00 * * * * $wamfc/wamnsea_update.sh
 
 # run check_wamsea.py (alert if big waves near ice)
-10 * * * * $wamfc/wave_data/check_wamnsea.sh $wamfc_src
+# 10 * * * * $wamfc/wave_data/check_wamnsea.sh $wamfc_src
 
 # run wavesice (WAM) forecast
 # internal check for ice_only restart and WAMNSEA product
-10 * * * * $FCcommon/run_forecast.sh         $wamfc_src
-# 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcB
-# 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcF
+# 10 * * * * $FCcommon/run_forecast.sh         $wamfc_src
+# # 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcB
+# # 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcF
 # ===================================================================
 
 
@@ -72,11 +72,11 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 30 * * * * $ww3fc/wave_data/ww3_arctic_update.sh
 
 # run check_ww3arctic.py (alert if big waves near ice)
-00 * * * * $ww3fc/wave_data/check_ww3arctic.sh
+# 00 * * * * $ww3fc/wave_data/check_ww3arctic.sh
 
 # run wavesice (WW3) forecast
 # internal check for ice_only restart and WW3_ARCTIC product
-30 * * * * $FCcommon/run_forecast.sh         $ww3fc_src
+40 * * * * $FCcommon/run_forecast.sh         $ww3fc_src
 # 30 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcB
 # 30 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcF
 # ===================================================================
@@ -90,5 +90,5 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 
 # ===================================================================
 # run check_ECMWF.sh (1: alert if forcing absent) (2: alert if present again)
-05 ** * * * $FORECAST/utility_scripts/check_ECMWF.sh 2
+# 05 ** * * * $FORECAST/utility_scripts/check_ECMWF.sh 2
 # ===================================================================

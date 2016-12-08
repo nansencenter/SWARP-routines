@@ -8,6 +8,7 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 HERE="$FORECAST/ModelSetups/common/ww3arctic_data"
 fget="$HERE/ww3_arctic_download.sh"
 fsort="$HERE/ww3_arctic_sort.sh"
+fget2="$HERE/ww3_arctic_get_best_est.sh"
 ww3a=$wmsc/WAVES_INPUT/WW3_ARCTIC
 cycle=2 # get 05:20 update from ifremer server
 print_info=0
@@ -30,6 +31,7 @@ timeout_warning=08
 time_now=$(date +%H)
 tday=$(date +%Y%m%d)
 yday=`date --date="yesterday" "+%Y%m%d"`
+yyear=${yday:0:4}
 
 if  [ $time_now -lt 5 ]
 then
@@ -46,59 +48,70 @@ mkdir -p $ww3a/${year}
 cd $ww3a/$year
 log=$ww3a/$year/ww3a_log.txt
 
-# Loop over previous 30 days
-# - check if eg wave file is there already
-# - if not download all materials for that day
-DLS=0 # no of downloads
-dfirst=1
-for n in `seq 1 3`
+# only today's FC is kept on the ftp server
+# (previously  this was indexed according to yesterday's date,
+#  since the run began then)
+ddir1=$ww3a/${yday:0:4}/originals/${yday}00
+dfil1=SWARP_WW3_ARCTIC-12K_$yday.nc
+
+if [ $print_info -eq 1 ]
+then
+   echo "Checking $yday"
+fi
+
+# 2d fields
+ddir2=$ww3a/${yyear}/forecast
+dfil2=SWARP_WW3_ARCTIC-12K_${yday}.fc.nc
+
+# full spectrum
+ddir3=$ww3a/${yyear}_ef/forecast
+dfil3=SWARP_WW3_ARCTIC-12K_${yday}_ef.fc.nc
+DLS=0
+
+if [ ! -f $ddir1/$dfil1 ]
+then
+   # download, sort and convert files
+   echo "** Update WW3_ARCTIC wave data from ftp.ifremer.fr **"   >  $log
+   echo " Today is $tday $(date "+%H:%M:%S")"                     >> $log
+   echo ""                                                        >> $log
+
+   echo "Downloading WW3 Arctic files for $yday"  >> $log
+   $fget $yday
+
+   echo "Sorting WW3 Arctic files for $ddate"  >> $log
+   $fsort   $ddate  1
+   DLS=1
+elif [ $print_info -eq 1 ]
+then
+   echo "WW3 Arctic files present for $ddate"      >> $log
+fi
+
+if [ ! -f $ddir1/$dfil1 ]
+then
+   echo "> WW3 Arctic files still not present for $ddate"  >> $log
+   echo " "                                                >> $log
+fi
+
+if [ $DLS -eq 1 ]
+then
+   # if doing download, also update best est for 2 days ago:
+   ddate=`date --date="$tday -2days" "+%Y%m%d"`
+   $fget2 $ddate
+fi
+
+
+for n in `seq -30 -3`
 do
-   ddate=$(date --date="-$n days" +%Y%m%d) # download date
-   dyear=${ddate:0:4}
-   ddir1=$ww3a/${dyear}/originals/${ddate}00
-   dfil1=SWARP_WW3_ARCTIC-12K_$ddate.nc
-
-   if [ $print_info -eq 1 ]
+   # also get best est's for last few days if not present
+   ddate=`date --date="$tday ${n}days" "+%Y%m%d"`
+   ddir=$ww3a/${ddate:0:4}/analysis_m1
+   dfil=SWARP_WW3_ARCTIC-12K_${ddate}.nc
+   if [ ! -f $ddir/$dfil ]
    then
-      echo "Checking $ddate"
-   fi
-
-   if [ $n -eq 1 ]
-   then
-      ddir2=$ww3a/${dyear}/forecast
-      dfil2=SWARP_WW3_ARCTIC-12K_${ddate}.fc.nc
-      #
-      ddir3=$ww3a/${dyear}_ef/forecast
-      dfil3=SWARP_WW3_ARCTIC-12K_${ddate}_ef.fc.nc
-   fi
-
-   if [ ! -f $ddir1/$dfil1 ]
-   then
-      # download, sort and convert files
-      if [ $dfirst -eq 1 ]
-      then
-         echo "** Update WW3_ARCTIC wave data from ftp.ifremer.fr **"   >  $log
-         echo " Today is $tday $(date "+%H:%M:%S")"                     >> $log
-         echo ""                                                        >> $log
-         dfirst=0
-      fi
-      echo "Downloading WW3 Arctic files for $ddate"  >> $log
-      $fget    $ddate $cycle
-
-      echo "Sorting WW3 Arctic files for $ddate"  >> $log
-      $fsort   $ddate $cycle 1
-      DLS=$((DLS+1))
-   # else
-   #    echo "WW3 Arctic files present for $ddate"      >> $log
-   fi
-
-   if [ ! -f $ddir1/$dfil1 ]
-   then
-      echo "> WW3 Arctic files still not present for $ddate"  >> $log
-      echo " "                                                >> $log
+      $fget2 $ddate
    fi
 done
-#################################################
+
 
 # ===============================================
 # WARNINGS
@@ -109,12 +122,13 @@ then
    echo "Number of downloads: $DLS" >> $log
 fi
 
-
+echo $ddir2/$dfil2
 if [ -f $ddir2/$dfil2 ]
 then
 
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K.fc.latest.nc
    fctarg=$ddir2/$dfil2
+   echo $fctarg
 
    if [ ! -L $fclat ]
    then
@@ -221,14 +235,3 @@ else
    fi
 
 fi
-
-# echo " "
-# echo "ww3_arctic_update.sh finished"
-# echo "log in $log"
-# echo " "
-# 
-# echo " " >> $log
-# cat $log
-# 
-# echo " "
-# cat $ww3a/latest_download.txt

@@ -32,7 +32,7 @@ from skimage import morphology as morph
 from scipy.interpolate import griddata as grd
 from operator import itemgetter as itg
 
-sys.path.append('./utilities')
+sys.path.append('../utilities')
 import mod_reading as Mrdg
 import Laplace_eqn_solution_2tw as Leqs
 import test_HYCOM_diag as Hdiag
@@ -345,10 +345,10 @@ class WIM_growth_stress:
 
         ZMo = reproj_mdl2osi(XMo,YMo,ZM,XO,YO)
 
-        mrg = np.load('./geo_info/bar_gre_bal_reg.npy')
-        org = np.load('./geo_info/bar_gre_bal_reg_OSI.npy')
-        mms = np.load('./geo_info/bar_gre_bal_reg_mask.npy')
-        oms = np.load('./geo_info/bar_gre_bal_reg_mask_OSI.npy')
+        mrg = np.load('../geo_info/bar_gre_bal_reg.npy')
+        org = np.load('../geo_info/bar_gre_bal_reg_OSI.npy')
+        mms = np.load('../geo_info/bar_gre_bal_reg_mask.npy')
+        oms = np.load('../geo_info/bar_gre_bal_reg_mask_OSI.npy')
 
         ZMo,ZO,TXI,TYI,TXW,TYW,FOI,TOI,ZDW,QA,QC,QO,TDI,FDI,HSD = \
                 mask_region(ZMo,region,mrg,org,mms,oms),mask_region(ZO,region,mrg,org,mms,oms),\
@@ -1693,10 +1693,10 @@ def basemap_creator(region,cres='i'):
 # Function that masks regions (only BS1 and FR1) will be used
 def mask_region(data,region,mreg=None,oreg=None,mmask=None,omask=None,mask=False):
     if mreg is None or oreg is None:
-        mdl_reg = np.load('./geo_info/bar_gre_bal_reg.npy')
-        osi_reg = np.load('./geo_info/bar_gre_bal_reg_OSI.npy')
-        mdl_mask = np.load('./geo_info/bar_gre_bal_reg_mask.npy')
-        osi_mask = np.load('./geo_info/bar_gre_bal_reg_mask_OSI.npy')
+        mdl_reg = np.load ('../geo_info/bar_gre_bal_reg.npy')
+        osi_reg = np.load ('../geo_info/bar_gre_bal_reg_OSI.npy')
+        mdl_mask = np.load('../geo_info/bar_gre_bal_reg_mask.npy')
+        osi_mask = np.load('../geo_info/bar_gre_bal_reg_mask_OSI.npy')
     else:
         mdl_reg = mreg
         osi_reg = oreg
@@ -1762,10 +1762,10 @@ elapsedtime = time.time() - time1
 print 'Basemap created in ',elapsedtime
 print('')
 
-mrg = np.load('./geo_info/bar_gre_bal_reg.npy')
-org = np.load('./geo_info/bar_gre_bal_reg_OSI.npy')
-mms = np.load('./geo_info/bar_gre_bal_reg_mask.npy')
-oms = np.load('./geo_info/bar_gre_bal_reg_mask_OSI.npy')
+mrg = np.load('../geo_info/bar_gre_bal_reg.npy')
+org = np.load('../geo_info/bar_gre_bal_reg_OSI.npy')
+mms = np.load('../geo_info/bar_gre_bal_reg_mask.npy')
+oms = np.load('../geo_info/bar_gre_bal_reg_mask_OSI.npy')
 
 print('Reading datasets...')
 data = reader(dadate,bmo,bmo)

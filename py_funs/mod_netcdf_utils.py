@@ -1,13 +1,7 @@
 import numpy as np
-from matplotlib import pyplot as plt
-from mpl_toolkits.basemap import Basemap
 from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
-import fns_plotting as Fplt
-from scipy.interpolate import griddata as grd
 import os,sys
-import shapely.geometry as shg
-import geometry_sphere as GS
 import mod_reading as MR
 
 
@@ -27,7 +21,7 @@ def lonlat_names(ncfil):
 ##########################################################
 def nc_get_var(ncfil,vblname,time_index=None):
    """
-   vbl=nc_get_var(ncfil,vblname,time_index=None):
+   vbl=nc_get_var(ncfil,vblname,time_index=None)
    *ncfil is string (filename)
    *vname is string (variable name)
    *time_index is record number to get
@@ -75,26 +69,56 @@ def nc_get_var(ncfil,vblname,time_index=None):
 ########################################################
 
 
+##########################################################
+def nc_get_dim(ncfil,vblname):
+   """
+   vbl=nc_get_var(ncfil,vblname,time_index=None)
+   *ncfil is string (filename)
+   *vname is string (variable name)
+   *vbl   is a mod_reading.var_object instance
+   """
+
+   nc    = ncopen(ncfil)
+
+   if vblname in nc.variables:
+      vbl0  = nc.variables[vblname]
+
+      # get the netcdf attributes
+      attlist   = vbl0.ncattrs()
+      attvals  = []
+      for att in attlist:
+         attval   = getattr(vbl0,att)
+         attvals.append(attval)
+      Xatts = [attlist,attvals]
+
+      vals  = vbl0[:]
+      nc.close()
+
+      return MR.var_object(vals,extra_atts=Xatts)
+   else:
+      raise ValueError(vbl_name+' not given as an array')
+########################################################
+
+
 ########################################################
 class nc_getinfo:
 
+   import os
    #####################################################
    def __init__(self,ncfil,time_index=None,lonlat_file=None):
 
       ##################################################
       self.filename  = ncfil
       if ncfil[0]=='/':
-         self.basedir   = '/'
+         bn             = os.path.basename(ncfil)
+         self.basedir   = ncfil.strip(bn)
       else:
-         import os
+         bn             = ncfil
          self.basedir   = os.getcwd()+'/'
 
-      ss = ncfil.split('/')
-      for i in range(len(ss)-1):
-         self.basedir   = self.basedir+'/'
-
-      self.basename     = ss[-1].strip('.nc')
+      self.basename     = os.path.splitext(bn)[0]
       self.filetype     = 'netcdf'
+      self.object_type  = 'netcdf'
 
       # things to work with plotting stuff in mod_reading.py
       self.HYCOM_region    = None
@@ -121,7 +145,14 @@ class nc_getinfo:
       Nkeys = len(vkeys)
 
       # is time a dimension?
-      self.time_dim     = ('time' in self.dimensions)
+      time_names     = ['time','time_counter'] # NEMO outputs call time "time_counter"
+      self.time_dim  = False
+      for time_name in time_names:
+         if time_name in self.dimensions:
+            self.time_dim  = True
+            self.time_name = time_name
+            break
+
 
       # get global netcdf attributes
       class ncatts:
@@ -137,82 +168,10 @@ class nc_getinfo:
       ########################################################
       # time info:
       if self.time_dim:
-
-         time        = nc.variables['time']
-         Nt          = len(time[:])
-         reftime_u   = time[0] # hours since refpoint
-         time_info   = time.units.split()
-
-         time_info[0]   = time_info[0].strip('s') # 1st word gives units
-         if time_info[0]=='econd':
-            time_info[0]   = 'second'
-
-         tu    = time.units
-         if ('T' in tu) and ('Z' in tu):
-            # using the T...Z format for time
-            # eg hyc2proj (this is the standard)
-            split1   = tu.split('T')
-            ctime    = split1[1].split('Z')[0]
-            cdate    = split1[0].split()[2]
-         else:
-            # eg WAMNSEA product from met.no
-            split1   = tu.split()
-            cdate    = split1[2]
-            ctime    = split1[3]
-
-         if '-' in cdate:
-            # remove '-'
-            # - otherwise assume YYYYMMDD format
-            split2   = cdate.split('-')
-            for loop_i in range(1,3):
-               if len(split2[loop_i])==1:
-                  split2[loop_i] = '0'+split2[loop_i]
-            cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
-
-         if len(cdate)<8:
-            cdate = (8-len(cdate))*'0'+cdate
-
-         if ':' in ctime:
-            # remove ':'
-            # - otherwise assume HHMMSS format
-            split2   = ctime.split(':')
-            for loop_i in range(0,3):
-               if (split2[loop_i])==1:
-                  split2[loop_i] = '0'+split2[loop_i]
-            ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
-
-         year0    = int(cdate[:4])
-         mon0     = int(cdate[4:6])
-         day0     = int(cdate[6:8])
-         hr0      = int(ctime[:2])
-         min0     = int(ctime[2:4])
-         sec0     = int(float(ctime[4:]))
-         refpoint = datetime(year0,mon0,day0,hr0,min0,sec0)
-
-         # check format of time
-         i32   = np.array([0],dtype='int32')
-         if type(i32[0])==type(reftime_u):
-            reftime_u   = int(reftime_u)
-
-         if time_info[0]=='second':
-            self.reftime = refpoint+timedelta(seconds=reftime_u)
-         elif time_info[0]=='hour':
-            self.reftime = refpoint+timedelta(hours=reftime_u)
-         elif time_info[0]=='day':
-            self.reftime = refpoint+timedelta(reftime_u) #NB works for fraction of days also
-
-         if time_info[0]=='second':
-            # convert time units to hours for readability of the messages:
-            self.timeunits  = 'hour'
-            self.timevalues = [int((time[i]-time[0])/3600.) for i in range(Nt)]
-         else:
-            self.timeunits  = time_info[0]
-            self.timevalues = [time[i]-time[0] for i in range(Nt)]
-
-         self.number_of_time_records = Nt
-         self.datetimes              = []
-         for tval in self.timevalues:
-            self.datetimes.append(self.timeval_to_datetime(tval))
+         time  = nc.variables[self.time_name]
+         self.get_time_info(time)
+      else:
+         self.datetimes = None
       ########################################################
 
 
@@ -334,6 +293,134 @@ class nc_getinfo:
 
 
    ###########################################################
+   def get_time_info(self,time):
+
+      from netcdftime import netcdftime as NCT
+
+      tu          = time.units
+      time_info   = tu.split()
+
+      ################################################################
+      # determine time format of reference point:
+      Unit  = time_info[0]# 1st word gives units
+      Unit  = Unit.strip('s')
+      if Unit=='econd':
+         Unit  = 'second'
+
+      time_info.remove(time_info[0])
+      time_info.remove(time_info[0]) # 'since'
+
+      # rest is date and time of reference point
+      if len(time_info)==2:
+         cdate,ctime = time_info
+      else:
+         if ('T' in time_info[0]) and ('Z' in time_info[0]):
+            # cdate+T...Z format for time
+            split1   = tu.split('T')
+            ctime    = split1[1].strip('Z')
+            cdate    = split1[0].split()[2]
+         
+      # reformat cdate to YYYYMMDD
+      if '-' in cdate:
+         # remove '-'
+         # - otherwise assume YYYYMMDD format
+         split2   = cdate.split('-')
+         for loop_i in range(1,3):
+            if len(split2[loop_i])==1:
+               split2[loop_i] = '0'+split2[loop_i]
+         cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
+      if len(cdate)<8:
+         cdate = (8-len(cdate))*'0'+cdate
+
+      # reformat ctime to HHMMSS
+      if ':' in ctime:
+         # remove ':'
+         # - otherwise assume HHMMSS format
+         split2   = ctime.split(':')
+         for loop_i in range(0,3):
+            if (split2[loop_i])==1:
+               split2[loop_i] = '0'+split2[loop_i]
+         ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
+      ################################################################
+
+
+      ################################################################
+      # now can make new string where format is known
+      # - this is to pass into netcdftime.utime
+      # - NB can't always use strftime/strptime since it only works after 1900
+      cyear0         = cdate[:4]
+      cmon0          = cdate[4:6]
+      cday0          = cdate[6:8]
+      chr0           = ctime[:2]
+      cmin0          = ctime[2:4]
+      csec0          = ctime[4:]
+      #
+      year0          = int(cyear0)
+      mon0           = int(cmon0)
+      day0           = int(cday0)
+      hr0            = int(chr0)
+      min0           = int(cmin0)
+      sec0           = int(float(csec0))
+      self.reftime   = datetime(year0,mon0,day0,hr0,min0,sec0)
+
+      fmt         = '%Y-%m-%d %H:%M:%S'
+      init_string = Unit+'s since '+\
+            cyear0+'-'+cmon0+'-'+cday0+' '+\
+            chr0+'-'+cmin0+'-'+csec0[:2]
+
+      ncatts   = time.ncattrs()
+      if 'calendar' in ncatts:
+         Utime    = NCT.utime(init_string,calendar=time.calendar)
+      else:
+         Utime    = NCT.utime(init_string)
+
+      arr               = time[:] #time values
+      self.datetimes    = []
+      self.timevalues   = []
+
+      i32   = np.array([0],dtype='int32')[0]
+      for i,tval in enumerate(arr):
+         if type(i32)==type(tval):
+            # can be problems if int32 format
+            tval  = int(tval)
+         cdate = Utime.num2date(tval).strftime(fmt)
+         dto   = datetime.strptime(cdate,fmt)       # now a proper datetime object
+         self.datetimes.append(dto)
+
+         if i==0:
+            self.reftime  = dto
+
+         tdiff = (dto-self.reftime).total_seconds()
+         if Unit=='second':
+            self.timevalues.append(tdiff/3600.)       # convert to hours for readability
+            self.timeunits = 'hour'
+         elif Unit=='hour':
+            self.timevalues.append(tdiff/3600.)       # keep as hours
+            self.timeunits = 'hour'
+         elif Unit=='day':
+            self.timevalues.append(tdiff/3600./24.)   # keep as days
+            self.timeunits = 'day'
+         
+      self.number_of_time_records   = len(self.datetimes)
+      return
+   ###########################################################
+
+   
+   ###########################################################
+   def nearestDate(self, pivot):
+      """
+      dto,time_index = self.nearestDate(dto0)
+      dto0  = datetime.datetime object
+      dto   = datetime.datetime object - nearest value in self.datetimes to dto0
+      time_index: dto=self.datetimes[time_index]
+      """
+      dto         = min(self.datetimes, key=lambda x: abs(x - pivot))
+      time_index  = self.datetimes.index(dto)
+      return dto,time_index
+   ###########################################################
+
+
+   ###########################################################
    def timeval_to_datetime(self,timeval):
 
       # check format of time
@@ -378,22 +465,15 @@ class nc_getinfo:
 
    ###########################################################
    def get_var(self,vname,time_index=None):
+      """
+      Call: self.get_var(vname,time_index=None)
+      Inputs:
+      vname = string (name of variable)
+      time_index = integer: if time_index 
+      Returns: mod_reading.var_object instance
+      """
 
-      # conc can have multiple names
-      vlist    = self.variables
-      cnames   = ['fice','ficem','icec','ice_conc']
-      if vname in cnames:
-         for vi in cnames:
-            if vi in vlist:
-               vname = vi
-
-      # thickness can have multiple names
-      hnames   = ['hice','hicem','icetk']
-      if vname in hnames:
-         for vi in hnames:
-            if vi in vlist:
-               vname = vi
-
+      vname = MR.check_names(vname,self.variables)
       vbl   = nc_get_var(self.filename,vname,time_index=time_index)
 
       return vbl
@@ -401,6 +481,21 @@ class nc_getinfo:
 
 
    ###########################################################
+   def get_dim(self,dname):
+      """
+      call: self.get_dim(dname)
+      inputs:
+      dname = string (name of dimension)
+      returns: mod_reading.var_object instance
+      """
+
+      vname = MR.check_names(dname,self.dimensions)
+      vbl   = nc_get_dim(self.filename,dname)
+
+      return vbl
+   ###########################################################
+
+
    #######################################################################
    def imshow(self,var_opts,**kwargs):
       """
@@ -465,6 +560,19 @@ class nc_getinfo:
 
 
    ###########################################################
+   def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+      """
+      data = self.compare_ice_edge_obs(varname,target_lonlats,\
+            time_index=0,mapping=None,**kwargs)
+      INPUTS:
+      target_lonlats = (tlon,tlat) = 2-tuple of numpy arrays
+      mapping = basemap or pyproj.Proj instance
+      kwargs: mask=None = mask to apply to interpolated data
+      """
+      return MR.interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
+   ###########################################################
+
+   ###########################################################
    def MIZmap(self,**kwargs):
       """
       Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs)
@@ -509,6 +617,13 @@ class nc_getinfo:
 
       MR.make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
       return
+   ###########################################################
+
+
+   ###########################################################
+   def compare_ice_edge_obs_all(self,**kwargs):
+      out   = MR.compare_ice_edge_obs(self,**kwargs)
+      return out
    ###########################################################
 
 ###########################################################
