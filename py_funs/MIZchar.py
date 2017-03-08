@@ -957,10 +957,15 @@ def ij2xy(cont,X,Y):
    # ??
    x     = []
    y     = []
-   xvec  = range(len(cont[:,0]))
+   if type(cont)==type([]):
+      # if input list of coordinates,
+      # convert to numpy array
+      # - coords become rows
+      cont  = np.array(cont)
 
+   nx    = cont.shape[0]
    ni,nj = X.shape
-   for n,en in enumerate(xvec):
+   for n in range(nx):
       #########################################
       # bilinear interp to get x,y curves from X,Y arrays
       # -i:
@@ -1554,8 +1559,8 @@ class poly_stat:
       # loop over the contours ("vs" is (i,j) tuple)
       for n,el in enumerate(vs):
          #getting all the neighbours
-         around2 = ((el[0]+.5,el[1]),(el[0]-.5,el[1])) # vertical boundaries - OK!
-         around1 = ((el[0],el[1]+.5),(el[0],el[1]-.5)) # horizontal boundaries
+         around2 = ((int(el[0]+.5),int(el[1]   )),(int(el[0]-.5),int(el[1]   ))) # vertical boundaries - OK!
+         around1 = ((int(el[0]   ),int(el[1]+.5)),(int(el[0]   ),int(el[1]-.5))) # horizontal boundaries
          check_cont = 0
          if el[0]/int(el[0]) == 1:
             for h,v in around1:
