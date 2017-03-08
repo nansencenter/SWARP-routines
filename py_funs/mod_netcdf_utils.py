@@ -69,6 +69,49 @@ def nc_get_var(ncfil,vblname,time_index=None):
 ########################################################
 
 
+
+##########################################################
+def nc_get_time(ncfil,time_name='time'):
+   """
+   vbl=nc_get_var(ncfil,vblname,time_index=None)
+   *ncfil is string (filename)
+   *vname is string (variable name)
+   *time_index is record number to get
+   *vbl is a mod_reading.var_object instance
+   """
+
+   nc    = ncopen(ncfil)
+   time  =  nc.variables[time_name][:]
+   nc.close()
+   return time
+########################################################
+
+
+##########################################################
+def nc_get_var_atts(ncfil,vblname):
+   """
+   vbl=nc_get_var(ncfil,vblname,time_index=None)
+   *ncfil is string (filename)
+   *vname is string (variable name)
+   *time_index is record number to get
+   *vbl is a mod_reading.var_object instance
+   """
+
+   nc    = ncopen(ncfil)
+   vbl0  = nc.variables[vblname]
+
+   # get the netcdf attributes
+   attlist  = vbl0.ncattrs()
+   atts     = {}
+   for att in attlist:
+      attval   = getattr(vbl0,att)
+      atts.update({att:attval})
+   
+   nc.close()
+   return atts
+########################################################
+
+
 ##########################################################
 def nc_get_dim(ncfil,vblname):
    """
@@ -478,6 +521,52 @@ class nc_getinfo:
 
       return vbl
    ###########################################################
+
+
+   ###########################################################
+   def get_var_atts(self,vname):
+      """
+      Call: self.get_var(vname)
+      Inputs:
+      vname = string (name of variable)
+      Returns: dictionary of attributes
+      """
+
+      if 'time' in vname:
+         vname = self.time_name
+      elif 'lon' in vname:
+         vname = self.lonname
+      elif 'lat' in vname:
+         vname = self.latname
+      else:
+         vname = MR.check_names(vname,self.variables)
+
+      return nc_get_var_atts(self.filename,vname)
+   ###########################################################
+
+
+   ###########################################################
+   def get_global_atts(self):
+      """
+      Call: self.get_global_atts()
+      Returns: dictionary of attributes
+      """
+
+      return vars(self.ncattrs)
+   ###########################################################
+
+
+   ##########################################################
+   def get_time(self):
+      """
+      vbl=nc_get_var(ncfil,vblname,time_index=None)
+      *ncfil is string (filename)
+      *vname is string (variable name)
+      *time_index is record number to get
+      *vbl is a mod_reading.var_object instance
+      """
+      return nc_get_time(self.filename,time_name=self.time_name)
+   ########################################################
 
 
    ###########################################################
