@@ -950,6 +950,8 @@ def cts_lon(lon):
 #############################################################
 # output: xy_coords
 def ij2xy(cont,X,Y):
+   # cont =np.array([(i0,j0),(i1,j1),...]).transpose()
+   # so rows are (i,j) pairs
    # changes indexes to x and y
    # (NOTE i and j are inverted -> i = [:,1], j = [:,0])
    # ??
