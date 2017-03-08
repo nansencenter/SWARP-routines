@@ -2907,7 +2907,7 @@ def make_png_pair_all(fobj,var_opts1,var_opts2,\
       HYCOMreg=None,figdir='.',\
       percentile_min=0,percentile_max=95,\
       start_date=None,end_date=None,\
-      *kwargs):
+      **kwargs):
 
    pobj        = plot_object()
    fig,ax,cbar = pobj.get()
