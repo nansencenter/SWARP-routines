@@ -2841,7 +2841,7 @@ def get_range_animation(fobj,var_opts,bmap,percentile_min=0,percentile_max=95):
 def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',\
       percentile_min=0,percentile_max=95,\
       start_date=None,end_date=None,\
-      *kwargs):
+      **kwargs):
 
    var_opts    = check_var_opts(var_opts)
    pobj        = plot_object()
