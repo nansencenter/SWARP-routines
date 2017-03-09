@@ -407,7 +407,7 @@ class proj_obj:
 
 
 ###########################################################
-def check_names(vname,variables,stop=True):
+def check_names(vname,variables):
 
    if vname in variables:
       return vname
@@ -415,52 +415,28 @@ def check_names(vname,variables,stop=True):
    lists = []
 
    # ice conc alt names
-   List   = ['ficem','fice','ice_conc','icec','cice','area',\
-                  'concentration','sea_ice_concentration']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   lists.append(['ficem','fice','ice_conc','icec',\
+                  'concentration','sea_ice_concentration',\
+                  'ice fraction'])
+
    # ice thick alt names
-   List  = ['hicem','hice','ice_thick','icetk','iceh',\
-            'sea_ice_thickness','thickness']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   lists.append(['hicem','hice','ice_thick','icetk',\
+                  'sea_ice_thickness','thickness','sea_ice_concentration'])
 
    # floe size alt names
-   List  = ['dfloe','dmax','Dfloe','Dmax']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   lists.append(['dfloe','dmax','Dfloe','Dmax'])
 
-   # wave stress: x component
-   List  = ['taux','tau_x','taux_waves']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   # H_s alt names
+   lists.append(['swh','Hs','hs'])
 
-   # wave stress: y component
-   List  = ['tauy','tau_y','tauy_waves']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   for names in lists:
+      if vname in names:
+         for vbl in names:
+            if vbl in variables:
+               return vbl
 
-   # swh
-   List  = ['Hs','hs','swh','significant_wave_height']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
-
-   if stop:
-      raise ValueError(vname+'not in variable list')
-   else:
-      return ''
+   raise ValueError(vname+' not in variable list')
+   return
 ###########################################################
 
 
