@@ -64,7 +64,7 @@ for ndays in range(FCdays):
    # call the AOD routine
    odir  = outdir+'/FC'+str(ndays)+'days'
    hi.areas_of_disagreement(time_index=idx,\
-      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      obs_type='OSISAF',obs_path=None,\
       vertices=None,regions=None,\
       do_sort=False,EastOnly=False,\
       forecast_day=ndays,\

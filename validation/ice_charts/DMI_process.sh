@@ -2,12 +2,11 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 if [ $# -eq 1 ]
 then
    cyear=$1
+   Indir=/work/shared/nersc/msc/DMI_icecharts/sigrid/$cyear
 else
-   echo "Usage: `basename $0` [year]"
-   exit
+   Indir=`pwd`
 fi
 
-indir=`pwd`
 outdir=/work/shared/nersc/msc/DMI_icecharts/MIZ_FA
 
 ME=`readlink -f $0`
@@ -21,6 +20,11 @@ export PYTHONPATH=$PYTHONPATH:$SWARP_ROUTINES/py_funs
 
 # extract MIZ from ice chart
 pyscript=$Vdir/read_icechart.py
-$python $pyscript --indir=$indir --outdir=$outdir --chart_source=DMI --MIZ_criteria="FA_only" --overwrite=False
+for indir in $Indir/*
+do
+   echo $python $pyscript --indir=$indir --outdir=$outdir --chart_source=DMI --MIZ_criteria="FA_only" --overwrite=False
+   $python $pyscript --indir=$indir --outdir=$outdir --chart_source=DMI --MIZ_criteria="FA_only" --overwrite=False
+done
 
-# TODO MIZ width/area?
+# collect time series for the year:
+$python $Vdir/collect_MIZ_widths.py $outdir/MIZ_polys_classified/$cyear

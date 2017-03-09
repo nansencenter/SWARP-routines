@@ -1,9 +1,10 @@
 import os,sys
+import matplotlib
+matplotlib.use('Agg')
 import shapefile_utils  as SFU
 from getopt import getopt
-import matplotlib
 import datetime as dtm
-matplotlib.use('Agg')
+import mod_reading as mr
 
 indir          = None
 outdir         = None
@@ -24,7 +25,10 @@ for opt,arg in opts:
    if opt=='--chart_source':
       chart_source   = arg
    if opt=='--overwrite':
-      overwrite   = arg
+      if arg.lower() in ['true','t','yes','y','1']:
+         overwrite   = True
+      elif arg.lower() not in ['false','f','no','n','0']:
+         raise ValueError('Unknown value for overwrite: '+arg+'- use eg T or F')
 
 if indir is None:
    raise ValueError('Specify input dir with --indir=')
@@ -37,6 +41,7 @@ if outdir is None:
 fnames      = os.listdir(indir)
 snames      = []
 datetimes   = []
+#print(fnames)
 
 if not os.path.exists(outdir):
    os.mkdir(outdir)
@@ -81,7 +86,11 @@ for i,fname in enumerate(snames):
    figname  = figdir+'/'+cyear+'/'+fname+'.png'
    if not os.path.exists(txtdir+'/'+cyear):
       os.mkdir(txtdir+'/'+cyear)
-   txtname  = txtdir+'/'+cyear+'/'+fname+'_MIZpolys.txt'
+
+   Txtdir   = txtdir+'/'+cyear+'/'+fname
+   if not os.path.exists(Txtdir):
+      os.mkdir(Txtdir)
+   txtname  = Txtdir+'/'+fname+'_MIZpolys.txt'
 
    if os.path.exists(figname) and (not overwrite):
       print('\n'+figname+' exists')
@@ -90,18 +99,41 @@ for i,fname in enumerate(snames):
 
    print('\nOpening '+fname_full+'...')
    
-   MIZshp   = SFU.MIZ_from_shapefile(fname_full,\
-         MIZ_criteria=MIZ_criteria,chart_source=chart_source)
+   if 1:
+      MIZshp   = SFU.MIZ_from_shapefile(fname_full,\
+            MIZ_criteria=MIZ_criteria,chart_source=chart_source)
 
-   # ============================================================
-   # write text file
-   MIZshp.write_text_file(txtname,MIZtype='outer')
-   # ============================================================
+      # ============================================================
+      # write text file
+      MIZshp.write_text_file(txtname,MIZtype='outer')
+      # ============================================================
+
+
+      # ==================================================================
+      #  make a figure
+      MIZshp.test_plot(figname=figname)
+      # ==================================================================
 
 
    # ==================================================================
-   #  make a figure
-   MIZshp.test_plot(figname=figname)
+   # calc MIZ width
+   chart_list  = mr.polygon_file_list(file_info={'files':[txtname],'dates':[dto]})
+
+   verts = None
+   if 1:
+      # Greenland Sea as defined by Dany/Strong
+      verts = [(-44,50),(-44,89),(8,89),(8,50)]
+      verts.append(verts[0])
+   mil   = chart_list.get_solutions(time_index=0,vertices=verts)
    # ==================================================================
 
-   # sys.exit()
+
+   # ==================================================================
+   # save summary file
+   ofil  = Txtdir+'/'+fname+'_summary.txt'
+   out   = mil.save_summary(ofil,date_time=dto)
+
+   # save shapefile
+   ofil  = Txtdir+'/'+fname+'.shp'
+   out   = mil.save_shapefile(filename=ofil)
+   # ==================================================================

@@ -22,6 +22,7 @@ Vdir=`dirname $ME`
 # load python
 [ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
 module load python/2.7.9-dso
+module load geos
 export PYTHONPATH=$PYTHONPATH:$SWARP_ROUTINES/py_funs
 
 for reg in $regions

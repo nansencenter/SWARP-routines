@@ -1,8 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from mpl_toolkits.basemap import Basemap
 from datetime import datetime,timedelta
-from netCDF4 import Dataset as ncopen
 import fns_plotting as Fplt
 from scipy.interpolate import griddata as grd
 import os,sys
@@ -11,10 +9,21 @@ import geometry_sphere as GS
 
 
 ##########################################################
-def basemap_OSISAF():
-    bmap = Basemap(width=7600000,height=11200000,resolution='i',rsphere=(6378273,6356889.44891),\
-               projection='stere',lat_ts=70,lat_0=90,lon_0=-45)
-    return bmap
+def map_OSISAF(map_type="pyproj"):
+   a  = 6378273
+   b  = 6356889.44891
+   lon0  = -45
+   lat0  = 90
+   lat1  = 70
+   if map_type=="pyproj":
+      import pyproj
+      return pyproj.Proj(proj='stere',a=a,b=b,\
+                         lat_ts=lat1,lat_0=lat0,lon_0=lon0)
+   elif map_type=="basemap":
+      from mpl_toolkits.basemap import Basemap
+      return Basemap(width=7600000,height=11200000,resolution='i',\
+                     rsphere=(a,b),projection='stere',\
+                     lat_ts=lat1,lat_0=lat0,lon_0=lon0)
 ##########################################################
 
 
@@ -43,8 +52,17 @@ class time_series:
 
    ############################################
    def __init__(self,dates,data,units=None,filename=None,overwrite=False):
-      self.dates                 = dates
-      self.data                  = data
+
+      # ==================================================================
+      # sort dates and data
+      DI          = sorted([(e,i) for i,e in enumerate(dates)])
+      self.dates  = [e for e,i in DI]
+      self.data   = {}
+      for vbl in data:
+         V  = [data[vbl][i] for e,i in DI]
+         self.data.update({vbl:np.array(V)})
+      # ==================================================================
+
       self.units                 = units
       self.variables             = data.keys()
       self.number_of_dates       = len(dates)
@@ -234,9 +252,11 @@ class read_MIZpoly_summary:
       
       ########################################################
       self.info   = {'filename'    :tfil,\
+                     'fields'      :[],\
                      'datetime'    :None,\
                      'time_in_days':None,\
                      'datetime_ref':datetime(1901,1,1)}
+
       if (cdate is not None) and (ctime is not None):
          self.info['datetime']   = datetime.strptime(cdate+' '+ctime,'%Y%m%d %H%M%S')
       elif (cdate is not None):
@@ -259,7 +279,7 @@ class read_MIZpoly_summary:
             else:
                raise ValueError('date in '+tfil+' has wrong format')
 
-            if self.info.datetime is not None:
+            if self.info['datetime'] is not None:
                if self.info['datetime'] != dtm:
                   raise ValueError('date in '+tfil+' not consistent with inputs cdate,ctime')
             else:
@@ -267,6 +287,7 @@ class read_MIZpoly_summary:
          else:
             val   = float(sp[1].strip())
             setattr(self,att,val)
+            self.info['fields'].append(att)
 
       if self.info['datetime'] is not None:
          dt                         = self.info['datetime']-self.info['datetime_ref']
@@ -386,7 +407,7 @@ class proj_obj:
 
 
 ###########################################################
-def check_names(vname,variables,stop=True):
+def check_names(vname,variables):
 
    if vname in variables:
       return vname
@@ -394,52 +415,28 @@ def check_names(vname,variables,stop=True):
    lists = []
 
    # ice conc alt names
-   List   = ['ficem','fice','ice_conc','icec','cice','area',\
-                  'concentration','sea_ice_concentration']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   lists.append(['ficem','fice','ice_conc','icec',\
+                  'concentration','sea_ice_concentration',\
+                  'ice fraction'])
+
    # ice thick alt names
-   List  = ['hicem','hice','ice_thick','icetk','iceh',\
-            'sea_ice_thickness','thickness']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   lists.append(['hicem','hice','ice_thick','icetk',\
+                  'sea_ice_thickness','thickness','sea_ice_concentration'])
 
    # floe size alt names
-   List  = ['dfloe','dmax','Dfloe','Dmax']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   lists.append(['dfloe','dmax','Dfloe','Dmax'])
 
-   # wave stress: x component
-   List  = ['taux','tau_x','taux_waves']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   # H_s alt names
+   lists.append(['swh','Hs','hs'])
 
-   # wave stress: y component
-   List  = ['tauy','tau_y','tauy_waves']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
+   for names in lists:
+      if vname in names:
+         for vbl in names:
+            if vbl in variables:
+               return vbl
 
-   # swh
-   List  = ['Hs','hs','swh','significant_wave_height']
-   if vname in List:
-      for v in variables:
-         if v in List:
-            return v
-
-   if stop:
-      raise ValueError(vname+'not in variable list')
-   else:
-      return ''
+   raise ValueError(vname+' not in variable list')
+   return
 ###########################################################
 
 
@@ -833,10 +830,11 @@ def imshow(fobj,var_opts,pobj=None,\
       Marr  = np.hypot(vbl.values.data,vbl2.values.data)
       Marr  = np.ma.array(conv_fac*Marr,mask=mask)
 
-   elif (vec_opt==2) or (vec_opt==3):
+   elif (vec_opt==2) or (vec_opt==3) or (vec_opt==5):
       # 2: plot vector magnitude + direction (unit vectors)
       # 3: plot vector direction only
-      raise ValueError('vec_opt==2,3 disabled for imshow')
+      # 5: vbl is a direction - convert to vector
+      raise ValueError('vec_opt==2,3,5 disabled for imshow')
 
    elif vec_opt==4:
 
@@ -863,20 +861,6 @@ def imshow(fobj,var_opts,pobj=None,\
          # direction-to
          dir[dir>180]   = dir[dir>180]-360
          Marr           = np.ma.array(dir,mask=np.logical_or(mask,1-np.isfinite(dir)))
-
-   elif vec_opt==5:
-      #vbl is a direction - convert to vector
-      Marr  = None
-      dir   = 90-vbl.values.data
-      if dir_from:
-         dir   = np.pi/180*(dir+180)
-      else:
-         dir   = np.pi/180*dir
-
-      # rotate unit vectors
-      U,V   = bmap.rotate_vector(np.cos(dir),np.sin(dir),lon,lat)
-      U     = np.ma.array(U,mask=mask)
-      V     = np.ma.array(V,mask=mask)
    ################################################################## 
 
 
@@ -985,7 +969,6 @@ def plot_var(fobj,var_opts,time_index=0,\
       clim=None,add_cbar=True,clabel=None,show=True,\
       test_lonlats=None):
 
-   from mpl_toolkits.basemap import Basemap
    from matplotlib import cm
 
    var_opts    = check_var_opts(var_opts,fobj.all_variables)
@@ -1648,7 +1631,8 @@ def compare_ice_edge_obs_all(fobj,HYCOMreg=None,figdir='.',**kwargs):
 ###########################################################
 def MIZmap(fobj,var_name='dmax',time_index=0,\
       vertices=None,regions=None,no_width=False,\
-      do_sort=False,EastOnly=True,plotting=True,**kwargs):
+      do_sort=False,EastOnly=True,\
+      plotting=True,show=True,**kwargs):
    """
    Call  : fobj.MIZmap(var_name='dmax',time_index=0,
                vertices=None,,regions=None,
@@ -1708,6 +1692,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       raise ValueError('Cannot pass in both vertices and regions')
    elif vertices is not None:
       do_sort  = False
+      regions  = ['custom']
    elif regions is not None:
       do_sort  = True
    
@@ -1736,37 +1721,32 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
             regions.remove('balt')
             regions.remove('Antarctic')
       # ==================================================================
+   elif regions is None:
+      regions  = ['Arctic']
 
-      for reg in regions:
-         mp = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,region=reg)
-         MPdict.update({reg:mp})
+   # ==================================================================
+   # loop over regions to classify polygons
+   for reg in regions:
+      mp = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,region=reg,vertices=vertices)
+      MPdict.update({reg:mp})
 
-         fname0   = fobj.basename+'_'+var_name +'_'+reg
-         tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+      fname0   = fobj.basename+'_'+var_name +'_'+reg
+      tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
+      if 'all' in tfile:
          tfiles.update({reg:tfile['all']})
 
-      if 0:
-         MPdict['gre'].show_maps()
-         return MPdict
+   if 0: #'gre' in MPdict.keys():
+      MPdict['gre'].show_maps()
+      return MPdict
 
-   else:
-      # not do_sort:
-      # - do whole Arctic
-      reg   = 'Arctic'
-      mp    = mc.get_MIZ_poly(Arr.values,lon,lat,fice.values,var_name=var_name,vertices=vertices,region=reg)
-      MPdict.update({reg:mp})
-      #
-      if vertices is None:
-         fname0   = fobj.basename+'_'+var_name +'_'+reg
-      else:
-         fname0   = fobj.basename+'_'+var_name
-
-      tfile    = mp.write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
-      tfiles.update({reg:tfile['all']})
 
    if no_width:
       return tfiles
+   # ==================================================================
 
+
+   # ==================================================================
+   # calc MIZ widths
    Pdict    = {}
    PLOTTING = False
    for reg in tfiles.keys():
@@ -1782,7 +1762,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
       ##########################################################
 
 
-      ##########################################################
+      # ========================================================
       # basemap for plotting
       if vertices is None:
          if do_sort:
@@ -1805,10 +1785,11 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          lonc,latc   = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),\
                         NH=True,inverse=True)
          # make basemap
-         bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
-                                 width=width,height=height,\
-                                 resolution='i')
-      ##########################################################
+         from mpl_toolkits.basemap import Basemap
+         bmap  = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
+                         width=width,height=height,\
+                         resolution='i')
+      # ========================================================
 
       # process each text file to get MIZ width etc
       print("MIZchar.single_file: "+tfil+"\n")
@@ -1867,7 +1848,8 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
          Fplt.finish_map(bmap)
          print('Saving '+figname)
          fig.savefig(figname)
-         plt.show(fig)
+         if show:
+            plt.show(fig)
          ax.cla()
          fig.clear()
          # finished region
@@ -1885,17 +1867,110 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
                   fobj.datetimes[time_index])
 ###########################################################
 
+def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,fig_info=None):
+   """
+   get_anomaly(lon,lat,ZZ,anom_fil_start,fig_info=None)
+   ZZ = [Z_mod,Z_obs] = list of masked arrays with same mask
+   outputs:
+      anom_fil_start+"_"+cdate+".npz" : save arrays to numpy binary file
+      anom_fil_start+"_"+cdate+".txt" : save RMSE and bias to this text file
+   """
+
+   # ==================================================================
+   # calc RMSE and bias
+   j_mod = 0
+   j_obs = 1
+   cdiff = ZZ[j_mod]-ZZ[j_obs]
+   good  = np.logical_not(ZZ[j_mod].mask)
+   cmin  = 0.01 # more conservative than 0.15 for plotting
+
+   # 1st estimate (lower bound)
+   # - only consider pixels with ice in both datasets
+   both_ice       = np.copy(good)
+   both_ice[good] = np.logical_and(ZZ[j_mod][good]>cmin,ZZ[j_obs][good]>cmin)
+   RMSEb          = np.sqrt(np.mean(cdiff[both_ice]**2))
+   BIASb          = np.mean(cdiff[both_ice])
+
+   # 2nd estimate (upper bound)
+   # - consider pixels with ice in one of the datasets
+   either_ice        = np.copy(good)
+   either_ice[good]  = np.logical_or(ZZ[j_mod][good]>cmin,ZZ[j_obs][good]>cmin)
+   RMSEe             = np.sqrt(np.mean(cdiff[either_ice]**2))
+   BIASe             = np.mean(cdiff[either_ice])
+
+   anom_fil = anom_fil_start+"_"+cdate+".npz"
+   print('Saving '+anom_fil+'\n')
+   np.savez(anom_fil,lon=lon,lat=lat,\
+         anomaly=cdiff.data,mask=cdiff.mask)
+
+   # write RMSE and BIAS (global variables - not regional) to summary files
+   sumname  = anom_fil.replace('.npz','.txt')
+   fid      = open(sumname,'w')
+   fid.write('Date            : '+cdate+'\n')
+   fid.write('RMSE_both_ice   : '+str(RMSEb)+'\n')
+   fid.write('Bias_both_ice   : '+str(BIASb)+'\n')
+   fid.write('RMSE_either_ice : '+str(RMSEe)+'\n')
+   fid.write('Bias_either_ice : '+str(BIASe))
+   fid.close()
+
+   if fig_info is not None:
+
+      # =================================================================
+      # plot model + ice edge
+      pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_mod],\
+            text=fig_info['text'][j_mod],\
+            mask_lower_than=cmin,\
+            HYCOM_region=fig_info['HYCOM_region'],\
+            clim=[0,1],clabel='Sea ice concentration')
+
+      bmap.contour(lon,lat,ZZ[j_obs][:,:],[.15],colors='g',\
+            linewidths=2,ax=pobj.ax,latlon=True)
+
+      figname  = fig_info['fignames'][j_mod]
+      print('Saving '+figname+'\n')
+      pobj.fig.savefig(figname)
+      pobj.ax.cla()
+      plt.close(pobj.fig)
+      # =================================================================
+
+
+      # =================================================================
+      # plot obs
+      pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_obs],\
+            text=fig_info['text'][j_obs],\
+            mask_lower_than=0.01,\
+            figname=fig_info['fignames'][j_obs],\
+            bmap=bmap,clim=[0,1],\
+            HYCOM_region=fig_info['HYCOM_region'],\
+            clabel='Sea ice concentration')
+      # =================================================================
+
+         
+      # =================================================================
+      # plot anomoly
+      anom_fig = anom_fil.replace('.npz','.png')
+
+      # mask "neither ice" region
+      cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
+      Fplt.plot_scalar(lon,lat,cdiff,figname=anom_fig,\
+            text=fig_info['text'][j_mod],\
+            HYCOM_region=fig_info['HYCOM_region'],\
+            clim=[-.5,.5],clabel='Concentration anomaly')
+      # =================================================================
+
+   return anom_fil
+
 
 ###########################################################
 def areas_of_disagreement(fobj,time_index=0,\
-      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      obs_type='OSISAF',obs_path=None,\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
       forecast_day=None,\
       plotting=2,**kwargs):
    """
    areas_of_disagreement(fobj,time_index=0,\
-      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      obs_type='OSISAF',obs_path=None,\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
       forecast_day=None,\
@@ -1922,72 +1997,54 @@ def areas_of_disagreement(fobj,time_index=0,\
 
    if obs_type == 'OSISAF':
       var_name = 'fice'
-      bmap     = basemap_OSISAF()
+      # bmap     = basemap_OSISAF()
+      mapping  = map_OSISAF(map_type="pyproj")
+
       if obs_path is None:
-      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
-            dtmo.strftime('%Y')+'_nh_polstere/'
-      if obs_option is None:
-	 obs_option='multi'
-      obsfil   = obs_path+'/ice_conc_nh_polstere-100_'+\
-                  obs_option+'_'+cdate+'1200.nc'
+      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/nh_polstere_10km_multi/'+\
+            dtmo.strftime('%Y')
+
+      LST      = os.listdir(obs_path)
+      obsfil   = None
+      for fil in LST:
+         if cdate in fil:
+            obsfil   = obs_path+'/'+fil
+            break
+
+      if obsfil is None:
+         raise ValueError('Observation file for '+cdate+\
+               ' not present in '+obs_path)
+
    else:
       raise ValueError('Wrong selection variable for areas_of_disagreement')
 
    # observation grid & compared quantity
    if PRINT_INFO:
-      print('Observation file:')
-      print(obsfil)
-      print('\n')
+      print('\nFound observation file:')
+      print(obsfil+'\n')
 
-   nci         = nc_getinfo(obsfil)
-   lon2,lat2   = nci.get_lonlat()
-   Xobs,Yobs   = bmap(lon2,lat2)
-   Zobs        = GetVar(nci,var_name,time_index=0)
-
-   # model grid & compared quantity
-   Zmod        = GetVar(fobj,var_name,time_index=time_index)
-   lon,lat     = fobj.get_lonlat()
-   Xmod,Ymod   = bmap(lon,lat)
-
+   # =================================================================
+   # observed conc
+   nci               = nc_getinfo(obsfil)
+   lon_ref,lat_ref   = nci.get_lonlat()
+   Zobs              = GetVar(nci,var_name,time_index=0)
    if '%' in Zobs.units:
       conv_fac = .01
    else:
       conv_fac = 1
+   Zref  = conv_fac*Zobs.values
 
-   if 1:
-      #Zref,Zint should be np.ma.array
-      lon_ref,lat_ref   = lon2,lat2
-      Xref,Yref,Zref    = Xobs,Yobs,conv_fac*Zobs.values # obs grid is reference;                 
-      Xin,Yin,Zin       = Xmod,Ymod,Zmod.values          # to be interped from model grid onto obs grid;  Zint is np.ma.array
-
-   # add the mask for the obs (ref) to interpolated model results (Zout)
-   if PRINT_INFO:
-      print('Reprojecting model...')
-   Zout   = reproj_mod2obs(Xin,Yin,Zin,Xref,Yref,mask=1*Zref.mask)
+   # interpolate model grid & compared quantity onto observation grid
+   # - also add the Nan mask for the observations to the model
+   Zout  = interp2points(fobj,var_name,[lon_ref,lat_ref],time_index=time_index,\
+            mapping=mapping,mask=1*Zref.mask)
 
    # add the mask for Zout to Zref
    Zref  = np.ma.array(Zref.data,mask=Zout.mask)
+   # =================================================================
 
 
-   # ==================================================================
-   # calc RMSE and bias
-   cdiff       = Zout-Zref
-   good        = np.logical_not(Zout.mask)
-
-   # 1st estimate (lower bound)
-   # - only consider pixels with ice in both datasets
-   both_ice       = np.copy(good)
-   both_ice[good] = np.logical_and(Zout[good]>0.,Zref[good]>0.)
-   RMSEb          = np.sqrt(np.mean(cdiff[both_ice]**2))
-   BIASb          = np.mean(cdiff[both_ice])
-
-   # 2nd estimate (upper bound)
-   # - consider pixels with ice in one of the datasets
-   either_ice        = np.copy(good)
-   either_ice[good]  = np.logical_or(Zout[good]>0.,Zref[good]>0.)
-   RMSEe             = np.sqrt(np.mean(cdiff[either_ice]**2))
-   BIASe             = np.mean(cdiff[either_ice])
-
+   # =================================================================
    if 'outdir' in kwargs:
       outdir   = kwargs['outdir']
    else:
@@ -1995,59 +2052,33 @@ def areas_of_disagreement(fobj,time_index=0,\
    if not os.path.exists(outdir):
       os.mkdir(outdir)
 
-   anom_fil = outdir+'/conc_anomaly_'+obs_type+'_'+cdate+'.npz'
-   print('Saving '+anom_fil+'\n')
-   np.savez(anom_fil,lon=lon2,lat=lat2,\
-         anomaly=cdiff.data,mask=cdiff.mask)
-
-   # write RMSE and BIAS (global variables - not regional) to summary files
-   sumname  = anom_fil.replace('.npz','.txt')
-   fid      = open(sumname,'w')
-   fid.write('RMSE_both_ice   : '+str(RMSEb)+'\n')
-   fid.write('Bias_both_ice   : '+str(BIASb)+'\n')
-   fid.write('RMSE_either_ice : '+str(RMSEe)+'\n')
-   fid.write('Bias_either_ice : '+str(BIASe))
-   fid.close()
-
+   anom_fil_start = outdir+'/conc_anomaly_'+obs_type
+   fig_info       = None
    if plotting>0:
+
+      # HYCOM region
+      fig_info = {}
       if fobj.HYCOM_region=='TP4':
-         HYCreg   = 'Arctic'
+         fig_info.update({'HYCOM_region':'Arctic'})
       else:
-         HYCreg   = fobj.HYCOM_region
+         fig_info.update({'HYCOM_region':fobj.HYCOM_region})
 
-      # =================================================================
-      # plot model + ice edge
-      cdate    = fobj.datetimes[time_index].strftime('%Y%m%dT%H%M%SZ')
-      figname  = outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png'
-      fobj.compare_ice_edge_obs(obs_type=obs_type,obs_path=obs_path,obs_option=obs_option,\
-            HYCOMreg=HYCreg,figname=figname,\
-            date_label=DTlabel,clabel='Sea ice concentration')
+      # figure file names
+      fig_info.update({'fignames':\
+            [outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png',\
+             outdir+'/'+nci.basename+'_'+obs_type+'_'+cdate+'.png']})
 
-      # plot obs
-      var_opts = make_plot_options('fice',ice_mask=True)
-      nci.make_png(var_opts,figdir=outdir,HYCOMreg=HYCreg,\
-            date_label=1,clabel='Sea ice concentration')
-      # =================================================================
+      # figure annotations
+      if DTlabel==1:
+         fig_info.update({'text':[cdate,cdate]})
+      else:
+         fig_info.update({'text':[DTlabel,cdate]})
 
-         
-      # =================================================================
-      # plot anomoly
-      anom_fig = anom_fil.replace('.npz','.png')
-      cmax     = .5
-      clabel   = 'Concentration anomaly'
-
-      # mask "not good" region
-      cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
-      Fplt.plot_anomaly(lon2,lat2,cdiff,anom_fig,\
-            # text=cdate,\
-            text=DTlabel,\
-            HYCOM_region=HYCreg,\
-            clim=[-cmax,cmax],clabel=clabel)
-      # =================================================================
-
+   anom_fil = get_conc_anomaly(lon_ref,lat_ref,[Zout,Zref],anom_fil_start,cdate,fig_info=fig_info)
    # ==================================================================
 
 
+   # ==================================================================
    MPdict         = {'Over':{},'Under':{}}
    tfiles         = {'Over':{},'Under':{}}
    summary_files  = {'Over':{},'Under':{}}
@@ -2057,11 +2088,11 @@ def areas_of_disagreement(fobj,time_index=0,\
       # test interpolation and matching of masks
       fig   = plt.figure()
       ax1   = fig.add_subplot(1,2,1)
-      ax1.imshow(Zout.transpose(),origin='upper')
+      ax1.imshow(Zout,origin='upper')
       ax2   = fig.add_subplot(1,2,2)
-      ax2.imshow(Zref.transpose(),origin='upper')
+      ax2.imshow(Zref,origin='upper')
       plt.show(fig)
-      return Xin,Yin,Zin,Xref,Yref,Zref
+      return
 
    if (vertices is not None) and (regions is not None):
       raise ValueError('Cannot pass in both vertices and regions')
@@ -2180,9 +2211,10 @@ def areas_of_disagreement(fobj,time_index=0,\
             lonc,latc   = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),\
                            NH=True,inverse=True)
             # make basemap
-            bmap        = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
-                                    width=width,height=height,\
-                                    resolution='i')
+            from mpl_toolkits.basemap import Basemap
+            bmap  = Basemap(projection='stere',lon_0=lonc,lat_0=latc,\
+                            width=width,height=height,\
+                            resolution='i')
          ##########################################################
 
 
@@ -2220,7 +2252,7 @@ def areas_of_disagreement(fobj,time_index=0,\
 
             if 1:
                # add observation ice edge
-               bmap.contour(lon2,lat2,conv_fac*Zobs.values,[.15],lat_lon=True,\
+               bmap.contour(lon_ref,lat_ref,conv_fac*Zobs.values,[.15],lat_lon=True,\
                               colors='g',linewidths=2,ax=ax,latlon=True)
 
             if vertices is not None:
@@ -2396,20 +2428,28 @@ class MIZmap_all:
       # ==================================================
       # set dates to analyse, check for missing dates
       if start_date is not None:
-         dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
-         DTO   = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         if type(start_date)==type("hey"):
+            # convert from string to datetime object
+            dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto0  = start_date
       else:
          dto0  = fobj.datetimes[0]
-         DTO   = fobj.datetimes[0]
 
       if end_date is not None:
-         dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         if type(end_date)==type("hey"):
+            # convert from string to datetime object
+            dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto1  = end_date
       else:
          dto1  = fobj.datetimes[-1]
 
 
       self.times_to_analyse  = [dto0]
       self.missing_times     = []
+
+      DTO   = dto0
       while DTO<dto1:
          DTO   = DTO+timedelta(step)
          self.times_to_analyse.append(DTO)
@@ -2424,7 +2464,11 @@ class MIZmap_all:
      
       # ==================================================
       # loop over times:
-      Init  = True
+      Init     = True
+      outdir3  = outdir+'/time_series' # directory for time series files
+      if not os.path.exists(outdir3):
+         os.mkdir(outdir3)
+
       for it,dto in enumerate(self.times_to_analyse):
          
          # restrict analysis dates
@@ -2451,7 +2495,7 @@ class MIZmap_all:
          # check if any answers present
          empty = True
          regs  = out.summary_files.keys()
-         if regs is not None:
+         if len(regs)>0:
             empty    = False
 
             if Init:
@@ -2459,7 +2503,7 @@ class MIZmap_all:
                sumfile  = out.summary_files[reg] # full path
                print('Initialising variable list from '+sumfile+'...')
 
-               sfo      = read_MIZpoly_summary(sumfile)
+               sfo   = read_MIZpoly_summary(sumfile)
                # EG OF SUMMARY FILE
                # Total_perimeter :          1146733
                # Total_area :      16769683265
@@ -2491,10 +2535,12 @@ class MIZmap_all:
             Init                    = False # don't need to do this again
             self.types              = out.types
             self.regions_analysed   = out.regions_analysed
+            self.time_series        = {}
 
             data  = {} # data will be data[OU][reg][variable]
             for reg in out.regions_analysed:
                data.update({reg:{}})
+               self.time_series.update({reg:[]})
 
                var_names2  = {}
                for vbl in var_names:
@@ -2523,22 +2569,18 @@ class MIZmap_all:
                for vbl in var_names:
                   v  = var_names2[vbl]
                   data[reg][v][it]  = getattr(sfo,vbl)
-      # ===================================================================
 
+            # convert data to time_series object
+            # - text file updated each time step
+            ctype = out.types[0]
+            ofil  = outdir3+'/time_series_'+ctype+'_'+reg+'.txt'
+            self.time_series[reg]  = time_series(self.times_to_analyse,\
+                  data[reg],filename=ofil,overwrite=True)
 
-      # ===================================================================
-      # convert data to time_series object
-      # - gives plotting options etc
-      self.time_series  = {}
-      outdir3  = outdir+'/time_series'
-      if not os.path.exists(outdir3):
-         os.mkdir(outdir3)
+            continue # end loop over regions
+         # ===================================================================
 
-      ctype = out.types[0]
-      for reg in out.regions_analysed:
-         ofil  = outdir3+'/time_series_'+ctype+'_'+reg+'.txt'
-         self.time_series.update({reg:[]})
-         self.time_series[reg]  = time_series(self.times_to_analyse,data[reg],filename=ofil)
+         continue # end loop over times
       # ===================================================================
 
       return
@@ -2555,20 +2597,33 @@ class AODs_all:
       # ==================================================
       # set dates to analyse, check for missing dates
       if start_date is not None:
-         dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
-         DTO   = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         if type(start_date)==type("hey"):
+            # convert from string to datetime object
+            if len(start_date)==8:
+               dto0  = datetime.strptime(start_date+'T120000Z','%Y%m%dT%H%M%SZ')
+            else:
+               dto0  = datetime.strptime(start_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto0  = start_date
       else:
          dto0  = fobj.datetimes[0]
-         DTO   = fobj.datetimes[0]
 
       if end_date is not None:
-         dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+         if type(end_date)==type("hey"):
+            # convert from string to datetime object
+            if len(end_date)==8:
+               dto1  = datetime.strptime(end_date+'T120000Z','%Y%m%dT%H%M%SZ')
+            else:
+               dto1  = datetime.strptime(end_date,'%Y%m%dT%H%M%SZ')
+         else:
+            dto1  = end_date
       else:
          dto1  = fobj.datetimes[-1]
 
 
       self.times_to_analyse  = [dto0]
       self.missing_times     = []
+      DTO   = dto0
       while DTO<dto1:
          DTO   = DTO+timedelta(step)
          self.times_to_analyse.append(DTO)
@@ -2793,7 +2848,7 @@ def get_range_animation(fobj,var_opts,bmap,percentile_min=0,percentile_max=95):
 def make_png_all(fobj,var_opts,HYCOMreg=None,figdir='.',\
       percentile_min=0,percentile_max=95,\
       start_date=None,end_date=None,\
-      *kwargs):
+      **kwargs):
 
    var_opts    = check_var_opts(var_opts)
    pobj        = plot_object()
@@ -2859,7 +2914,7 @@ def make_png_pair_all(fobj,var_opts1,var_opts2,\
       HYCOMreg=None,figdir='.',\
       percentile_min=0,percentile_max=95,\
       start_date=None,end_date=None,\
-      *kwargs):
+      **kwargs):
 
    pobj        = plot_object()
    fig,ax,cbar = pobj.get()
@@ -3202,32 +3257,38 @@ class file_list:
 
 ######################################################################
 class polygon_file_list:
-   def __init__(self,directory,prefix='TP4archv_wav.',suffix='_dmax.txt',date_format='%Y%m%dT%H%M%SZ',add_day=False):
+   def __init__(self,file_info=None,directory=None,prefix='TP4archv_wav.',suffix='_dmax.txt',date_format='%Y%m%dT%H%M%SZ',add_day=False):
       import os
 
       self.object_type  = 'polygon_file_list'
-      self.directory    = directory
+      if file_info is not None:
+         file_list   = file_info['files']
+         datetimes   = file_info['dates']
+         for i,f in enumerate(file_list):
+            file_list[i]   = os.path.abspath(f)
 
-      lst         = os.listdir(directory)
-      file_list   = []
-      datetimes   = []
-      for fil in lst:
+      else:
 
-         if not ((suffix in fil) and (prefix in fil)):
-            continue
+         lst         = os.listdir(directory)
+         file_list   = []
+         datetimes   = []
+         for fil in lst:
 
-         cdate = fil.strip(suffix).strip(prefix)
-         print(cdate)
-         dto   = datetime.strptime(cdate,date_format)
+            if not ((suffix in fil) and (prefix in fil)):
+               continue
+
+            cdate = fil.strip(suffix).strip(prefix)
+            print(cdate)
+            dto   = datetime.strptime(cdate,date_format)
 
 
-         if add_day:
-            # model has julian day starting at 0
-            # - may sts need to add 1 day
-            dto  += timedelta(1)
+            if add_day:
+               # model has julian day starting at 0
+               # - may sts need to add 1 day
+               dto  += timedelta(1)
 
-         file_list.append(fil)
-         datetimes.append(dto)
+            file_list.append(directory+'/'+fil)
+            datetimes.append(dto)
 
       self.number_of_time_records   = len(file_list)
       if self.number_of_time_records==0:
@@ -3243,7 +3304,7 @@ class polygon_file_list:
       TV                   = sorted([(e,i) for i,e in enumerate(timevalues)])
       self.timevalues,ii   = np.array(TV).transpose()
       self.datetimes       = [datetimes[int(i)] for i in ii]
-      self.file_list       = [self.directory+'/'+file_list[int(i)] for i in ii]
+      self.file_list       = [file_list[int(i)] for i in ii]
 
       return
    ###########################################################
