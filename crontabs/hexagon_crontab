@@ -13,19 +13,19 @@ VALIDATION="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/validation"
 
 # ice-only FC's
 FCcommon="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/common/"
+IOfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/ice_only/inputs/THISFC.src"
+IOfc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/ice_only/inputs/THISFC.src"
+IOfc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/ice_only/inputs/THISFC.src"
+
+# wave-ice FC's (WAM)
 wamfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice/inputs/THISFC.src"
 wamfc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/wavesice/inputs/THISFC.src"
 wamfc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/wavesice/inputs/THISFC.src"
 
-# wave-ice FC's (WAM)
+# wave-ice FC's (WW3)
 ww3fc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/wavesice_ww3arctic/inputs/THISFC.src"
 ww3fc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/wavesice_ww3arctic/inputs/THISFC.src"
 ww3fc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/wavesice_ww3arctic/inputs/THISFC.src"
-
-# wave-ice FC's (WW3)
-IOfc_src="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/TP4a0.12/ice_only/inputs/THISFC.src"
-IOfc_srcB="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/BS1a0.045/ice_only/inputs/THISFC.src"
-IOfc_srcF="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/FR1a0.03/ice_only/inputs/THISFC.src"
 
 # download/check wave data
 wamfc="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/ModelSetups/common/wamnsea_data"
@@ -36,6 +36,9 @@ qsub="/opt/torque/5.1.1-1_fba25d92/bin/qsub"
 python="/work/apps/python/2.7.9-dso-gnu/bin/python"
 qstat="/opt/torque/5.1.1-1_fba25d92/bin/qstat"
 cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
+
+# hindcast scripts
+HCIO="/home/nersc/timill/GITHUB-REPOSITORIES/SWARP-routines/forecast_scripts/hindcast/TP4a0.12/ice_only/launch_all.sh"
 
 
 # ===================================================================
@@ -53,42 +56,63 @@ cdo="/work/apps/cdo/1.5.4-cray/bin/cdo"
 # ===================================================================
 # get wamnsea waves as early as possible
 # NOTE the wamnsea products are usually uploaded just after 4 am
-00 * * * * $wamfc/wamnsea_update.sh
+# 00 * * * * $wamfc/wamnsea_update.sh
 
 # run check_wamsea.py (alert if big waves near ice)
-# 10 * * * * $wamfc/wave_data/check_wamnsea.sh $wamfc_src
+# 10 * * * * $wamfc/check_wamnsea.sh $wamfc_src
 
 # run wavesice (WAM) forecast
 # internal check for ice_only restart and WAMNSEA product
 # 10 * * * * $FCcommon/run_forecast.sh         $wamfc_src
-# # 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcB
-# # 10 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcF
+# # 30 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcB
+# # 30 * * * * $FCcommon/run_forecast_nested.sh  $wamfc_srcF
 # ===================================================================
 
 
 # ===================================================================
 # download WW3 Arctic waves
 # NB products updated 0520
-30 * * * * $ww3fc/wave_data/ww3_arctic_update.sh
+30 * * * * $ww3fc/ww3_arctic_update.sh
 
 # run check_ww3arctic.py (alert if big waves near ice)
-# 00 * * * * $ww3fc/wave_data/check_ww3arctic.sh
+# 00 * * * * $ww3fc/check_ww3arctic.sh
 
 # run wavesice (WW3) forecast
 # internal check for ice_only restart and WW3_ARCTIC product
 40 * * * * $FCcommon/run_forecast.sh         $ww3fc_src
-# 30 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcB
-# 30 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcF
+40 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcB
+40 * * * * $FCcommon/run_forecast_nested.sh  $ww3fc_srcF
 # ===================================================================
 
 
 # ===================================================================
 # get ice conc for validation and wave warning
-00 12 * * * $VALIDATION/get_osisaf_conc.sh
+00 12 * * * $VALIDATION/OSISAF/get_osisaf_conc.sh
+00 21 * * * $VALIDATION/get_AMSR2.sh
 # ===================================================================
 
+# ===================================================================
+# get ice conc for validation and wave warning
+00 12 * * * $VALIDATION/ice_charts/DMI_download.sh
+# ===================================================================
+
+# ===================================================================
+# clean old forecasts
+00 00 * * * $FORECAST/utility_scripts/clean_forecasts.sh
+# ===================================================================
 
 # ===================================================================
 # run check_ECMWF.sh (1: alert if forcing absent) (2: alert if present again)
 # 05 ** * * * $FORECAST/utility_scripts/check_ECMWF.sh 2
 # ===================================================================
+  
+# ===================================================================
+# launch hindcasts sequentially
+# 00 ** * * * $HCIO
+# 10 ** * * * $HCIO
+# 20 ** * * * $HCIO
+# 30 ** * * * $HCIO
+# 40 ** * * * $HCIO
+# 50 ** * * * $HCIO
+# ===================================================================
+
