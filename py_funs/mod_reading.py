@@ -1970,7 +1970,7 @@ def areas_of_disagreement(fobj,time_index=0,\
       plotting=2,**kwargs):
    """
    areas_of_disagreement(fobj,time_index=0,\
-      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      obs_type='OSISAF',obs_path=None,\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
       forecast_day=None,\
