@@ -1,6 +1,7 @@
 #!/bin/bash
 # copy forecast file from hexagon to johansen
 
+print_info=0
 thour=`date +%H`
 
 if [ $# -eq 2 ]
@@ -76,7 +77,6 @@ then
    Reg=FR1a0.03
 fi
 
-print_info=0
 if [ $print_info -eq 1 ]
 then
    echo $reg $Reg
@@ -162,24 +162,31 @@ do
       continue
    fi
 
-   # only do scp if file not present
+   # only try scp if file not present
    if [ ! -f $joh_dir/$joh_fil ]
    then
-      rm -f $tmp_dir/gifs/*
-      echo "scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir"
-      scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
-
-      if [ -f $tmp_dir/$hex_fil ]
+      # 1st check hexagon
+      if [ ! "$(ssh -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no ls -A $hex_dir/$hdate/final_output/*.nc 2>/dev/null)" == "" ]
       then
-         # if scp worked move it to THREDDS dir
-         mv $tmp_dir/$hex_fil $joh_dir/$joh_fil
-         chmod o+r $joh_dir/$joh_fil
-         echo "Product found on $hdate!" >> $cplog
-         echo "" >> $cplog
-      else
-         # if scp didn't work, give warning
-         echo "No product on $hdate" >> $cplog
-         wrn_count=$(expr $wrn_count + 1)
+         rm -f $tmp_dir/gifs/*
+         echo "scp -i $HOME/.ssh/\$keyname \$user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir"
+         scp -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/final_output/$hex_fil $tmp_dir
+
+         if [ -f $tmp_dir/$hex_fil ]
+         then
+            # if scp worked move it to THREDDS dir
+            mv $tmp_dir/$hex_fil $joh_dir/$joh_fil
+            chmod o+r $joh_dir/$joh_fil
+            echo "Product found on $hdate!" >> $cplog
+            echo "" >> $cplog
+         else
+            # if scp didn't work, give warning
+            echo "No product on $hdate" >> $cplog
+            wrn_count=$(expr $wrn_count + 1)
+         fi
+      elif [ $print_info -eq 1 ]
+      then
+         echo "Forecast file is not on hexagon"
       fi
    else
       echo "Netcdf product already on johansen" >> $cplog
@@ -196,7 +203,7 @@ do
 
    # check for gifs' presence
    lst=($tmp_dir/gifs/*.gif)
-   Ng=${#lst}
+   Ng=${#lst[@]}
    if [ $Ng -eq 1 ]
    then
       if [ ! -f ${lst[0]} ]
@@ -206,8 +213,8 @@ do
       fi
    fi
    
-   # do copy if they are there
-   if [ $Ng -gt 0 ]
+   # try to copy if they are not here
+   if [ $Ng -eq 0 ]
    then
       if [ $n -eq 0 ]
       then
@@ -254,6 +261,9 @@ do
 
             # copy to SWARP web page area
             cp $tmp_dir/gifs/* $WEB
+         elif [ $print_info -eq 1 ]
+         then
+            echo "No gifs on hexagon"
          fi
       fi
       #################################################################
