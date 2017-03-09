@@ -1963,7 +1963,7 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,fig_info=None):
 
 ###########################################################
 def areas_of_disagreement(fobj,time_index=0,\
-      obs_type='OSISAF',obs_path=None,obs_option='multi',\
+      obs_type='OSISAF',obs_path=None,\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
       forecast_day=None,\
@@ -2001,20 +2001,27 @@ def areas_of_disagreement(fobj,time_index=0,\
       mapping  = map_OSISAF(map_type="pyproj")
 
       if obs_path is None:
-      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
-            dtmo.strftime('%Y')+'_nh_polstere/'
-      if obs_option is None:
-	 obs_option='multi'
-      obsfil   = obs_path+'/ice_conc_nh_polstere-100_'+\
-                  obs_option+'_'+cdate+'1200.nc'
+      	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/nh_polstere_10km_multi/'+\
+            dtmo.strftime('%Y')
+
+      LST      = os.listdir(obs_path)
+      obsfil   = None
+      for fil in LST:
+         if cdate in fil:
+            obsfil   = obs_path+'/'+fil
+            break
+
+      if obsfil is None:
+         raise ValueError('Observation file for '+cdate+\
+               ' not present in '+obs_path)
+
    else:
       raise ValueError('Wrong selection variable for areas_of_disagreement')
 
    # observation grid & compared quantity
    if PRINT_INFO:
-      print('Observation file:')
-      print(obsfil)
-      print('\n')
+      print('\nFound observation file:')
+      print(obsfil+'\n')
 
    # =================================================================
    # observed conc

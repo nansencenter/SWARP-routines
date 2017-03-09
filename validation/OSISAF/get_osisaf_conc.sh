@@ -14,7 +14,7 @@ then
 fi
 
 # where the conc files are stored
-hex_dir=/work/shared/nersc/msc/OSI-SAF
+hex_dir=/work/shared/nersc/msc/OSI-SAF/nh_polstere_10km_multi
 ME=`readlink -f $0`
 Vdir=`dirname $ME`
 
@@ -39,7 +39,7 @@ do
    cday=`date -d "$cdate" '+%d'`
 
    # make yearly dir for file to go into
-   dir0=$hex_dir/${cyear}_nh_polstere
+   dir0=$hex_dir/${cyear}
    if [ ! -d dir0 ]
    then
       mkdir -p $dir0
