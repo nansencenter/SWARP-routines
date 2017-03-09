@@ -79,7 +79,7 @@ then
    $fget $yday
 
    echo "Sorting WW3 Arctic files for $ddate"  >> $log
-   $fsort $yday 1
+   $fsort   $ddate  1
    DLS=1
 elif [ $print_info -eq 1 ]
 then
@@ -92,33 +92,25 @@ then
    echo " "                                                >> $log
 fi
 
-if [ 1 -eq 0 ]
+if [ $DLS -eq 1 ]
 then
-   #cancel the best est update as missing records (only starts at 12:00)
+   # if doing download, also update best est for 2 days ago:
+   ddate=`date --date="$tday -2days" "+%Y%m%d"`
+   $fget2 $ddate
+fi
 
-   if [ $DLS -eq 1 ]
+
+for n in `seq -30 -3`
+do
+   # also get best est's for last few days if not present
+   ddate=`date --date="$tday ${n}days" "+%Y%m%d"`
+   ddir=$ww3a/${ddate:0:4}/analysis_m1
+   dfil=SWARP_WW3_ARCTIC-12K_${ddate}.nc
+   if [ ! -f $ddir/$dfil ]
    then
-      # if doing download, also update best est for 2 days ago:
-      ddate=`date --date="$tday -2days" "+%Y%m%d"`
-      ddir=$ww3a/${ddate:0:4}/analysis_m1
-      dfil=SWARP_WW3_ARCTIC-12K_${ddate}.nc
-      rm -f $ddir/$dfil
       $fget2 $ddate
    fi
-
-
-   for n in `seq -30 -3`
-   do
-      # also get best est's for last few days if not present
-      ddate=`date --date="$tday ${n}days" "+%Y%m%d"`
-      ddir=$ww3a/${ddate:0:4}/analysis_m1
-      dfil=SWARP_WW3_ARCTIC-12K_${ddate}.nc
-      if [ ! -f $ddir/$dfil ]
-      then
-         $fget2 $ddate
-      fi
-   done
-fi
+done
 
 
 # ===============================================
@@ -130,12 +122,13 @@ then
    echo "Number of downloads: $DLS" >> $log
 fi
 
-
+echo $ddir2/$dfil2
 if [ -f $ddir2/$dfil2 ]
 then
 
    fclat=$ww3a/SWARP_WW3_ARCTIC-12K.fc.latest.nc
    fctarg=$ddir2/$dfil2
+   echo $fctarg
 
    if [ ! -L $fclat ]
    then
