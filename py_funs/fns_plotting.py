@@ -45,7 +45,8 @@ def start_HYCOM_map(region,cres='i'):
 
    from mpl_toolkits.basemap import Basemap
 
-   if region=='Arctic':
+
+   if region is None or region=='Arctic':
       lonc     = -45.
       latc     = 90.
       lat_ts   = latc
