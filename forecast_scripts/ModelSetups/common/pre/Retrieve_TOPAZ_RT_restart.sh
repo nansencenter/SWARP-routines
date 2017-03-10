@@ -33,8 +33,10 @@ mkdir -p $Bdir
 
 if [ -f $Bdir/$gfil ]
 then
-   echo $rbase already on /migrate
-   mail -s "CONFIRMATION: Latest restart on /migrate" $email < $gfil
+   echo $rbase already on /migrate > toto
+   echo $gfil >> toto
+   mail -s "CONFIRMATION: Latest restart on /migrate" $email < toto
+   rm toto
    exit
 else
    # get from vilje
@@ -52,7 +54,10 @@ else
 
    if [ $count -ne 3 ]
    then
-      mail -s "WARNING: Latest restart not on vilje" $email < $gfil
+      echo $rbase not on vilje > toto
+      echo $gfil >> toto
+      mail -s "WARNING: Latest restart not on vilje" $email < toto
+      rm toto
       exit
    else
       echo $gfil > toto
