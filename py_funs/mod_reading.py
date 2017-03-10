@@ -1867,7 +1867,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
                   fobj.datetimes[time_index])
 ###########################################################
 
-def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,fig_info=None):
+def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
    """
    get_anomaly(lon,lat,ZZ,anom_fil_start,fig_info=None)
    ZZ = [Z_mod,Z_obs] = list of masked arrays with same mask
@@ -1899,9 +1899,10 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,fig_info=None):
    BIASe             = np.mean(cdiff[either_ice])
 
    anom_fil = anom_fil_start+"_"+cdate+".npz"
-   print('Saving '+anom_fil+'\n')
-   np.savez(anom_fil,lon=lon,lat=lat,\
-         anomaly=cdiff.data,mask=cdiff.mask)
+   if not NO_NPZ:
+      print('Saving '+anom_fil+'\n')
+      np.savez(anom_fil,lon=lon,lat=lat,\
+            anomaly=cdiff.data,mask=cdiff.mask)
 
    # write RMSE and BIAS (global variables - not regional) to summary files
    sumname  = anom_fil.replace('.npz','.txt')
@@ -1958,7 +1959,11 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,fig_info=None):
             clim=[-.5,.5],clabel='Concentration anomaly')
       # =================================================================
 
-   return anom_fil
+   if NO_NPZ:
+      return
+   else:
+      return anom_fil
+###########################################################
 
 
 ###########################################################
@@ -1966,8 +1971,8 @@ def areas_of_disagreement(fobj,time_index=0,\
       obs_type='OSISAF',obs_path=None,\
       vertices=None,regions=None,\
       do_sort=True,EastOnly=True,\
-      forecast_day=None,\
-      plotting=2,**kwargs):
+      forecast_day=None,obs_shift=0,\
+      plotting=2,NO_NPZ=True,**kwargs):
    """
    areas_of_disagreement(fobj,time_index=0,\
       obs_type='OSISAF',obs_path=None,\
@@ -1985,15 +1990,31 @@ def areas_of_disagreement(fobj,time_index=0,\
    import MIZchar as mc
    PRINT_INFO  = 1
 
-   dtmo  = fobj.datetimes[time_index]
-   cdate = dtmo.strftime('%Y%m%d')
+   dtmo     = fobj.datetimes[time_index] #date of model
+   cdate    = dtmo.strftime('%Y%m%d')
+   obs_date = dtmo+timedelta(obs_shift)# date of obs - can be shifted to test persistence forecast
 
-   if forecast_day is None:
+   if forecast_day is not None:
+      if forecast_day>0 and obs_shift>0:
+         raise ValueError('use forecast_day=0 with obs_shift>0 to test persistence forecast')
+
+   if forecast_day is None and obs_shift==0:
+      # labels on maps
+      # - date of model and obs are the same
+      # - just give this date
       DTlabel  = 1
+
    else:
-      dtm_start   = dtmo-timedelta(forecast_day)
-      DTlabel     = dtm_start.strftime('%d %b %Y')+\
-         ' +%i days' %(forecast_day)
+      # labels on maps
+      # - date of model and obs are the same
+      # - give this date relative to start of forecast
+      if obs_shift>0:
+         DTlabel  = dtmo.strftime('%d %b %Y')+\
+            ' +%i days' %(obs_shift)
+      else:
+         dtm_start   = dtmo-timedelta(forecast_day)
+         DTlabel     = dtm_start.strftime('%d %b %Y')+\
+            ' +%i days' %(forecast_day)
 
    if obs_type == 'OSISAF':
       var_name = 'fice'
@@ -2002,17 +2023,18 @@ def areas_of_disagreement(fobj,time_index=0,\
 
       if obs_path is None:
       	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/nh_polstere_10km_multi/'+\
-            dtmo.strftime('%Y')
+            obs_date.strftime('%Y')
 
-      LST      = os.listdir(obs_path)
-      obsfil   = None
+      LST         = os.listdir(obs_path)
+      obsfil      = None
+      cdate_obs   = obs_date.strftime('%Y%m%d')
       for fil in LST:
-         if cdate in fil:
+         if cdate_obs in fil:
             obsfil   = obs_path+'/'+fil
             break
 
       if obsfil is None:
-         raise ValueError('Observation file for '+cdate+\
+         raise ValueError('Observation file for '+cdate_obs+\
                ' not present in '+obs_path)
 
    else:
@@ -2054,7 +2076,9 @@ def areas_of_disagreement(fobj,time_index=0,\
 
    anom_fil_start = outdir+'/conc_anomaly_'+obs_type
    fig_info       = None
+
    if plotting>0:
+      # =================================================================
 
       # HYCOM region
       fig_info = {}
@@ -2064,17 +2088,25 @@ def areas_of_disagreement(fobj,time_index=0,\
          fig_info.update({'HYCOM_region':fobj.HYCOM_region})
 
       # figure file names
+      if obs_shift==0:
+         figname_mod = outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png'
+      else:
+         figname_mod = outdir+'/'+fobj.basename+'_ModelOutput_'+cdate+\
+               '_IceEdge_'+obs_type+'_'+cdate_obs+'.png'
+
       fig_info.update({'fignames':\
-            [outdir+'/'+fobj.basename+'_IceEdge_'+obs_type+'_'+cdate+'.png',\
-             outdir+'/'+nci.basename+'_'+obs_type+'_'+cdate+'.png']})
+            [figname_mod,\
+             outdir+'/'+nci.basename+'_'+obs_type+'_'+cdate_obs+'.png']})
 
       # figure annotations
       if DTlabel==1:
          fig_info.update({'text':[cdate,cdate]})
       else:
-         fig_info.update({'text':[DTlabel,cdate]})
+         fig_info.update({'text':[DTlabel,cdate_obs]})
+      # =================================================================
 
-   anom_fil = get_conc_anomaly(lon_ref,lat_ref,[Zout,Zref],anom_fil_start,cdate,fig_info=fig_info)
+   anom_fil = get_conc_anomaly(lon_ref,lat_ref,[Zout,Zref],anom_fil_start,\
+         cdate_obs,fig_info=fig_info,NO_NPZ=NO_NPZ)
    # ==================================================================
 
 
@@ -2129,7 +2161,8 @@ def areas_of_disagreement(fobj,time_index=0,\
 
          for OU in ['Over','Under']:
 
-            fname0   = fobj.basename+'_v'+obs_type +'_'+OU+'_'+reg
+            fname0   = fobj.basename+'_ModelOutput_'+cdate+\
+                  '_v'+obs_type +'_'+cdate_obs+'_'+OU+'_'+reg
             tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
             if 'all' in tfile.keys():
                tfiles[OU].update({reg:tfile['all']})
@@ -2152,7 +2185,8 @@ def areas_of_disagreement(fobj,time_index=0,\
 
       for OU in ['Over','Under']:
 
-         fname0   = fobj.basename+'_v'+obs_type+'_'+OU
+         fname0   = fobj.basename+'_ModelOutput_'+cdate+\
+               '_v'+obs_type +'_'+cdate_obs+'_'+OU
          tfile    = MPdict[OU][reg].write_poly_stats(filename_start=fname0,do_sort=False,**kwargs)
          if 'all' in tfile.keys():
             tfiles[OU].update({reg:tfile['all']})
