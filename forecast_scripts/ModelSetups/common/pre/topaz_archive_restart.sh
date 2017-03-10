@@ -3,6 +3,8 @@
 
 #18-03-15 VERSION: creating a TP4restart LIST that will register the name of every restart already archived
 #I thought that reading through a text file would be faster than checking the whole work folder
+me=`readlink -f $0`
+here=`dirname $me`
 
 source $SWARP_ROUTINES/source_files/hex_vars.src
 mkdir -p /work/$USER/tmp
@@ -46,9 +48,12 @@ else
    Rlatest=TP4restart${dty}_${JDAY}_00
 fi
 
+$here/Retrieve_TOPAZ_RT_restart.sh $Rlatest
+exit
+
 if [ $print_info -eq 1 ]
 then
-   echo $Rlatest
+   echo latest restart: $Rlatest
 fi
 
 # CREATING THE LOG DIRECTORY AND FILE
@@ -68,6 +73,7 @@ do
    afil=$(basename $el)                   # *.a filename without full path
    if [ $print_info -eq 1 ]
    then
+      echo $el
       echo $afil
    fi
 
