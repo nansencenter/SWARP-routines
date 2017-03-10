@@ -8,45 +8,34 @@ user=timill #TODO source hidden
 
 P=$TP4_REALTIME
 cd $P
-refno=4
+refno=5
 xref=$P/expt_01.$refno           # reference expt directory  (has restarts)
 bref=$P/Build_V2.2.12_X01.$refno # reference Build directory (has hycom executable compiled)
 
-E0=$((1$refno-1)) # increment this
+E0=1$refno # don't clean ref dir
+# E0=$((1$refno-1)) # do clean ref dir
 X=01.$refno
 Eno=0$E0
 rno=0
 
-md=/migrate/timill/restarts/TP4a0.12/SWARP_forecasts/
-list=(`ls $md/2015/*gz`)
-list2=(`ls $md/2016/*gz`)
-Nlist=${#list[@]}
-inext=Nlist
-for loop_i in `seq 1 ${#list2[@]}`
-do
-   list[$inext]=${list2[$((loop_i-1))]}
-   inext=$((inext+1))
-   Nlist=$((Nlist+1))
-done
+cd $P
+LIST=(expt_*)
+Nexpts=${#LIST[@]}
 
-for rno in `seq 1 $Nlist`
+for edir in ${LIST[@]}
 do
-   tfil0=${list[$((rno-1))]}
-   E0=$((E0+1))
-   echo " "
-   echo `basename $tfil0` $E0
-   # continue
 
-   Eno=0$E0
-   X=0${E0:0:1}.${E0:1:1}
-   xdir=$P/expt_$X            # reference expt directory  (has restarts)
-   if [ -d $xdir ]
+   Bdir=Build_V2.2.12_X${edir:5:4}
+   Enum1=10#${edir:5:2}
+   Enum2=${edir:8:1}
+   Enum=$((Enum1+0))$Enum2
+
+   if [ $Enum -le $E0 ]
    then
-      rm -f $xdir/log/mpijob.out
-      cd $xdir/data
-      rm -f TP4DAILY* TP4archv*
-      rm -f $xdir/SCRATCH/Ecmwf.nc
-      # deleting this and changing REGION.src makes preprocess.sh reset path to ECMWFR_T799_bak from ECMWFR_T799
+      echo keeping $edir $Bdir
+   else
+      echo rm -r $edir $Bdir
+      rm -r $edir $Bdir
    fi
 
 done
