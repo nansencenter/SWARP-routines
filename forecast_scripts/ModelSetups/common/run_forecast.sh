@@ -12,6 +12,7 @@ source $SWARP_ROUTINES/source_files/hex_vars.src
 print_info=0 # print info to screen (or email in crontab)
 test_pre=0
 SWARP_PP=1
+manual=0 # disable checks to force run
 
 if [ $# -lt 1 ]
 then
@@ -72,7 +73,6 @@ fi
 ## ===========================================================
 
 
-manual=0
 if [ $# -eq 2 ]
 then
    echo ""
