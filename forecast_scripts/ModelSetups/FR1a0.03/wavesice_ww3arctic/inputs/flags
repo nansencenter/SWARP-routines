@@ -12,10 +12,22 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                   -DEVP \
                   -DDAILY_AVERAGE \
 
-# # selective archiving (choose variables)
-# # and archive restart
+# # restart options
+# # SINGLE_RESTART and SINGLE_RESTART_ONLY affect both dumping & reading.
+# # To save a new variable (in save_restart_ice_ab), compile with -DSINGLE_RESTART;
+# # however, it will only be read if -DSINGLE_RESTART_ONLY is also present.
+# # Hence do a short run first with -DSINGLE_RESTART, then add -DSINGLE_RESTART_ONLY
 # CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-#                   -DARCHIVE_SELECT \
+#                   -DSINGLE_RESTART \
+# #                 -DSINGLE_RESTART_ONLY \
+
+# flags to do selective archiving
+# and archive restart
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                  -DARCHIVE_SELECT \
+                  -DARCHIVE_RESTART \
+#                 -DARCHIVE_ICE_ONLY \
+
 
 # # ecnc2 forcing in 2015 is missing 4 records (between (not inc) 22-Aug 0600, 23-Aug 1200)
 # # - now read smaller forecast files (-13 days to + 9 days) to avoid problem
@@ -37,30 +49,39 @@ CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DNEST_INNER \
 
-# flags for rheology and diagnostics;
-CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
-                -DTHERMF_BUGFIX2 \
-#               -DTHERM_DIAG \
-#               -DICE_DYN_DIAG \
-#               -DICE_DYN_DIAG_DUMP \
-#               -DMIZ \
-#               -DMIZ2 \
+# # flags for rheology and diagnostics;
+# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+# #               -DTHERM_DIAG \
+# #               -DICE_DYN_DIAG \
+# #               -DICE_DYN_DIAG_DUMP \
+# #               -DMIZ \
+# #               -DMIZ2 \
 
 # flags for waves run 
 CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
                  -DWAVES \
-                 -DWAVES_WW3_ARCTIC \
                  -DWAVES_THERM \
-                 -DWAVES_TEST_SUBR \
-#                -DWAVES_WAMNSEA \
-#                -DWAVES_WW3 \
+#                -DWAVES_ALL_DIRS \
+#                -DWAVES_OFF \
+#                -DWAVES_FSD_RESET \
 #                -DWAVES_NOSAVE \
 #                -DWAVES_TIME_INTERP \
-#                -DWAVES_TESTADV \
-#                -DWAVES_TEST_READWAVES \
 #                -DWAVES_RESET_ICE \
 #                -DWAVES_SAMESPEED \
 #                -DWAVES_LAXADV \
+
+# forcing flags for waves run (comment all to use old WAM)
+CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+                 -DWAVES_WW3_ARCTIC \
+#                -DWAVES_ERAI \
+#                -DWAVES_WW3 \
+#                -DWAVES_WAMNSEA \
+
+# # diagnostic flags for waves run 
+# CPPFLAGSNERSC := $(CPPFLAGSNERSC) \
+# #                -DWAVES_CHECK_FINAL \
+# #                -DWAVES_TESTADV \
+# #                -DWAVES_TEST_READWAVES \
 
 # # flags for standalone waves run
 # #  - fice,hice read in from daily average files

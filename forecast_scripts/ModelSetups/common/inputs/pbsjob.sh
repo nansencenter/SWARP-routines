@@ -13,7 +13,7 @@
 #
 #  We want 24 hours on 51 cpu's:
 #
-#PBS -l walltime=05:00:00,mppwidth=MPPWIDTH
+#PBS -l walltime=09:00:00,mppwidth=MPPWIDTH
 #
 #  The job needs 1 GB memory per cpu:
 ##PBS -l mppmem=1000mb

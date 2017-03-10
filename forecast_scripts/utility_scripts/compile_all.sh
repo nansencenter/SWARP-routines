@@ -34,9 +34,10 @@ fi
 
 
 # recompile
+cdate=`date +%Y%m%d-%H%M%S`
 logdir=$here/logs
 mkdir -p $logdir
-logfile=$logdir/compile.log
+logfile=$logdir/compile.log.$cdate
 rm -f $logfile
 echo "************************************************************"  >  $logfile
 echo "Recompiling HYCOM (no error means compilation was succesful)"  >> $logfile
@@ -76,3 +77,7 @@ do
       echo " "                                  >> $logfile
    done
 done
+
+echo " "
+echo "Check results in $logfile"
+echo " "
