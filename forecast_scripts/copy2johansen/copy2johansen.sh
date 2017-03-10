@@ -226,24 +226,31 @@ do
             scp -r -i $HOME/.ssh/$keyname $user@hexagon.bccs.uib.no:$hex_dir/$hdate/figures/gifs $tmp_dir
 
             # need to change permissions to make files accessible on FTP or SWARP area
-            chmod o+r $tmp_dir/gifs/*
-            chmod o+w $tmp_dir/gifs/*
-            chmod g+r $tmp_dir/gifs/*
-            chmod g+w $tmp_dir/gifs/*
+            chmod og+rw $tmp_dir/gifs/*
 
             # copy to FTP
             cp $tmp_dir/gifs/* $FTP
 
+
             # make combined figures synced in time for WEB page
+            # - NB this only does TP4
             if [ $FCtype_joh == "ice_only" ]; then
                # sea ice concentration and thickness
                convert \( $tmp_dir/gifs/icec.gif  -coalesce -append \) \
                        \( $tmp_dir/gifs/icetk.gif -coalesce -append \) \
                        +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/IO1comb.gif
+
+
                # Sea ice and surface velocity speed
                convert \( $tmp_dir/gifs/uice.gif  -coalesce -append \) \
                        \( $tmp_dir/gifs/usurf.gif -coalesce -append \) \
                        +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/IO2comb.gif
+
+               # need to change permissions to make files accessible on FTP or SWARP area
+               chmod og+rw $tmp_dir/gifs/*comb.gif
+
+               # copy to SWARP web page area
+               cp $tmp_dir/gifs/* $WEB
             fi
               
             if [ $FCtype_joh == "wavesice" ]; then
@@ -251,16 +258,15 @@ do
                convert \( $tmp_dir/gifs/dmax.gif  -coalesce -append \) \
                        \( $tmp_dir/gifs/swh.gif -coalesce -append \) \
                        +append -crop x600 +repage -set delay 15 -loop 0 $tmp_dir/gifs/WIcomb.gif
+
+               # need to change permissions to make files accessible on FTP or SWARP area
+               chmod og+rw $tmp_dir/gifs/*comb.gif
+
+               # copy to SWARP web page area
+               cp $tmp_dir/gifs/* $WEB
             fi
 
-            # need to change permissions to make files accessible on FTP or SWARP area
-            chmod o+r $tmp_dir/gifs/*comb.gif
-            chmod o+w $tmp_dir/gifs/*comb.gif
-            chmod g+r $tmp_dir/gifs/*comb.gif
-            chmod g+w $tmp_dir/gifs/*comb.gif
 
-            # copy to SWARP web page area
-            cp $tmp_dir/gifs/* $WEB
          elif [ $print_info -eq 1 ]
          then
             echo "No gifs on hexagon"
