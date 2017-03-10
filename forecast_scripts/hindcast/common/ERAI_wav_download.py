@@ -18,9 +18,9 @@ from ecmwfapi import ECMWFDataServer
 
 #set resolution
 if 0:
-   grid  = "0.5/0.5"
+   grid  = "0.5/0.5" # 0.5 degree grid
 else:
-   grid  = "1/1" # 1 degree
+   grid  = "1/1" # 1 degree grid
 
 # dictionary of variable id's
 varnos   = {'MWD':'230.140',
@@ -31,7 +31,7 @@ varnames = ["MWD","MWP","SWH"] # variables to get
 
 server   = ECMWFDataServer()
 
-for nyear in range(2007,2015):
+for nyear in range(2014,2015):
    # Set date and time 
    year  = str(nyear)
    if year == 2016:
