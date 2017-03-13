@@ -68,11 +68,14 @@ class time_series:
       self.number_of_dates       = len(dates)
       self.number_of_variables   = len(data.keys())
       
-      if not os.path.exists(filename) or overwrite:
-         print('Saving time series to '+filename)
-         self.write_file(filename)
+      if filename is not None:
+         if not os.path.exists(filename) or overwrite:
+            print('Saving time series to '+filename)
+            self.write_file(filename)
+         self.filename  = os.path.abspath(filename)
+      else:
+         self.filename  = None
 
-      self.filename  = os.path.abspath(filename)
       return
    ############################################
 
@@ -187,6 +190,74 @@ class time_series:
       return
    #########################################
 
+
+   #########################################
+   def extend_ts(self,TS1,**kwargs):
+      """
+      TS2 = self.extend_ts(TS,**kwargs1)
+      Input:
+      *TS1 = another mod_reading.time_series object (with same data fields);
+       TS1.datetimes and TS2.datetimes should not overlap
+      *kwargs = filename (string), and overwrite (bool)
+      Output:
+      TS2 = another mod_reading.time_series object (with same data fields)
+      """
+
+      return self.extend(TS1.dates,TS1.data,\
+                  units=TS1.units,**kwargs)
+   #########################################
+
+
+   #########################################
+   def extend(self,dates,data,units=None,**kwargs):
+      """
+      TS2 = self.extend_dd(dates,data)
+      Input:
+      *dates = list of datetime objects;
+       shouldn't overlap with self.datetimes
+      *data  = dictionary with same keys (data fields) as self.data
+      Output:
+      TS2 = another mod_reading.time_series object (with same data fields)
+      """
+
+      for date in dates:
+         if date in self.dates:
+            raise ValueError('input dates and self.dates should not overlap')
+
+      err1  = 'self.data and input data should have the same fields'
+      if len(self.data)!=len(data):
+         raise ValueError(err1)
+      else:
+         for key in data:
+            if key not in self.data:
+               raise ValueError(err1)
+
+      err2  = 'input units and self.units are different'
+      if units is None:
+         units = self.units
+      elif self.units is not None:
+         if len(units) != len(self.units):
+            raise ValueError(err2)
+         else:
+            for unit in units:
+               if unit not in self.units:
+                  raise ValueError(err2)
+
+      if units is not None:
+         if len(units)!=len(data):
+            raise ValueError('units and data should be the same length')
+
+      Dates = 1*self.dates
+      Dates.extend(dates)
+
+      Data  = {}
+      for fld in self.data:
+         dat   = list(self.data[fld])
+         dat.extend(list(data[fld]))
+         Data.update({fld:dat})
+
+      return time_series(Dates,Data,units=units,**kwargs)
+
 ############################################
 
 ############################################
@@ -294,6 +365,21 @@ class read_MIZpoly_summary:
          self.info['time_in_days']  = dt.total_seconds()/float(24*60*60)
 
       return
+   #######################################################
+
+   #######################################################
+   def get_time_series(self,inputs_only=True):
+      
+      dates    = [self.info['datetime']]
+      data     = {}
+      for fld in self.info['fields']:
+         dat   = [getattr(self,fld)]
+         data.update({fld:dat})
+
+      if inputs_only:
+         return dates,data
+      else:
+         return time_series(dates,data)
    #######################################################
 
 ##########################################################
