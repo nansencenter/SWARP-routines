@@ -14,15 +14,14 @@ Bfields  = Ufields[1:3]
 akey     = Ufields[-1]  # area
 
 
-if 0:
-   psubdirs = []
-   for sdir in subdirs:
-      if 'PFC' not in sdir:
-         # for plotting
-         psubdirs.append(sdir)
+if 1:
+   # choose what to plot
+   psubdirs = ['FC0days','FC2days','FC3days','FC4days']
+   figdir   = 'time_series/figs/FC'
 else:
-   # psubdirs = ['FC0days','FC2days','FC4days']
-   psubdirs = ['FC0days','FC2days','FC4days','PFC2days']
+   # choose what to plot
+   psubdirs = ['FC0days','FC2days','PFC1days','PFC2days']
+   figdir   = 'time_series/figs/PFC'
 
 for sdir in subdirs:
 
@@ -62,11 +61,11 @@ for year in [2016,2017]:
 
 #now make the plots
 fignames    = []
-fignames.append('time_series/figs/conc_anomaly_RMSE.png')
-fignames.append('time_series/figs/conc_anomaly_bias.png')
-fignames.append('time_series/figs/Model_Underest.png')
-fignames.append('time_series/figs/Model_Overest.png')
-fignames.append('time_series/figs/Model_Bias.png')
+fignames.append(figdir+'/conc_anomaly_RMSE.png')
+fignames.append(figdir+'/conc_anomaly_bias.png')
+fignames.append(figdir+'/Model_Underest.png')
+fignames.append(figdir+'/Model_Overest.png')
+fignames.append(figdir+'/Model_Bias.png')
 
 
 for n,figname in enumerate(fignames):
