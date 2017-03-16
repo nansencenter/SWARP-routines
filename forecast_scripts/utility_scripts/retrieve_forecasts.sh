@@ -33,6 +33,11 @@ do
       cdate=${gg:$((N-8)):$N}
       echo $cdate
 
+      # if [ ${cdate:4:2} -lt 12 ]
+      # then
+      #    continue
+      # fi
+
       if [ -d $cdate ]
       then
          # don't overwrite directories
