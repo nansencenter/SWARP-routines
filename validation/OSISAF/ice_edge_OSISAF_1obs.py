@@ -64,13 +64,15 @@ for ndays in range(FCdays):
 
          # call the AOD routine
          odir  = outdir+'/FC'+str(ndays)+'days'
-         hi.areas_of_disagreement(time_index=idx,\
-            obs_type='OSISAF',obs_path=None,\
-            vertices=None,regions=None,\
-            do_sort=False,EastOnly=False,\
-            forecast_day=ndays,\
-            obs_shift=0,\
-            plotting=1,outdir=odir)
+         if not os.path.exists(odir):
+            # don't overwrite sub-dirs
+            hi.areas_of_disagreement(time_index=idx,\
+               obs_type='OSISAF',obs_path=None,\
+               vertices=None,regions=None,\
+               do_sort=False,EastOnly=False,\
+               forecast_day=ndays,\
+               obs_shift=0,\
+               plotting=1,outdir=odir)
          # ========================================================
 
 
@@ -84,11 +86,13 @@ for ndays in range(FCdays):
 
             # call the AOD routine
             odir  = outdir+'/PFC'+str(ndays)+'days'
-            hi.areas_of_disagreement(time_index=idx,\
-               obs_type='OSISAF',obs_path=None,\
-               vertices=None,regions=None,\
-               do_sort=False,EastOnly=False,\
-               forecast_day=0,\
-               obs_shift=ndays,\
-               plotting=1,outdir=odir)
+            if not os.path.exists(odir):
+               # don't overwrite sub-dirs
+               hi.areas_of_disagreement(time_index=idx,\
+                  obs_type='OSISAF',obs_path=None,\
+                  vertices=None,regions=None,\
+                  do_sort=False,EastOnly=False,\
+                  forecast_day=0,\
+                  obs_shift=ndays,\
+                  plotting=1,outdir=odir)
          # ========================================================
