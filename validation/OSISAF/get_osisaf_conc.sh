@@ -76,4 +76,20 @@ done
 # Launch validation script
 # - compares today's observation to relevant forecasts
 $Vdir/ice_edge_OSISAF_1obs.sh $ydate
+
+
+cd $Vdir
+mkdir -p time_series
+mkdir -p time_series/figs
+mkdir -p time_series/figs/FC
+mkdir -p time_series/figs/PFC
+
+
+# load python
+[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc
+module load python/2.7.9-dso
+module load geos
+export PYTHONPATH=$PYTHONPATH:$SWARP_ROUTINES/py_funs
+$python extract_time_series.py
+$python plot_time_series.py
 #########################################################################

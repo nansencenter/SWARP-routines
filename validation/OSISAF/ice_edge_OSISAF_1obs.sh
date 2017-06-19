@@ -1,16 +1,39 @@
 source $SWARP_ROUTINES/source_files/hex_vars.src
+TP4_only=0
+over_write=1
 if [ $# -eq 1 ]
 then
    cdate=$1
+elif [ $# -eq 2 ]
+then
+   cdate=$1
+   TP4_only=$2
+elif [ $# -eq 3 ]
+then
+   cdate=$1
+   TP4_only=$2
+   over_write=$3
 else
-   echo "Usage: `basename $0` [date]"
+   echo "Usage: `basename $0` [date] [TP4_only] [over_write]"
    echo "- where date is in yyyymmdd format"
+   echo "- TP4_only=1: don't try FR1 and BS1; 0: do try them"
+   echo "- over_write=1/0: do/don't overwrite old results"
    exit
 fi
 
-regions="TP4a0.12 BS1a0.045 FR1a0.03"
-# regions="TP4a0.12"
-# regions="BS1a0.045 FR1a0.03"
+if [ $TP4_only -eq 1 ]
+then
+   regions="TP4a0.12"
+   # regions="BS1a0.045 FR1a0.03"
+else
+   regions="TP4a0.12 BS1a0.045 FR1a0.03"
+fi
+
+echo " "
+echo Doing regions:
+echo $regions
+echo " "
+
 FCtypes="ice_only"
 basedir="$RTmods/results/"
 valdir="$RTmods/validation/"
@@ -33,7 +56,19 @@ do
       mkdir -p $valdir/$reg/$FCtype
 
       outdir=$valdir/$reg/$FCtype/$cdate #where results will go (1 dir for each forecast)
-      mkdir -p $outdir
+      if [ -d $outdir ]
+      then
+         if [ $over_write -eq 0 ]
+         then
+            echo Skipping $reg $FCtype $cdate
+            continue
+         else
+            echo Overwriting $reg $FCtype $cdate
+         fi
+      else
+         echo Doing $reg $FCtype $cdate
+         mkdir $outdir
+      fi
       outdir=$outdir/OSISAF #where results will go (1 dir for each forecast)
       mkdir -p $outdir
       figdir=$outdir/figs

@@ -51,21 +51,48 @@ for ndays in range(FCdays):
    # print(fcdate)
    # print(fcdir)
 
-   hi = mr.file_list(fcdir,'DAILY','.a')
-   # for i,DT in enumerate(hi.datetimes):
-   #    print(i)
-   #    print(DT)
+   if os.path.exists(fcdir):
+      hi = mr.file_list(fcdir,'DAILY','.a')
+      # for i,DT in enumerate(hi.datetimes):
+      #    print(i)
+      #    print(DT)
 
-   # find index corresponding to observation date
-   dto2,idx = hi.nearestDate(dto)
-   # print(dto2)
-   # print(ndays,idx)
+      if dto in hi.datetimes:
+         # ========================================================
+         # find index corresponding to observation date
+         idx = hi.datetimes.index(dto)
 
-   # call the AOD routine
-   odir  = outdir+'/FC'+str(ndays)+'days'
-   hi.areas_of_disagreement(time_index=idx,\
-      obs_type='OSISAF',obs_path=None,\
-      vertices=None,regions=None,\
-      do_sort=False,EastOnly=False,\
-      forecast_day=ndays,\
-      plotting=1,outdir=odir)
+         # call the AOD routine
+         odir  = outdir+'/FC'+str(ndays)+'days'
+         if not os.path.exists(odir):
+            # don't overwrite sub-dirs
+            hi.areas_of_disagreement(time_index=idx,\
+               obs_type='OSISAF',obs_path=None,\
+               vertices=None,regions=None,\
+               do_sort=False,EastOnly=False,\
+               forecast_day=ndays,\
+               obs_shift=0,\
+               plotting=1,outdir=odir)
+         # ========================================================
+
+
+      if ndays>0:
+         # ========================================================
+         # get persistence forecast
+         dto2  = fcdate+DTM.timedelta(.5)
+         if dto2 in hi.datetimes:
+            # find index corresponding to forecast start date
+            idx = hi.datetimes.index(dto2)
+
+            # call the AOD routine
+            odir  = outdir+'/PFC'+str(ndays)+'days'
+            if not os.path.exists(odir):
+               # don't overwrite sub-dirs
+               hi.areas_of_disagreement(time_index=idx,\
+                  obs_type='OSISAF',obs_path=None,\
+                  vertices=None,regions=None,\
+                  do_sort=False,EastOnly=False,\
+                  forecast_day=0,\
+                  obs_shift=ndays,\
+                  plotting=1,outdir=odir)
+         # ========================================================

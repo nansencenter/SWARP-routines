@@ -51,6 +51,7 @@ validation/ice_charts/*.log
 validation/thickness_comparison_ifremer/figs/*
 validation/thickness_comparison_ifremer/out/*
 validation/thickness_comparison_ifremer/epsg
+validation/OSISAF/time_series/*
 #
 validation/data/*
 validation/outputs/*
