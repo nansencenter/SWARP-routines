@@ -923,6 +923,14 @@ def imshow(fobj,var_opts,pobj=None,\
 
 ###########################################################
 def interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+   """
+   interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+   *fobj is a file object eg from netcdf
+   *varname is a string (name of variable in file object)
+   *target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
+   *time_index (integer) - for multi-record files
+   *mapping is a pyproj.Proj object to project form lat/lon to x,y (stereographic projection)
+   """
 
    lon,lat  = fobj.get_lonlat()
 

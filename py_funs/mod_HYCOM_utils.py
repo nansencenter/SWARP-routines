@@ -767,12 +767,12 @@ class HYCOM_binary_info:
    ###########################################################
    def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
       """
-      data = self.compare_ice_edge_obs(varname,target_lonlats,\
-            time_index=0,mapping=None,**kwargs)
-      INPUTS:
-      target_lonlats = (tlon,tlat) = 2-tuple of numpy arrays
-      mapping = basemap or pyproj.Proj instance
-      kwargs: mask=None = mask to apply to interpolated data
+      self.interp2points(varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+      *fobj is a file object eg from netcdf
+      *varname is a string (name of variable in file object)
+      *target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
+      *time_index (integer) - for multi-record files
+      *mapping is a pyproj.Proj object to project form lat/lon to x,y (stereographic projection)
       """
       return MR.interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
    ###########################################################
