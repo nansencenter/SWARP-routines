@@ -1,16 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from mpl_toolkits.basemap import Basemap
 from datetime import datetime,timedelta
-from netCDF4 import Dataset as ncopen
 import fns_plotting as Fplt
-from scipy.interpolate import griddata as grd
 import os,sys
-import shapely.geometry as shg
-import geometry_sphere as GS
-
 import mod_reading as MR
-
 
 ##############################################################
 def get_array_from_binary(fid,nx,ny,fmt_size=4,order='fortran'):
@@ -230,9 +223,16 @@ class HYCOM_grid_info:
       hgi.get_areas      (scux*scvy)   - option to only have p-points that are surrounded by q-points
       """
 
-      self.gridpath     = gridpath
-      self.afile        = gridpath+'/regional.grid.a'
-      self.bfile        = gridpath+'/regional.grid.b'
+      self.gridpath  = gridpath
+      flist          = [gridpath+'/regional.grid.a',
+                        gridpath+'/regional.grid.b']
+
+      # check if grid files are present
+      for fil in flist:
+         if not os.path.exists(fil):
+            raise ValueError(fil +' not present - change "gridpath" argument')
+      self.afile,self.bfile   = flist
+
       self.afile_depth  = gridpath+'/regional.depth.a'
       self.bfile_depth  = gridpath+'/regional.depth.b'
 
