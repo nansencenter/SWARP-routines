@@ -1,4 +1,3 @@
-from matplotlib import pyplot as plt
 
 ##########################################################
 class plot_object:
@@ -13,6 +12,7 @@ class plot_object:
    """
 
    def __init__(self,fig=None,ax=None,cbar=None,axpos=None):
+      from matplotlib import pyplot as plt
 
       if fig is None:
          self.fig   = plt.figure()
@@ -29,6 +29,10 @@ class plot_object:
 
       return
 
+   def close(self):
+      plt.close(self.fig)
+      return
+
    def get(self):
       return self.fig,self.ax,self.cbar
 
@@ -43,172 +47,89 @@ class plot_object:
 ############################################################################
 def start_HYCOM_map(region,cres='i'):
 
-   from mpl_toolkits.basemap import Basemap
-
-
    if region is None or region=='Arctic':
       lonc     = -45.
       latc     = 90.
-      lat_ts   = latc
       rad      = 33 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='Antarctic':
       lonc     = 180.
       latc     = -90.
-      lat_ts   = latc
       rad      = 60 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='TP4':
       lonc     = -45.
       latc     = 85.
-      lat_ts   = latc
       rad      = 33 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='BS1' or region=='bar':
       # Barents Sea model
       lonc     = 48.
       latc     = 74.
-      lat_ts   = latc
       rad      = 12 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='FR1':
       # Fram Strait model
       lonc     = 0.5
       latc     = 78.75
-      lat_ts   = latc
       rad      = 6.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='gre':
       # Greenland Sea - bit further south than FR1
       lonc     = -2.
       latc     = 74.
-      lat_ts   = latc
       rad      = 13.5 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
+
+   elif region=='svalbard':
+      # Greenland Sea - bit further south than FR1
+      lonc     = 2.
+      latc     = 78.
+      rad      = 5.4 # radius in deg
 
    elif region=='les':
       # Laptev/East Siberian Seas
       lonc     = 100.
       latc     = 74.
-      lat_ts   = latc
       rad      = 10.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='beau':
       # Beaufort Sea
       lonc     = -175.
       latc     = 77.
-      lat_ts   = latc
       rad      = 23.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='ncb':
       # North Canada & Beaufort Seas
       lonc     = -120.
       latc     = 74.
-      lat_ts   = latc
       rad      = 40.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='lab':
       # Labrador Sea
       lonc     = -60.
       latc     = 65.
-      lat_ts   = latc
       rad      = 20.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='can':
       # Labrador Sea
       lonc     = -80.
       latc     = 65.
-      lat_ts   = latc
       rad      = 20.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    elif region=='balt':
       # Baltic sea
       lonc     = 22.
       latc     = 64.
-      lat_ts   = latc
       rad      = 2.0 # radius in deg
-      width    = 2*rad*111.e3
-      height   = 2*rad*111.e3
-      #
-      bm = Basemap(width=width,height=height,\
-                   resolution='i',projection='stere',\
-                   lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 
    else:
       raise ValueError('Unknown region: '+region)
 
-   return bm
+   return start_map_simple(lonc,latc,rad,cres=cres)
 ############################################################################
 
 ############################################################################
 def start_map(bbox,cres='i'):
-
-   from mpl_toolkits.basemap import Basemap
 
    # set plot domain from bbox
    lon0  = bbox[0]
@@ -218,22 +139,39 @@ def start_map(bbox,cres='i'):
    #
    fac      = 2
    rad      = .5*fac*(lat1-lat0) #degrees
-   width    = 2*rad*111.e3
-   height   = 2*rad*111.e3
    #
    lon_av   = .5*(lon0+lon1)
    lat_av   = .5*(lat0+lat1)
    if 1:
       print('radius (deg lat) ='+str(rad))
-      print('width (km) ='+str(width/1.e3))
-      print('height (km) ='+str(height/1.e3))
+      print('width/height (km) ='+str(2*rad*111))
       print('lon_av (deg E) ='+str(lon_av))
       print('lat_av (deg N) ='+str(lat_av))
-   #
-   bm = Basemap(width=width,height=height,\
+
+   return start_map_simple(lon_av,lat_av,rad,cres=cres)
+############################################################################
+
+############################################################################
+def start_map_simple(lonc,latc,rad,lat_ts=None,cres='i'):
+   """
+   start_map_simple(lonc,latc,rad,lat_ts=None,cres='i')
+   *latc,lonc are central lat,lon
+   *radius is radius of area in degrees
+   *lat_ts is true scale latitude (default is latc)
+   *cres is coastal resolution to use
+   """
+   from mpl_toolkits.basemap import Basemap
+
+   fac      = 2
+   width    = 2*rad*111.e3
+   height   = 2*rad*111.e3
+
+   if lat_ts is None:
+      lat_ts   = latc
+
+   return Basemap(width=width,height=height,\
                 resolution=cres,projection='stere',\
-                lat_ts=lat_av,lat_0=lat_av,lon_0=lon_av)
-   return bm
+                lat_ts=lat_ts,lat_0=latc,lon_0=lonc)
 ############################################################################
 
 ############################################################################
@@ -335,7 +273,7 @@ def plot_scalar(lon,lat,V,figname=None,text=None,\
       pobj.fig.savefig(figname)
 
       print('Saving '+figname+'\n')
-      plt.close(pobj.fig)
+      pobj.close()
 
    return pobj,bmap
 ############################################################################
