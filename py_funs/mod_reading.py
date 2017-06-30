@@ -1082,8 +1082,8 @@ def plot_var(fobj,var_opts,time_index=0,\
 
    if HYCOMreg is None:
       HYCOMreg = fobj.HYCOM_region
-      if HYCOMreg is None:
-         HYCOMreg = 'TP4'
+   if HYCOMreg is None:
+      HYCOMreg = 'TP4'
 
    if bmap is None:
       # make basemap
@@ -1343,7 +1343,8 @@ def plot_var(fobj,var_opts,time_index=0,\
    Fplt.finish_map(bmap,ax=ax)
    
    # date label
-   if (fobj.HYCOM_region=='TP4'):
+   if (HYCOMreg=='TP4'):
+      # centre label
       xyann = (0.05,.925)
    else:
       xyann = (0.4,.925)
@@ -1638,7 +1639,6 @@ def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
       if reg is None:
          reg   = 'TP4'
       kwargs.update({'HYCOMreg':reg})
-
 
    #############################################################
    if reg=='TP4':
@@ -3103,12 +3103,27 @@ def make_png_pair_all(fobj,var_opts1,var_opts2,\
 
 ###########################################################
 class file_list:
-   def __init__(self,directory,pattern,extension,**kwargs):
+   def __init__(self,directory='.',pattern=None,extension=None,**kwargs):
+      """
+      fli = file_list(directory,pattern=None,extension=None,**kwargs)
+      eg fli = file_list(directory,pattern='TP4DAILY',extension='.a',**kwargs)
+      INPUTS:
+      *directory (string) - where to find the files
+      *pattern - string that needs to be in file names to be included
+      *extension - string with file extension eg '.a' or '.nc'
+      **kwargs
+      eg gridpath - for HYCOM binary files - string with path to directory with regional.grid.[a,b]
+         and regional.depth.[a,b]
+      """
       import os
 
       self.object_type  = 'file_list'
       self.directory    = directory
       self.extension    = extension
+      if extension is None:
+         raise ValueError('Argument "extension" (file extension) not given')
+      if pattern is None:
+         raise ValueError('Argument "pattern" not given')
 
       lst         = os.listdir(directory)
       file_list   = []
@@ -3117,12 +3132,12 @@ class file_list:
          fname,fext  = os.path.splitext(fil)
 
          # check pattern
-         # print(fil)
          if (fext==extension) and (pattern in fname):
             file_list.append(fil)
 
-      self.number_of_files          = len(file_list)
+      self.number_of_files = len(file_list)
       if self.number_of_files==0:
+         print('WARNING: no files found')
          return
 
       # print(file_list)
