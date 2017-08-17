@@ -137,7 +137,7 @@ def start_map(bbox,cres='i'):
    lon1  = bbox[2]
    lat1  = bbox[3]
    #
-   fac      = 2
+   fac      = 1.25
    rad      = .5*fac*(lat1-lat0) #degrees
    #
    lon_av   = .5*(lon0+lon1)
@@ -208,13 +208,14 @@ def get_nice_meridians(lonmin,lonmax):
 ############################################################################
 
 ############################################################################
-def finish_map(bm,**kwargs):
+def finish_map(bm,do_fill=True,**kwargs):
    # finish_map(bm)
    # *bm is a basemap
 
    # coast/land
    bm.drawcoastlines(**kwargs)
-   bm.fillcontinents(color='gray',**kwargs)
+   if do_fill:
+      bm.fillcontinents(color='gray',**kwargs)
 
    # draw parallels and meridians.
    merids   = get_nice_meridians(bm.lonmin,bm.lonmax)
@@ -224,7 +225,7 @@ def finish_map(bm,**kwargs):
          labels=[True,False,True,True],**kwargs) # labels = [left,right,top,bottom]
    bm.drawmeridians(merids,latmax=90.,\
          labels=[True,False,False,True],**kwargs)
-   bm.drawmapboundary(**kwargs) # fill_color='aqua')
+   bm.drawmapboundary(**kwargs)
 
    return
 ############################################################################

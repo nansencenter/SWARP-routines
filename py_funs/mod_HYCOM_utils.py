@@ -391,11 +391,17 @@ class HYCOM_grid_info:
 
    ###################################################################
    def get_depths(self,inner_points=False):
+      """
+      self.get_depths(inner_points=False)
+      *can remove outer points if inner_points=True
+      *returns masked array
+      """
       dep = get_array_from_HYCOM_binary(self.afile_depth,1,grid_dir=self.gridpath)
       if inner_points:
-         return dep[:-1,:-1]
-      else:
-         return dep
+         dep   =  dep[:-1,:-1]
+
+      mask  = np.isnan(dep)
+      return np.ma.array(dep,mask=mask)
    ###################################################################
 
 
@@ -437,6 +443,54 @@ class HYCOM_grid_info:
       
       Egrid = EU.create_ESMF_grid(centres,corners,AREA=areas,MASK=mask)
       return Egrid
+      ###################################################################
+
+   #########################################################################
+   def plot_depth(self,figname=None,show=False,imshow=False):
+      """
+      plot the depth
+      """
+      from matplotlib import pyplot as plt
+
+      fig   = plt.figure()
+      ax    = fig.add_subplot(1,1,1)
+      depth = self.get_depths()
+
+      mindep      = depth.min()
+      maxdep      = depth.max()
+      print("\nMin depth (m) = "+str(mindep))
+      print("Max depth (m) = "+str(maxdep)+"\n")
+
+      if imshow:
+         IM = ax.imshow(depth.transpose(),origin='lower')
+      else:
+         # need lon,lat
+         qlon,qlat   = self.get_corners()
+
+         # make basemap for plotting
+         import fns_plotting as Fplt
+         bbox  = [qlon.min(),qlat.min(),qlon.max(),qlat.max()]
+         bmap  = Fplt.start_map(bbox)
+
+         IM    = bmap.pcolor(qlon,qlat,depth,latlon=True,ax=ax,vmin=mindep,vmax=maxdep)
+         Fplt.finish_map(bmap,do_fill=False)
+
+      # colorbar
+      cbar  = fig.colorbar(IM)
+      cbar.set_label("Depth, m",rotation=270,labelpad=20,fontsize=16)
+
+      if figname is not None:
+         print("\nSaving "+figname+"\n")
+         fig.savefig(figname)
+      else:
+         show  = True
+
+      if show:
+         plt.show(fig)
+
+      ax.cla()
+      plt.close(fig)
+      return
       ###################################################################
 
 ######################################################################
