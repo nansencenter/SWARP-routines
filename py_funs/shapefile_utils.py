@@ -105,26 +105,13 @@ def is_in_bbox(bbox,x,y):
 
 
 # ==========================================================================
-def DMI_form_dictionary():
-
-   # dictionary to map from strings to integers
-   form_vals      = {'X':-1,'-9':np.NaN}
-   form_vals_max  = 10
-   for n in range(form_vals_max+1):
-      form_vals.update({str(n):n})
-   
-   return form_vals
-############################################################################
-
-
-############################################################################
-def AARI_form_dictionary():
+def form_dictionary():
 
    # dictionary to map from strings to integers
    form_vals      = {'X':-1,'-9':np.NaN,'99':np.NaN}
    form_vals_max  = 10
    for n in range(form_vals_max+1):
-      form_vals.update({"%2.2d" %(n):n})
+      form_vals.update({str(n):n})
    
    return form_vals
 ############################################################################
@@ -1018,7 +1005,7 @@ class MIZ_from_shapefile:
       self.chart_source = chart_source
       self.MIZ_criteria = MIZ_criteria
 
-      sf    = shapefile.Reader(fname_full)
+      sf = shapefile.Reader(fname_full)
       print('Processing '+fname_full+'...')
 
       # ============================================================
@@ -1027,7 +1014,8 @@ class MIZ_from_shapefile:
       # sf_info[n]   = [poly,record]
       # where poly is a shapely polygon,
       # and record is all the metadata
-      sf_info     = extract_shapefile_info(sf,get_holes=True)
+      sf_info,self.bbox_ll,self.bbox_xy   =\
+            extract_shapefile_info(sf,get_holes=True)
       self.shapes = shapes(sf_info)
       self.Npolys = len(sf_info)
 
@@ -1039,6 +1027,7 @@ class MIZ_from_shapefile:
 
       # ================================================================================
       # MIZ definition stuff
+      self.MIZ_criteria = MIZ_criteria
       if MIZ_criteria=="FA_only":
          form_cats_MIZ     = ['FA']
          match_all_crits   = True
@@ -1064,12 +1053,8 @@ class MIZ_from_shapefile:
                               "- valid options: 'FA_only', 'FB_only', 'FC_only',\n"+\
                               " 'all_Fcats_small' or 'any_Fcats_small'")
 
-      if chart_source=="DMI":
-         form_vals         = DMI_form_dictionary()
-      else:
-         form_vals         = AARI_form_dictionary()
-      MIZthresh         = 4
-      self.MIZ_criteria = MIZ_criteria
+      form_vals   = form_dictionary()
+      MIZthresh   = 4
       # ================================================================================
 
 
@@ -1083,7 +1068,7 @@ class MIZ_from_shapefile:
       print('\nTesting if polygons are in the MIZ...')
       for n,lut in enumerate(self.shapes.records):
 
-         # print(lut)
+         print(lut)
          if lut['POLY_TYPE']=='W':
             # water
             self.WTR_forms.append(n)
