@@ -232,6 +232,16 @@ def get_poly(shp,mapping=None,get_holes=True,latlon=True,return_bboxes=False):
       # make a shapely polygon
       # - buffer(0) usually makes it valid if it's not already
       poly     = shgeom.Polygon(bdy,rings).buffer(0)
+      # if poly.length==0:
+      #    P = shgeom.Polygon(bdy,rings)
+      #    print(bdy)
+      #    for ring in rings:
+      #       print(ring)
+      #       print(len(ring))
+      #    print(len(bdy),len(rings))
+      #    print(P.length,P.area,P.is_valid)
+      #    print(poly.length,poly.area,poly.is_valid)
+      #    raise ValueError('Empty polygon found')
       Nrings   = len(rings)
       # print(Nrings)
    else:
@@ -351,7 +361,8 @@ def extract_shapefile_info(sfile,**kwargs):
          bbox_xy  = new_bbox(bbox_xy,bbox_xy0)
 
       # add lookup table and shapely polygon to out
-      out.append([poly,lut,Nrings])
+      if (poly.exterior is not None and poly.is_valid):
+         out.append([poly,lut,Nrings])
 
    return out,bbox_ll,bbox_xy
 ############################################################################
@@ -653,7 +664,10 @@ class shapefile_info:
          if poly_num is None:
             # plot all
             for n,poly in enumerate(self.shapes.polygons):
+               # print(n,poly)
+               # print(poly.length,poly.area)
                rec   = self.shapes.records[n]
+               # print(rec)
                val   = rec[vname]
                col   = clist[val]
                Fplt.plot_patches(ax,[poly],col,mapping=pmap,plot_holes=plot_holes)
