@@ -87,10 +87,17 @@ def map_coords(coords,inverse=False,mapping=None,return_bboxes=False,**kwargs):
 def new_bbox(b1,b2):
    import numpy as np
 
-   return [np.min([b1[0],b2[0]]),\
-           np.min([b1[1],b2[1]]),\
-           np.max([b1[2],b2[2]]),\
-           np.max([b1[3],b2[3]])]
+   if b1 is None and b2 is None:
+      return
+   elif b1 is None:
+      return b2
+   elif b2 is None:
+      return b1
+   else:
+      return [np.min([b1[0],b2[0]]),\
+              np.min([b1[1],b2[1]]),\
+              np.max([b1[2],b2[2]]),\
+              np.max([b1[3],b2[3]])]
 # ===============================================================
 
 
@@ -243,6 +250,7 @@ def get_poly(shp,mapping=None,get_holes=True,latlon=True,return_bboxes=False):
       poly  = poly.buffer(0)
 
    # can sometimes make a multipolygon from making poly valid
+   polys = []
    if hasattr(poly,'geoms'):
       polys = []
       for poly in poly.geoms:
@@ -250,7 +258,7 @@ def get_poly(shp,mapping=None,get_holes=True,latlon=True,return_bboxes=False):
          polys.append([poly,Nrings])
    else:
       Nrings   = len(poly.interiors)
-      polys    = [[poly,Nrings]]
+      polys.append([poly,Nrings])
 
    
    # try to ensure poly is valid
@@ -351,16 +359,16 @@ def extract_shapefile_info(sfile,**kwargs):
          lut.update({fld:val})
 
       # get shapely polygon representation of points
-      if bbox_ll is None:
-         polys,bbox_ll,bbox_xy   = get_poly(shp,return_bboxes=True,**kwargs)
-      else:
-         polys,bbox_ll0,bbox_xy0 = get_poly(shp,return_bboxes=True,**kwargs)
-         bbox_ll  = new_bbox(bbox_ll,bbox_ll0)
-         bbox_xy  = new_bbox(bbox_xy,bbox_xy0)
+      polys,bbox_ll0,bbox_xy0 = get_poly(shp,return_bboxes=True,**kwargs)
+
+      # update the bounding boxes
+      bbox_ll  = new_bbox(bbox_ll,bbox_ll0)
+      bbox_xy  = new_bbox(bbox_xy,bbox_xy0)
 
       # add lookup table and shapely polygon to out
       for poly,Nrings in polys:
-         out.append([poly,lut,Nrings])
+         if (poly.exterior is not None and poly.is_valid):
+            out.append([poly,lut,Nrings])
 
    return out,bbox_ll,bbox_xy
 ############################################################################
