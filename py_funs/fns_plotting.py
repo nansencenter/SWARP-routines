@@ -1,3 +1,36 @@
+# ===============================================================
+def pyproj_srs_to_dict(srs):
+   lst      = srs.split('+')[1:]
+
+   dic   = {}
+   for ss in lst:
+      key,val  = ss.strip().split('=')
+      try:
+         dic.update({key:float(val)})
+      except:
+         dic.update({key:val})
+
+   if 'proj' in dic:
+      dic.update({'projection':dic['proj']})
+      del(dic['proj'])
+
+   if 'units' in dic:
+      if dic['units']!='m':
+         raise ValueError('need units=m for conversion to basemap')
+      del(dic['units'])
+
+   if 'a' in dic and 'b' in dic:
+      dic.update({'rsphere':[dic['a'],dic['b']]})
+      del(dic['a'])
+      del(dic['b'])
+
+   elif 'a' in dic:
+      dic.update({'rsphere':dic['a']})
+      del(dic['a'])
+
+   return dic
+# ===============================================================
+
 
 ##########################################################
 class plot_object:
@@ -280,16 +313,85 @@ def plot_scalar(lon,lat,V,figname=None,text=None,\
 ############################################################################
 
 
-############################################################################
-def plot_patches(ax,MPlist,col):
+# ===============================================================
+def get_lists_for_patches(ccl,cent):
+   """
+   when doing complicated patches (eg to remove holes),
+   need these lists (called from plot_patches)
+   tst1,lst2=get_lists_for_patches(ccl,cent)
+   inputs:
+   ccl=[(x0,y0),(x1,y1),...]
+    - list of coordinates of polygon to be drawn
+   cent=(x_centroid,y_centroid)
+    - centroid - used to close the polygon
+   """
+   from matplotlib import path
+   # start the poly
+   lst2  = [path.Path.MOVETO]
+
+   # specify the poly
+   lst1  = 1*ccl
+   N     = len(ccl)-1
+   lst2.extend(N*[path.Path.LINETO])
+
+   # close the poly
+   lst1.append(cent)
+   lst2.append(path.Path.CLOSEPOLY)
+   return lst1,lst2
+# ===============================================================
+
+
+# ===============================================================
+def plot_patches(ax,MPlist,col,mapping=None,plot_holes=True):
    from matplotlib import patches,cm,collections
+   from matplotlib import path
    patch_list  = []
 
    for poly in MPlist:
-      ccl   = list(poly.exterior.coords)
-      patch_list.append(patches.Polygon(ccl,True))
+      if mapping is None:
+         # plot in lon,lat
+         ccl   = list(poly.exterior.coords)
+      else:
+         lon,lat  = poly.exterior.coords.xy
+         x,y      = mapping(lon,lat)
+         ccl      = [(x[i],y[i]) for i in range(len(x))]
 
-   pc = collections.PatchCollection(patch_list, cmap=cm.jet, alpha=.5)
+      if len(poly.interiors)==0 or not plot_holes:
+         # no holes
+         # - simple way to plot
+         patch_list.append(patches.Polygon(ccl,True))
+      else:
+         # ========================================================
+         # remove holes
+         x0,y0 = poly.centroid.coords[0]
+         if mapping is not None:
+            # lon/lat to x,y
+            x0,y0 = mapping(x0,y0)
+         cent  = (x0,y0)
+         clist,Plist = get_lists_for_patches(ccl,cent)
+
+         for qi in poly.interiors:
+            if mapping is None:
+               # plot in lon,lat
+               ccl   = list(qi.coords)
+               cent2 = poly.centroid.coords[0]
+            else:
+               lon,lat  = qi.coords.xy
+               x,y      = mapping(lon,lat)
+               ccl      = [(x[i],y[i]) for i in range(len(x))]
+               x0,y0    = qi.centroid.coords[0]
+               x0,y0    = mapping(x0,y0)
+               cent2    = (x0,y0)
+
+            clist2,Plist2 = get_lists_for_patches(ccl,cent2)
+            clist.extend(clist2)
+            Plist.extend(Plist2)
+
+         patch_list.append(patches.PathPatch(path.Path(clist,Plist)))
+         # ========================================================
+
+
+   pc = collections.PatchCollection(patch_list, cmap=cm.jet, alpha=1.) # alpha is transparency
    pc.set_facecolor(col)
    ax.add_collection(pc)
    return

@@ -19,6 +19,114 @@ def lonlat_names(ncfil):
 
 
 ##########################################################
+def get_time_name(nc):
+   time_names  = ['time','time_counter'] # NEMO outputs call time "time_counter"
+
+   time_name   = None
+   for tname in time_names:
+      if tname in nc.dimensions:
+         time_name = tname
+         break
+
+   return time_name
+##########################################################
+
+
+##########################################################
+def get_time_converter(time):
+   """
+   reftime,time_converter = get_time_converter(time)
+   *input:
+   time = nc.variables['time'],
+   where nc is a netCDF4.Dataset object
+   *outputs:
+   reftime - datetime.datetime object
+   time_converter netCDF4.netcdftime.utime object
+   """
+
+   # from netcdftime import netcdftime as NCT
+   from netCDF4 import netcdftime as NCT
+
+   tu          = time.units
+   time_info   = tu.split()
+
+   ################################################################
+   # determine time format of reference point:
+   Unit  = time_info[0]# 1st word gives units
+   Unit  = Unit.strip('s')
+   if Unit=='econd':
+      Unit  = 'second'
+
+   time_info.remove(time_info[0])
+   time_info.remove(time_info[0]) # 'since'
+
+   # rest is date and time of reference point
+   if len(time_info)==2:
+      cdate,ctime = time_info
+   else:
+      if ('T' in time_info[0]) and ('Z' in time_info[0]):
+         # cdate+T...Z format for time
+         split1   = tu.split('T')
+         ctime    = split1[1].strip('Z')
+         cdate    = split1[0].split()[2]
+      
+   # reformat cdate to YYYYMMDD
+   if '-' in cdate:
+      # remove '-'
+      # - otherwise assume YYYYMMDD format
+      split2   = cdate.split('-')
+      for loop_i in range(1,3):
+         if len(split2[loop_i])==1:
+            split2[loop_i] = '0'+split2[loop_i]
+      cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
+   if len(cdate)<8:
+      cdate = (8-len(cdate))*'0'+cdate
+
+   # reformat ctime to HHMMSS
+   if ':' in ctime:
+      # remove ':'
+      # - otherwise assume HHMMSS format
+      split2   = ctime.split(':')
+      for loop_i in range(0,3):
+         if (split2[loop_i])==1:
+            split2[loop_i] = '0'+split2[loop_i]
+      ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
+   ################################################################
+
+
+   ################################################################
+   # now can make new string where format is known
+   # - this is to pass into netcdftime.utime
+   # - NB can't always use strftime/strptime since it only works after 1900
+   cyear0   = cdate[:4]
+   cmon0    = cdate[4:6]
+   cday0    = cdate[6:8]
+   chr0     = ctime[:2]
+   cmin0    = ctime[2:4]
+   csec0    = ctime[4:]
+   #
+   year0    = int(cyear0)
+   mon0     = int(cmon0)
+   day0     = int(cday0)
+   hr0      = int(chr0)
+   min0     = int(cmin0)
+   sec0     = int(float(csec0))
+   reftime  = datetime(year0,mon0,day0,hr0,min0,sec0)
+
+   init_string = Unit+'s since '+\
+         cyear0+'-'+cmon0+'-'+cday0+' '+\
+         chr0+'-'+cmin0+'-'+csec0[:2]
+
+   if 'calendar' in time.ncattrs():
+      time_converter = NCT.utime(init_string,calendar=time.calendar)
+   else:
+      time_converter = NCT.utime(init_string)
+
+   return time_converter
+##########################################################
+
+
+##########################################################
 def nc_get_var(ncfil,vblname,time_index=None):
    """
    vbl=nc_get_var(ncfil,vblname,time_index=None)
@@ -193,14 +301,11 @@ class nc_getinfo:
             vkeys.remove(key)
       Nkeys = len(vkeys)
 
-      # is time a dimension?
-      time_names     = ['time','time_counter'] # NEMO outputs call time "time_counter"
-      self.time_dim  = False
-      for time_name in time_names:
-         if time_name in self.dimensions:
-            self.time_dim  = True
-            self.time_name = time_name
-            break
+
+      ########################################################
+      # time info:
+      self.get_time_info(nc)
+      ########################################################
 
 
       # get global netcdf attributes
@@ -214,14 +319,6 @@ class nc_getinfo:
             return vars(self).keys()
       self.ncattrs   = ncatts(nc)
 
-      ########################################################
-      # time info:
-      if self.time_dim:
-         time  = nc.variables[self.time_name]
-         self.get_time_info(time)
-      else:
-         self.datetimes = None
-      ########################################################
 
 
       ########################################################
@@ -342,97 +439,32 @@ class nc_getinfo:
 
 
    ###########################################################
-   def get_time_info(self,time):
+   def get_time_info(self,nc):
 
-      from netcdftime import netcdftime as NCT
+      self.time_name = get_time_name(nc)
+      self.time_dim  = (self.time_name is not None)
 
-      tu          = time.units
-      time_info   = tu.split()
+      if not self.time_dim:
+         self.datetimes = None
+         return
 
-      ################################################################
-      # determine time format of reference point:
-      Unit  = time_info[0]# 1st word gives units
-      Unit  = Unit.strip('s')
-      if Unit=='econd':
-         Unit  = 'second'
-
-      time_info.remove(time_info[0])
-      time_info.remove(time_info[0]) # 'since'
-
-      # rest is date and time of reference point
-      if len(time_info)==2:
-         cdate,ctime = time_info
-      else:
-         if ('T' in time_info[0]) and ('Z' in time_info[0]):
-            # cdate+T...Z format for time
-            split1   = tu.split('T')
-            ctime    = split1[1].strip('Z')
-            cdate    = split1[0].split()[2]
-         
-      # reformat cdate to YYYYMMDD
-      if '-' in cdate:
-         # remove '-'
-         # - otherwise assume YYYYMMDD format
-         split2   = cdate.split('-')
-         for loop_i in range(1,3):
-            if len(split2[loop_i])==1:
-               split2[loop_i] = '0'+split2[loop_i]
-         cdate = split2[0]+split2[1]+split2[2] # should be YYYYMMDD now
-      if len(cdate)<8:
-         cdate = (8-len(cdate))*'0'+cdate
-
-      # reformat ctime to HHMMSS
-      if ':' in ctime:
-         # remove ':'
-         # - otherwise assume HHMMSS format
-         split2   = ctime.split(':')
-         for loop_i in range(0,3):
-            if (split2[loop_i])==1:
-               split2[loop_i] = '0'+split2[loop_i]
-         ctime = split2[0]+split2[1]+split2[2] # should be HHMMSS now
-      ################################################################
-
-
-      ################################################################
-      # now can make new string where format is known
-      # - this is to pass into netcdftime.utime
-      # - NB can't always use strftime/strptime since it only works after 1900
-      cyear0         = cdate[:4]
-      cmon0          = cdate[4:6]
-      cday0          = cdate[6:8]
-      chr0           = ctime[:2]
-      cmin0          = ctime[2:4]
-      csec0          = ctime[4:]
-      #
-      year0          = int(cyear0)
-      mon0           = int(cmon0)
-      day0           = int(cday0)
-      hr0            = int(chr0)
-      min0           = int(cmin0)
-      sec0           = int(float(csec0))
-      self.reftime   = datetime(year0,mon0,day0,hr0,min0,sec0)
-
-      fmt         = '%Y-%m-%d %H:%M:%S'
-      init_string = Unit+'s since '+\
-            cyear0+'-'+cmon0+'-'+cday0+' '+\
-            chr0+'-'+cmin0+'-'+csec0[:2]
-
-      ncatts   = time.ncattrs()
-      if 'calendar' in ncatts:
-         Utime    = NCT.utime(init_string,calendar=time.calendar)
-      else:
-         Utime    = NCT.utime(init_string)
+      time  = nc.variables[self.time_name]
+      fmt   = '%Y-%m-%d %H:%M:%S'
+      
+      self.time_converter = get_time_converter(time)
 
       arr               = time[:] #time values
       self.datetimes    = []
       self.timevalues   = []
+
+      Unit  = self.time_converter.units.lower()
 
       i32   = np.array([0],dtype='int32')[0]
       for i,tval in enumerate(arr):
          if type(i32)==type(tval):
             # can be problems if int32 format
             tval  = int(tval)
-         cdate = Utime.num2date(tval).strftime(fmt)
+         cdate = self.time_converter.num2date(tval).strftime(fmt)
          dto   = datetime.strptime(cdate,fmt)       # now a proper datetime object
          self.datetimes.append(dto)
 
@@ -440,13 +472,13 @@ class nc_getinfo:
             self.reftime  = dto
 
          tdiff = (dto-self.reftime).total_seconds()
-         if Unit=='second':
+         if Unit=='seconds':
             self.timevalues.append(tdiff/3600.)       # convert to hours for readability
             self.timeunits = 'hour'
-         elif Unit=='hour':
+         elif Unit=='hours':
             self.timevalues.append(tdiff/3600.)       # keep as hours
             self.timeunits = 'hour'
-         elif Unit=='day':
+         elif Unit=='days':
             self.timevalues.append(tdiff/3600./24.)   # keep as days
             self.timeunits = 'day'
          
