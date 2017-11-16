@@ -145,10 +145,16 @@ def nc_get_dim(ncfil,vblname):
 
 ########################################################
 class nc_getinfo:
+   """
+   mod_netcdf_utils.nc_getinfo(ncfil,lonlat_file=None)
+   """
 
    import os
    #####################################################
    def __init__(self,ncfil,time_index=None,lonlat_file=None):
+      # NB time_index not needed here, but adding it as a dummy index
+      # means this object can be used along with other similar objects
+      # in some functions in mod_reading.py
 
       ##################################################
       self.filename  = ncfil
