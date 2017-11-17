@@ -123,7 +123,8 @@ class time_series:
 
 
    ############################################
-   def plot(self,var_name,refdate=None,time_units='days',yscaling=1.,pobj=None,**kwargs):
+   def plot(self,var_name,refdate=None,label_xaxis_dates=False,\
+         time_units='days',yscaling=1.,pobj=None,**kwargs):
       if pobj is None:
          pobj  = plot_object()
 
@@ -144,6 +145,10 @@ class time_series:
       lin  ,= pobj.ax.plot(x,y,**kwargs)
 
       info  = {'time_data':x,'refdate':refdate,'time_units':'days'}
+
+      if label_xaxis_dates:
+         self.xlabel_dates(pobj.ax,info)
+
       return pobj,lin,info
    ############################################
 
@@ -257,6 +262,61 @@ class time_series:
          Data.update({fld:dat})
 
       return time_series(Dates,Data,units=units,**kwargs)
+   # ===================================================================
+
+
+   # ===================================================================
+   def convert_datetime(self,dto,info):
+      # convert datetime to numeric value
+      # according to specified ref date and units
+      if info['time_units']=='days':
+         xfac  = 24*3600. # seconds in 1 day
+      elif info['time_units']=='hours':
+         xfac  = 3600. # seconds in 1h
+      elif info['time_units']=='minutes':
+         xfac  = 60. # seconds in 1min
+      else:
+         xfac  = 1. # keep as seconds
+
+      return (dto-info['refdate']).total_seconds()/xfac
+   # ===================================================================
+
+   def xlabel_dates(self,ax,info):
+
+      from datetime import datetime as DT
+
+      # xticks
+      xt    = []
+      XT    = []
+      year1 = self.dates[0].year
+      year2 = self.dates[0].year
+      mon1  = self.dates[0].month
+      mon2  = self.dates[-1].month
+
+      step  = 1
+      Mon2  = (mon2+1)+12*(year2-year1)
+      Mons  = range(mon1,Mon2,step)
+      while len(Mons)>6:
+         step += 1
+         Mon2  = (mon2+1)+12*(year2-year1)
+         Mons  = range(mon1,Mon2,step)
+
+      year  = year1
+      for i,mon in enumerate(Mons):
+         if mon>12:
+            year += 1
+
+         if i>0:
+            dto   = DT(year,mon,1)
+            xt.append(self.convert_datetime(dto,info))
+            XT.append(dto.strftime('%d %b'))
+
+      ax.set_xticks(xt)
+      ax.set_xticklabels(XT,rotation='vertical')
+      return
+###########################################################
+
+
 
 ############################################
 
@@ -473,6 +533,10 @@ class plot_object:
       pobj  = plot_object(fig=self.fig,ax=self.ax,cbar=self.cbar,axpos=axpos)
 
       return pobj
+
+   def close(self):
+      plt.close(self.fig)
+      return
 ##########################################################
 
 
@@ -2712,7 +2776,7 @@ class MIZmap_all:
       # ===================================================================
 
       return
-###########################################################
+   # ===================================================================
 
 
 ###########################################################
