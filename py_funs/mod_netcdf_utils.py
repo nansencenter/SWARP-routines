@@ -795,9 +795,15 @@ def get_amsr2_gdal_dataset(filename):
    subds0 = gdal.Open(ds.GetSubDatasets()[0][0])
    dst_ds = gdal.GetDriverByName('MEM').Create('tmp', subds0.RasterXSize,
                                                       subds0.RasterYSize,
-                                                      1, gdal.GDT_Byte)
+                                                      1, gdal.GDT_Int16)
    dst_ds.SetGeoTransform((min_x, grid_resolution, 0, min_y, 0, grid_resolution))
    dst_ds.SetProjection(srs_wkt)
+
+   # set no_data_value for the band
+   band = dst_ds.GetRasterBand(1)
+   NoData_value = -999999
+   band.SetNoDataValue(NoData_value)
+   band.FlushCache()
 
    return dst_ds
 

@@ -1013,6 +1013,55 @@ class shapefile_info:
       Z0[in_bbox] = Z
       return Z0,dic
 
+   def rasterize_layer(self, dst_ds, attribute='ORIG_FID'):
+      ''' Burn values from vector layer on a raster matching the input dataset
+      
+      Parameters
+      ----------
+         dst_ds : GDALDataset
+            destination dataset that defines size, resolution, spatial extent
+         attribute : str
+            name of the attribute to burn onto raster
+      Returns
+      -------
+         raster : numpy.ndarray
+            raster with size of the dataset with values from the shapefile
+      '''
+      import gdal, ogr
+      mb_v = ogr.Open(self.shapefile)
+      mb_l = mb_v.GetLayer()
+      gdal.RasterizeLayer(dst_ds, [1], mb_l,
+                            options=["ATTRIBUTE=%s" % attribute,
+                                     "BLOCKSIZE=10000"])
+      dst_arr = dst_ds.ReadAsArray()
+      
+      return dst_arr
+
+   def code_raster_layer(self, inp_arr, dic,
+                               raster_key='ORIG_FID', vector_key='ICECODE'):
+      ''' Change values in the raster based on records and dictionary
+      
+      Parameters
+      ----------
+         inp_arr : numpy.ndarray
+            input raster
+         dic : dict
+            mapping between vector attribute (ICECODE) and destination value (CONC)
+         raster_key : str
+            name of attribute in vector file that contains values on the raster
+         vector_key : str
+            name of atribute in vector file that contains key for the mapping
+      Returns
+      -------
+         out_arr : numpy.ndarray
+            array with destination values (e.g. concentration)
+      '''
+      out_arr = np.zeros(inp_arr.shape) + np.nan
+      for rec in self.shapes.records:
+          out_arr[inp_arr == rec[raster_key]] = dic[rec[vector_key]]
+
+      return out_arr
+
 ############################################################################
 class MIZ_from_shapefile:
    def __init__(self,fname_full,MIZ_criteria="FA_only",chart_source="DMI"):
