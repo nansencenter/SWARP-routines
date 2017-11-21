@@ -747,4 +747,58 @@ class nc_getinfo:
       return out
    ###########################################################
 
+def get_amsr2_gdal_dataset(filename):
+   ''' Return geocoded GDAL Dataset matching AMSR2 Arc_*_res3.125_pyres.nc
+
+   Parameters of the projection (min/max of x/y and proj4 string) are hardcoded
+   based on experiments using Nansat.
+    
+   Parameters
+   ----------
+      filename : str
+         input file name
+   Returns
+   -------
+      dst_ds : GDALDataset
+         destination dataset in memory
+   '''
+   from osgeo import gdal, ogr, osr
+   
+   # check that file is correct
+   ds = gdal.Open(filename)
+   title = ds.GetMetadata()['NC_GLOBAL#title']
+   if (not 'Daily averaged Arctic sea ice concentration derived from AMSR2' in
+       title):
+      raise Exception('Not correct inpu file %s' % filename)
+   
+   # hardcode resolution and min/max of X/Y coordinates in meters
+   grid_resolution = 3125
+   min_x = -3800000
+   max_x = 3800000
+   off_x = grid_resolution * -15.5
+   min_x = min_x + off_x
+   max_x = max_x + off_x + grid_resolution
+
+   min_y = -5600000
+   max_y = 5600000
+   off_y = grid_resolution * 78.5
+   min_y = min_y + off_y
+   max_y = max_y + off_y + grid_resolution
+
+   # hardcode projection
+   srs_proj4 = '+proj=stere +datum=WGS84 +ellps=WGS84 +lat_0=90 +lat_ts=70 +lon_0=-45 +no_defs'
+   srs = osr.SpatialReference()
+   srs.ImportFromProj4(str(srs_proj4))
+   srs_wkt = srs.ExportToWkt()
+
+   # create dataset
+   subds0 = gdal.Open(ds.GetSubDatasets()[0][0])
+   dst_ds = gdal.GetDriverByName('MEM').Create('tmp', subds0.RasterXSize,
+                                                      subds0.RasterYSize,
+                                                      1, gdal.GDT_Byte)
+   dst_ds.SetGeoTransform((min_x, grid_resolution, 0, min_y, 0, grid_resolution))
+   dst_ds.SetProjection(srs_wkt)
+
+   return dst_ds
+
 ###########################################################
