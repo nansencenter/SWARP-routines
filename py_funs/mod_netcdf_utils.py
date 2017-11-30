@@ -127,12 +127,13 @@ def get_time_converter(time):
 
 
 ##########################################################
-def nc_get_var(ncfil,vblname,time_index=None):
+def nc_get_var(ncfil,vblname,time_index=None,depth_index=0):
    """
    vbl=nc_get_var(ncfil,vblname,time_index=None)
    *ncfil is string (filename)
    *vname is string (variable name)
    *time_index is record number to get
+   *depth_index is horizon number to get
    *vbl is a mod_reading.var_object instance
    """
 
@@ -165,6 +166,17 @@ def nc_get_var(ncfil,vblname,time_index=None):
       else:
          vals  = vbl0[time_index,:,:]
          dims  = dims[1:]
+   elif vbl0.ndim==4:
+      if time_index is None:
+         if shape[0]==1:
+            vals  = vbl0[0,depth_index,:,:]
+            dims  = dims[2:]
+         else:
+            vals  = vbl0[:,depth_index,:,:]
+            dims = (dims[0], dims[2], dims[3]) 
+      else:
+         vals  = vbl0[time_index,depth_index,:]
+         dims  = dims[2:]
    ##################################################
 
    nc.close()
