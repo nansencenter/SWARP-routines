@@ -1013,6 +1013,47 @@ class shapefile_info:
       Z0[in_bbox] = Z
       return Z0,dic
 
+   def rasterize_layer(self, dst_ds, dic, attribute='ICECODE'):
+      ''' Rasterize vector layer using a dictionary
+      
+      An empty raster matching size, resolution and spatial extend of the input 
+      dataset <dst_ds> is created. Values from the dictionay <dic> are selected
+      from the vector layer from field <attribute> and burned into the raster
+      
+      Parameters
+      ----------
+         dst_ds : GDALDataset
+            destination dataset that defines size, resolution, spatial extent
+         dic : dict
+            mapping between vector attribute (ICECODE) and destination value (CONC)
+         attribute : str
+            name of the attribute in the vector layer to use in the dictionary
+      Returns
+      -------
+         raster : numpy.ndarray
+            raster with size of the dataset with values from the shapefile
+      '''
+      import gdal, ogr
+
+      # open input shapefile using OGR
+      ivector = ogr.Open(self.shapefile)
+      ilayer = ivector.GetLayer()
+      # create temporary layer in memory and add real field with CICE values
+      odriver = ogr.GetDriverByName('MEMORY')
+      ovector = odriver.CreateDataSource('memData')
+      olayer = ovector.CopyLayer(ilayer, 'burn_ice_layer', ['OVERWRITE=YES'])
+      fidef = ogr.FieldDefn('burn_ice', ogr.OFTReal)
+      olayer.CreateField(fidef)
+      for ft in olayer:
+         ft.SetField('burn_ice', float(dic.get(ft.GetField(attribute), 0)))
+         olayer.SetFeature(ft)
+
+      # burn CICE values onto raster
+      gdal.RasterizeLayer(dst_ds, [1], olayer, options=["ATTRIBUTE=burn_ice"])
+      dst_arr = dst_ds.ReadAsArray()
+      
+      return dst_arr
+
 ############################################################################
 class MIZ_from_shapefile:
    def __init__(self,fname_full,MIZ_criteria="FA_only",chart_source="DMI"):

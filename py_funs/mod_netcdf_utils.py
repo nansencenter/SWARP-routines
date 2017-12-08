@@ -127,12 +127,13 @@ def get_time_converter(time):
 
 
 ##########################################################
-def nc_get_var(ncfil,vblname,time_index=None):
+def nc_get_var(ncfil,vblname,time_index=None,depth_index=0):
    """
    vbl=nc_get_var(ncfil,vblname,time_index=None)
    *ncfil is string (filename)
    *vname is string (variable name)
    *time_index is record number to get
+   *depth_index is horizon number to get
    *vbl is a mod_reading.var_object instance
    """
 
@@ -165,6 +166,17 @@ def nc_get_var(ncfil,vblname,time_index=None):
       else:
          vals  = vbl0[time_index,:,:]
          dims  = dims[1:]
+   elif vbl0.ndim==4:
+      if time_index is None:
+         if shape[0]==1:
+            vals  = vbl0[0,depth_index,:,:]
+            dims  = dims[2:]
+         else:
+            vals  = vbl0[:,depth_index,:,:]
+            dims = (dims[0], dims[2], dims[3]) 
+      else:
+         vals  = vbl0[time_index,depth_index,:]
+         dims  = dims[2:]
    ##################################################
 
    nc.close()
@@ -752,5 +764,65 @@ class nc_getinfo:
       out   = MR.compare_ice_edge_obs(self,**kwargs)
       return out
    ###########################################################
+
+def get_amsr2_gdal_dataset(filename):
+   ''' Return geocoded GDAL Dataset matching AMSR2 Arc_*_res3.125_pyres.nc
+
+   Parameters of the projection (min/max of x/y and proj4 string) are hardcoded
+   based on experiments using Nansat.
+    
+   Parameters
+   ----------
+      filename : str
+         input file name
+   Returns
+   -------
+      dst_ds : GDALDataset
+         destination dataset in memory
+   '''
+   from osgeo import gdal, ogr, osr
+   
+   # check that file is correct
+   ds = gdal.Open(filename)
+   title = ds.GetMetadata()['NC_GLOBAL#title']
+   if (not 'Daily averaged Arctic sea ice concentration derived from AMSR2' in
+       title):
+      raise Exception('Not correct inpu file %s' % filename)
+   
+   # hardcode resolution and min/max of X/Y coordinates in meters
+   grid_resolution = 3125
+   min_x = -3800000
+   max_x = 3800000
+   off_x = grid_resolution * -16
+   min_x = min_x + off_x
+   max_x = max_x + off_x
+
+   min_y = -5600000
+   max_y = 5600000
+   off_y = grid_resolution * 80
+   min_y = min_y + off_y
+   max_y = max_y + off_y
+
+   # hardcode projection
+   srs_proj4 = '+proj=stere +datum=WGS84 +ellps=WGS84 +lat_0=90 +lat_ts=70 +lon_0=-45 +no_defs'
+   srs = osr.SpatialReference()
+   srs.ImportFromProj4(str(srs_proj4))
+   srs_wkt = srs.ExportToWkt()
+
+   # create dataset
+   subds0 = gdal.Open(ds.GetSubDatasets()[0][0])
+   dst_ds = gdal.GetDriverByName('MEM').Create('tmp', subds0.RasterXSize,
+                                                      subds0.RasterYSize,
+                                                      1, gdal.GDT_Float32)
+   dst_ds.SetGeoTransform((min_x, grid_resolution, 0, min_y, 0, grid_resolution))
+   dst_ds.SetProjection(srs_wkt)
+
+   # set no_data_value for the band
+   band = dst_ds.GetRasterBand(1)
+   NoData_value = -999999
+   band.SetNoDataValue(NoData_value)
+   band.FlushCache()
+
+   return dst_ds
 
 ###########################################################
