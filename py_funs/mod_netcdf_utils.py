@@ -303,8 +303,8 @@ class nc_getinfo:
 
       # open the file
       nc    = ncopen(ncfil)
-      dkeys = nc.dimensions.keys()
-      vkeys = nc.variables.keys()
+      dkeys = list(nc.dimensions.keys())
+      vkeys = list(nc.variables.keys())
 
       # remove dimensions from variables
       self.dimensions   = dkeys
