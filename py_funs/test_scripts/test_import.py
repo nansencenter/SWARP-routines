@@ -28,31 +28,55 @@ from operator import itemgetter as itg
 from getopt import getopt
 import shutil
 
-# errors in import (2.7.2)
 from skimage import measure as msr
 from skimage.morphology import opening, closing
-# 
-# # errors in import (2.7.9)
-from netCDF4 import Dataset
-from netcdftime import netcdftime as NCT
 
-# # not present (2.7.9)
-import rtree.index      as Rindex         # not originally requested 
+from netCDF4 import Dataset
+from netCDF4 import netcdftime as NCT
+
+import rtree
 
 
 from distutils.util import strtobool
-if 0:
-   import ESMF # ESMF regridding
-   from mpi4py import MPI
+from distutils.core import setup, Extension
 
-# pygrib doesn't work in conda
-if 0:
-   import pygrib
-   from ncepgrib2 import Grib2Encode as g2e  # part of pygrib package
-   from ncepgrib2 import Grib2Decode as g2d
 
-if 1:
-   # linking to C++
-   from distutils.core import setup, Extension
-   from Cython.Build import cythonize
+try:
+    # pygrib often doesn't work in conda
+    import pygrib
+    from ncepgrib2 import Grib2Encode as g2e  # part of pygrib package
+    from ncepgrib2 import Grib2Decode as g2d
+except:
+    print('import pygrib failed')
 
+
+try:
+    from ncepgrib2 import Grib2Encode as g2e  # part of pygrib package
+    from ncepgrib2 import Grib2Decode as g2d
+except:
+    print('import ncepgrib2 failed')
+
+
+try:
+    # linking to C++
+    from Cython.Build import cythonize
+except:
+    print('import cython failed')
+
+
+try:
+   import gdal
+except:
+    print('import gdal failed')
+
+
+try:
+    import ESMF # ESMF regridding
+except:
+    print('import pygrib failed')
+
+
+try:
+    from mpi4py import MPI
+except:
+    print('import mpi4py failed')
