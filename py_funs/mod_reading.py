@@ -1682,7 +1682,7 @@ def compare_ice_edge_obs(fobj,pobj=None,bmap=None,time_index=0,\
       	 obs_path   = '/work/shared/nersc/msc/OSI-SAF/'+\
             dtmo.strftime('%Y')+'_nh_polstere/'
       if obs_option is None:
-	 obs_option='multi'
+         obs_option='multi'
       obsfil   = obs_path+\
             '/ice_conc_nh_polstere-100_'+obs_option+'_'+\
             dtmo.strftime('%Y%m%d')+'1200.nc'

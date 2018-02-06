@@ -303,8 +303,8 @@ class nc_getinfo:
 
       # open the file
       nc    = ncopen(ncfil)
-      dkeys = nc.dimensions.keys()
-      vkeys = nc.variables.keys()
+      dkeys = list(nc.dimensions.keys())
+      vkeys = list(nc.variables.keys())
 
       # remove dimensions from variables
       self.dimensions   = dkeys
@@ -710,6 +710,24 @@ class nc_getinfo:
       """
       return MR.interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
    ###########################################################
+
+   def get_external_data(self,ncfil,dto_in=None,time_index=None,
+		lonlat_file=None,mapping=None):
+       target_lonlats = self.get_lonlat()
+
+       # initialise mnu.nc_getinfo object
+       nci = mnu.nc_getinfo(ncfil,lonlat_file=lonlat_file)
+
+       tind = time_index
+       if time_index is None:
+          tind  = 0
+          if type(dto_in) is not type(None):
+             dto,tind  = nci.nearestDate(dto_in)
+
+       vout  = nci.interp2points(vname, target_lonlats,
+                                    time_index=tind,
+                                    mapping=mapping)
+       return vout
 
    ###########################################################
    def MIZmap(self,**kwargs):
