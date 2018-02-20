@@ -1072,14 +1072,21 @@ def imshow(fobj,var_opts,pobj=None,\
 
 
 ###########################################################
-def interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+def interp2points(fobj,varname,target_lonlats,
+        time_index=0,mapping=None,latlon=True,**kwargs):
    """
    interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
-   *fobj is a file object eg from netcdf
-   *varname is a string (name of variable in file object)
-   *target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
-   *time_index (integer) - for multi-record files
-   *mapping is a pyproj.Proj object to project form lat/lon to x,y (stereographic projection)
+   * fobj is a file object eg from netcdf
+   * varname is a string (name of variable in file object)
+   * latlon (bool)
+     if latlon:
+       target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
+     else:
+       target_lonlats = [target_x,target_y], target_x/y are numpy arrays
+       need to provide mapping in this case to map lon,lat to x,y
+   * time_index (integer) - for multi-record files
+   * mapping is a pyproj.Proj object to project form lat/lon to x,y
+      (stereographic projection)
    """
 
    lon,lat  = fobj.get_lonlat()
@@ -1087,6 +1094,8 @@ def interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs
    # ===============================================================================
    # do interpolation in stereographic projection
    if mapping is None:
+      if not latlon:
+         raise ValueError('need to provide mapping if latlon=False')
       import pyproj
       souths   = lat[lat<0]
       lat_0    = 90.
@@ -1109,8 +1118,11 @@ def interp2points(fobj,varname,target_lonlats,time_index=0,mapping=None,**kwargs
    Z     = fobj.get_var(varname,time_index=time_index).values #numpy masked array
 
    #target
-   lons,lats   = target_lonlats
-   x,y         = mapping(lons,lats)
+   if latlon:
+       lons,lats   = target_lonlats
+       x,y         = mapping(lons,lats)
+   else:
+       x,y = target_lonlats
 
    # do interpolation
    fvals = reproj_mod2obs(X,Y,Z,x,y,**kwargs) #numpy masked array
