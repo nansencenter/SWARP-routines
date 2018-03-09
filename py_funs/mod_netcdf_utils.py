@@ -555,6 +555,29 @@ class nc_getinfo:
       return lon,lat
    ###########################################################
 
+   def get_bbox(self,mapping):
+
+      nc    = ncopen(self.lonlat_file)
+      lono  = nc.variables[self.lonname]
+      lato  = nc.variables[self.latname]
+
+      if lono.ndim==2:
+         lon   = lono[:,:]
+         lat   = lato[:,:]
+      else:
+         lon   = lono[:]
+         lat   = lato[:]
+         if self.lon_first:
+            # lon in cols, lat in rows
+            lon,lat  = np.meshgrid(lon,lat,indexing='ij')
+         else:
+            # lon in rows, lat in cols
+            lon,lat  = np.meshgrid(lon,lat,indexing='xy')
+      nc.close()
+
+      x,y = mapping(lon,lat)
+      return [x.min(),x.max(),y.min(),y.max()]
+
 
    ###########################################################
    def get_var(self,vname,time_index=None):
@@ -699,17 +722,34 @@ class nc_getinfo:
 
 
    ###########################################################
-   def interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs):
+   def interp2points(self,varname,target_lonlats,**kwargs):
       """
-      self.interp2points(varname,target_lonlats,time_index=0,mapping=None,**kwargs):
-      *fobj is a file object eg from netcdf
-      *varname is a string (name of variable in file object)
-      *target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
-      *time_index (integer) - for multi-record files
-      *mapping is a pyproj.Proj object to project form lat/lon to x,y (stereographic projection)
+      self.interp2points(varname,target_lonlats,**kwargs)
+      * fobj is a file object eg from netcdf
+      * varname is a string (name of variable in file object)
+      * target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
+      * kwargs for mod_reading.interp2points()
       """
-      return MR.interp2points(self,varname,target_lonlats,time_index=0,mapping=None,**kwargs)
+      return MR.interp2points(self,varname,target_lonlats,**kwargs)
    ###########################################################
+
+   def get_external_data(self,ncfil,dto_in=None,time_index=None,
+		lonlat_file=None,mapping=None):
+       target_lonlats = self.get_lonlat()
+
+       # initialise mnu.nc_getinfo object
+       nci = mnu.nc_getinfo(ncfil,lonlat_file=lonlat_file)
+
+       tind = time_index
+       if time_index is None:
+          tind  = 0
+          if type(dto_in) is not type(None):
+             dto,tind  = nci.nearestDate(dto_in)
+
+       vout  = nci.interp2points(vname, target_lonlats,
+                                    time_index=tind,
+                                    mapping=mapping)
+       return vout
 
    ###########################################################
    def MIZmap(self,**kwargs):
