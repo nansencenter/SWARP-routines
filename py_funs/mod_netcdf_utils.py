@@ -555,6 +555,29 @@ class nc_getinfo:
       return lon,lat
    ###########################################################
 
+   def get_bbox(self,mapping):
+
+      nc    = ncopen(self.lonlat_file)
+      lono  = nc.variables[self.lonname]
+      lato  = nc.variables[self.latname]
+
+      if lono.ndim==2:
+         lon   = lono[:,:]
+         lat   = lato[:,:]
+      else:
+         lon   = lono[:]
+         lat   = lato[:]
+         if self.lon_first:
+            # lon in cols, lat in rows
+            lon,lat  = np.meshgrid(lon,lat,indexing='ij')
+         else:
+            # lon in rows, lat in cols
+            lon,lat  = np.meshgrid(lon,lat,indexing='xy')
+      nc.close()
+
+      x,y = mapping(lon,lat)
+      return [x.min(),x.max(),y.min(),y.max()]
+
 
    ###########################################################
    def get_var(self,vname,time_index=None):
