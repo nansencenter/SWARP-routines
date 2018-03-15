@@ -3,7 +3,7 @@ from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
 import os,sys
 import mod_reading as MR
-
+from pynextsim import lib as nsl
 
 ##########################################################
 def lonlat_names(ncfil):
@@ -733,7 +733,10 @@ class nc_getinfo:
       return MR.interp2points(self,varname,target_lonlats,**kwargs)
    ###########################################################
 
-   def get_external_data(self,ncfil,dto_in=None,time_index=None,
+
+   ###########################################################
+
+   def get_external_data(self,ncfil,vname,dto_in=None,time_index=None,
 		lonlat_file=None,mapping=None):
        target_lonlats = self.get_lonlat()
 
@@ -745,13 +748,43 @@ class nc_getinfo:
           tind  = 0
           if type(dto_in) is not type(None):
              dto,tind  = nci.nearestDate(dto_in)
+       nci = nc_getinfo(ncfil,lonlat_file=lonlat_file)
+
+       if time_index is not None:
+          tind = time_index
+       elif type(dto_in) is not type(None):
+          dto,tind  = self.nearestDate(dto_in)
+       else:
+          tind = 0
 
        vout  = nci.interp2points(vname, target_lonlats,
                                     time_index=tind,
                                     mapping=mapping)
        return vout
+   ###########################################################
+
+
+   def get_area_euclidean(self,pyproj_map,earthshape):
+      """ 
+      Calculates element area from netcdf file
+      area=get_area_euclidean(self)
+      """
+      lon,lat = self.get_lonlat()
+      #proj = nsl.DefaultProjection()
+      #pp = proj.pyproj
+      #a = proj.a
+      #b = proj.b
+      pp = pyproj_map
+      a,b = earthshape
+      x,y=pp(lon,lat)
+      dy=np.mean(y[:,2]-y[:,1])
+      dx=np.mean(x[1,:]-x[0,:])
+      area = dx*dy
+      return area
+      
 
    ###########################################################
+
    def MIZmap(self,**kwargs):
       """
       Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs)
