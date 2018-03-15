@@ -2040,7 +2040,17 @@ def MIZmap(fobj,var_name='dmax',time_index=0,\
 def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
    """
    get_anomaly(lon,lat,ZZ,anom_fil_start,fig_info=None)
-   ZZ = [Z_mod,Z_obs] = list of masked arrays with same mask
+   * ZZ = [Z_mod,Z_obs] = list of masked arrays
+   * anom_fil_start (string): start of filename to save to
+   * cdate (string) date string yyyymmdd
+   * NO_NPZ (bool): False/True, do/don't save fields to .npz file
+   * fig_info (dictionary) with fields:
+      fignames (list)
+      text (list)
+      HYCOM_region (list)
+      plot_obs (bool)
+      plot_mod (bool)
+
    outputs:
       anom_fil_start+"_"+cdate+".npz" : save arrays to numpy binary file
       anom_fil_start+"_"+cdate+".txt" : save RMSE and bias to this text file
@@ -2051,7 +2061,8 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
    j_mod = 0
    j_obs = 1
    cdiff = ZZ[j_mod]-ZZ[j_obs]
-   good  = np.logical_not(ZZ[j_mod].mask)
+   # get union of masks
+   good  = np.logical_and(~ZZ[j_mod].mask,~ZZ[j_obs].mask)
    cmin  = 0.01 # more conservative than 0.15 for plotting
 
    # 1st estimate (lower bound)
@@ -2088,32 +2099,42 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
 
       # =================================================================
       # plot model + ice edge
-      pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_mod],\
-            text=fig_info['text'][j_mod],\
-            mask_lower_than=cmin,\
-            HYCOM_region=fig_info['HYCOM_region'],\
-            clim=[0,1],clabel='Sea ice concentration')
+      plot_mod = True
+      if 'plot_mod' in fig_info:
+          plot_mod = fig_info['plot_mod']
+      if plot_mod:
+         pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_mod],\
+               text=fig_info['text'][j_mod],\
+               mask_lower_than=cmin,\
+               HYCOM_region=fig_info['HYCOM_region'][j_mod],\
+               clim=[0,1],\
+               clabel='Sea ice concentration')
 
-      bmap.contour(lon,lat,ZZ[j_obs][:,:],[.15],colors='g',\
-            linewidths=2,ax=pobj.ax,latlon=True)
+         bmap.contour(lon,lat,ZZ[j_obs][:,:],[.15],colors='g',\
+               linewidths=2,ax=pobj.ax,latlon=True)
 
-      figname  = fig_info['fignames'][j_mod]
-      print('Saving '+figname+'\n')
-      pobj.fig.savefig(figname)
-      pobj.ax.cla()
-      plt.close(pobj.fig)
+         figname  = fig_info['fignames'][j_mod]
+         print('Saving '+figname+'\n')
+         pobj.fig.savefig(figname)
+         pobj.ax.cla()
+         plt.close(pobj.fig)
       # =================================================================
 
 
       # =================================================================
       # plot obs
-      pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_obs],\
-            text=fig_info['text'][j_obs],\
-            mask_lower_than=0.01,\
-            figname=fig_info['fignames'][j_obs],\
-            bmap=bmap,clim=[0,1],\
-            HYCOM_region=fig_info['HYCOM_region'],\
-            clabel='Sea ice concentration')
+      plot_obs = True
+      if 'plot_obs' in fig_info:
+          plot_obs = fig_info['plot_obs']
+      if plot_obs:
+         pobj,bmap   = Fplt.plot_scalar(lon,lat,ZZ[j_obs],\
+               text=fig_info['text'][j_obs],\
+               mask_lower_than=0.01,\
+               figname=fig_info['fignames'][j_obs],\
+              # bmap=bmap,
+               clim=[0,1],\
+               HYCOM_region=fig_info['HYCOM_region'][j_obs],\
+               clabel='Sea ice concentration_')
       # =================================================================
 
          
@@ -2125,7 +2146,7 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
       cdiff = np.ma.array(cdiff.data,mask=np.logical_not(either_ice))
       Fplt.plot_scalar(lon,lat,cdiff,figname=anom_fig,\
             text=fig_info['text'][j_mod],\
-            HYCOM_region=fig_info['HYCOM_region'],\
+            HYCOM_region=fig_info['HYCOM_region'][j_mod],\
             clim=[-.5,.5],clabel='Concentration anomaly')
       # =================================================================
 
@@ -2133,6 +2154,8 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
       return
    else:
       return anom_fil
+   
+   return cdiff
 ###########################################################
 
 
