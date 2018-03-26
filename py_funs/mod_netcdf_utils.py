@@ -271,7 +271,11 @@ class nc_getinfo:
 
    import os
    #####################################################
-   def __init__(self,ncfil,time_index=None,lonlat_file=None):
+   def __init__(self,
+           ncfil,
+           time_index=None,
+           lonlat_file=None,
+           timedep_lonlat=False):
       # NB time_index not needed here, but adding it as a dummy index
       # means this object can be used along with other similar objects
       # in some functions in mod_reading.py
@@ -293,6 +297,9 @@ class nc_getinfo:
       self.HYCOM_region    = None
       self.get_fixed_lonlat = self.get_lonlat
       ##################################################
+
+      # for drifters
+      self.timedep_lonlat = timedep_lonlat
 
       # added here manually
       # - TODO could possibly be determined
@@ -366,6 +373,10 @@ class nc_getinfo:
                self.lon_first = False
                self.shape     = (len(lat),len(lon))
                break
+      elif self.timedep_lonlat:
+         self.lon0    = None
+         self.lat0    = None
+         self.shape   = lon[0,:,:].shape
       else:
          self.lon0    = lon[0,0]
          self.lat0    = lat[0,0]
@@ -384,7 +395,9 @@ class nc_getinfo:
 
       ########################################################
       # projection info:
-      proj_list   = ['stereographic','projection_3'] # could also have mercator or regular lon-lat
+      proj_list   = ['stereographic','projection_3',
+              'Polar_Stereographic_Grid'] 
+      # could also have mercator or regular lon-lat
       HAVE_PROJ   = 0   # if 0 assume HYCOM native grid
       for proj_name in proj_list: 
          if proj_name in vkeys:
@@ -434,7 +447,10 @@ class nc_getinfo:
       # - remove some other variables from vkeys
       # - eg projection,lon,lat
       # - TODO model_depth?
-      bkeys = [proj_name,self.lonname,self.latname]
+      bkeys = [proj_name]
+      if not self.timedep_lonlat:
+         bkeys = [self.lonname,self.latname]
+
       # bkeys.append('model_depth')
       for key in bkeys:
          if key in vkeys:
@@ -531,7 +547,14 @@ class nc_getinfo:
    ###########################################################
 
    ###########################################################
-   def get_lonlat(self,vec2mat=True):
+   def get_lonlat(self,vec2mat=True,**kwargs):
+
+      if self.timedep_lonlat:
+         # return lon,lat using get_var
+         lon = self.get_var(self.lonname,**kwargs)
+         lat = self.get_var(self.latname,**kwargs)
+         return (lon.values.filled(np.nan),
+                 lat.values.filled(np.nan))
 
       nc    = ncopen(self.lonlat_file)
       lono  = nc.variables[self.lonname]
