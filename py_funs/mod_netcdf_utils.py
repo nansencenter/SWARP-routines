@@ -3,7 +3,6 @@ from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
 import os,sys
 import mod_reading as MR
-from pynextsim import lib as nsl
 
 ##########################################################
 def lonlat_names(ncfil):
@@ -793,10 +792,6 @@ class nc_getinfo:
       area=get_area_euclidean(self)
       """
       lon,lat = self.get_lonlat()
-      #proj = nsl.DefaultProjection()
-      #pp = proj.pyproj
-      #a = proj.a
-      #b = proj.b
       pp = pyproj_map
       a,b = earthshape
       x,y=pp(lon,lat)
