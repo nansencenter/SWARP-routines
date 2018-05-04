@@ -82,7 +82,7 @@ except:
 try:
     import ESMF # ESMF regridding
 except:
-    print('import pygrib failed')
+    print('import ESMF failed')
 
 
 try:
