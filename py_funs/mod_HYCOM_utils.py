@@ -101,10 +101,10 @@ def get_array_from_HYCOM_binary(infile,recno,dims=None,grid_dir='.',mask_land=Tr
    if nrec%n0==0:
       Nhyc  = nrec
    else:
-      Nhyc  = (1+nrec/n0)*n0
+      Nhyc  = int(1+nrec/n0)*n0
    rec_size = Nhyc*fmt_size
    #
-   fid   = open(infile,'rb')
+   fid = open(infile,'rb')
    for n in range(1,recno):
       fid.seek(rec_size,1) # seek in bytes (1: reference is current position)
    ######################################################################
@@ -191,7 +191,7 @@ def get_record_numbers_HYCOM(bfile):
          LUT   = {layer:n}
          MIN   = {layer:xmin}
          MAX   = {layer:xmax}
-         if word not in lut3d.keys():
+         if word not in lut3d:
             lut3d.update({word:LUT})
             min3d.update({word:MIN})
             max3d.update({word:MAX})
@@ -520,11 +520,11 @@ class HYCOM_binary_info:
       # info from bfile
       lut2d,lut3d = get_record_numbers_HYCOM(self.bfile)
       #
-      self.record_numbers  ,self.minvals2d,self.maxvals2d   = lut2d
-      self.record_numbers3d,self.minvals3d,self.maxvals3d   = lut3d
+      self.record_numbers  ,self.minvals2d,self.maxvals2d = lut2d
+      self.record_numbers3d,self.minvals3d,self.maxvals3d = lut3d
 
-      self.variables          = self.record_numbers.keys()
-      self.variables3d        = self.record_numbers3d.keys() 
+      self.variables          = list(self.record_numbers)
+      self.variables3d        = list(self.record_numbers3d) 
       self.all_variables      = 1*self.variables
       self.all_variables.extend(1*self.variables3d)
 
@@ -706,7 +706,7 @@ class HYCOM_binary_info:
          recno       = self.record_numbers3d[vname][layer]
          xmin        = self.minvals3d       [vname][layer]
          xmax        = self.maxvals3d       [vname][layer]
-         vbl         = get_array_from_HYCOM_binary(self.afile,recno,\
+         vbl         = get_array_from_HYCOM_binary(self.afile,recno,
                            dims=self.dims)
 
       extra_atts  = [['dimensions'],['i','j']]
