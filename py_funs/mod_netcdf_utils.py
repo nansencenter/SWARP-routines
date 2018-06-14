@@ -117,7 +117,8 @@ def get_time_converter(time):
     return time_converter
 
 
-def nc_get_var(ncfil, vblname, time_index=None, depth_index=0):
+def nc_get_var(ncfil, vblname, time_index=None,
+        depth_index=0, ij_range=None):
     """
     vbl=nc_get_var(ncfil, vblname, time_index=None)
     *ncfil is string (filename)
@@ -127,78 +128,95 @@ def nc_get_var(ncfil, vblname, time_index=None, depth_index=0):
     *vbl is a mod_reading.var_object instance
     """
 
-    nc   = ncopen(ncfil)
-    vbl0 = nc.variables[vblname]
+    with ncopen(ncfil) as nc:
+        vbl0 = nc.variables[vblname]
 
-    # get the netcdf attributes
-    attlist = vbl0.ncattrs()
-    attvals = []
-    for att in attlist:
-        attval = getattr(vbl0, att)
-        attvals.append(attval)
+        # get the netcdf attributes
+        attlist = vbl0.ncattrs()
+        attvals = []
+        for att in attlist:
+            attval = getattr(vbl0, att)
+            attvals.append(attval)
 
-    dims  = vbl0.dimensions
-    shape = vbl0.shape
+        dims  = vbl0.dimensions
+        shape = vbl0.shape
 
-    # some attributes that depend on rank
-    if vbl0.ndim==1:
-        vals = vbl0[:]
-    elif vbl0.ndim==2:
-        vals = vbl0[:, :]
-    elif vbl0.ndim==3:
-        if time_index is None:
-            if shape[0]==1:
-                vals = vbl0[0, :, :]
+        # do we want to limit the range
+        if ij_range is not None:
+            i0, i1, j0, j1 = ij_range
+
+        # some attributes that depend on rank
+        if vbl0.ndim==1:
+            vals = vbl0[:]
+
+        elif vbl0.ndim==2:
+            if ij_range is not None:
+                vals = vbl0[i0:i1, j0:j1]
+            else:
+                vals = vbl0[:, :]
+
+        elif vbl0.ndim==3:
+            if time_index is None:
+                if shape[0]==1:
+                    time_index = 0
+            if time_index is None:
+                if ij_range is not None:
+                    vals = vbl0[:, i0:i1, j0:j1]
+                else:
+                    vals = vbl0[:, :, :]
+            else:
+                if ij_range is not None:
+                    vals = vbl0[time_index, i0:i1, j0:j1]
+                else:
+                    vals = vbl0[time_index, :, :]
                 dims = dims[1:]
-            else:
-                vals = vbl0[:, :, :]
-        else:
-            vals = vbl0[time_index, :, :]
-            dims = dims[1:]
-    elif vbl0.ndim==4:
-        if time_index is None:
-            if shape[0]==1:
-                vals = vbl0[0, depth_index, :, :]
-                dims = dims[2:]
-            else:
-                vals = vbl0[:, depth_index, :, :]
-                dims = (dims[0], dims[2], dims[3]) 
-        else:
-            vals = vbl0[time_index, depth_index, :]
-            dims = dims[2:]
 
-    nc.close()
+        elif vbl0.ndim==4:
+            if time_index is None:
+                if shape[0]==1:
+                    time_index = 0
+
+            if time_index is None:
+                if ij_range is not None:
+                    vals = vbl0[:, depth_index, i0:i1, j0:j1]
+                else:
+                    vals = vbl0[:, depth_index, :, :]
+                dims = (dims[0], dims[2], dims[3]) 
+            else:
+                if ij_range is not None:
+                    vals = vbl0[time_index, depth_index, i0:i1, j0:j1]
+                else:
+                    vals = vbl0[time_index, depth_index, :, :]
+                dims = dims[2:]
 
     attlist.append('dimensions')
     attvals.append(dims)
-    vbl = MR.var_object(vals, extra_atts=[attlist, attvals])
-    return vbl
+    return MR.var_object(vals, extra_atts=[attlist, attvals])
 
 
 def nc_get_time(ncfil, time_name='time'):
     """
-    vbl=nc_get_var(ncfil,vblname,time_index=None)
+    vbl=nc_get_time(ncfil, time_name)
     *ncfil is string (filename)
     *vname is string (variable name)
     *time_index is record number to get
     *vbl is a mod_reading.var_object instance
     """
-
-    nc   = ncopen(ncfil)
-    time =  nc.variables[time_name][:]
-    nc.close()
+    with ncopen(ncfil) as nc:
+        time = nc.variables[time_name][:]
     return time
 
 
 def nc_get_var_atts(ncfil,vblname):
     """
-    vbl=nc_get_var(ncfil,vblname,time_index=None)
+    vbl=nc_get_var_atts(ncfil, vblname, time_index=None)
+    Parameters:
     *ncfil is string (filename)
     *vname is string (variable name)
-    *time_index is record number to get
+
+    Returns:
     *vbl is a mod_reading.var_object instance
     """
-
     nc   = ncopen(ncfil)
     vbl0 = nc.variables[vblname]
 
@@ -320,42 +338,40 @@ class nc_getinfo:
         self.lonlat_dim           = (self.lonname in self.dimensions)
 
         # basic lon-lat info
-        nc2 = ncopen(self.lonlat_file)
-        lon = nc2.variables[self.lonname]
-        lat = nc2.variables[self.latname]
-        if self.lonlat_dim:
-            self.lon0 = lon[0]
-            self.lat0 = lat[0]
+        with ncopen(self.lonlat_file) as nc2:
+            lon = nc2.variables[self.lonname]
+            lat = nc2.variables[self.latname]
+            if self.lonlat_dim:
+                self.lon0 = lon[0]
+                self.lat0 = lat[0]
 
-            # get example variable:
-            # - for eg plotting, need to make the lon/lat matrices
-            # (converted from vectors)
-            # have the same shape as the variables
-            vbl_dims = nc.variables[vkeys[0]].dimensions
-            for dkey in vbl_dims:
-                if dkey==self.lonname:
-                    self.lon_first = True
-                    self.shape     = (len(lon),len(lat))
-                    break
-                elif dkey==self.latname:
-                    self.lon_first = False
-                    self.shape     = (len(lat),len(lon))
-                    break
-        elif self.timedep_lonlat:
-            self.lon0  = None
-            self.lat0  = None
-            self.shape = lon[0,:,:].shape
-        else:
-            self.lon0  = lon[0,0]
-            self.lat0  = lat[0,0]
-            self.shape = lon.shape
-        nc2.close()
+                # get example variable:
+                # - for eg plotting, need to make the lon/lat matrices
+                # (converted from vectors)
+                # have the same shape as the variables
+                vbl_dims = nc.variables[vkeys[0]].dimensions
+                for dkey in vbl_dims:
+                    if dkey==self.lonname:
+                        self.lon_first = True
+                        self.shape     = (len(lon),len(lat))
+                        break
+                    elif dkey==self.latname:
+                        self.lon_first = False
+                        self.shape     = (len(lat),len(lon))
+                        break
+            elif self.timedep_lonlat:
+                self.lon0  = None
+                self.lat0  = None
+                self.shape = lon[0,:,:].shape
+            else:
+                self.lon0  = lon[0,0]
+                self.lat0  = lat[0,0]
+                self.shape = lon.shape
         
-
-        ny,nx        = self.shape
-        self.Npts_x  = nx     # No of points in x dirn
-        self.Npts_y  = ny     # No of points in y dirn
-        self.Npts    = nx*ny # Total no of points
+        ny, nx      = self.shape
+        self.Npts_x = nx    # No of points in x dirn
+        self.Npts_y = ny    # No of points in y dirn
+        self.Npts   = nx*ny # Total no of points
 
 
         # projection info:
@@ -500,7 +516,15 @@ class nc_getinfo:
             dt = self.reftime +timedelta(timeval) #NB works for fraction of days also
         return dt
 
-    def get_lonlat_new(self, vec2mat=True, **kwargs):
+    def get_lonlat_old(self, vec2mat=True, **kwargs):
+        """
+        Parameters:
+        * vec2mat (bool): if lon, lat are vectors (eg if they are dimensions),
+            convert to matrices
+
+        Returns:
+        * lon, lat (np.array)
+        """
 
         if self.timedep_lonlat:
             # return lon,lat using get_var
@@ -530,6 +554,19 @@ class nc_getinfo:
         return lon, lat
 
     def get_lonlat(self, vec2mat=True, **kwargs):
+        """
+        Parameters:
+        * vec2mat (bool): if lon, lat are vectors (eg if they are dimensions),
+            convert to matrices
+        * ij_range: list of integers to reduce the size of arrays
+            - can be: None or [i0, i1, j0, j1]
+            - let lon_all, lat_all = self.get_lonlat(vec2mat=True)
+            - let lon, lat = self.get_lonlat(vec2mat=True, ij_range=[i0, i1, j0, j1])
+            - lon = lon_all[i0:i1, j0:j1], lat = lat_all[i0:i1, j0:j1]
+
+        Returns:
+        * lon, lat (np.array)
+        """
 
         if self.timedep_lonlat:
             # return lon,lat using get_var
@@ -538,23 +575,48 @@ class nc_getinfo:
             return (lon.values.filled(np.nan),
                       lat.values.filled(np.nan))
 
+        ij_range = kwargs.get('ij_range', None)
+
         with ncopen(self.lonlat_file) as nc:
             lono = nc.variables[self.lonname]
             lato = nc.variables[self.latname]
 
-            if lono.ndim==2:
-                lon = lono[:, :]
-                lat = lato[:, :]
+            if ij_range is None:
+                if lono.ndim==2:
+                    lon = lono[:, :]
+                    lat = lato[:, :]
+                else:
+                    lon = lono[:]
+                    lat = lato[:]
+                    if vec2mat:
+                        if self.lon_first:
+                            # lon in cols, lat in rows
+                            lon, lat  = np.meshgrid(lon, lat, indexing='ij')
+                        else:
+                            # lon in rows, lat in cols
+                            lon, lat  = np.meshgrid(lon, lat, indexing='xy')
             else:
-                lon = lono[:]
-                lat = lato[:]
-                if vec2mat:
+                print('ij_range: ', ij_range)
+                i0, i1, j0, j1 = ij_range
+                if lono.ndim==2:
+                    lon = lono[i0:i1, j0:j1]
+                    lat = lato[i0:i1, j0:j1]
+                else:
                     if self.lon_first:
                         # lon in cols, lat in rows
-                        lon, lat  = np.meshgrid(lon, lat, indexing='ij')
+                        lon = lono[j0:j1]
+                        lat = lato[i0:i1]
                     else:
                         # lon in rows, lat in cols
-                        lon, lat  = np.meshgrid(lon, lat, indexing='xy')
+                        lon = lono[i0:i1]
+                        lat = lato[j0:j1]
+                    if vec2mat:
+                        if self.lon_first:
+                            # lon in cols, lat in rows
+                            lon, lat  = np.meshgrid(lon, lat, indexing='ij')
+                        else:
+                            # lon in rows, lat in cols
+                            lon, lat  = np.meshgrid(lon, lat, indexing='xy')
 
         return lon, lat
 
@@ -573,20 +635,19 @@ class nc_getinfo:
         return [x.min(), x.max(), y.min(), y.max()]
 
 
-    def get_var(self,vname,time_index=None):
+    def get_var(self, vname, **kwargs):
         """
-        Call: self.get_var(vname,time_index=None)
+        Call: self.get_var(vname, time_index=None)
         Inputs:
         vname = string (name of variable)
         time_index = integer: if time_index 
         Returns: mod_reading.var_object instance
         """
         vname = MR.check_names(vname, self.variables)
-        vbl   = nc_get_var(self.filename, vname, time_index=time_index)
-        return vbl
+        return nc_get_var(self.filename, vname, **kwargs)
 
 
-    def get_var_atts(self,vname):
+    def get_var_atts(self, vname):
         """
         Call: self.get_var(vname)
         Inputs:
@@ -601,9 +662,9 @@ class nc_getinfo:
         elif 'lat' in vname:
             vname = self.latname
         else:
-            vname = MR.check_names(vname,self.variables)
+            vname = MR.check_names(vname, self.variables)
 
-        return nc_get_var_atts(self.filename,vname)
+        return nc_get_var_atts(self.filename, vname)
 
 
     def get_global_atts(self):
