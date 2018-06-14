@@ -20,9 +20,9 @@ def lonlat_names(ncfil):
 
 
 def get_time_name(nc):
-    time_names  = ['time','time_counter'] # NEMO outputs call time "time_counter"
+    time_names = ['time','time_counter'] # NEMO outputs call time "time_counter"
 
-    time_name    = None
+    time_name = None
     for tname in time_names:
         if tname in nc.dimensions:
             time_name = tname
@@ -500,7 +500,36 @@ class nc_getinfo:
             dt = self.reftime +timedelta(timeval) #NB works for fraction of days also
         return dt
 
-    def get_lonlat(self,vec2mat=True,**kwargs):
+    def get_lonlat_new(self, vec2mat=True, **kwargs):
+
+        if self.timedep_lonlat:
+            # return lon,lat using get_var
+            lon = self.get_var(self.lonname, **kwargs)
+            lat = self.get_var(self.latname, **kwargs)
+            return (lon.values.filled(np.nan),
+                      lat.values.filled(np.nan))
+
+        with ncopen(self.lonlat_file) as nc:
+            lono = nc.variables[self.lonname]
+            lato = nc.variables[self.latname]
+
+            if lono.ndim==2:
+                lon = lono[:, :]
+                lat = lato[:, :]
+            else:
+                lon = lono[:]
+                lat = lato[:]
+                if vec2mat:
+                    if self.lon_first:
+                        # lon in cols, lat in rows
+                        lon, lat  = np.meshgrid(lon, lat, indexing='ij')
+                    else:
+                        # lon in rows, lat in cols
+                        lon, lat  = np.meshgrid(lon, lat, indexing='xy')
+
+        return lon, lat
+
+    def get_lonlat(self, vec2mat=True, **kwargs):
 
         if self.timedep_lonlat:
             # return lon,lat using get_var
