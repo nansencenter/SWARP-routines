@@ -12,11 +12,11 @@ def lonlat_names(ncfil):
     nc = ncopen(ncfil)
     for vbl in nc.variables:
         if 'lon' in vbl or 'Lon' in vbl:
-            lon    = vbl
+            lonname = vbl
         if 'lat' in vbl or 'Lat' in vbl:
-            lat    = vbl
+            latname = vbl
     nc.close()
-    return lon,lat
+    return lonname, latname
 
 
 def get_time_name(nc):
