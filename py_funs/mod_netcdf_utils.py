@@ -20,10 +20,19 @@ def lonlat_names(ncfil):
 
 
 def get_time_name(nc):
-    time_names = ['time', 'time_counter'] # NEMO outputs call time "time_counter"
+    """
+    NEMO outputs call time "time_counter"
+    CS2-SMOS thickness files use 'tc' for time dimension, but
+    'time_bnds' for time variable
+    """
+    time_names = 
 
     time_name = None
-    for tname in time_names:
+    for tname in [
+            'time',
+            'time_counter',
+            'time_bnds',
+            ]:
         if tname in nc.dimensions:
             time_name = tname
             break
