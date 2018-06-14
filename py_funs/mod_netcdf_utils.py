@@ -42,15 +42,14 @@ def get_time_converter(time):
     time_converter netCDF4.netcdftime.utime object
     """
 
-
-    tu             = time.units
-    time_info    = tu.split()
+    tu        = time.units
+    time_info = tu.split()
 
     # determine time format of reference point:
-    Unit  = time_info[0]# 1st word gives units
-    Unit  = Unit.strip('s')
+    Unit = time_info[0]# 1st word gives units
+    Unit = Unit.strip('s')
     if Unit=='econd':
-        Unit  = 'second'
+        Unit = 'second'
 
     time_info.remove(time_info[0])
     time_info.remove(time_info[0]) # 'since'
@@ -61,15 +60,15 @@ def get_time_converter(time):
     else:
         if ('T' in time_info[0]) and ('Z' in time_info[0]):
             # cdate+T...Z format for time
-            split1    = tu.split('T')
-            ctime     = split1[1].strip('Z')
-            cdate     = split1[0].split()[2]
+            split1 = tu.split('T')
+            ctime  = split1[1].strip('Z')
+            cdate  = split1[0].split()[2]
         
     # reformat cdate to YYYYMMDD
     if '-' in cdate:
         # remove '-'
         # - otherwise assume YYYYMMDD format
-        split2    = cdate.split('-')
+        split2 = cdate.split('-')
         for loop_i in range(1,3):
             if len(split2[loop_i])==1:
                 split2[loop_i] = '0'+split2[loop_i]
@@ -81,7 +80,7 @@ def get_time_converter(time):
     if ':' in ctime:
         # remove ':'
         # - otherwise assume HHMMSS format
-        split2    = ctime.split(':')
+        split2 = ctime.split(':')
         for loop_i in range(0,3):
             if (split2[loop_i])==1:
                 split2[loop_i] = '0'+split2[loop_i]
@@ -91,20 +90,20 @@ def get_time_converter(time):
     # now can make new string where format is known
     # - this is to pass into netcdftime.utime
     # - NB can't always use strftime/strptime since it only works after 1900
-    cyear0    = cdate[:4]
-    cmon0     = cdate[4:6]
-    cday0     = cdate[6:8]
-    chr0      = ctime[:2]
-    cmin0     = ctime[2:4]
-    csec0     = ctime[4:]
+    cyear0 = cdate[:4]
+    cmon0  = cdate[4:6]
+    cday0  = cdate[6:8]
+    chr0   = ctime[:2]
+    cmin0  = ctime[2:4]
+    csec0  = ctime[4:]
     #
-    year0     = int(cyear0)
-    mon0      = int(cmon0)
-    day0      = int(cday0)
-    hr0        = int(chr0)
-    min0      = int(cmin0)
-    sec0      = int(float(csec0))
-    reftime  = datetime(year0,mon0,day0,hr0,min0,sec0)
+    year0   = int(cyear0)
+    mon0    = int(cmon0)
+    day0    = int(cday0)
+    hr0     = int(chr0)
+    min0    = int(cmin0)
+    sec0    = int(float(csec0))
+    reftime = datetime(year0,mon0,day0,hr0,min0,sec0)
 
     init_string = (Unit+'s since '+
             cyear0+'-'+cmon0+'-'+cday0+' '+
@@ -118,9 +117,9 @@ def get_time_converter(time):
     return time_converter
 
 
-def nc_get_var(ncfil,vblname,time_index=None,depth_index=0):
+def nc_get_var(ncfil, vblname, time_index=None, depth_index=0):
     """
-    vbl=nc_get_var(ncfil,vblname,time_index=None)
+    vbl=nc_get_var(ncfil, vblname, time_index=None)
     *ncfil is string (filename)
     *vname is string (variable name)
     *time_index is record number to get
@@ -128,14 +127,14 @@ def nc_get_var(ncfil,vblname,time_index=None,depth_index=0):
     *vbl is a mod_reading.var_object instance
     """
 
-    nc     = ncopen(ncfil)
-    vbl0  = nc.variables[vblname]
+    nc   = ncopen(ncfil)
+    vbl0 = nc.variables[vblname]
 
     # get the netcdf attributes
-    attlist    = vbl0.ncattrs()
-    attvals  = []
+    attlist = vbl0.ncattrs()
+    attvals = []
     for att in attlist:
-        attval    = getattr(vbl0,att)
+        attval = getattr(vbl0, att)
         attvals.append(attval)
 
     dims  = vbl0.dimensions
@@ -143,42 +142,40 @@ def nc_get_var(ncfil,vblname,time_index=None,depth_index=0):
 
     # some attributes that depend on rank
     if vbl0.ndim==1:
-        vals  = vbl0[:]
+        vals = vbl0[:]
     elif vbl0.ndim==2:
-        vals  = vbl0[:,:]
+        vals = vbl0[:, :]
     elif vbl0.ndim==3:
         if time_index is None:
             if shape[0]==1:
-                vals  = vbl0[0,:,:]
-                dims  = dims[1:]
+                vals = vbl0[0, :, :]
+                dims = dims[1:]
             else:
-                vals  = vbl0[:,:,:]
+                vals = vbl0[:, :, :]
         else:
-            vals  = vbl0[time_index,:,:]
-            dims  = dims[1:]
+            vals = vbl0[time_index, :, :]
+            dims = dims[1:]
     elif vbl0.ndim==4:
         if time_index is None:
             if shape[0]==1:
-                vals  = vbl0[0,depth_index,:,:]
-                dims  = dims[2:]
+                vals = vbl0[0, depth_index, :, :]
+                dims = dims[2:]
             else:
-                vals  = vbl0[:,depth_index,:,:]
+                vals = vbl0[:, depth_index, :, :]
                 dims = (dims[0], dims[2], dims[3]) 
         else:
-            vals  = vbl0[time_index,depth_index,:]
-            dims  = dims[2:]
+            vals = vbl0[time_index, depth_index, :]
+            dims = dims[2:]
 
     nc.close()
 
     attlist.append('dimensions')
     attvals.append(dims)
-    vbl    = MR.var_object(vals,extra_atts=[attlist,attvals])
-
+    vbl = MR.var_object(vals, extra_atts=[attlist, attvals])
     return vbl
 
 
-
-def nc_get_time(ncfil,time_name='time'):
+def nc_get_time(ncfil, time_name='time'):
     """
     vbl=nc_get_var(ncfil,vblname,time_index=None)
     *ncfil is string (filename)
@@ -187,8 +184,8 @@ def nc_get_time(ncfil,time_name='time'):
     *vbl is a mod_reading.var_object instance
     """
 
-    nc     = ncopen(ncfil)
-    time  =  nc.variables[time_name][:]
+    nc   = ncopen(ncfil)
+    time =  nc.variables[time_name][:]
     nc.close()
     return time
 
@@ -202,14 +199,14 @@ def nc_get_var_atts(ncfil,vblname):
     *vbl is a mod_reading.var_object instance
     """
 
-    nc     = ncopen(ncfil)
-    vbl0  = nc.variables[vblname]
+    nc   = ncopen(ncfil)
+    vbl0 = nc.variables[vblname]
 
     # get the netcdf attributes
-    attlist  = vbl0.ncattrs()
-    atts      = {}
+    attlist = vbl0.ncattrs()
+    atts    = {}
     for att in attlist:
-        attval    = getattr(vbl0,att)
+        attval = getattr(vbl0,att)
         atts.update({att:attval})
     
     nc.close()
@@ -224,30 +221,30 @@ def nc_get_dim(ncfil,vblname):
     *vbl    is a mod_reading.var_object instance
     """
 
-    nc     = ncopen(ncfil)
+    nc = ncopen(ncfil)
 
     if vblname in nc.variables:
-        vbl0  = nc.variables[vblname]
+        vbl0 = nc.variables[vblname]
 
         # get the netcdf attributes
-        attlist    = vbl0.ncattrs()
-        attvals  = []
+        attlist = vbl0.ncattrs()
+        attvals = []
         for att in attlist:
-            attval    = getattr(vbl0,att)
+            attval = getattr(vbl0,att)
             attvals.append(attval)
         Xatts = [attlist,attvals]
 
-        vals  = vbl0[:]
+        vals = vbl0[:]
         nc.close()
 
-        return MR.var_object(vals,extra_atts=Xatts)
+        return MR.var_object(vals, extra_atts=Xatts)
     else:
         raise ValueError(vbl_name+' not given as an array')
 
 
 class nc_getinfo:
     """
-    mod_netcdf_utils.nc_getinfo(ncfil,lonlat_file=None)
+    mod_netcdf_utils.nc_getinfo(ncfil, lonlat_file=None)
     """
 
     def __init__(self,
@@ -261,15 +258,15 @@ class nc_getinfo:
 
         self.filename  = ncfil
         if ncfil[0]=='/':
-            bn                 = os.path.basename(ncfil)
-            self.basedir    = ncfil.strip(bn)
+            bn           = os.path.basename(ncfil)
+            self.basedir = ncfil.strip(bn)
         else:
-            bn                 = ncfil
-            self.basedir    = os.getcwd()+'/'
+            bn           = ncfil
+            self.basedir = os.getcwd()+'/'
 
-        self.basename      = os.path.splitext(bn)[0]
-        self.filetype      = 'netcdf'
-        self.object_type  = 'netcdf'
+        self.basename    = os.path.splitext(bn)[0]
+        self.filetype    = 'netcdf'
+        self.object_type = 'netcdf'
 
         # things to work with plotting stuff in mod_reading.py
         self.HYCOM_region     = None
@@ -282,7 +279,7 @@ class nc_getinfo:
         # - TODO could possibly be determined
         #    from netcdf metadata though
         # - could also be an input
-        self.reftime_sig  = 'start of forecast'
+        self.reftime_sig = 'start of forecast'
 
 
         # open the file
@@ -291,16 +288,14 @@ class nc_getinfo:
         vkeys = list(nc.variables.keys())
 
         # remove dimensions from variables
-        self.dimensions    = dkeys
+        self.dimensions = dkeys
         for key in dkeys:
             if key in vkeys:
                 vkeys.remove(key)
         Nkeys = len(vkeys)
 
-
         # time info:
         self.get_time_info(nc)
-
 
         # get global netcdf attributes
         class ncatts:
@@ -311,26 +306,26 @@ class nc_getinfo:
                 return
             def atts2list(self):
                 return vars(self).keys()
-        self.ncattrs    = ncatts(nc)
+        self.ncattrs = ncatts(nc)
 
 
 
         # grid info:
         if lonlat_file is None:
             lonlat_file = ncfil
-        self.lonlat_file  = lonlat_file
+        self.lonlat_file = lonlat_file
 
         # are lon,lat dimensions?
-        self.lonname,self.latname  = lonlat_names(self.lonlat_file)
-        self.lonlat_dim                = (self.lonname in self.dimensions)
+        self.lonname,self.latname = lonlat_names(self.lonlat_file)
+        self.lonlat_dim           = (self.lonname in self.dimensions)
 
         # basic lon-lat info
-        nc2    = ncopen(self.lonlat_file)
-        lon    = nc2.variables[self.lonname]
-        lat    = nc2.variables[self.latname]
+        nc2 = ncopen(self.lonlat_file)
+        lon = nc2.variables[self.lonname]
+        lat = nc2.variables[self.latname]
         if self.lonlat_dim:
-            self.lon0     = lon[0]
-            self.lat0     = lat[0]
+            self.lon0 = lon[0]
+            self.lat0 = lat[0]
 
             # get example variable:
             # - for eg plotting, need to make the lon/lat matrices
@@ -340,48 +335,48 @@ class nc_getinfo:
             for dkey in vbl_dims:
                 if dkey==self.lonname:
                     self.lon_first = True
-                    self.shape      = (len(lon),len(lat))
+                    self.shape     = (len(lon),len(lat))
                     break
                 elif dkey==self.latname:
                     self.lon_first = False
-                    self.shape      = (len(lat),len(lon))
+                    self.shape     = (len(lat),len(lon))
                     break
         elif self.timedep_lonlat:
-            self.lon0     = None
-            self.lat0     = None
-            self.shape    = lon[0,:,:].shape
+            self.lon0  = None
+            self.lat0  = None
+            self.shape = lon[0,:,:].shape
         else:
-            self.lon0     = lon[0,0]
-            self.lat0     = lat[0,0]
-            self.shape    = lon.shape
+            self.lon0  = lon[0,0]
+            self.lat0  = lat[0,0]
+            self.shape = lon.shape
         nc2.close()
         
 
-        ny,nx          = self.shape
+        ny,nx        = self.shape
         self.Npts_x  = nx     # No of points in x dirn
         self.Npts_y  = ny     # No of points in y dirn
-        self.Npts     = nx*ny # Total no of points
+        self.Npts    = nx*ny # Total no of points
 
 
         # projection info:
-        proj_list    = ['stereographic','projection_3',
+        proj_list = ['stereographic', 'projection_3',
                   'Polar_Stereographic_Grid'] 
         # could also have mercator or regular lon-lat
         HAVE_PROJ    = 0    # if 0 assume HYCOM native grid
         for proj_name in proj_list: 
             if proj_name in vkeys:
-                proj          = nc.variables[proj_name]
-                att_list     = proj.ncattrs()
-                HAVE_PROJ    = 1
+                proj      = nc.variables[proj_name]
+                att_list  = proj.ncattrs()
+                HAVE_PROJ = 1
                 break
 
         if HAVE_PROJ:
             # object with the netcdf attributes of projection variable
             # + some extra proj-dependent info 
-            att_list_full  = [att_list[i] for i in range(len(att_list))]
-            att_vals_full  = []
+            att_list_full = [att_list[i] for i in range(len(att_list))]
+            att_vals_full = []
             for att in att_list:
-                att_val  = proj.getncattr(att)
+                att_val = proj.getncattr(att)
                 att_vals_full.append(att_val)
 
             # specific to stereographic
@@ -395,14 +390,14 @@ class nc_getinfo:
                 dy = yy[1]-yy[0]
 
                 #convert to m
-                xunits    = nc.variables['x'].units.split()
-                fac        = 1.
+                xunits = nc.variables['x'].units.split()
+                fac    = 1.
                 if len(xunits)==2:
-                    fac    = float(xunits[0])
+                    fac = float(xunits[0])
                     xunits.remove(xunits[0])
 
                 if xunits[0]=='km':
-                    fac    = fac*1.e3
+                    fac = fac*1.e3
                 #
                 att_vals_full.extend([dx*fac,dy*fac])
 
@@ -423,9 +418,9 @@ class nc_getinfo:
             if key in vkeys:
                 vkeys.remove(key)
 
-        self.variables         = vkeys
-        self.variables3d      = None  #TODO enable treatment of 3d fields
-        self.all_variables    = vkeys
+        self.variables     = vkeys
+        self.variables3d   = None  #TODO enable treatment of 3d fields
+        self.all_variables = vkeys
 
         nc.close()
         return
@@ -445,19 +440,19 @@ class nc_getinfo:
         
         self.time_converter = get_time_converter(time)
 
-        arr                    = time[:] #time values
-        self.datetimes     = []
-        self.timevalues    = []
+        arr             = time[:] #time values
+        self.datetimes  = []
+        self.timevalues = []
 
-        Unit  = self.time_converter.units.lower()
+        Unit = self.time_converter.units.lower()
 
-        i32    = np.array([0],dtype='int32')[0]
-        for i,tval in enumerate(arr):
+        i32 = np.array([0],dtype='int32')[0]
+        for i, tval in enumerate(arr):
             if type(i32)==type(tval):
                 # can be problems if int32 format
                 tval  = int(tval)
             cdate = self.time_converter.num2date(tval).strftime(fmt)
-            dto    = datetime.strptime(cdate,fmt)         # now a proper datetime object
+            dto    = datetime.strptime(cdate, fmt)         # now a proper datetime object
             self.datetimes.append(dto)
 
             if i==0:
@@ -485,15 +480,15 @@ class nc_getinfo:
         dto    = datetime.datetime object - nearest value in self.datetimes to dto0
         time_index: dto=self.datetimes[time_index]
         """
-        dto            = min(self.datetimes, key=lambda x: abs(x - pivot))
-        time_index  = self.datetimes.index(dto)
-        return dto,time_index
+        dto        = min(self.datetimes, key=lambda x: abs(x - pivot))
+        time_index = self.datetimes.index(dto)
+        return dto, time_index
 
 
-    def timeval_to_datetime(self,timeval):
+    def timeval_to_datetime(self, timeval):
 
         # check format of time
-        i32    = np.array([0],dtype='int32')
+        i32 = np.array([0],dtype='int32')
         if type(i32[0])==type(timeval):
             timeval  = int(timeval)
 
@@ -509,54 +504,44 @@ class nc_getinfo:
 
         if self.timedep_lonlat:
             # return lon,lat using get_var
-            lon = self.get_var(self.lonname,**kwargs)
-            lat = self.get_var(self.latname,**kwargs)
+            lon = self.get_var(self.lonname, **kwargs)
+            lat = self.get_var(self.latname, **kwargs)
             return (lon.values.filled(np.nan),
                       lat.values.filled(np.nan))
 
-        nc     = ncopen(self.lonlat_file)
-        lono  = nc.variables[self.lonname]
-        lato  = nc.variables[self.latname]
+        with ncopen(self.lonlat_file) as nc:
+            lono = nc.variables[self.lonname]
+            lato = nc.variables[self.latname]
 
-        if lono.ndim==2:
-            lon    = lono[:,:]
-            lat    = lato[:,:]
-        else:
-            lon    = lono[:]
-            lat    = lato[:]
-            if vec2mat:
-                if self.lon_first:
-                    # lon in cols, lat in rows
-                    lon,lat  = np.meshgrid(lon,lat,indexing='ij')
-                else:
-                    # lon in rows, lat in cols
-                    lon,lat  = np.meshgrid(lon,lat,indexing='xy')
-        nc.close()
-
-        return lon,lat
-
-    def get_bbox(self,mapping):
-
-        nc     = ncopen(self.lonlat_file)
-        lono  = nc.variables[self.lonname]
-        lato  = nc.variables[self.latname]
-
-        if lono.ndim==2:
-            lon    = lono[:,:]
-            lat    = lato[:,:]
-        else:
-            lon    = lono[:]
-            lat    = lato[:]
-            if self.lon_first:
-                # lon in cols, lat in rows
-                lon,lat  = np.meshgrid(lon,lat,indexing='ij')
+            if lono.ndim==2:
+                lon = lono[:, :]
+                lat = lato[:, :]
             else:
-                # lon in rows, lat in cols
-                lon,lat  = np.meshgrid(lon,lat,indexing='xy')
-        nc.close()
+                lon = lono[:]
+                lat = lato[:]
+                if vec2mat:
+                    if self.lon_first:
+                        # lon in cols, lat in rows
+                        lon, lat  = np.meshgrid(lon, lat, indexing='ij')
+                    else:
+                        # lon in rows, lat in cols
+                        lon, lat  = np.meshgrid(lon, lat, indexing='xy')
 
-        x,y = mapping(lon,lat)
-        return [x.min(),x.max(),y.min(),y.max()]
+        return lon, lat
+
+    def get_bbox(self, mapping, **kwargs):
+        """
+        Parameters:
+        * mapping: pyproj mapping
+        * kwargs for self.get_lonlat()
+
+        Returns:
+        * bbox = [xmin, xmax, ymin, ymax], where x,y are coordinates specified by mapping
+        """
+
+        lon, lat = self.get_lonlat(**kwargs)
+        x, y = mapping(lon, lat)
+        return [x.min(), x.max(), y.min(), y.max()]
 
 
     def get_var(self,vname,time_index=None):
@@ -567,10 +552,8 @@ class nc_getinfo:
         time_index = integer: if time_index 
         Returns: mod_reading.var_object instance
         """
-
-        vname = MR.check_names(vname,self.variables)
-        vbl    = nc_get_var(self.filename,vname,time_index=time_index)
-
+        vname = MR.check_names(vname, self.variables)
+        vbl   = nc_get_var(self.filename, vname, time_index=time_index)
         return vbl
 
 
@@ -605,16 +588,16 @@ class nc_getinfo:
 
     def get_time(self):
         """
-        vbl=nc_get_var(ncfil,vblname,time_index=None)
+        vbl=nc_get_var(ncfil, vblname, time_index=None)
         *ncfil is string (filename)
         *vname is string (variable name)
         *time_index is record number to get
         *vbl is a mod_reading.var_object instance
         """
-        return nc_get_time(self.filename,time_name=self.time_name)
+        return nc_get_time(self.filename, time_name=self.time_name)
 
 
-    def get_dim(self,dname):
+    def get_dim(self, dname):
         """
         call: self.get_dim(dname)
         inputs:
@@ -622,119 +605,117 @@ class nc_getinfo:
         returns: mod_reading.var_object instance
         """
 
-        vname = MR.check_names(dname,self.dimensions)
-        vbl    = nc_get_dim(self.filename,dname)
+        vname = MR.check_names(dname, self.dimensions)
+        vbl   = nc_get_dim(self.filename, dname)
 
         return vbl
 
 
-    def imshow(self,var_opts,**kwargs):
+    def imshow(self, var_opts, **kwargs):
         """
-        pobj    = self.imshow(var_opts,time_index=0,pobj=None,
-              clim=None,add_cbar=True,clabel=None,show=True,
+        pobj    = self.imshow(var_opts, time_index=0, pobj=None,
+              clim=None, add_cbar=True, clabel=None, show=True,
               test_ijs=None)
         """
+        return MR.imshow(self, var_opts, **kwargs)
 
-        return MR.imshow(self,var_opts,**kwargs)
 
-
-    def plot_var(self,var_opts,**kwargs):
+    def plot_var(self, var_opts, **kwargs):
         """
-        pobj,bmap = self.plot_var(var_opts,time_index=0,
-            pobj=None,bmap=None,HYCOMreg='TP4',
-            clim=None,add_cbar=True,clabel=None,show=True,
-            test_lonlats=None,date_label=0):
+        pobj,bmap = self.plot_var(var_opts, time_index=0,
+            pobj=None, bmap=None, HYCOMreg='TP4',
+            clim=None, add_cbar=True, clabel=None, show=True,
+            test_lonlats=None, date_label=0):
         """
-
         return MR.plot_var(self,var_opts,**kwargs)
 
 
-    def plot_var_pair(self,var_opts1,var_opts2,pobj=None,bmap=None,**kwargs):
+    def plot_var_pair(self, var_opts1, var_opts2, pobj=None, bmap=None, **kwargs):
         """
-        pobj,bmap=self.plot_var_pair(var_opts1,var_opts2,pobj=None,bmap=None,**kwargs)
+        pobj, bmap=self.plot_var_pair(var_opts1, var_opts2, pobj=None, bmap=None, **kwargs)
         """
         return MR.plot_var_pair(self,var_opts1,var_opts2,**kwargs)
 
 
-    def make_png(self,var_opts,**kwargs):
+    def make_png(self, var_opts, **kwargs):
         """
-        pobj,bmap=self.make_png(var_opts,pobj=None,bmap=None,figdir='.',time_index=0,date_label=2,**kwargs)
+        pobj, bmap=self.make_png(var_opts, pobj=None, bmap=None, figdir='.', time_index=0, date_label=2, **kwargs)
         """
-        return MR.make_png(self,var_opts,**kwargs)
+        return MR.make_png(self, var_opts, **kwargs)
 
 
-    def make_png_pair(self,var_opts1,var_opts2,**kwargs):
+    def make_png_pair(self, var_opts1, var_opts2, **kwargs):
         """
-        pobj,bmap = self.make_png_pair(var_opts1,var_opts2,
-            pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
+        pobj,bmap = self.make_png_pair(var_opts1, var_opts2,
+            pobj=None, bmap=None, figdir='.', date_label=2, **kwargs)
         """
         return MR.make_png_pair(self,var_opts1,var_opts2,**kwargs)
 
 
-    def compare_ice_edge_obs(self,**kwargs):
+    def compare_ice_edge_obs(self, **kwargs):
         """
-        pobj,bmap,obsfil = self.compare_ice_edge_obs(pobj=None,bmap=None,time_index=0,
-            obs_type='OSISAF',date_label=1,figname=None,**kwargs)
+        pobj,bmap,obsfil = self.compare_ice_edge_obs(pobj=None, bmap=None, time_index=0,
+            obs_type='OSISAF', date_label=1, figname=None, **kwargs)
         """
-        return MR.compare_ice_edge_obs(self,**kwargs)
+        return MR.compare_ice_edge_obs(self, **kwargs)
 
 
-    def interp2points(self,varname,target_lonlats,**kwargs):
+    def interp2points(self, varname, target_lonlats, **kwargs):
         """
-        self.interp2points(varname,target_lonlats,**kwargs)
+        self.interp2points(varname, target_lonlats, **kwargs)
         * fobj is a file object eg from netcdf
         * varname is a string (name of variable in file object)
-        * target_lonlats = [target_lon,target_lat], target_lon/lat are numpy arrays
+        * target_lonlats = [target_lon, target_lat], target_lon/lat are numpy arrays
         * kwargs for mod_reading.interp2points()
         """
-        return MR.interp2points(self,varname,target_lonlats,**kwargs)
+        return MR.interp2points(self, varname, target_lonlats, **kwargs)
 
 
 
-    def get_external_data(self,ncfil,vname,dto_in=None,time_index=None,
-		lonlat_file=None,mapping=None):
+    def get_external_data(self, ncfil, vname, dto_in=None, time_index=None,
+		lonlat_file=None, mapping=None):
          target_lonlats = self.get_lonlat()
 
          # initialise mnu.nc_getinfo object
-         nci = mnu.nc_getinfo(ncfil,lonlat_file=lonlat_file)
+         nci = mnu.nc_getinfo(ncfil, lonlat_file=lonlat_file)
 
          tind = time_index
          if time_index is None:
              tind  = 0
              if type(dto_in) is not type(None):
-                 dto,tind  = nci.nearestDate(dto_in)
-         nci = nc_getinfo(ncfil,lonlat_file=lonlat_file)
+                 dto,tind = nci.nearestDate(dto_in)
+         nci = nc_getinfo(ncfil, lonlat_file=lonlat_file)
 
          if time_index is not None:
              tind = time_index
          elif type(dto_in) is not type(None):
-             dto,tind  = self.nearestDate(dto_in)
+             dto, tind = self.nearestDate(dto_in)
          else:
              tind = 0
 
-         vout  = nci.interp2points(vname, target_lonlats,
-                                                time_index=tind,
-                                                mapping=mapping)
+         vout = nci.interp2points(vname, target_lonlats,
+                 time_index=tind,
+                 mapping=mapping)
          return vout
 
 
-    def get_area_euclidean(self,pyproj_map,earthshape):
+    def get_area_euclidean(self, pyproj_map, earthshape):
         """ 
         Calculates element area from netcdf file
-        area=get_area_euclidean(self)
+        area  = get_area_euclidean(self)
         """
         lon,lat = self.get_lonlat()
         pp = pyproj_map
-        a,b = earthshape
-        x,y=pp(lon,lat)
-        dy=np.mean(y[:,2]-y[:,1])
-        dx=np.mean(x[1,:]-x[0,:])
+        a, b = earthshape
+        x, y = pp(lon, lat)
+        dy = np.mean(y[:, 2]-y[:, 1])
+        dx = np.mean(x[1, :]-x[0, :])
         area = dx*dy
         return area
         
 
 
-    def MIZmap(self,**kwargs):
+    def MIZmap(self, **kwargs):
         """
         Call  : self.MIZmap(var_name='dmax',do_sort=False,EastOnly=True,plotting=True,**kwargs)
         Inputs:
@@ -743,40 +724,36 @@ class nc_getinfo:
                 outdir='.',do_sort=True
         Returns: MIZchar.MIZpoly object
         """
-        return MR.MIZmap(self,**kwargs)
+        return MR.MIZmap(self, **kwargs)
 
 
-    def areas_of_disagreement(self,**kwargs):
+    def areas_of_disagreement(self, **kwargs):
         """
         MPdict,tfiles,Pdict = self.areas_of_disagreement(obs_type='OSISAF',
                 time_index=0,do_sort=True,EastOnly=True,
                 plotting=True,HYCOMreg='Arctic',**kwargs)
         kwargs: outdir='.',do_sort=True
         """
-        return MR.areas_of_disagreement(self,**kwargs)
+        return MR.areas_of_disagreement(self, **kwargs)
 
 
-    def make_png_all(self,var_opts,**kwargs):
+    def make_png_all(self, var_opts, **kwargs):
         """
-        self.make_png_all(var_opts,HYCOMreg=None,figdir='.')
+        self.make_png_all(var_opts, HYCOMreg=None, figdir='.')
         """
-
-        MR.make_png_all(self,var_opts,**kwargs)
+        MR.make_png_all(self, var_opts, **kwargs)
         return
 
 
-    def make_png_pair_all(self,var_opts1,var_opts2,**kwargs):
+    def make_png_pair_all(self, var_opts1, var_opts2, **kwargs):
         """
         self.make_png_pair_all(var_opts1,var_opts2,HYCOMreg=None,figdir='.')
         """
-
-        MR.make_png_pair_all(self,var_opts1,var_opts2,**kwargs)
+        MR.make_png_pair_all(self, var_opts1, var_opts2, **kwargs)
         return
 
-
-    def compare_ice_edge_obs_all(self,**kwargs):
-        out    = MR.compare_ice_edge_obs(self,**kwargs)
-        return out
+    def compare_ice_edge_obs_all(self, **kwargs):
+        return MR.compare_ice_edge_obs(self, **kwargs)
 
 def get_amsr2_gdal_dataset(filename):
     ''' Return geocoded GDAL Dataset matching AMSR2 Arc_*_res3.125_pyres.nc
