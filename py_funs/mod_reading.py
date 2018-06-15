@@ -505,17 +505,17 @@ def check_names(vname,variables):
 
     lists = []
 
-   # ice conc alt names
-   lists.append(['ficem','fice','ice_conc','icec',\
-                  'concentration','sea_ice_concentration',\
-                  'ice fraction','sic',
-                  'Concentration'])
+    # ice conc alt names
+    lists.append(['ficem','fice','ice_conc','icec',\
+                   'concentration','sea_ice_concentration',\
+                   'ice fraction','sic',
+                   'Concentration'])
 
-   # ice thick alt names
-   lists.append(['hicem','hice','ice_thick','icetk',\
-                  'sea_ice_thickness','thickness',\
-                  'sit', 'analysis_thickness',
-                  'Thickness'])
+    # ice thick alt names
+    lists.append(['hicem','hice','ice_thick','icetk',\
+                   'sea_ice_thickness','thickness',\
+                   'sit', 'analysis_thickness',
+                   'Thickness'])
 
     # floe size alt names
     lists.append(['dfloe','dmax','Dfloe','Dmax'])
@@ -941,21 +941,17 @@ def imshow(fobj,var_opts,pobj=None,
             mask[good]  = (data[good]>var_opts.upper_limit)
         Marr  = np.ma.array(data,mask=mask)
 
-   cmap = plt.cm.get_cmap(cmap, 25)
-   
-   if fobj.filetype=='netcdf':
-      PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax,
-              cmap=cmap)
-   else:
-      PC = ax.imshow(
-              Marr.transpose(),
-              origin='lower',
-              vmin=vmin,vmax=vmax,
-              cmap=cmap)
+    cmap = plt.cm.get_cmap(cmap, 25)
+    
     if fobj.filetype=='netcdf':
-        PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax)
+        PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax,
+                cmap=cmap)
     else:
-        PC = ax.imshow(Marr.transpose(),origin='lower',vmin=vmin,vmax=vmax)
+        PC = ax.imshow(
+                Marr.transpose(),
+                origin='lower',
+                vmin=vmin,vmax=vmax,
+                cmap=cmap)
 
     if add_cbar:
 
