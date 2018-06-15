@@ -125,7 +125,7 @@ def get_time_converter(time):
 
 
 def nc_get_var(ncfil, vblname, time_index=None,
-        depth_index=0, ij_range=None):
+        depth_index=0, ij_range=None, **kwargs):
     """
     vbl=nc_get_var(ncfil, vblname, time_index=None)
     *ncfil is string (filename)
@@ -134,6 +134,8 @@ def nc_get_var(ncfil, vblname, time_index=None,
     *depth_index is horizon number to get
     *vbl is a mod_reading.var_object instance
     """
+    # NB kwargs is not used, but is there as a dummy to avoid having to sort kwargs
+    # before calling this function
 
     with ncopen(ncfil) as nc:
         vbl0 = nc.variables[vblname]
