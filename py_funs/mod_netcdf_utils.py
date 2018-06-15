@@ -469,12 +469,17 @@ class nc_getinfo:
 
         Unit = self.time_converter.units.lower()
 
-        i32 = np.array([0],dtype='int32')[0]
         for i, tval in enumerate(arr):
-            if type(i32)==type(tval):
+            if isinstance(tval,np.int32):
                 # can be problems if int32 format
                 tval  = int(tval)
-            cdate = self.time_converter.num2date(tval).strftime(fmt)
+            try:
+                cdate = self.time_converter.num2date(tval).strftime(fmt)
+            except ValueError:
+                # might get errors if close to end/start of month
+                # eg CS2-SMOS
+                tval=round(float(tval))
+                cdate = self.time_converter.num2date(tval).strftime(fmt)
             dto    = datetime.strptime(cdate, fmt)         # now a proper datetime object
             self.datetimes.append(dto)
 
