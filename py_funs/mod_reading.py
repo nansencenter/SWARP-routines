@@ -567,11 +567,14 @@ def check_names(vname,variables):
    # ice conc alt names
    lists.append(['ficem','fice','ice_conc','icec',\
                   'concentration','sea_ice_concentration',\
-                  'ice fraction'])
+                  'ice fraction','sic',
+                  'Concentration'])
 
    # ice thick alt names
    lists.append(['hicem','hice','ice_thick','icetk',\
-                  'sea_ice_thickness','thickness','sea_ice_concentration'])
+                  'sea_ice_thickness','thickness',\
+                  'sit', 'analysis_thickness',
+                  'Thickness'])
 
    # floe size alt names
    lists.append(['dfloe','dmax','Dfloe','Dmax'])
@@ -876,7 +879,7 @@ def CompVar(fobj1,fobj2,vname,layer=0,time_index=0):
 #######################################################################
 def imshow(fobj,var_opts,pobj=None,\
       clim=None,add_cbar=True,clabel=None,show=True,\
-      test_ijs=None,time_index=0):
+      test_ijs=None,time_index=0, cmap=None):
    """
    pobj   = imshow(fobj,var_opts,time_index=0,pobj=None,\
         clim=None,add_cbar=True,clabel=None,show=True,\
@@ -1031,11 +1034,18 @@ def imshow(fobj,var_opts,pobj=None,\
          mask[good]  = (data[good]>var_opts.upper_limit)
       Marr  = np.ma.array(data,mask=mask)
    #########################################################################
-
+    
+   cmap = plt.cm.get_cmap(cmap, 25)
+   
    if fobj.filetype=='netcdf':
-      PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax)
+      PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax,
+              cmap=cmap)
    else:
-      PC = ax.imshow(Marr.transpose(),origin='lower',vmin=vmin,vmax=vmax)
+      PC = ax.imshow(
+              Marr.transpose(),
+              origin='lower',
+              vmin=vmin,vmax=vmax,
+              cmap=cmap)
 
    if add_cbar:
 
@@ -1123,6 +1133,7 @@ def interp2points(fobj,varname,target_lonlats,
        x,y         = mapping(lons,lats)
    else:
        x,y = target_lonlats
+
 
    # do interpolation
    fvals = reproj_mod2obs(X,Y,Z,x,y,**kwargs) #numpy masked array
