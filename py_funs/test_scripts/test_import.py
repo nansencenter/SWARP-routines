@@ -16,7 +16,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
 from datetime import date, timedelta
 import subprocess
-import shapely.geometry as shgeom
+try:
+   import shapely.geometry as shgeom
+except:
+   print("no shapely")
 import shapefile #(pyshp package)
 import glob
 import smtplib
@@ -28,13 +31,19 @@ from operator import itemgetter as itg
 from getopt import getopt
 import shutil
 
-from skimage import measure as msr
-from skimage.morphology import opening, closing
+try:
+   from skimage import measure as msr
+   from skimage.morphology import opening, closing
+except:
+   print("no skimage")
 
 from netCDF4 import Dataset
 from netCDF4 import netcdftime as NCT
 
-import rtree
+try:
+   import rtree
+except:
+   print("no rtree")
 
 
 from distutils.util import strtobool
@@ -73,7 +82,7 @@ except:
 try:
     import ESMF # ESMF regridding
 except:
-    print('import pygrib failed')
+    print('import ESMF failed')
 
 
 try:
