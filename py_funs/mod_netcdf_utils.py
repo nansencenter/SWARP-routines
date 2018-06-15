@@ -765,14 +765,18 @@ class nc_getinfo:
          return vout
 
 
-    def get_area_euclidean(self, pyproj_map, earthshape):
+    def get_area_euclidean(self, pyproj_map, **kwargs):
         """ 
         Calculates element area from netcdf file
-        area  = get_area_euclidean(self)
+        area  = self.get_area_euclidean(pyproj_map, **kwargs)
+        Parameters:
+        * pyproj_map 
+        * kwargs for self.get_lonlat
+        Returns:
+        * area (float)
         """
-        lon,lat = self.get_lonlat()
+        lon,lat = self.get_lonlat(**kwargs)
         pp = pyproj_map
-        a, b = earthshape
         x, y = pp(lon, lat)
         dy = np.mean(y[:, 2]-y[:, 1])
         dx = np.mean(x[1, :]-x[0, :])
