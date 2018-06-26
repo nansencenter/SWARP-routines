@@ -322,7 +322,7 @@ class nc_getinfo:
         Nkeys = len(vkeys)
 
         # time info:
-        self.get_time_info(nc)
+        self._set_time_info(nc)
 
         # get global netcdf attributes
         class ncatts:
@@ -451,7 +451,13 @@ class nc_getinfo:
         return
 
 
-    def get_time_info(self,nc):
+    def _set_time_info(self, nc):
+        """
+        * sets self.time_name  = name of time variable
+        * sets self.time_dim = True or False - is time is a dimension
+        * sets self.time_converter = function to convert time value to datetime
+        * sets datetimes
+        """
 
         self.time_name = get_time_name(nc)
         self.time_dim  = (self.time_name is not None)
@@ -460,8 +466,8 @@ class nc_getinfo:
             self.datetimes = None
             return
 
-        time  = nc.variables[self.time_name]
-        fmt    = '%Y-%m-%d %H:%M:%S'
+        time = nc.variables[self.time_name]
+        fmt  = '%Y-%m-%d %H:%M:%S'
         
         self.time_converter = get_time_converter(time)
 
@@ -472,7 +478,7 @@ class nc_getinfo:
         Unit = self.time_converter.units.lower()
 
         for i, tval in enumerate(arr):
-            if isinstance(tval,np.int32):
+            if isinstance(tval, np.int32):
                 # can be problems if int32 format
                 tval  = int(tval)
             try:
@@ -500,7 +506,6 @@ class nc_getinfo:
                 self.timeunits = 'day'
             
         self.number_of_time_records    = len(self.datetimes)
-        return
 
     
     def nearestDate(self, pivot):
