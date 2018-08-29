@@ -3,7 +3,10 @@ import os,sys
 
 from datetime import datetime,timedelta
 from netCDF4 import Dataset as ncopen
-from netCDF4 import netcdftime as NCT
+try:
+    from netCDF4 import netcdftime as NCT
+except:
+    import netcdftime as NCT
 
 from osgeo import gdal, ogr, osr
 import mod_reading as MR
@@ -70,7 +73,7 @@ def get_time_converter(time):
             split1 = tu.split('T')
             ctime  = split1[1].strip('Z')
             cdate  = split1[0].split()[2]
-        
+
     # reformat cdate to YYYYMMDD
     if '-' in cdate:
         # remove '-'
@@ -190,7 +193,7 @@ def nc_get_var(ncfil, vblname, time_index=None,
                     vals = vbl0[:, depth_index, i0:i1, j0:j1]
                 else:
                     vals = vbl0[:, depth_index, :, :]
-                dims = (dims[0], dims[2], dims[3]) 
+                dims = (dims[0], dims[2], dims[3])
             else:
                 if ij_range is not None:
                     vals = vbl0[time_index, depth_index, i0:i1, j0:j1]
@@ -235,7 +238,7 @@ def nc_get_var_atts(ncfil,vblname):
     for att in attlist:
         attval = getattr(vbl0,att)
         atts.update({att:attval})
-    
+
     nc.close()
     return atts
 
@@ -376,7 +379,7 @@ class nc_getinfo:
                 self.lon0  = lon[0,0]
                 self.lat0  = lat[0,0]
                 self.shape = lon.shape
-        
+
         ny, nx      = self.shape
         self.Npts_x = nx    # No of points in x dirn
         self.Npts_y = ny    # No of points in y dirn
@@ -385,10 +388,10 @@ class nc_getinfo:
 
         # projection info:
         proj_list = ['stereographic', 'projection_3',
-                  'Polar_Stereographic_Grid'] 
+                  'Polar_Stereographic_Grid']
         # could also have mercator or regular lon-lat
         HAVE_PROJ    = 0    # if 0 assume HYCOM native grid
-        for proj_name in proj_list: 
+        for proj_name in proj_list:
             if proj_name in vkeys:
                 proj      = nc.variables[proj_name]
                 att_list  = proj.ncattrs()
@@ -397,7 +400,7 @@ class nc_getinfo:
 
         if HAVE_PROJ:
             # object with the netcdf attributes of projection variable
-            # + some extra proj-dependent info 
+            # + some extra proj-dependent info
             att_list_full = [att_list[i] for i in range(len(att_list))]
             att_vals_full = []
             for att in att_list:
@@ -429,7 +432,7 @@ class nc_getinfo:
             self.proj_info = MR.proj_obj(att_list_full,att_vals_full)
         else:
             self.proj_info = []
-        
+
         # variable list
         # - remove some other variables from vkeys
         # - eg projection,lon,lat
@@ -468,7 +471,7 @@ class nc_getinfo:
 
         time = nc.variables[self.time_name]
         fmt  = '%Y-%m-%d %H:%M:%S'
-        
+
         self.time_converter = get_time_converter(time)
 
         arr             = time[:] #time values
@@ -504,10 +507,10 @@ class nc_getinfo:
             elif Unit=='days':
                 self.timevalues.append(tdiff/3600./24.)    # keep as days
                 self.timeunits = 'day'
-            
+
         self.number_of_time_records    = len(self.datetimes)
 
-    
+
     def nearestDate(self, pivot):
         """
         dto,time_index = self.nearestDate(dto0)
@@ -623,7 +626,7 @@ class nc_getinfo:
         Call: self.get_var(vname, time_index=None)
         Inputs:
         vname = string (name of variable)
-        time_index = integer: if time_index 
+        time_index = integer: if time_index
         Returns: mod_reading.var_object instance
         """
         vname = MR.check_names(vname, self.variables)
@@ -773,11 +776,11 @@ class nc_getinfo:
 
 
     def get_area_euclidean(self, pyproj_map, **kwargs):
-        """ 
+        """
         Calculates element area from netcdf file
         area  = self.get_area_euclidean(pyproj_map, **kwargs)
         Parameters:
-        * pyproj_map 
+        * pyproj_map
         * kwargs for self.get_lonlat
         Returns:
         * area (float)
@@ -789,7 +792,7 @@ class nc_getinfo:
         dx = np.mean(x[1, :]-x[0, :])
         area = dx*dy
         return area
-        
+
 
 
     def MIZmap(self, **kwargs):
@@ -837,7 +840,7 @@ def get_amsr2_gdal_dataset(filename):
 
     Parameters of the projection (min/max of x/y and proj4 string) are hardcoded
     based on experiments using Nansat.
-     
+
     Parameters
     ----------
         filename : str
@@ -847,14 +850,14 @@ def get_amsr2_gdal_dataset(filename):
         dst_ds : GDALDataset
             destination dataset in memory
     '''
-    
+
     # check that file is correct
     ds = gdal.Open(filename)
     title = ds.GetMetadata()['NC_GLOBAL#title']
     if (not 'Daily averaged Arctic sea ice concentration derived from AMSR2' in
          title):
         raise Exception('Not correct inpu file %s' % filename)
-    
+
     # hardcode resolution and min/max of X/Y coordinates in meters
     grid_resolution = 3125
     min_x = -3800000
