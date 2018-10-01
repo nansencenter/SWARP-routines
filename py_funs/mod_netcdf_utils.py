@@ -437,10 +437,14 @@ class nc_getinfo:
         # - remove some other variables from vkeys
         # - eg projection,lon,lat
         # - TODO model_depth?
-        bkeys = [proj_name]
+        if HAVE_PROJ:
+            vkeys.remove(proj_name)
         if not self.timedep_lonlat:
-            bkeys = [self.lonname,self.latname]
+            for key in [self.lonname, self.latname]:
+                vkeys.remove(key)
 
+        # other variables to remove
+        bkeys = []
         # bkeys.append('model_depth')
         for key in bkeys:
             if key in vkeys:
