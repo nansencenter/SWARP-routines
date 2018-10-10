@@ -441,7 +441,8 @@ class nc_getinfo:
             vkeys.remove(proj_name)
         if not self.timedep_lonlat:
             for key in [self.lonname, self.latname]:
-                vkeys.remove(key)
+                if key in vkeys:
+                    vkeys.remove(key)
 
         # other variables to remove
         bkeys = []
