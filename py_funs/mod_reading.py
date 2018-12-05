@@ -1,11 +1,26 @@
+import os, sys
 import numpy as np
 from matplotlib import pyplot as plt
-from datetime import datetime,timedelta
-import fns_plotting as Fplt
+from matplotlib import cm
+
+from datetime import datetime, timedelta
 from scipy.interpolate import griddata as grd
-import os,sys
 import shapely.geometry as shg
 import geometry_sphere as GS
+import pyproj
+import scipy.ndimage as NDI
+import time
+
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.basemap import Basemap
+import pygrib
+from ncepgrib2 import Grib2Encode as g2e
+from ncepgrib2 import Grib2Decode as g2d
+
+import mod_netcdf_utils as MNU
+import mod_HYCOM_utils as MHU
+import MIZchar as mc
+import fns_plotting as Fplt
 
 
 def map_OSISAF(map_type="pyproj"):
@@ -15,11 +30,9 @@ def map_OSISAF(map_type="pyproj"):
     lat0  = 90
     lat1  = 70
     if map_type=="pyproj":
-        import pyproj
         return pyproj.Proj(proj='stere',a=a,b=b,
                                  lat_ts=lat1,lat_0=lat0,lon_0=lon0)
     elif map_type=="basemap":
-        from mpl_toolkits.basemap import Basemap
         return Basemap(width=7600000,height=11200000,resolution='i',
                             rsphere=(a,b),projection='stere',
                             lat_ts=lat1,lat_0=lat0,lon_0=lon0)
@@ -254,8 +267,6 @@ class time_series:
 
     def xlabel_dates(self,ax,info):
 
-        from datetime import datetime as DT
-
         # xticks
         xt     = []
         XT     = []
@@ -278,7 +289,7 @@ class time_series:
                 year += 1
 
             if i>0:
-                dto    = DT(year,mon,1)
+                dto    = datetime(year,mon,1)
                 xt.append(self.convert_datetime(dto,info))
                 XT.append(dto.strftime('%d %b'))
 
@@ -429,16 +440,16 @@ def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
 
     # Interpolation 
     # - can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
-    C      = np.array([X1d,Y1d]).T
-    Z2     = grd(C,Z1d,(X2,Y2),method=method)
+    C  = np.array([X1d, Y1d]).T
+    Z2 = grd(C, Z1d, (X2, Y2), method=method)
 
     # check output and add mask
     mask2 = np.isnan(Z2)
     if mask is not None:
         # apply union of mask and model nans
-        mask2=np.logical_or(mask2,mask)
+        mask2 = np.logical_or(mask1, mask)
      
-    Z2 = np.ma.array(Z2,mask=mask2)
+    Z2 = np.ma.array(Z2, mask=mask2)
     return(Z2)
 
 
@@ -697,7 +708,6 @@ class var_object:
 
 
 def nc_getinfo(ncfil,time_index=None,lonlat_file=None):
-    import mod_netcdf_utils as MNU
     nci    = MNU.nc_getinfo(ncfil,time_index=time_index,
                 lonlat_file=lonlat_file)
     return nci
@@ -705,9 +715,6 @@ def nc_getinfo(ncfil,time_index=None,lonlat_file=None):
 
 def print_grib_messages(grb2fil,N=None):
 
-    import pygrib
-    from ncepgrib2 import Grib2Encode as g2e
-    from ncepgrib2 import Grib2Decode as g2d
 
     gr         = pygrib.open(grb2fil)
 
@@ -729,7 +736,6 @@ def print_grib_messages(grb2fil,N=None):
 
 
 def HYCOM_binary_info(fname,gridpath=None):
-    import mod_HYCOM_utils as MHU
     hbi    = MHU.HYCOM_binary_info(fname,gridpath=gridpath)
     return hbi
 
@@ -799,8 +805,6 @@ def imshow(fobj,var_opts,pobj=None,
           test_ijs=None)
     """
 
-    from mpl_toolkits.basemap import Basemap
-    from matplotlib import cm
 
     var_opts     = check_var_opts(var_opts,fobj.all_variables)
     vname         = var_opts.name
@@ -1004,7 +1008,6 @@ def interp2points(fobj,varname,target_lonlats,
     if mapping is None:
         if not latlon:
             raise ValueError('need to provide mapping if latlon=False')
-        import pyproj
         souths    = lat[lat<0]
         lat_0     = 90.
         lon_0     = -45.
@@ -1043,8 +1046,6 @@ def plot_var(fobj,var_opts,time_index=0,
         smoothing=0,
         clim=None,add_cbar=True,clabel=None,show=True,
         test_lonlats=None):
-
-    from matplotlib import cm
 
     var_opts     = check_var_opts(var_opts,fobj.all_variables)
     vname         = var_opts.name
@@ -1237,7 +1238,6 @@ def plot_var(fobj,var_opts,time_index=0,
     # pcolor plot
     if Marr is not None:
         if smoothing>0:
-            import scipy.ndimage as NDI
 
             # smooth by avg over neighbours
             if smoothing==1:
@@ -1250,10 +1250,10 @@ def plot_var(fobj,var_opts,time_index=0,
                                             [1, 0, 0, 1],
                                             [1, 1, 1, 1]],dtype='float')
 
-            DT                     = NDI.convolve(Marr.data, kernel/kernel.sum(), mode='constant', cval=0.0)
+            DT = NDI.convolve(Marr.data, kernel/kernel.sum(), mode='constant', cval=0.0)
             kernel[kernel==0] = 1.
-            MSK                    = NDI.convolve(np.array(Marr.mask,dtype='float'), kernel/kernel.sum(), mode='constant', cval=1.0) 
-            MSK[MSK>0]          = 1.
+            MSK = NDI.convolve(np.array(Marr.mask,dtype='float'), kernel/kernel.sum(), mode='constant', cval=1.0) 
+            MSK[MSK>0] = 1.
 
             Marr  = np.ma.array(DT,mask=np.array(MSK,dtype='bool'))
             del DT,MSK
@@ -1283,7 +1283,6 @@ def plot_var(fobj,var_opts,time_index=0,
             else:
                 # new way - doesn't work for multiple plots
                 # - worked for side-by-side plots
-                from mpl_toolkits.axes_grid1 import make_axes_locatable
                 divider  = make_axes_locatable(ax)
                 cax        = divider.append_axes("right", size="5%", pad=0.15)
                 cbar      = fig.colorbar(PC,cax=cax)
@@ -1689,8 +1688,6 @@ def MIZmap(fobj,var_name='dmax',time_index=0,
         which contains locations of output files, and some other info
     """
 
-    import MIZchar as mc
-
     vname = check_names(var_name,fobj.variables)
     fname = check_names('fice',fobj.variables)    # need fice for ice mask
     if var_name == 'dmax':
@@ -1816,7 +1813,6 @@ def MIZmap(fobj,var_name='dmax',time_index=0,
             lonc,latc    = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),
                                 NH=True,inverse=True)
             # make basemap
-            from mpl_toolkits.basemap import Basemap
             bmap  = Basemap(projection='stere',lon_0=lonc,lat_0=latc,
                                  width=width,height=height,
                                  resolution='i')
@@ -2027,7 +2023,6 @@ def areas_of_disagreement(fobj,time_index=0,
                                     - corners = [lons,lats], where lons=[DL,DR,UR,UL]
     """
 
-    import MIZchar as mc
     PRINT_INFO  = 1
 
     dtmo      = fobj.datetimes[time_index] #date of model
@@ -2275,7 +2270,6 @@ def areas_of_disagreement(fobj,time_index=0,
                 lonc,latc    = GS.polar_stereographic_simple(np.array([xcen]),np.array([ycen]),
                                     NH=True,inverse=True)
                 # make basemap
-                from mpl_toolkits.basemap import Basemap
                 bmap  = Basemap(projection='stere',lon_0=lonc,lat_0=latc,
                                      width=width,height=height,
                                      resolution='i')
@@ -2390,7 +2384,6 @@ def time_average(fobj,varname,start_date=None,end_date=None,**kwargs):
 
 
 def smooth(lon,lat,V,radius,mask=None,resolution=None):
-     import time
 
      nx,ny    = lon.shape
      Vav      = np.zeros((nx,ny))
@@ -2997,7 +2990,6 @@ class file_list:
         eg gridpath - for HYCOM binary files - string with path to directory with regional.grid.[a,b]
             and regional.depth.[a,b]
         """
-        import os
 
         self.object_type  = 'file_list'
         self.directory     = directory
@@ -3247,7 +3239,6 @@ class file_list:
 
 class polygon_file_list:
     def __init__(self,file_info=None,directory=None,prefix='TP4archv_wav.',suffix='_dmax.txt',date_format='%Y%m%dT%H%M%SZ',add_day=False):
-        import os
 
         self.object_type  = 'polygon_file_list'
         if file_info is not None:
@@ -3315,7 +3306,6 @@ class polygon_file_list:
         pil = self.read_file(time_index=0)
         pil is a poly_info_list object
         """
-        import MIZchar as mc
         tfil  = self.file_list[time_index]
         pil    = mc.single_file(tfil)
 
@@ -3331,7 +3321,6 @@ class polygon_file_list:
         mil is a MIZ_info_list object
         **kwargs are for MIZchar.poly_info_list.get_solutions
         """
-        import MIZchar as mc
         tfil  = self.file_list[time_index]
         pil    = mc.single_file(tfil)
 
