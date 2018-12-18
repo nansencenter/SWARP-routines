@@ -14,9 +14,9 @@ import mod_reading as MR
 def lonlat_names(ncfil):
     nc = ncopen(ncfil)
     for vbl in nc.variables:
-        if 'lon' in vbl or 'Lon' in vbl:
+        if 'lon' in vbl[:3].lower():
             lonname = vbl
-        if 'lat' in vbl or 'Lat' in vbl:
+        if 'lat' in vbl[:3].lower():
             latname = vbl
     nc.close()
     return lonname, latname
@@ -65,8 +65,8 @@ def get_time_converter(time):
     time_info.remove(time_info[0]) # 'since'
 
     # rest is date and time of reference point
-    if len(time_info)==2:
-        cdate,ctime = time_info
+    if len(time_info)>=2:
+        cdate, ctime = time_info[0:2]
     else:
         if ('T' in time_info[0]) and ('Z' in time_info[0]):
             # cdate+T...Z format for time
@@ -346,8 +346,8 @@ class nc_getinfo:
         self.lonlat_file = lonlat_file
 
         # are lon,lat dimensions?
-        self.lonname,self.latname = lonlat_names(self.lonlat_file)
-        self.lonlat_dim           = (self.lonname in self.dimensions)
+        self.lonname, self.latname = lonlat_names(self.lonlat_file)
+        self.lonlat_dim            = (self.lonname in self.dimensions)
 
         # basic lon-lat info
         with ncopen(self.lonlat_file) as nc2:
@@ -356,6 +356,13 @@ class nc_getinfo:
             if self.lonlat_dim:
                 self.lon0 = lon[0]
                 self.lat0 = lat[0]
+                self.lonlat_corners = np.array([
+                        (lon[0], lat[0]),
+                        (lon[-1], lat[0]),
+                        (lon[-1], lat[-1]),
+                        (lon[0], lat[-1]),
+                        (lon[0], lat[0]),
+                        ]).T
 
                 # get example variable:
                 # - for eg plotting, need to make the lon/lat matrices
@@ -365,19 +372,29 @@ class nc_getinfo:
                 for dkey in vbl_dims:
                     if dkey==self.lonname:
                         self.lon_first = True
-                        self.shape     = (len(lon),len(lat))
+                        self.shape     = (len(lon), len(lat))
                         break
                     elif dkey==self.latname:
                         self.lon_first = False
-                        self.shape     = (len(lat),len(lon))
+                        self.shape     = (len(lat), len(lon))
                         break
             elif self.timedep_lonlat:
                 self.lon0  = None
                 self.lat0  = None
+                self.lonlat_corners = None
                 self.shape = lon[0,:,:].shape
             else:
-                self.lon0  = lon[0,0]
-                self.lat0  = lat[0,0]
+                self.lon0  = lon[0, 0]
+                self.lat0  = lat[0, 0]
+                self.lonlat_corners = np.array([
+                        (lon[0, 0], lat[0, 0]),
+                        (lon[-1, 0], lat[-1, 0]),
+                        (lon[-1, -1], lat[-1, -1]),
+                        (lon[0, -1], lat[0, -1]),
+                        (lon[0, 0], lat[0, 0]),
+                        ]).T
+                self.lon1  = lon[-1, -1]
+                self.lat1  = lat[-1, -1]
                 self.shape = lon.shape
 
         ny, nx      = self.shape
@@ -391,11 +408,13 @@ class nc_getinfo:
                   'Polar_Stereographic_Grid']
         # could also have mercator or regular lon-lat
         HAVE_PROJ    = 0    # if 0 assume HYCOM native grid
+        keys_to_remove = []
         for proj_name in proj_list:
             if proj_name in vkeys:
                 proj      = nc.variables[proj_name]
                 att_list  = proj.ncattrs()
                 HAVE_PROJ = 1
+                keys_to_remove.append(proj_name) # don't want to keep projection variable with the other variables
                 break
 
         if HAVE_PROJ:
@@ -410,7 +429,7 @@ class nc_getinfo:
             # specific to stereographic
             if proj_name=='stereographic':
                 # add x,y resolution to ncinfo.proj_info
-                att_list_full.extend(['x_resolution','y_resolution'])
+                att_list_full.extend(['x_resolution', 'y_resolution'])
 
                 xx = nc.variables['x'][0:2]
                 yy = nc.variables['y'][0:2]
@@ -427,27 +446,24 @@ class nc_getinfo:
                 if xunits[0]=='km':
                     fac = fac*1.e3
                 #
-                att_vals_full.extend([dx*fac,dy*fac])
+                att_vals_full.extend([dx*fac, dy*fac])
 
-            self.proj_info = MR.proj_obj(att_list_full,att_vals_full)
+            self.proj_info = MR.proj_obj(att_list_full, att_vals_full)
         else:
             self.proj_info = []
 
         # variable list
         # - remove some other variables from vkeys
         # - eg projection,lon,lat
+        # - time_bnds
         # - TODO model_depth?
-        if HAVE_PROJ:
-            vkeys.remove(proj_name)
+        keys_to_remove.append("time_bnds")
+        # keys_to_remove.append('model_depth')
         if not self.timedep_lonlat:
-            for key in [self.lonname, self.latname]:
-                if key in vkeys:
-                    vkeys.remove(key)
+            keys_to_remove.extend([self.lonname, self.latname])
 
         # other variables to remove
-        bkeys = []
-        # bkeys.append('model_depth')
-        for key in bkeys:
+        for key in keys_to_remove:
             if key in vkeys:
                 vkeys.remove(key)
 
@@ -783,19 +799,24 @@ class nc_getinfo:
     def get_area_euclidean(self, pyproj_map, **kwargs):
         """
         Calculates element area from netcdf file
+        Assumes regular grid in the given projection
         area  = self.get_area_euclidean(pyproj_map, **kwargs)
+
         Parameters:
-        * pyproj_map
-        * kwargs for self.get_lonlat
+        -----------
+        pyproj_map : pyproj.Proj
+        kwargs for self.get_lonlat
+
         Returns:
+        --------
         * area (float)
         """
-        lon,lat = self.get_lonlat(**kwargs)
+        lon, lat = self.get_lonlat(**kwargs)
         pp = pyproj_map
         x, y = pp(lon, lat)
         dy = np.mean(y[:, 2]-y[:, 1])
         dx = np.mean(x[1, :]-x[0, :])
-        area = dx*dy
+        area = np.abs(dx*dy)
         return area
 
 

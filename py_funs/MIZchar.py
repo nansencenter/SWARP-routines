@@ -1671,9 +1671,9 @@ class poly_stat:
       self.name   = pname
       pclass      = self.polygon_class
       region      = self.region
-      print ''
-      print 'Statistic Chart for ',pname
-      print 'Class and Region ',pclass,region
+      print('')
+      print('Statistic Chart for ', pname)
+      print('Class and Region ', pclass, region)
       # DN       = np.flipud(np.transpose(self.icemap))
       DN       = np.transpose(self.icemap)
       Ny,Nx    = DN.shape
@@ -1801,8 +1801,8 @@ class poly_stat:
          plt.close()
       else:
          plt.show(False)
-      print 'Statistic chart done for '+str(pname)
-      print ''
+      print('Statistic chart done for '+str(pname))
+      print('')
       return
 ####################################################################
 
