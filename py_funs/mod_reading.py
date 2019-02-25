@@ -413,13 +413,23 @@ def reduce_grid(X, Y, Z, bbox):
     """
     Reduce the grid so don't have to interp to as many points for example
 
-    In particular, this sets bbox_ij = i0, i1, j0, j1 so that
-    X_reduced = X[i0:i1, j0: j1],
-    Y_reduced = Y[i0:i1, j0: j1]
-    This also lets variables on the same grid be accessed in the same way
-
     Parameters:
-    * bbox (list of floats) = xmin, xmax, ymin, ymax
+    -----------
+    X : numpy.ndarray
+        array with source x coordinates
+    Y : numpy.ndarray
+        array with source y coordinates
+    Z : numpy.ma.core.MaskedArray
+        array with data to be interpolated
+    bbox : list(float)
+        xmin, xmax, ymin, ymax
+
+    Returns:
+    --------
+    X_reduced : numpy.ndarray
+    Y_reduced : numpy.ndarray
+    Z_reduced : numpy.ndarray
+        masked values filled with numpy.nan
     """
     print('reduce grid bbox: ', bbox)
     xmin, xmax, ymin, ymax = bbox
