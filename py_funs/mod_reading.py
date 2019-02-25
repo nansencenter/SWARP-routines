@@ -409,34 +409,43 @@ class read_MIZpoly_summary:
             return time_series(dates,data)
 
 
+def reduce_grid(X, Y, Z, bbox):
+    """
+    Reduce the grid so don't have to interp to as many points for example
+
+    In particular, this sets bbox_ij = i0, i1, j0, j1 so that
+    X_reduced = X[i0:i1, j0: j1],
+    Y_reduced = Y[i0:i1, j0: j1]
+    This also lets variables on the same grid be accessed in the same way
+
+    Parameters:
+    * bbox (list of floats) = xmin, xmax, ymin, ymax
+    """
+    print('reduce grid bbox: ', bbox)
+    xmin, xmax, ymin, ymax = bbox
+    id = np.where( (X>=xmin) & (X<=xmax) &
+                 (Y>=ymin)  & (Y<=ymax) )
+    imin = id[0].min()
+    jmin = id[1].min()
+    imax = id[0].max() +1
+    jmax = id[1].max() +1
+    Z_ = Z.filled(np.nan).astype(float)
+    return(
+            X[imin: imax, jmin: jmax],
+            Y[imin: imax, jmin: jmax],
+            Z_[imin: imax, jmin: jmax],
+            )
 
 # Function that reprojects model into observational grid
 def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
     # input coords from X1,Y1; Z1 is array to interp; X2,Y2 are output matrices
 
-
-    # determine resolution of source grid
-    X1d    = X1.reshape(X1.size)
-    Y1d    = Y1.reshape(Y1.size)
-    Z1d    = Z1.reshape(Z1.size).data.astype(float)
-    dx     = abs(X1d[1]-X1d[0])
-    dy     = abs(Y1d[1]-Y1d[0])
-    res    = np.sqrt(dx**2+dy**2)
-    Z1d[Z1.reshape(Z1.size).mask] = np.nan
-
-
     # reduce size of source grid
-    xmin      = np.min(X2)-2*res
-    ymin      = np.min(Y2)-2*res
-    xmax      = np.max(X2)+2*res
-    ymax      = np.max(Y2)+2*res
-    needed    = np.logical_and(X1d>=xmin,X1d<=xmax)
-    needed    = np.logical_and(needed,Y1d<=ymax)
-    needed    = np.logical_and(needed,Y1d>=ymin)
-    X1d        = X1d[needed]
-    Y1d        = Y1d[needed]
-    Z1d        = Z1d[needed]
-
+    bbox = X2.min(), X2.max(), Y2.min(), Y2.max()
+    X1_reduced, Y1_reduced, Z1_reduced = reduce_grid(X1, Y1, Z1, bbox)
+    X1d = X1_reduced.reshape(X1_reduced.size)
+    Y1d = Y1_reduced.reshape(Y1_reduced.size)
+    Z1d = Z1_reduced.reshape(Z1_reduced.size)
 
     # Interpolation 
     # - can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
