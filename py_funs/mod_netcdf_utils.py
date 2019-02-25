@@ -27,19 +27,22 @@ def get_time_name(nc):
     NEMO outputs call time "time_counter"
     CS2-SMOS thickness files use 'tc' for time dimension, but
     'time_bnds' for time variable
+    Parameters:
+    -----------
+    nc : NetCDF4.Dataset
+
+    Returns:
+    --------
+    time_name : str
+        name of time variable in netcdf file
     """
-    time_name = None
     for tname in [
             'time',
+            'time0',
             'time_counter',
-            'time_bnds',
             ]:
         if tname in nc.dimensions:
-            time_name = tname
-            break
-
-    return time_name
-
+            return tname
 
 def get_time_converter(time):
     """
