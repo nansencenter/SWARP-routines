@@ -814,8 +814,8 @@ class nc_getinfo:
         lon, lat = self.get_lonlat(**kwargs)
         pp = pyproj_map
         x, y = pp(lon, lat)
-        dy = np.mean(y[:, 2]-y[:, 1])
-        dx = np.mean(x[1, :]-x[0, :])
+        dy = np.max([np.abs(np.mean(y[:, 2]-y[:, 1])), np.abs(np.mean(y[1, :]-y[0, :]))])
+        dx = np.max([np.abs(np.mean(x[:, 2]-x[:, 1])), np.abs(np.mean(x[1, :]-x[0, :]))])
         area = np.abs(dx*dy)
         return area
 
