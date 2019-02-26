@@ -453,7 +453,7 @@ def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
     # reduce size of source grid
     bbox = X2.min(), X2.max(), Y2.min(), Y2.max()
     X1_reduced, Y1_reduced, Z1_reduced = reduce_grid(X1, Y1, Z1, bbox)
-    X1d = X1_reduced.reshape(X1_reduced.size)
+    X1d = X1_reduced.flatten()
     Y1d = Y1_reduced.reshape(Y1_reduced.size)
     Z1d = Z1_reduced.reshape(Z1_reduced.size)
 
