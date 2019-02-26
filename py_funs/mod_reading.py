@@ -13,9 +13,9 @@ import time
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.basemap import Basemap
-import pygrib
-from ncepgrib2 import Grib2Encode as g2e
-from ncepgrib2 import Grib2Decode as g2d
+#import pygrib
+#from ncepgrib2 import Grib2Encode as g2e
+#from ncepgrib2 import Grib2Decode as g2d
 
 import mod_netcdf_utils as MNU
 import mod_HYCOM_utils as MHU
@@ -46,7 +46,7 @@ class AOD_output:
       self.regions_analysed    = regions
       self.datetime              = dto
       self.types                  = types
-      
+
       if anomaly_file is not None:
           anom_fil  = os.path.splitext(anomaly_file)[0]
           #
@@ -72,7 +72,7 @@ class time_series:
         self.variables                 = data.keys()
         self.number_of_dates         = len(dates)
         self.number_of_variables    = len(data.keys())
-        
+
         if filename is not None:
             if not os.path.exists(filename) or overwrite:
                 print('Saving time series to '+filename)
@@ -305,12 +305,12 @@ def read_time_series(tfil):
     fid    = open(tfil)
     lines = fid.readlines()
     fid.close()
-    
+
     # read header
     lin        = lines[0]
     Vnames    = lin.split()[1:] #variable names : eg MIZ_width,m (1st col is date)
     lines.remove(lin)
-    
+
     # get variable names and units
     data      = {}
     units     = {}
@@ -351,7 +351,7 @@ def read_time_series(tfil):
 class read_MIZpoly_summary:
 
     def __init__(self,tfil,cdate=None,ctime=None):
-        
+
         self.info    = {'filename'     :tfil,
                             'fields'        :[],
                             'datetime'     :None,
@@ -396,7 +396,7 @@ class read_MIZpoly_summary:
         return
 
     def get_time_series(self,inputs_only=True):
-        
+
         dates     = [self.info['datetime']]
         data      = {}
         for fld in self.info['fields']:
@@ -438,7 +438,7 @@ def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
     Z1d        = Z1d[needed]
 
 
-    # Interpolation 
+    # Interpolation
     # - can be done with other methods ('nearest','linear','cubic'<--doesn't work for our data)
     C  = np.array([X1d, Y1d]).T
     Z2 = grd(C, Z1d, (X2, Y2), method=method)
@@ -448,7 +448,7 @@ def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
     if mask is not None:
         # apply union of mask and model nans
         mask2 = np.logical_or(mask1, mask)
-     
+
     Z2 = np.ma.array(Z2, mask=mask2)
     return(Z2)
 
@@ -485,7 +485,7 @@ class plot_object:
         return self.fig,self.ax,self.cbar
 
     def renew(self,axpos=None):
-        
+
         pobj  = plot_object(fig=self.fig,ax=self.ax,cbar=self.cbar,axpos=axpos)
 
         return pobj
@@ -549,7 +549,7 @@ def check_var_opts(var_opts,variables=None):
     var_opts = check_var_opts(var_opts,variables=None)
     *var_opts can be a string with variable name
      or a mod_reading.make_plot_options object
-    *variables is a list of the variables in a file 
+    *variables is a list of the variables in a file
     - error raised if the variable name is not in this list
     (there is also a list of synonyms
     eg 'hice'='sea_ice_thickness'='icetk')
@@ -612,7 +612,7 @@ class make_plot_options:
      - vec_opt=3    - quiver plot of vector with length proportional to magnitude
      - vec_opt=4    - plot direction as scalar (0=North, 90=East)
      - vec_opt=5    - input is direction - convert to unit vectors
-    *dir_from: determines if direction is from or to 
+    *dir_from: determines if direction is from or to
     *lower_limit: mask variable where lower than this
     *upper_limit: mask variable where greater than this
     """
@@ -659,7 +659,7 @@ class var_object:
     *mask_in is a bool array
     *xtra_atts=[attlist,attvals] - attlist and attvals are lists
     of attribute names and values for output
-    *vbl.values is a masked array 
+    *vbl.values is a masked array
      - also has shape and ndim att's, and min,max methods
     """
     def __init__(self,vals,mask_in=None,extra_atts=None):
@@ -695,7 +695,7 @@ class var_object:
 
             self.values = np.ma.array(vals,mask=mask)
 
-        # activate self[:,:] 
+        # activate self[:,:]
         self.__getitem__  = self.values.__getitem__
         return
 
@@ -946,7 +946,7 @@ def imshow(fobj,var_opts,pobj=None,
         Marr  = np.ma.array(data,mask=mask)
 
     cmap = plt.cm.get_cmap(cmap, 25)
-    
+
     if fobj.filetype=='netcdf':
         PC = ax.imshow(Marr,origin='lower',vmin=vmin,vmax=vmax,
                 cmap=cmap)
@@ -1252,7 +1252,7 @@ def plot_var(fobj,var_opts,time_index=0,
 
             DT = NDI.convolve(Marr.data, kernel/kernel.sum(), mode='constant', cval=0.0)
             kernel[kernel==0] = 1.
-            MSK = NDI.convolve(np.array(Marr.mask,dtype='float'), kernel/kernel.sum(), mode='constant', cval=1.0) 
+            MSK = NDI.convolve(np.array(Marr.mask,dtype='float'), kernel/kernel.sum(), mode='constant', cval=1.0)
             MSK[MSK>0] = 1.
 
             Marr  = np.ma.array(DT,mask=np.array(MSK,dtype='bool'))
@@ -1310,7 +1310,7 @@ def plot_var(fobj,var_opts,time_index=0,
             bmap.plot(lont,latt,'^m',markersize=10,latlon=True,ax=ax)
 
     Fplt.finish_map(bmap,ax=ax)
-    
+
     # date label
     if (HYCOMreg=='TP4'):
         # centre label
@@ -1451,7 +1451,7 @@ def make_png(fobj,var_opts,pobj=None,bmap=None,figdir='.',date_label=2,**kwargs)
     if not os.path.exists(figdir):
         os.mkdir(figdir)
 
-    print('Saving to '+figname) 
+    print('Saving to '+figname)
     pobj.fig.savefig(figname)
 
     if new_fig:
@@ -1528,7 +1528,7 @@ def make_png_pair(fobj,var_opts1,var_opts2,
     if not os.path.exists(figdir):
         os.mkdir(figdir)
 
-    print('Saving to '+figname) 
+    print('Saving to '+figname)
     fig.savefig(figname)
 
 
@@ -1731,7 +1731,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,
         regions  = ['custom']
     elif regions is not None:
         do_sort  = True
-    
+
     if do_sort:
 
         # possible regions are:
@@ -1824,7 +1824,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,
         Psolns    = tfo.get_solutions(METH=5)
 
         Pdict.update({reg:Psolns})
-        
+
         # Save summary & shapefile
         mc.save_summary  (Psolns,sumname)
         mc.save_shapefile(Psolns,filename=shpname)
@@ -1839,7 +1839,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,
             fid.write('total_area_of_rectangle : '+str(tot_area))
             fid.close()
 
-        
+
         if plotting:
             # Make plot
             var_opts = make_plot_options(vname,lower_limit=lower_limit)
@@ -1867,7 +1867,7 @@ def MIZmap(fobj,var_name='dmax',time_index=0,
                     ax.text(xmax,ymin,'%4.1f km' %(Wavg),
                         color='k',fontsize=16,horizontalalignment='right',
                         verticalalignment='top')
-            
+
 
             Fplt.finish_map(bmap)
             print('Saving '+figname)
@@ -1999,7 +1999,7 @@ def get_conc_anomaly(lon,lat,ZZ,anom_fil_start,cdate,NO_NPZ=True,fig_info=None):
         return
     else:
         return anom_fil
-    
+
     return cdiff
 
 
@@ -2280,7 +2280,7 @@ def areas_of_disagreement(fobj,time_index=0,
             tfo        = mc.single_file(tfil)
             Psolns    = tfo.get_solutions(METH=5)
             Pdict[OU].update({reg:Psolns})
-            
+
             # Save summary & shapefile
             mc.save_summary  (Psolns,sumname)
             mc.save_shapefile(Psolns,filename=shpname)
@@ -2295,7 +2295,7 @@ def areas_of_disagreement(fobj,time_index=0,
                 fid.write('total_area_of_rectangle : '+str(tot_area))
                 fid.close()
 
-            
+
             if plotting==2:
                 # Make plot
                 var_opts = make_plot_options('fice',ice_mask=True)
@@ -2501,7 +2501,7 @@ class MIZmap_all:
         self.number_of_times_analysed = Ntimes
         self.number_of_results          = 0
 
-      
+
         # loop over times:
         Init      = True
         outdir3  = outdir+'/time_series' # directory for time series files
@@ -2509,11 +2509,11 @@ class MIZmap_all:
             os.mkdir(outdir3)
 
         for it,dto in enumerate(self.times_to_analyse):
-            
+
             # restrict analysis dates
             if dto in self.missing_times:
                 continue
-            
+
             idx        = fobj.datetimes.index(dto)
             cdate     = dto.strftime('%Y%m%dT%H%M%SZ')
             outdir2  = outdir+'/'+cdate
@@ -2663,15 +2663,15 @@ class AODs_all:
         self.number_of_times_analysed = Ntimes
         self.number_of_results          = 0
 
-      
+
         # loop over times:
         Init  = True
         for it,dto in enumerate(self.times_to_analyse):
-            
+
             # restrict analysis dates
             if dto in self.missing_times:
                 continue
-            
+
             idx        = fobj.datetimes.index(dto)
             cdate     = dto.strftime('%Y%m%d')
             outdir2  = outdir+'/'+cdate
@@ -3030,7 +3030,7 @@ class file_list:
             self.HYCOM_region = file_list[0][:3]
             if 'gridpath' not in kwargs:
                 kwargs.update({'gridpath':gridpath_lut[self.HYCOM_region]})
-            
+
         elif extension=='.nc':
             self.filetype      = 'netcdf'
             self.getinfo        = nc_getinfo
@@ -3067,8 +3067,8 @@ class file_list:
 
         #set some extra variables to work with eg make_png_all
         self.basename          = self.objects[0].basename
-        self.variables         = self.objects[0].variables     
-        self.variables3d      = self.objects[0].variables3d  
+        self.variables         = self.objects[0].variables
+        self.variables3d      = self.objects[0].variables3d
         self.all_variables    = self.objects[0].all_variables
 
         self.date_strings = []
