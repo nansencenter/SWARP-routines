@@ -466,7 +466,7 @@ def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
     mask2 = np.isnan(Z2)
     if mask is not None:
         # apply union of mask and model nans
-        mask2 = np.logical_or(mask1, mask)
+        mask2 = np.logical_or(mask2, mask)
 
     Z2 = np.ma.array(Z2, mask=mask2)
     return(Z2)
