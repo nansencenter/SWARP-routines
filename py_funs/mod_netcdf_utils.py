@@ -368,8 +368,11 @@ class nc_getinfo:
                 # - for eg plotting, need to make the lon/lat matrices
                 # (converted from vectors)
                 # have the same shape as the variables
-                vbl_dims = nc.variables[vkeys[0]].dimensions
-                for dkey in vbl_dims:
+                for vkey in vkeys:
+                    if self.lonname in nc.variables[vkey].dimensions:
+                        ncvar = nc.variables[vkey]
+                        break
+                for dkey in ncvar.dimensions:
                     if dkey==self.lonname:
                         self.lon_first = True
                         self.shape     = (len(lon), len(lat))
@@ -404,8 +407,13 @@ class nc_getinfo:
 
 
         # projection info:
-        proj_list = ['stereographic', 'projection_3',
-                  'Polar_Stereographic_Grid']
+        proj_list = [
+                'stereographic',
+                'projection_3',
+                'Polar_Stereographic_Grid',
+                'Lambert_Azimuthal_Grid',
+                ]
+
         # could also have mercator or regular lon-lat
         HAVE_PROJ    = 0    # if 0 assume HYCOM native grid
         keys_to_remove = []
@@ -427,17 +435,24 @@ class nc_getinfo:
                 att_vals_full.append(att_val)
 
             # specific to stereographic
-            if proj_name=='stereographic':
-                # add x,y resolution to ncinfo.proj_info
+            if proj.getncattr('grid_mapping_name') in [
+                    'lambert_azimuthal_equal_area',
+                    'polar_stereographic',
+                    ]:
+                # add x, y resolution to ncinfo.proj_info
                 att_list_full.extend(['x_resolution', 'y_resolution'])
 
-                xx = nc.variables['x'][0:2]
-                yy = nc.variables['y'][0:2]
+                if 'x' in nc.dimensions:
+                    xname, yname = 'x', 'y'
+                elif 'xc' in nc.dimensions:
+                    xname, yname = 'xc', 'yc'
+                xx = nc.variables[xname][0:2]
+                yy = nc.variables[yname][0:2]
                 dx = xx[1]-xx[0]
                 dy = yy[1]-yy[0]
 
                 #convert to m
-                xunits = nc.variables['x'].units.split()
+                xunits = nc.variables[xname].units.split()
                 fac    = 1.
                 if len(xunits)==2:
                     fac = float(xunits[0])
@@ -450,7 +465,7 @@ class nc_getinfo:
 
             self.proj_info = MR.proj_obj(att_list_full, att_vals_full)
         else:
-            self.proj_info = []
+            self.proj_info = None
 
         # variable list
         # - remove some other variables from vkeys
