@@ -439,7 +439,8 @@ def reduce_grid(X, Y, Z, bbox):
     jmin = id[1].min()
     imax = id[0].max() +1
     jmax = id[1].max() +1
-    Z_ = Z.filled(np.nan).astype(float)
+    Z_ = Z.data.astype(float)
+    Z_[Z.mask] = np.nan
     return(
             X[imin: imax, jmin: jmax],
             Y[imin: imax, jmin: jmax],
@@ -447,9 +448,27 @@ def reduce_grid(X, Y, Z, bbox):
             )
 
 # Function that reprojects model into observational grid
-def reproj_mod2obs(X1,Y1,Z1,X2,Y2,method='linear',mask=None):
-    # input coords from X1,Y1; Z1 is array to interp; X2,Y2 are output matrices
+def reproj_mod2obs(X1, Y1, Z1, X2, Y2, method='linear', mask=None):
+    '''
+    interpolate from one grid to another
 
+    Parameters:
+    -----------
+    X1 : numpy.ndarray
+        x coordinates of input points
+    Y1 : numpy.ndarray
+        y coordinates of input points
+    Z1 : numpy.ma.core.MaskedArray
+        data to be interpolated
+    X2 : numpy.ndarray
+        x coordinates of output points
+    Y2 : numpy.ndarray
+        y coordinates of output points
+    method : str
+        interpolation method : 'linear' or 'interp'
+    mask : numpy.ndarray(bool)    
+        optional array of extra points to be masked
+    '''
     # reduce size of source grid
     bbox = X2.min(), X2.max(), Y2.min(), Y2.max()
     X1_reduced, Y1_reduced, Z1_reduced = reduce_grid(X1, Y1, Z1, bbox)
