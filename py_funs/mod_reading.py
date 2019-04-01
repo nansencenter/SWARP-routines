@@ -466,7 +466,7 @@ def reproj_mod2obs(X1, Y1, Z1, X2, Y2, method='linear', mask=None):
         y coordinates of output points
     method : str
         interpolation method : 'linear' or 'interp'
-    mask : numpy.ndarray(bool)    
+    mask : numpy.ndarray(bool)
         optional array of extra points to be masked
     '''
     # reduce size of source grid
