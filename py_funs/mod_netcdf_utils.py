@@ -434,35 +434,6 @@ class nc_getinfo:
                 att_val = proj.getncattr(att)
                 att_vals_full.append(att_val)
 
-            # specific to stereographic
-            if proj.getncattr('grid_mapping_name') in [
-                    'lambert_azimuthal_equal_area',
-                    'polar_stereographic',
-                    ]:
-                # add x, y resolution to ncinfo.proj_info
-                att_list_full.extend(['x_resolution', 'y_resolution'])
-
-                if 'x' in nc.dimensions:
-                    xname, yname = 'x', 'y'
-                elif 'xc' in nc.dimensions:
-                    xname, yname = 'xc', 'yc'
-                xx = nc.variables[xname][0:2]
-                yy = nc.variables[yname][0:2]
-                dx = xx[1]-xx[0]
-                dy = yy[1]-yy[0]
-
-                #convert to m
-                xunits = nc.variables[xname].units.split()
-                fac    = 1.
-                if len(xunits)==2:
-                    fac = float(xunits[0])
-                    xunits.remove(xunits[0])
-
-                if xunits[0]=='km':
-                    fac = fac*1.e3
-                #
-                att_vals_full.extend([dx*fac, dy*fac])
-
             self.proj_info = MR.proj_obj(att_list_full, att_vals_full)
         else:
             self.proj_info = None
