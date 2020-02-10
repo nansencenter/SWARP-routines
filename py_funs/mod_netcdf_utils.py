@@ -31,6 +31,7 @@ def get_time_name(nc):
     time_name = None
     for tname in [
             'time',
+            'time0', #cfsr
             'time_counter',
             'time_bnds',
             ]:
